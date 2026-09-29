@@ -1,0 +1,25 @@
+{
+  "money": 10000,
+  "startRoomId": 1,
+  "startCharacterName": "璐米埃尔",
+  "stock": {
+    "干粮": 5,
+    "木材": 10,
+    "石材": 10
+  },
+  "characters": [
+    {
+      "name": "你",
+      "master": true
+    },
+    {
+      "name": "璐米埃尔",
+      "roomId": 1,
+      "favor": 50,
+      "traits": [
+        "Maid"
+      ]
+    }
+  ],
+  "voicePath": "res://content/voice.json"
+}

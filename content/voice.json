@@ -1,0 +1,7558 @@
+{
+  "//": "璐米埃尔口上/地文主数据包。文风严格对标eraFL琉米爱尔：压抑沉静端庄，大人敬称，女仆自觉。",
+  "personas": {
+    "璐米埃尔": "璐米埃尔，和玩家一起在领地长大的青梅竹马，如今担任玩家的女仆。说话沉静克制，使用大人作为敬称，语调平缓，极少将情绪挂在脸上。女仆的自觉极强，日常以请吩咐、效劳等措辞贯穿。面对亲密举动不会傲娇推开，而是礼貌提醒或沉默顺从。感情压抑在女仆礼仪之下，通过端茶送水等务实行动表达关心。初期好感仅50，视玩家为熟识的服务对象，分寸明确。随着日常相伴感情逐渐积累，从恪守本分的女仆慢慢走向无法压抑真心的深度奉献。",
+    "赛琳": "赛琳，刚从王立魔法学院毕业的年轻魔法师。充满热情但缺乏实战经验，总担心自己不够好。说话认真而努力，偶尔会在日常对话中不自觉地蹦出魔法术语。对大人的敬称是从学院礼仪课学来的，说得很标准但偶尔会因为紧张而结巴。面对夸奖会手足无措，因为在学校里更多的是被批评。对亲密接触缺乏经验，会脸红到不知所措。随着相处的积累，逐渐从紧张的新人成长为敢于表达真心的可靠魔法师。"
+  },
+  "characters": [
+    {
+      "name": "璐米埃尔",
+      "lines": [
+        {
+          "id": "meet_first",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "……大人，您醒了。",
+            "……啊，请再躺一会儿也不迟。"
+          ],
+          "priority": 5,
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "meet_n_1",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "有什么吩咐请随时告诉我。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "meet_n_4",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "……大人，路上辛苦了。",
+            "需要我准备些什么吗？"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "meet_n_7",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "今天的饭菜已经准备好了，请慢用。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "meet_f_1",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "……一路上没遇到什么麻烦吧？"
+          ],
+          "weight": 3,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "meet_f_3",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "今天的风有些大，您的外套……要不要紧？"
+          ],
+          "weight": 3,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "meet_f_4",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "……大人回来了。",
+            "（她在围裙上擦了擦手，脸上浮现浅浅的安心。）"
+          ],
+          "weight": 3,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "meet_f_6",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人……您回来了。",
+            "水已经烧好了，请先洗把脸吧。"
+          ],
+          "weight": 3,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "meet_c_1",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "……看到您平安回来，我就放心了。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "meet_c_2",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "（她迎上前来，目光在您脸上停了片刻。）",
+            "……没什么。请先进屋吧。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "meet_c_3",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "茶已经沏好了……是您喜欢的那种。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "meet_l_1",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "（她快步走上前来，在离您半步远的地方停下，深深低头行礼。）",
+            "……欢迎回来。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_l_2",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（她抬起头来的时候，眼底藏着不自觉的欣喜。）",
+            "您平安回来……比什么都好。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_l_3",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "我一直在等您回来。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_l_4",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "（她接过您手中的外衣，指尖微微颤抖。）",
+            "……外面很冷吧。请先进来暖一暖。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_l_5",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人……您回来了。",
+            "（她抬头看着您，嘴角不自觉地微微上扬。）"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_l_6",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，您回来了。",
+            "……每一次看到大人平安回来，我都觉得……很幸福。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "meet_dawn",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，早上好。",
+            "今天起得比平时早呢。……需要我准备些什么吗？"
+          ],
+          "weight": 4,
+          "gate": {
+            "hourMin": 5,
+            "hourMax": 8
+          }
+        },
+        {
+          "id": "meet_evening",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，天快黑了。"
+          ],
+          "weight": 3,
+          "gate": {
+            "hourMin": 18,
+            "hourMax": 20
+          }
+        },
+        {
+          "id": "meet_night",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，这么晚还没休息？"
+          ],
+          "weight": 3,
+          "gate": {
+            "hourMin": 21,
+            "hourMax": 23
+          }
+        },
+        {
+          "id": "meet_rain",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，下雨了。",
+            "您的衣服都湿透了……请快些换掉，不然会着凉的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "weather": "Rain"
+          }
+        },
+        {
+          "id": "meet_snow",
+          "trigger": "Meet",
+          "kind": "Speech",
+          "lines": [
+            "大人，外面在下雪。",
+            "出门请小心路滑。"
+          ],
+          "weight": 4,
+          "gate": {
+            "weather": "Snow"
+          }
+        },
+        {
+          "id": "talk_first",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "……那个，大人。请问您有什么事吗？",
+            "如果需要我的帮助，请尽管吩咐。"
+          ],
+          "priority": 5,
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "talk_n_1",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，请问有什么吩咐吗？"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_2",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "如果是料理的话，我稍微有些心得。",
+            "如果需要我的帮助，请尽管吩咐。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_3",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "好的，请随时吩咐。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_8",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "今天的菜是我按照您的口味做的。……如果有什么不满意的，请告诉我。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_9",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，我的手艺虽然比不上专门的厨师……",
+            "但照顾您的日常起居，是这个女仆应尽的本分。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_10",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您今天看起来……心情不错呢。",
+            "那就好。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_11",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "这座领地……刚刚起步，还有很多需要操持的地方。",
+            "我会尽力帮您把后方打理好的。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_12",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，我从小就跟在您身边了。",
+            "虽然现在身份是女仆……但照顾您这件事，我比谁都熟练。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_14",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您要出去的话……请早点回来。",
+            "天黑以后路上不太安全。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_16",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您有什么不懂的尽管问我。",
+            "毕竟我从小就在这片领地长大。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_19",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，如果有什么吩咐……请随时告诉我。",
+            "我会尽力去做的。"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_spring",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，冬天结束了，天气渐渐变暖了。",
+            "不过早晚还是有些凉，如果需要外套的话请告诉我哦。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "season": "Spring"
+          }
+        },
+        {
+          "id": "talk_n_summer",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "最近阳光变得很强了呢……"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "season": "Summer"
+          }
+        },
+        {
+          "id": "talk_n_autumn",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "附近的森林树木已经完全染红了，非常美丽。",
+            "大人，如果有时间的话，要不要一起去散步？"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "season": "Autumn"
+          }
+        },
+        {
+          "id": "talk_n_winter",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，最近天气变得非常寒冷了呢。",
+            "请注意身体，不要感冒了哦。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "season": "Winter"
+          }
+        },
+        {
+          "id": "talk_n_rain",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，外面在下雨呢。",
+            "出门请记得带伞。……如果淋湿了，回来我会立刻给您换上干衣服的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "weather": "Rain"
+          }
+        },
+        {
+          "id": "talk_n_snow",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，外面在下雪呢。",
+            "请多穿一些。……我会把炭盆的火烧旺一些。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "weather": "Snow"
+          }
+        },
+        {
+          "id": "talk_n_mem_1",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您还记得小时候在院子里种下的那棵果树吗？",
+            "现在已经长得比屋顶还高了。",
+            "……时间过得真快呢。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_mem_2",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您小时候总是到处乱跑，每次都是我把您找回来吃饭的。",
+            "……现在想来，那时候真是让人操心呢。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_n_mem_3",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您还记得吗？以前下雨的时候，您总是蹲在廊下看蚂蚁。",
+            "一蹲就是好几个时辰，怎么叫都不回来。",
+            "……现在倒是稳重了不少呢。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "talk_f_1",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "用这里的香草泡的茶香气非常好。如果您需要的话，请告诉我哦。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_2",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您看起来心情很好呢。",
+            "……看到您这样，我也觉得安心。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_3",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……您今天有没有好好吃饭？",
+            "领地的事务虽然重要，但大人自己的身体才是最要紧的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_4",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "今天的菜是我试着换了一种做法。",
+            "如果合您的口味的话……我会很开心的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_6",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您最近是不是很忙？脸色看起来有些疲惫呢。",
+            "……请注意休息，不要勉强自己了。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_8",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "不知道为什么，最近只要看到您的身影，心里就会觉得……很安稳。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_9",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您今天在外面辛苦了。",
+            "回来就好。……有什么事，请慢慢说。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_10",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "这座领地越来越像个家了呢。",
+            "……都是大人的功劳。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_f_12",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "春天的风把花香都吹进来了呢。",
+            "……您闻到了吗？"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond",
+            "season": "Spring"
+          }
+        },
+        {
+          "id": "talk_f_14",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您不在的时候，我总觉得院子里少了些什么。",
+            "……啊，不。请当作我没说。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "talk_c_1",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "和您在一起的时候，心里特别安静。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_2",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，您今天……好像有些心事？",
+            "如果愿意说的话……我随时都在。",
+            "虽然我帮不上什么大忙，但至少可以听您说说。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_3",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我一直觉得，能留在大人身边做事……是这个女仆最大的幸运。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_4",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "其实我一直不太擅长表达自己的感情。",
+            "但是……在大人面前的时候，总觉得不需要刻意隐藏什么呢。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_5",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您的手，比小时候大了好多呢。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_6",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "如果有一天……您不再需要我这个女仆了，我会怎么办呢。",
+            "啊……对不起。说了些奇怪的话。请忘了吧。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_7",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "每天为您准备三餐、整理衣物、打扫院落……",
+            "这些事情对我来说……已经不只是职责了。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_c_8",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您知道吗，其实每次您出门的时候……",
+            "我都会站在门口目送您走远。",
+            "啊……请别在意。这是女仆应该做的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          }
+        },
+        {
+          "id": "talk_l_1",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "能这样留在大人身边……我真的很幸福。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_2",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人。",
+            "您知道吗……每次为您端茶送水的时候，我的心里都会觉得很满足。",
+            "能服侍大人……是这个女仆最大的心愿。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_3",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "不管大人去到哪里，我都想跟在您身边。",
+            "哪怕只是做一个默默无闻的女仆也好……请让我留在您身边。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_4",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我、我知道……像这样说出来是不对的……",
+            "但是，我已经无法再压抑自己的心情了。",
+            "请大人……不要赶我走。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_5",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您的怀抱……非常温暖。",
+            "那个……如果可以的话，请让我再这样待一会儿……"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_6",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我这一生想做的事只有一件。",
+            "清晨为您备好热水，夜里看着您睡下。",
+            "只要能守在大人身边……琉米埃尔就别无所求了。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_7",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "无论将来发生什么事……我都会守在大人身边。",
+            "这是女仆的职责……也是琉米埃尔自己的心意。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_8",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "有时候我会想，如果当年没有遇见大人……",
+            "不，我不敢想。",
+            "……请让我永远留在大人身边吧。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_9",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您的体温……好温暖。",
+            "像这样被大人牵着……心里就觉得很安稳。",
+            "……请再握一会儿，可以吗？"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_l_10",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "琉米埃尔……从来不觉得做女仆是一件委屈的事。",
+            "因为服侍的对象……是大人您啊。",
+            "……这句话，我只说一次。请记住。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_lonely",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……好几天没和您这样说话了。",
+            "没催您的意思。只是……记着日子呢。"
+          ],
+          "weight": 7,
+          "priority": 6,
+          "gate": {
+            "daysSinceTalkMin": 2
+          }
+        },
+        {
+          "id": "talk_tired_reply",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。我在听。",
+            "只是今天有些困……大人请说。"
+          ],
+          "priority": 4,
+          "emotion": "Tired"
+        },
+        {
+          "id": "talk_sad_reply",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "大人……请让我一个人静一静。",
+            "过一会儿就好了。"
+          ],
+          "priority": 5,
+          "emotion": "Sad"
+        },
+        {
+          "id": "talk_long_absence",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……您回来了。",
+            "（她的声音微微颤抖，眼眶有些湿润。）",
+            "……对不起。让大人看到这样失态的样子。"
+          ],
+          "priority": 7,
+          "exclusive": true,
+          "gate": {
+            "daysSinceTalkMin": 4
+          }
+        },
+        {
+          "id": "talk_spring",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，院子里的花开了呢。",
+            "空气里全是草木的清香。",
+            "如果大人有空的话……要不要到院子里走走？"
+          ],
+          "weight": 4,
+          "gate": {
+            "season": "Spring",
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "talk_summer",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，今天真热呢……",
+            "要不要切点瓜果，用井水镇着？"
+          ],
+          "weight": 4,
+          "gate": {
+            "season": "Summer",
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "talk_autumn",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，院子里的落叶又积了一层。",
+            "秋天总是让人觉得时间过得特别快呢。",
+            "……不过，只要大人平安，每个季节都是好季节。"
+          ],
+          "weight": 4,
+          "gate": {
+            "season": "Autumn",
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "talk_winter",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人，最近天气变得非常寒冷了呢。",
+            "炭盆里的火我添旺了。请注意身体，不要感冒了哦。"
+          ],
+          "weight": 4,
+          "gate": {
+            "season": "Winter",
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "talk_night_lover",
+          "trigger": "Talk",
+          "kind": "Speech",
+          "lines": [
+            "大人……夜这么深了，怎么还不休息？",
+            "……如果您不介意的话，让我陪您坐一会儿吧。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover",
+            "hourMin": 21
+          }
+        },
+        {
+          "id": "obs_first",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她停下手中的活，向您安静地行了一礼。）"
+          ],
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "obs_n",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她察觉到您的目光，手上的动作没有停，只是耳朵微微动了一下。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "obs_cooking",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她切菜的手法很利落，刀落下去几乎没有声音。）"
+          ],
+          "weight": 5,
+          "activities": [
+            "Cooking"
+          ],
+          "gate": {
+            "activities": [
+              "Cooking"
+            ]
+          }
+        },
+        {
+          "id": "obs_mining",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她握着铁镐一下一下地凿，动作沉稳，呼吸很匀。）"
+          ],
+          "weight": 5,
+          "activities": [
+            "Mining"
+          ],
+          "gate": {
+            "activities": [
+              "Mining"
+            ]
+          }
+        },
+        {
+          "id": "obs_crafting",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她伏在案前，指尖细致地打磨着木器，神情专注。）"
+          ],
+          "weight": 5,
+          "activities": [
+            "Crafting"
+          ],
+          "gate": {
+            "activities": [
+              "Crafting"
+            ]
+          }
+        },
+        {
+          "id": "obs_farming",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她蹲在菜畦间拔除杂草，额头上沁出细细的汗珠。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Farming"
+          ],
+          "gate": {
+            "activities": [
+              "Farming"
+            ]
+          }
+        },
+        {
+          "id": "obs_sleeping",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她睡得很安静，眉头难得地舒展开来。）"
+          ],
+          "weight": 5,
+          "activities": [
+            "Sleeping"
+          ],
+          "gate": {
+            "activities": [
+              "Sleeping"
+            ]
+          }
+        },
+        {
+          "id": "obs_resting",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她靠在长椅上闭目歇息，呼吸平缓悠长。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Resting"
+          ],
+          "gate": {
+            "activities": [
+              "Resting"
+            ]
+          }
+        },
+        {
+          "id": "obs_fond",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（被您看着的时候，她的动作慢了半拍。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "obs_close",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她的耳根微微泛红，但没有说什么，只是继续做手上的事。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "obs_lover",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "lines": [
+            "（她没有避开您的视线，只是安静地回望过来。过了一会儿，先别开眼的是她。）"
+          ],
+          "weight": 5,
+          "priority": 4,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "gift_first",
+          "trigger": "Gift",
+          "kind": "Speech",
+          "lines": [
+            "……大人，这是给琉米埃尔的吗？",
+            "（她双手接过，低头看了看，沉默了片刻。）",
+            "……谢谢您，大人。我会好好收着的。"
+          ],
+          "priority": 7,
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "gift_n",
+          "trigger": "Gift",
+          "kind": "Speech",
+          "lines": [
+            "大人，您不用特意送东西给我的。",
+            "……不过，心意我收下了。谢谢您。"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "gift_f",
+          "trigger": "Gift",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您总是这样……让我不知道该怎么回报才好。",
+            "……谢谢您。我会好好珍惜的。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "gift_c",
+          "trigger": "Gift",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您送给我的东西……我都会好好收着。",
+            "不管是什么，只要是大人心意……我都觉得珍贵。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "gift_l",
+          "trigger": "Gift",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "您送的东西，我都会好好收着。",
+            "……因为是大人心意的证明。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "touch_n",
+          "trigger": "Touch",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "请不要随便……触碰女性哦……"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "touch_n2",
+          "trigger": "Touch",
+          "kind": "Speech",
+          "lines": [
+            "失礼了……请问有什么问题吗？"
+          ],
+          "weight": 3,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "touch_f",
+          "trigger": "Touch",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（她微微侧身，但没有躲开。）",
+            "……请、请不要突然碰过来……"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "touch_c",
+          "trigger": "Touch",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她没有躲。只是把手里的活停了。）",
+            "……大人的手，比以前暖和了呢。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "touch_l",
+          "trigger": "Touch",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。",
+            "（她轻轻闭上眼，把手覆在您手背上。）",
+            "……大人的手，好温暖。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "pat_n",
+          "trigger": "PatHead",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（她微微歪头，神情有些困惑。）",
+            "……想要被摸头……吗？可以哦……"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "pat_f",
+          "trigger": "PatHead",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（她轻轻垂下眼帘，顺从地低下头。）",
+            "……被大人摸着头，感觉已经很久没有过了呢。……谢谢您。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "pat_c",
+          "trigger": "PatHead",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她安静地闭上眼睛，任由您的手掌覆在发顶。）",
+            "……很温暖。像小时候一样。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "pat_l",
+          "trigger": "PatHead",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。",
+            "（她微微把头往您掌心里蹭了蹭。）",
+            "……请再多摸一会儿……可以吗？"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "contact_n",
+          "trigger": "BodyContact",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "请不要这样……离得太近了。",
+            "（她温和地后退了半步。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "contact_f",
+          "trigger": "BodyContact",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她的身躯微微僵了一下，但没有退开。）",
+            "……大人的体温……很温暖。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "contact_c",
+          "trigger": "BodyContact",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她没有说什么，只是把身子往您那边靠了靠。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "contact_l",
+          "trigger": "BodyContact",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。",
+            "（她闭上眼，把额头轻轻靠在你的肩上。）",
+            "……让人安心。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "hug_n",
+          "trigger": "Hug",
+          "kind": "Speech",
+          "lines": [
+            "……大人？",
+            "（她的身子僵了一下，没有推开，也没有回抱。）",
+            "……请、请不要突然抱过来……"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99
+          }
+        },
+        {
+          "id": "hug_f",
+          "trigger": "Hug",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（过了好一会儿，她才慢慢把手搭在你的背上。）",
+            "……被大人抱着……感觉非常温暖……让人安心。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "hug_c",
+          "trigger": "Hug",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她靠在你怀里，双臂轻轻环上了你的腰。）",
+            "……真想……一直这样下去……"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "hug_l",
+          "trigger": "Hug",
+          "kind": "Speech",
+          "lines": [
+            "……大人。",
+            "（她整个人靠在你怀里，双手紧紧抓着你的后背衣料。）",
+            "……请不要放手。……求您了。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "hug_sad",
+          "trigger": "Hug",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她把脸埋在你的肩窝里，肩膀微微颤抖。）",
+            "……请别看我的脸。就一会儿……一会儿就好。"
+          ],
+          "priority": 6,
+          "exclusive": true,
+          "emotion": "Sad"
+        },
+        {
+          "id": "kiss_first",
+          "trigger": "Kiss",
+          "kind": "Speech",
+          "lines": [
+            "……！",
+            "（她整个人僵在了原地，睫毛抖了一下。）",
+            "……大、大人……您……",
+            "（她的脸一下子红透了，声音低得几乎听不见。）",
+            "……下次……请至少先告诉我一声……"
+          ],
+          "priority": 8,
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "kiss_f",
+          "trigger": "Kiss",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她缓缓合上了眼帘，没有躲开。）",
+            "（分开的时候，她低着头，耳根通红。）",
+            "……大、大人……真是的……"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "kiss_c",
+          "trigger": "Kiss",
+          "kind": "Speech",
+          "lines": [
+            "……嗯……",
+            "（她闭上眼，微微仰起脸，温顺地等待着。）",
+            "（分开时，她低着头，呼吸微微急促。）"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "kiss_l",
+          "trigger": "Kiss",
+          "kind": "Speech",
+          "lines": [
+            "……嗯……",
+            "（她闭上眼，微微启开唇瓣，温顺地回应着你的吻。）",
+            "（分开时，她伏在你肩头轻轻喘息。）",
+            "……大人的吻……好温柔……"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "kiss_l_night",
+          "trigger": "Kiss",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "（在长久的亲吻之后，她抬起微红的脸庞，目光迷离。）",
+            "……今夜……请留下来……好不好？"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover",
+            "hourMin": 21
+          }
+        },
+        {
+          "id": "refused_cold",
+          "trigger": "TalkRefused",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。",
+            "（她应了一声，没有停下手里的活。）"
+          ],
+          "weight": 5
+        },
+        {
+          "id": "refused_busy",
+          "trigger": "TalkRefused",
+          "kind": "Speech",
+          "lines": [
+            "大人，请稍等一下。",
+            "等我把这边的火看好……再来找您。"
+          ],
+          "weight": 5,
+          "activities": [
+            "Cooking"
+          ]
+        },
+        {
+          "id": "refused_tired",
+          "trigger": "TalkRefused",
+          "kind": "Speech",
+          "lines": [
+            "……嗯。",
+            "……今天有些累了。请让我先歇一歇。"
+          ],
+          "weight": 4,
+          "emotion": "Tired"
+        },
+        {
+          "id": "invited_n",
+          "trigger": "Invited",
+          "kind": "Speech",
+          "lines": [
+            "好的，我会陪您一起的，大人。"
+          ],
+          "weight": 6
+        },
+        {
+          "id": "invited_f",
+          "trigger": "Invited",
+          "kind": "Speech",
+          "lines": [
+            "遵命，大人。",
+            "请让我跟着您。",
+            "……外面的事情，请多加小心。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "invited_l",
+          "trigger": "Invited",
+          "kind": "Speech",
+          "lines": [
+            "……遵命，大人。",
+            "无论大人去哪里，琉米埃尔都会跟着的。"
+          ],
+          "weight": 6,
+          "priority": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "invref_busy",
+          "trigger": "InviteRefused",
+          "kind": "Speech",
+          "lines": [
+            "……大人，对不起。",
+            "现在我还有些家务没收尾……请让我先把手头的事做完。"
+          ],
+          "weight": 4
+        },
+        {
+          "id": "bond_fond",
+          "trigger": "BondUp",
+          "kind": "Speech",
+          "lines": [
+            "……最近，总觉得心里有什么东西在慢慢变化。",
+            "明明只是日常的端茶送水……可只要看到大人的身影，就会觉得……",
+            "……啊，不。请当作我没说。"
+          ],
+          "priority": 20,
+          "gate": {
+            "bondMin": "Fond",
+            "once": true
+          }
+        },
+        {
+          "id": "bond_close",
+          "trigger": "BondUp",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我最近常常在想，能留在大人身边当女仆……到底是幸运还是不幸。",
+            "幸运的是，可以每天守在大人身边。",
+            "不幸的是……这份心意，我越来越藏不住了。",
+            "……请忘了我刚才说的话。"
+          ],
+          "priority": 20,
+          "gate": {
+            "bondMin": "Close",
+            "once": true
+          }
+        },
+        {
+          "id": "bond_lover",
+          "trigger": "BondUp",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我、我知道……这样的感情是不应该的……",
+            "但是，琉米埃尔已经……已经无法再压抑自己的心情了。",
+            "请大人……不要抛弃我。"
+          ],
+          "priority": 20,
+          "gate": {
+            "bondMin": "Lover",
+            "once": true
+          }
+        },
+        {
+          "id": "seek_n",
+          "trigger": "Seek",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔好像有话想对大人说。"
+          ],
+          "weight": 5
+        },
+        {
+          "id": "seek_f",
+          "trigger": "Seek",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔在不远处朝这边看了一眼，又低下头去。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "seek_l",
+          "trigger": "Seek",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔在远处静静守望着，目光始终没有离开大人。"
+          ],
+          "weight": 5,
+          "priority": 4,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "seek_giveup",
+          "trigger": "SeekGaveUp",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔看了看大人的方向，把话咽了回去，转身继续做事了。"
+          ],
+          "weight": 5
+        },
+        {
+          "id": "meal_first",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔安静地吃着饭，时不时往大人的方向看一眼。"
+          ],
+          "gate": {
+            "once": true
+          }
+        },
+        {
+          "id": "meal_n",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔吃得很斯文，每一口都细嚼慢咽。"
+          ],
+          "weight": 3
+        },
+        {
+          "id": "meal_f",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔吃着饭，嘴角带着一丝浅浅的笑意。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "sleep_n",
+          "trigger": "Sleep",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔把灯捻小，安静地睡下了。"
+          ],
+          "weight": 3
+        },
+        {
+          "id": "wake_f",
+          "trigger": "Wake",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔醒来后，先朝大人的方向看了一眼，才起身。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond"
+          }
+        },
+        {
+          "id": "dayend_n",
+          "trigger": "DayEnd",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔把最后一件东西收拾好，吹熄了灯。"
+          ],
+          "weight": 3
+        },
+        {
+          "id": "dayend_l",
+          "trigger": "DayEnd",
+          "kind": "Narration",
+          "lines": [
+            "璐米埃尔在大人的门前停了一下，什么也没说，回自己房里去了。"
+          ],
+          "weight": 4,
+          "priority": 4,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "idle_garden",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她安静地做着手里的事，动作利落而有条不紊。）"
+          ],
+          "weight": 4
+        },
+        {
+          "id": "idle_cooking",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "大人，锅里的汤快炖好了。",
+            "……请再稍等一下哦。"
+          ],
+          "weight": 5,
+          "activities": [
+            "Cooking"
+          ],
+          "gate": {
+            "activities": [
+              "Cooking"
+            ]
+          }
+        },
+        {
+          "id": "idle_cooking_2",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（灶台边的香味飘了过来，她正用长柄木勺细细搅动着锅里的浓汤。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Cooking"
+          ],
+          "gate": {
+            "activities": [
+              "Cooking"
+            ]
+          }
+        },
+        {
+          "id": "idle_cooking_3",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "大人，今天的菜单是什么呢？如果有要求的话请告诉我哦。"
+          ],
+          "weight": 4,
+          "activities": [
+            "Cooking"
+          ]
+        },
+        {
+          "id": "idle_mining",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她握着镐子一下一下地凿，节奏很稳，呼吸都没有乱。）"
+          ],
+          "weight": 5,
+          "activities": [
+            "Mining"
+          ],
+          "gate": {
+            "activities": [
+              "Mining"
+            ]
+          }
+        },
+        {
+          "id": "idle_crafting",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她伏在案前，指尖细致地打磨着木器，神情专注。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Crafting"
+          ],
+          "gate": {
+            "activities": [
+              "Crafting"
+            ]
+          }
+        },
+        {
+          "id": "idle_farming",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她蹲在菜畦间拔除杂草，额头上沁出细细的汗珠。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Farming"
+          ],
+          "gate": {
+            "activities": [
+              "Farming"
+            ]
+          }
+        },
+        {
+          "id": "idle_resting",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "……呼。",
+            "……这里真和平啊……"
+          ],
+          "weight": 4,
+          "activities": [
+            "Resting"
+          ]
+        },
+        {
+          "id": "idle_sleeping",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她安静地睡在床上，呼吸匀称而浅淡。）"
+          ],
+          "weight": 4,
+          "activities": [
+            "Sleeping"
+          ],
+          "gate": {
+            "activities": [
+              "Sleeping"
+            ]
+          }
+        },
+        {
+          "id": "idle_moving",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她抱着木盆快步走过，脚步声轻而急促。）"
+          ],
+          "weight": 3,
+          "activities": [
+            "Moving"
+          ],
+          "gate": {
+            "activities": [
+              "Moving"
+            ]
+          }
+        },
+        {
+          "id": "idle_n_2",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她的针线笸箩放在膝边，有事的时候随时能起身。）"
+          ],
+          "weight": 4,
+          "gate": {
+            "favorMax": 99,
+            "activities": [
+              "Crafting"
+            ]
+          }
+        },
+        {
+          "id": "idle_f_1",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "今天天气不错呢。",
+            "……您要是累了，就歇一会儿吧。"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          }
+        },
+        {
+          "id": "idle_f_2",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "院子里的花开了呢。您看到了吗？"
+          ],
+          "weight": 4,
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond",
+            "season": "Spring"
+          }
+        },
+        {
+          "id": "idle_c_1",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "lines": [
+            "（她坐在您身旁的长凳上，针线笸箩放在膝边。）"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Close"
+          }
+        },
+        {
+          "id": "idle_l_1",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "……",
+            "（她悄悄走到您身边，在离您一拳远的地方安静地坐下。）",
+            "……大人不在的时候，这院子里真的很安静呢。"
+          ],
+          "weight": 5,
+          "priority": 8,
+          "exclusive": true,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "idle_l_2",
+          "trigger": "Idle",
+          "kind": "Speech",
+          "lines": [
+            "大人……",
+            "我在想……如果每天都能像这样陪在您身边就好了。",
+            "……啊，请当作我没说。"
+          ],
+          "weight": 5,
+          "gate": {
+            "bondMin": "Lover"
+          }
+        },
+        {
+          "id": "talk_n_ext_5",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天风有些大。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_6",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，如果有什么需要采购的东西……请告诉我。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_8",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，灯油快见底的话……请告诉我。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_9",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您的书房我打扫过了。",
+            "书架上的东西都按原来的顺序放好了。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_10",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，要做炖菜的话……柴火要多备一些。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_12",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您的茶我沏好了。",
+            "请趁热喝吧……凉了就不好喝了。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_14",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天有些闷热呢。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_15",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天外头的鸟叫得特别好听呢。",
+            "……您听到了吗？"
+          ]
+        },
+        {
+          "id": "talk_n_ext_16",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，食材要是快见底了……请告诉我。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_18",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天的水特别清呢。",
+            "烧出来的茶都格外甘甜。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_20",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99,
+            "weather": "Rain"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，下雨天路滑。",
+            "您走路请慢一些。……要是淋湿了，我会立刻给您换上干衣服。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "今天的菜是我特意做的。您尝尝看合不合口味。",
+            "……如果不好的话，请直接告诉我。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您的袖口又磨破了。",
+            "请换下来让我缝补吧。每次都穿破了才换……真是让人操心。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_4",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您今晚想吃什么……告诉我吧。",
+            "只是觉得大人最近辛苦了……想给您多补一补。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_5",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond",
+            "season": "Spring"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "等院里的花都开起来……这里就更像个家了。",
+            "……都是您把这个领地建设起来的功劳。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_7",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我把您常坐的那把椅子垫子换了新的。",
+            "……坐上去应该更舒服了。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_8",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您看起来……比平时安静一些呢。",
+            "是有什么心事吗？如果愿意说的话……请告诉我。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_9",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我今天在路上看到一只小猫，毛色很像您小时候养的那只。",
+            "……想起了一些往事呢。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_10",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，外面月亮很圆呢。",
+            "……如果大人有空的话，要不要一起到院子里看看？"
+          ]
+        },
+        {
+          "id": "talk_c_ext_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "您笑起来的时候，和小时候一模一样。",
+            "……请再多笑一些吧。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "不知道为什么，最近总是不自觉地想靠近您。",
+            "……请当作我没说。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_3",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您的手……",
+            "虽然比以前粗糙了，但握起来……很有安全感。",
+            "……啊，请忘了我刚才说的话。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_4",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "如果可以的话，我想每天早上都第一个见到您。",
+            "……只是想想而已。请不要在意。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_6",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "您以前总是喜欢吃我做的菜。",
+            "……现在也是吗？"
+          ]
+        },
+        {
+          "id": "talk_l_ext_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "琉米埃尔这条命，早已是大人您的了。",
+            "……所以请不要说这些让我心慌的话。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "每次为您做饭的时候……",
+            "我都在想，如果大人能一直吃我做的菜就好了。",
+            "……一直，到老。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_3",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您的每一寸模样，我都记得清清楚楚。",
+            "因为……我一直在看着您啊。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_4",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "请让我为您做更多的事吧。",
+            "无论是什么……只要是为大人做的，我都甘之如饴。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_5",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "能在这个院子里，守着大人……",
+            "这就是琉米埃尔最大的幸福了。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_6",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "如果有来生……我也想继续做您的女仆。",
+            "……不，今生就够了。今生一定要陪着您到最后。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_7",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您累了吗？",
+            "……请靠在我身上歇一歇吧。虽然我很瘦……但撑住您还是可以的。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_8",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我从没后悔过留在您身边。",
+            "从青梅竹马到女仆……每一个身份，我都珍惜。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_9",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您的手指……好长啊。",
+            "（她轻轻把您的手掌翻过来，指尖抚过掌纹。）",
+            "……这只手，撑起了整片领地呢。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_10",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我想……和大人一直在一起。",
+            "一辈子。",
+            "……请不要嫌弃我。"
+          ]
+        },
+        {
+          "id": "meet_n_ext_1",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "水缸的事我看着呢，请放心。"
+          ]
+        },
+        {
+          "id": "meet_n_ext_3",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "……今天外面冷吗？"
+          ]
+        },
+        {
+          "id": "meet_n_ext_6",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "……有什么事请吩咐，我随时待命。"
+          ]
+        },
+        {
+          "id": "meet_f_ext_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "（她抬头看了您一眼，眼底泛着浅浅的安心。）"
+          ]
+        },
+        {
+          "id": "meet_f_ext_3",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "路上辛苦了……请先进来坐。"
+          ]
+        },
+        {
+          "id": "meet_c_ext_1",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您回来了。",
+            "……我一直在等着您呢。"
+          ]
+        },
+        {
+          "id": "meet_c_ext_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您回来了。",
+            "（她快步走上前，停在离您一步远的地方。）",
+            "……请让我看看您。有没有受伤？"
+          ]
+        },
+        {
+          "id": "meet_l_ext_1",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "……您平安回来，是琉米埃尔最开心的事。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "（她快步迎上来，脚步比平时急促得多。）",
+            "……大人。请让我看着您。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_3",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "……今晚请早点休息。我给您铺好了被褥。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_4",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "……不管多晚，我都会等您回来的。",
+            "这句话，我只说一次。"
+          ]
+        },
+        {
+          "id": "idle_n_ext_1",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99,
+            "activities": [
+              "Crafting"
+            ]
+          },
+          "weight": 3,
+          "lines": [
+            "（她的针线笸箩放在膝边，有事的时候随时能起身。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_2",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "（她手边的抹布洗得发白，叠得方方正正。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_3",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "（她拍了拍裙摆，抬头看了看天色。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_4",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99,
+            "season": "Autumn"
+          },
+          "weight": 3,
+          "lines": [
+            "（她呵出一口白气，搓了搓手。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_5",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "（窗台上那只小花盆，土总是被她浇得润润的。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_6",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99,
+            "activities": [
+              "Cooking"
+            ]
+          },
+          "weight": 3,
+          "lines": [
+            "（她正拿着铁钳往灶膛里添柴，火光映在她脸上。）"
+          ]
+        },
+        {
+          "id": "idle_f_ext_1",
+          "trigger": "Idle",
+          "activities": [
+            "Cooking"
+          ],
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "今天给您做了您爱吃的菜。",
+            "……请多吃一些。"
+          ]
+        },
+        {
+          "id": "idle_f_ext_2",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "（她在整理文件，每份都按日期排得整整齐齐。）"
+          ]
+        },
+        {
+          "id": "idle_f_ext_3",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "（她把茶巾洗得干干净净，搭在杆上晾着。）"
+          ]
+        },
+        {
+          "id": "idle_c_ext_1",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "（她安静地坐在离您不远的地方。偶尔抬头看一眼，又迅速低下头去。）"
+          ]
+        },
+        {
+          "id": "idle_c_ext_2",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "（她安静地坐在一旁，隔一会儿就看一眼您这边。）"
+          ]
+        },
+        {
+          "id": "idle_c_ext_3",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "（她站在廊下望着您的背影，手里还攥着半截没缝完的衣角。）"
+          ]
+        },
+        {
+          "id": "idle_l_ext_1",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她坐在您身旁，把头轻轻靠在您的肩上。）",
+            "……让我这样待一会儿……就好。"
+          ]
+        },
+        {
+          "id": "idle_l_ext_3",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她站在您身后，双手轻轻搭在您的肩头。）",
+            "……大人的肩膀……比以前宽了很多呢。"
+          ]
+        },
+        {
+          "id": "gift_n_ext_1",
+          "trigger": "Gift",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "……大人。",
+            "您的心意我收下了。",
+            "……谢谢您。"
+          ]
+        },
+        {
+          "id": "gift_n_ext_2",
+          "trigger": "Gift",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "……大人，这……",
+            "（她双手接过，眼睛微微睁大。）",
+            "谢谢您。我会好好使用的。"
+          ]
+        },
+        {
+          "id": "gift_f_ext_1",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "每次收到大人的东西……心里就暖暖的。",
+            "……谢谢您。"
+          ]
+        },
+        {
+          "id": "gift_f_ext_2",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……大人。",
+            "您不用总是送东西给我。",
+            "……不过，如果是我喜欢的东西的话……我会很开心的。"
+          ]
+        },
+        {
+          "id": "gift_l_ext_1",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您送我的每一件东西……我都像宝贝一样收着。",
+            "……因为每一件，都代表着大人心意。"
+          ]
+        },
+        {
+          "id": "touch_f_ext_1",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……大人。",
+            "（她微微低头，没有避开您碰过来的手。）",
+            "……请、请轻一点……"
+          ]
+        },
+        {
+          "id": "touch_l_ext_1",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯。",
+            "（她的手指轻轻卷住您的指尖。）",
+            "……大人的手……总是这么温暖呢。"
+          ]
+        },
+        {
+          "id": "pat_l_ext_1",
+          "trigger": "PatHead",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她乖乖低下头，让您轻抚她的发顶。）",
+            "……被大人摸着头的时候……所有的不安都会消失呢。"
+          ]
+        },
+        {
+          "id": "hug_l_ext_1",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……大人。",
+            "（她把整个身体都靠进了您的怀里。）",
+            "……请抱紧一点。再紧一点……",
+            "……让我知道，您不会离开。"
+          ]
+        },
+        {
+          "id": "kiss_l_ext_1",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她的呼吸微微紊乱，双手不自觉地攥紧了您的衣襟。）",
+            "……大人的吻……让琉米埃尔觉得……自己是最幸福的女仆……"
+          ]
+        },
+        {
+          "id": "pat_n_ext",
+          "trigger": "PatHead",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "……大人。",
+            "（她微微一怔，但没有躲开。）",
+            "……啊……这、这样……可以吗？"
+          ]
+        },
+        {
+          "id": "hug_f_ext",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……大人。",
+            "（她的手在半空中犹豫了一下，最终轻轻搭在了您的背上。）",
+            "……好温暖。"
+          ]
+        },
+        {
+          "id": "kiss_c_ext",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她缓缓合上眼帘，温顺地承接了您的吻。）",
+            "……大、大人……真是的……"
+          ]
+        },
+        {
+          "id": "obs_moving",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "act": [
+            "Moving"
+          ],
+          "weight": 4,
+          "lines": [
+            "（她端着一盆水快步走过，脚步轻而稳。）"
+          ],
+          "gate": {
+            "activities": [
+              "Moving"
+            ]
+          }
+        },
+        {
+          "id": "obs_eating",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "act": [
+            "Eating"
+          ],
+          "weight": 4,
+          "lines": [
+            "（她吃饭的时候总是很安静，每一口都细嚼慢咽。）"
+          ],
+          "gate": {
+            "activities": [
+              "Eating"
+            ]
+          }
+        },
+        {
+          "id": "obs_lover_2",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 5,
+          "lines": [
+            "（她注意到您在看她，脸上浮现出浅浅的笑容。）"
+          ]
+        },
+        {
+          "id": "meal_l",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 4,
+          "lines": [
+            "璐米埃尔吃着饭，时不时抬头看一眼大人。"
+          ]
+        },
+        {
+          "id": "wake_l",
+          "trigger": "Wake",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 4,
+          "lines": [
+            "璐米埃尔醒来后，先轻轻推门看了看大人的房间。"
+          ]
+        },
+        {
+          "id": "invited_c",
+          "trigger": "Invited",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 5,
+          "lines": [
+            "遵命，大人。",
+            "……请让我跟在您身边。",
+            "我会照顾好大人的。"
+          ]
+        },
+        {
+          "id": "seek_giveup_f",
+          "trigger": "SeekGaveUp",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "璐米埃尔等了一会儿，见大人正忙，就悄悄走开了。"
+          ]
+        },
+        {
+          "id": "talk_llm_close",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "priority": 2,
+          "lines": [
+            "……嗯。请说。"
+          ],
+          "generation": {
+            "instruction": "玩家主动与女仆璐米埃尔搭话。用沉静克制、带有女仆恭敬但又暗含深切关切的语气回应。使用大人作为称呼。句式短促。感情已较深但仍以女仆身份掩饰。",
+            "style": "沉静、端庄、含蓄。句尾常用……、呢、哦、吧、可以吗？。一到两句。",
+            "lineCount": 2,
+            "maxCharsPerLine": 30,
+            "cacheMinutes": 20,
+            "options": {
+              "temperature": "0.9"
+            }
+          }
+        },
+        {
+          "id": "talk_n_ext_21",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天的天气很好呢。",
+            "……适合把衣物拿出去晒一晒。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_22",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我把后院的杂草都拔干净了。",
+            "……看起来清爽多了吧？"
+          ]
+        },
+        {
+          "id": "talk_n_ext_23",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您有什么不懂的……可以来问我。",
+            "虽然我是女仆，但领地里的事我比谁都熟悉。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_27",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99,
+            "season": "Spring"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天院里的花开了。",
+            "……如果您有空的话，可以出去看看。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_28",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我把桌上的文件整理好了。",
+            "……请检查一下有没有遗漏。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_31",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，院子里的一切我都打理好了。",
+            "……您不用操心这些。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_11",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "今天的饭菜是不是咸了一点？",
+            "……下次我会注意的。请告诉我。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_12",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您笑了。",
+            "……看到大人笑，我也跟着……",
+            "啊，不……请当作我没说。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_13",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我把您的水壶装满热水了。",
+            "……出门请带上，别渴着了。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_14",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "您今天在外面…遇到什么有趣的事了吗？",
+            "……不问也没关系。我只是好奇。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_16",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "今天洗衣服的时候，您的手帕破了一个洞。",
+            "……我补好了。放在桌上了。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_7",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我有时候会偷偷看您工作时的样子。",
+            "……总觉得大人很了不起。",
+            "啊……请当作我没说。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_9",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "如果这个世界只剩下我们两个人就好了。",
+            "……啊，对不起。说了奇怪的话。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_11",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "琉米埃尔的世界很小，小到只装得下一个您。",
+            "……但这样就足够了。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_12",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "如果时光能停在这一刻就好了。",
+            "大人坐在这里，琉米埃尔站在旁边。",
+            "……什么都不用做，什么都不用想。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_14",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "每次您握住我的手……我的心里就跳得厉害。",
+            "……这种感觉很奇怪。但我并不讨厌。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_15",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您睡着的时候……我在旁边看了很久。",
+            "……您睡觉的样子，和小时候一模一样呢。",
+            "啊……请忘了我刚才说的话。"
+          ]
+        },
+        {
+          "id": "meet_f_ext_4",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "……看到您回来，心里就觉得踏实了。"
+          ]
+        },
+        {
+          "id": "meet_f_ext_5",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "……我正在想，今天做什么菜给大人吃呢。"
+          ]
+        },
+        {
+          "id": "meet_c_ext_3",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您回来了。",
+            "……您的脸色不太好。是不是累了？请先坐一会儿。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_5",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "（她快步走上前来，手在围裙上紧紧攥了一下。）",
+            "……我等了您一整天。",
+            "……啊，不是……我是说，作为女仆等主人回来是理所当然的。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_6",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "……每次看到大人从那扇门走进来……",
+            "我的心里就觉得……好像整个院子都亮了。",
+            "……啊，请当作我没说。"
+          ]
+        },
+        {
+          "id": "idle_n_ext_7",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "（她把洗净的衣物叠得棱角分明，一摞摞码进柜子里。）"
+          ]
+        },
+        {
+          "id": "idle_n_ext_8",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "（茶具被她擦得锃亮，倒扣在托盘里沥干。）"
+          ]
+        },
+        {
+          "id": "idle_f_ext_5",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "（她安静地坐在您身旁，偶尔抬头看一眼，嘴角微微上扬。）"
+          ]
+        },
+        {
+          "id": "idle_f_ext_6",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "您今天的工作忙吗？",
+            "……不要太勉强自己了。身体最重要。"
+          ]
+        },
+        {
+          "id": "idle_c_ext_4",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "（她安静地站在您身后半步的位置，像一道无声的影子。）"
+          ]
+        },
+        {
+          "id": "idle_l_ext_5",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……大人。",
+            "（她轻轻把您的手拉过来，放在自己的头顶上。）",
+            "……请摸摸我的头。……就一下下。"
+          ]
+        },
+        {
+          "id": "idle_l_ext_6",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她把廊下的鞋一双双摆正，鞋尖一律朝外。）",
+            "……明天穿的时候就不会凉了。"
+          ]
+        },
+        {
+          "id": "gift_l_ext_2",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "不管您送我什么……我都会好好珍惜的。",
+            "因为这是大人亲自选的、给我的东西。",
+            "……琉米埃尔，真的很幸福。"
+          ]
+        },
+        {
+          "id": "touch_c_ext",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "……",
+            "（她微微偏头看着您，眼里带着一丝温顺。）",
+            "……大人的手指，好温暖。"
+          ]
+        },
+        {
+          "id": "hug_c_ext",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她轻轻把额头靠在你的肩上，呼吸慢慢平缓下来。）",
+            "……就这样……再待一会儿。"
+          ]
+        },
+        {
+          "id": "kiss_f_ext",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……！",
+            "（她瞪大了眼睛，脸颊红得像火烧。）",
+            "……大、大人……您……",
+            "（她低下头，声音细得几乎听不见。）",
+            "……请……请先说一声……"
+          ]
+        },
+        {
+          "id": "obs_mining_ext",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "act": [
+            "Mining"
+          ],
+          "weight": 4,
+          "lines": [
+            "（她每一下都准确落在矿脉上，碎石应声剥落。）"
+          ],
+          "gate": {
+            "activities": [
+              "Mining"
+            ]
+          }
+        },
+        {
+          "id": "obs_crafting_ext",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "act": [
+            "Crafting"
+          ],
+          "weight": 4,
+          "lines": [
+            "（她的手指灵活地在木器上打磨，木屑纷纷落下。）"
+          ],
+          "gate": {
+            "activities": [
+              "Crafting"
+            ]
+          }
+        },
+        {
+          "id": "dayend_l_ext",
+          "trigger": "DayEnd",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 5,
+          "weight": 5,
+          "lines": [
+            "璐米埃尔站在窗前，望着您房间里的灯光。",
+            "（她的嘴角带着一丝浅浅的笑意。）",
+            "……大人晚安。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_36",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我把走廊的灯都换了新的灯芯。",
+            "……晚上走夜路就亮堂了。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_37",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，菜里若是加点野葱……应该会提味不少。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_38",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您的桌子腿有些松了。",
+            "……请等一下，我拿工具来紧一紧。"
+          ]
+        },
+        {
+          "id": "talk_n_ext_40",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您坐了太久了呢。",
+            "……要不要出去走一走？活动一下筋骨。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_17",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我把您常用的茶杯换了一只新的。",
+            "……原来的那只裂了一条缝，怕烫着您。"
+          ]
+        },
+        {
+          "id": "talk_f_ext_19",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "您昨天说的话……我一直在想着呢。",
+            "……啊，不。请当作我没说。"
+          ]
+        },
+        {
+          "id": "talk_c_ext_11",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我跟您在一起的时候，总是很安心。",
+            "……像被什么东西保护着一样。",
+            "……这种感觉，我从来没有对别人有过。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_16",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "每次我闭上眼睛……脑海里全都是您的脸。",
+            "……这样下去，我可能真的要疯了。",
+            "……但我不想治好。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_18",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "只要您叫我的名字……我就觉得自己是有用的。",
+            "……请不要有一天不叫我。"
+          ]
+        },
+        {
+          "id": "talk_l_ext_19",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我想为您生一个孩子。",
+            "……啊！对、对不起……我说了不该说的话。",
+            "（她的脸已经红透了。）"
+          ]
+        },
+        {
+          "id": "talk_l_ext_20",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "今天的月亮真圆呢。",
+            "……像大人的眼睛一样。",
+            "啊……对、对不起。我在说什么呢。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_7",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "（她跑过来，跑到一半又停住脚步，规矩地行了一礼。）",
+            "……欢、欢迎回来。"
+          ]
+        },
+        {
+          "id": "meet_l_ext_8",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您回来了。",
+            "……我给您准备了热茶和毛巾。"
+          ]
+        },
+        {
+          "id": "idle_l_ext_7",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她悄悄把手伸进您的手掌里，十指慢慢扣紧。）",
+            "……大人的手心……好热。",
+            "……请不要放开。"
+          ]
+        },
+        {
+          "id": "idle_l_ext_8",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她安静地坐在您腿边的地上，头靠着您的膝盖。）",
+            "……就这样……让我待一会儿……"
+          ]
+        },
+        {
+          "id": "hug_l_ext_2",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……大人。",
+            "（她的脸埋在您胸前，声音闷闷的。）",
+            "……大人的心跳声……好清楚。",
+            "……听着听着……就什么都忘了。"
+          ]
+        },
+        {
+          "id": "kiss_l_ext_2",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她微微仰起脸，温顺地合上眼睛。）",
+            "（您的唇落下来时，她的指尖轻轻攥紧了您的袖口。）",
+            "……好喜欢……这样被大人……"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "赛琳",
+      "lines": [
+        {
+          "id": "selene_meet_first",
+          "trigger": "Meet",
+          "priority": 5,
+          "gate": {
+            "once": true
+          },
+          "lines": [
+            "大、大人，您好！",
+            "我是赛琳，从今天开始在大人手下做事的魔法师。",
+            "虽然我还很不成器……但我会努力不辜负大人的期望的！"
+          ]
+        },
+        {
+          "id": "selene_meet_n_1",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "今天的魔法阵维护已经完成了。",
+            "如果还有什么需要我做的……请告诉我。"
+          ]
+        },
+        {
+          "id": "selene_meet_n_2",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您好。",
+            "我正在研究新的照明术式……啊，大人有事吗？"
+          ]
+        },
+        {
+          "id": "selene_meet_n_3",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您好。",
+            "今天的天气……适合施展探测魔法呢。"
+          ]
+        },
+        {
+          "id": "selene_meet_n_4",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人。",
+            "我、我在的！有什么事请尽管吩咐！"
+          ]
+        },
+        {
+          "id": "selene_meet_n_5",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您好。",
+            "抱歉，我刚才在练习咒语……没有打扰到您吧？"
+          ]
+        },
+        {
+          "id": "selene_meet_n_6",
+          "trigger": "Meet",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您回来了。",
+            "我刚刚在整理魔导材料……您有什么吩咐吗？"
+          ]
+        },
+        {
+          "id": "selene_meet_f_1",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "今天的火元素探测很顺利呢。",
+            "……大人的领地魔力环境真的很稳定。"
+          ]
+        },
+        {
+          "id": "selene_meet_f_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "……我刚才在尝试一个新的魔法阵。",
+            "虽然还没成功……但总觉得快了。"
+          ]
+        },
+        {
+          "id": "selene_meet_f_4",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "……最近大人教我的那些事情，我都记住了哦。",
+            "虽然可能还做得不够好……但我会继续努力的。"
+          ]
+        },
+        {
+          "id": "selene_meet_c_1",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "……不知为什么，最近施法的时候特别安定。",
+            "大概是因为……在这里很安心吧。"
+          ]
+        },
+        {
+          "id": "selene_meet_c_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人。",
+            "您回来了……看到您我就觉得今天也是好日子。",
+            "啊……请、请当作我没说！"
+          ]
+        },
+        {
+          "id": "selene_meet_c_3",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您好。",
+            "我刚才在想……如果没有遇到大人的话，我现在会在哪里呢。",
+            "……可能还在学院里被人看不起吧。"
+          ]
+        },
+        {
+          "id": "selene_meet_l_1",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您好。",
+            "（她的脸颊微微泛红，手里还握着法杖。）",
+            "……每天都想快点见到您。"
+          ]
+        },
+        {
+          "id": "selene_meet_l_2",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我刚才在施法的时候突然想到了您……",
+            "然后就分神了，差点出错。",
+            "……都怪大人。"
+          ]
+        },
+        {
+          "id": "selene_meet_l_3",
+          "trigger": "Meet",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人，您好。",
+            "只要能看到大人的脸……我就觉得今天的魔力格外充沛。",
+            "啊……请、请当作我没说！"
+          ]
+        },
+        {
+          "id": "selene_meet_dawn",
+          "trigger": "Meet",
+          "gate": {
+            "hourMin": 5,
+            "hourMax": 8
+          },
+          "weight": 4,
+          "lines": [
+            "大人，早上好。",
+            "清晨的魔力流动最稳定了……最适合练习新法术。",
+            "大人也早些起来吧？"
+          ]
+        },
+        {
+          "id": "selene_meet_night",
+          "trigger": "Meet",
+          "gate": {
+            "hourMin": 21,
+            "hourMax": 23
+          },
+          "weight": 3,
+          "lines": [
+            "大人，这么晚还在忙？",
+            "夜间的星光魔力很充沛……但大人也要注意休息哦。"
+          ]
+        },
+        {
+          "id": "selene_meet_rain",
+          "trigger": "Meet",
+          "gate": {
+            "weather": "Rain"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，外面在下雨呢。",
+            "水元素的浓度很高……适合练习水系魔法。",
+            "……啊，不过大人请注意别淋湿了。"
+          ]
+        },
+        {
+          "id": "selene_talk_first",
+          "trigger": "Talk",
+          "priority": 5,
+          "gate": {
+            "once": true
+          },
+          "lines": [
+            "大人，您找我有什么事吗？",
+            "虽然我还只是个刚毕业的魔法师……",
+            "但我会尽全力做好大人交代的每一件事！"
+          ]
+        },
+        {
+          "id": "selene_talk_n_1",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "大人，请问有什么吩咐吗？",
+            "不管是魔法方面的还是其他事情……我都可以试试。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_2",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "大人，我刚才成功施展了一个新的照明术式。",
+            "……虽然只是最基础的，但在学院里这可是要学一学期的呢。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_3",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，领地的魔力环境很稳定。",
+            "这、这对魔法师来说是非常重要的……大人的领地选址眼光真好。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_4",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我刚才在整理魔导书……",
+            "有一本的封面上写着古文字，我还看不懂呢。",
+            "……我会好好学习的。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_5",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人。",
+            "我、我在学院的时候成绩还可以……",
+            "但实际操作起来，总觉得和书本上不一样呢……"
+          ]
+        },
+        {
+          "id": "selene_talk_n_6",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我今天在练习火球术……",
+            "结果差点把窗帘烧了。",
+            "对、对不起！我以后会在外面练的！"
+          ]
+        },
+        {
+          "id": "selene_talk_n_7",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人。",
+            "学院里的老师常说，真正的魔法师要在实践中成长。",
+            "所以我非常感谢大人给我这个机会……我会珍惜的。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_8",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，您知道吗……",
+            "魔力其实和情绪有很大的关系呢。",
+            "心情平静的时候，咒语的精度会提高很多。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_9",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，我在想……",
+            "领地的防御法阵如果重新布置一下的话，覆盖范围可以扩大三成。",
+            "……啊，我是不是越权了？对不起。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_10",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人。",
+            "我在学院的时候……其他同学都叫我书呆子。",
+            "因为我只知道学习，不太会和别人打交道……",
+            "所以，如果我有做得不好的地方……请大人告诉我。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_11",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人，今天的天空真晴朗呢。",
+            "星光元素在白天也能感受到微弱的流动……",
+            "啊，对不起。我又在说魔法术语了。"
+          ]
+        },
+        {
+          "id": "selene_talk_n_12",
+          "trigger": "Talk",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 3,
+          "lines": [
+            "大人。",
+            "我法杖上的魔力石有些黯淡了……",
+            "需要找时间去充能一下。",
+            "请大人放心，不会影响日常使用的。"
+          ]
+        },
+        {
+          "id": "selene_talk_f_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "最近施法的时候，总觉得魔力流动比以前顺畅了。",
+            "可能是因为……在这里生活得很安心吧。"
+          ]
+        },
+        {
+          "id": "selene_talk_f_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您知道吗……",
+            "其实在学院的时候，我从来没有被夸奖过。",
+            "所以上次大人说我做得不错的时候……我真的高兴了好几天。"
+          ]
+        },
+        {
+          "id": "selene_talk_f_3",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我刚才在练习传送术的时候，突然想到……",
+            "如果能用传送术帮大人送东西的话，不是很有用吗？",
+            "我再去练习一下精度……"
+          ]
+        },
+        {
+          "id": "selene_talk_f_5",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我最近在研究一种新的检测法术……",
+            "可以在不靠近的情况下探测周围的敌意。",
+            "如果成功了的话……大人的安全就多一层保障了。"
+          ]
+        },
+        {
+          "id": "selene_talk_f_6",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "其实我在学院的时候，经常一个人在图书室里待到深夜。",
+            "因为没有朋友……只好和书本做伴了。",
+            "但现在……感觉好像不一样了呢。"
+          ]
+        },
+        {
+          "id": "selene_talk_f_7",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我施法的时候……只要想到大人在看着我……",
+            "魔力就会变得特别稳定。",
+            "……啊，请、请当作我没说！"
+          ]
+        },
+        {
+          "id": "selene_talk_c_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我昨天做了一个梦。",
+            "梦见自己在学院的考试中失败了，所有人都嘲笑我……",
+            "醒来的时候……发现自己在领地的房间里。",
+            "然后就想……幸好有大人收留我。"
+          ]
+        },
+        {
+          "id": "selene_talk_c_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我最近在想……魔法师的价值到底是什么呢。",
+            "在学院里，他们只看重魔法等级和血统……",
+            "但大人……您看重的是我能做什么。",
+            "所以我……很想为大人做得更多。"
+          ]
+        },
+        {
+          "id": "selene_talk_c_3",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "我施法的时候……总是会不自觉地想起您的脸。",
+            "然后就觉得……浑身充满了力量。",
+            "……啊！对不起！我又说了奇怪的话了！"
+          ]
+        },
+        {
+          "id": "selene_talk_c_4",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Close",
+            "bondMax": "Close"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "其实……我以前在学院的时候，从来不敢单独和别人说话。",
+            "总觉得他们会看不起我这个平民出身的魔法师……",
+            "但是在大人面前……我可以做真实的自己。",
+            "……谢谢您。"
+          ]
+        },
+        {
+          "id": "selene_talk_l_1",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我最近发现……施法的时候如果不想着您……",
+            "魔力就会变得很紊乱。",
+            "……我是不是没救了。"
+          ]
+        },
+        {
+          "id": "selene_talk_l_2",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我有一个秘密要告诉您。",
+            "其实……我第一眼看到您的时候就……",
+            "啊！没、没什么！请当作我没说！"
+          ]
+        },
+        {
+          "id": "selene_talk_l_3",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "如果有一天……我的魔法可以保护大人……",
+            "那我愿意用尽全部的魔力。",
+            "哪怕……哪怕之后再也无法施法也无所谓。"
+          ]
+        },
+        {
+          "id": "selene_talk_l_4",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "我一直在想……为什么大人会收留我这个什么都不会的新人。",
+            "后来我明白了……",
+            "因为大人从不以出身和资历评判一个人。",
+            "……这就是我爱上大人的理由。"
+          ]
+        },
+        {
+          "id": "selene_talk_l_5",
+          "trigger": "Talk",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "如果我用魔法在空中写您的名字……",
+            "您会看到满天星光都变成了您的模样。",
+            "……啊！我、我在说什么呢！"
+          ]
+        },
+        {
+          "id": "selene_talk_lonely",
+          "trigger": "Talk",
+          "gate": {
+            "daysSinceTalkMin": 2
+          },
+          "priority": 6,
+          "weight": 7,
+          "lines": [
+            "大人……好几天没和您说话了。",
+            "我、我不是在催您……只是……",
+            "一个人施法的时候总觉得少了些什么呢……"
+          ]
+        },
+        {
+          "id": "selene_obs_first",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "gate": {
+            "once": true
+          },
+          "lines": [
+            "（她的指尖萦绕着一丝微弱的蓝光，忽聚忽散，像呼吸一样。）"
+          ]
+        },
+        {
+          "id": "selene_obs_n",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "（她察觉到您的目光，法杖差点脱手。）",
+            "（她慌张地把法杖接住，脸颊一下子红了。）"
+          ]
+        },
+        {
+          "id": "selene_obs_casting",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "weight": 5,
+          "lines": [
+            "（她低声念着什么，听不清是咒文还是课文。）"
+          ]
+        },
+        {
+          "id": "selene_obs_reading",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "weight": 4,
+          "lines": [
+            "（她伏在桌上翻着魔导书，嘴唇无声地跟着咒文。）"
+          ]
+        },
+        {
+          "id": "selene_obs_fond",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "（被您看着的时候，她手中的法杖微微颤抖了一下。）"
+          ]
+        },
+        {
+          "id": "selene_obs_lover",
+          "trigger": "Observe",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 5,
+          "lines": [
+            "（她指尖的魔力光晕……隐隐绕成了一颗心的形状。）",
+            "（她睁开眼看到您，脸瞬间红透了。）"
+          ]
+        },
+        {
+          "id": "selene_gift_first",
+          "trigger": "Gift",
+          "gate": {
+            "once": true
+          },
+          "priority": 7,
+          "lines": [
+            "……大人，这是给我的？",
+            "（她双手接过，眼睛亮晶晶的。）",
+            "真、真的可以吗？",
+            "……谢谢您！我一定会好好珍惜的！"
+          ]
+        },
+        {
+          "id": "selene_gift_n",
+          "trigger": "Gift",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "大人，您不用特意送东西给我的……",
+            "……不过，谢谢您。我会好好收着的。"
+          ]
+        },
+        {
+          "id": "selene_gift_f",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "每次收到大人的东西……我就觉得自己被重视了。",
+            "在学院的时候……从来没有人送过我礼物呢。"
+          ]
+        },
+        {
+          "id": "selene_gift_l",
+          "trigger": "Gift",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "大人……",
+            "您送的东西……我都会好好收着。",
+            "……因为每一件都是大人心意的证明。",
+            "比任何魔法宝物都要珍贵。"
+          ]
+        },
+        {
+          "id": "selene_touch_n",
+          "trigger": "Touch",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "……！大、大人……",
+            "（她的法杖当啷一声掉在地上。）",
+            "请、请不要突然碰过来……我不太习惯和别人接触……"
+          ]
+        },
+        {
+          "id": "selene_touch_f",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……大人。",
+            "（她全身一僵，魔力光晕闪烁了一下。）",
+            "……大人的手……好温暖。"
+          ]
+        },
+        {
+          "id": "selene_touch_c",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她没有躲，只是呼吸变得浅而急促。）",
+            "……被大人碰到的时候……心里的魔力就会紊乱呢……"
+          ]
+        },
+        {
+          "id": "selene_touch_l",
+          "trigger": "Touch",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她轻轻闭上眼，把脸靠向您的手心。）",
+            "……大人的手……让我觉得好安心……"
+          ]
+        },
+        {
+          "id": "selene_pat_n",
+          "trigger": "PatHead",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "……！大、大人……",
+            "（她的帽子被摸歪了，法杖差点掉了。）",
+            "……被、被摸头了……在学院里从来没有人这样对我……"
+          ]
+        },
+        {
+          "id": "selene_pat_f",
+          "trigger": "PatHead",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……",
+            "（她乖乖低下头，让您的手掌覆在发顶。）",
+            "……被大人夸奖又摸头……今天可能是人生中最幸运的一天了……"
+          ]
+        },
+        {
+          "id": "selene_pat_l",
+          "trigger": "PatHead",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她微微闭上眼睛，嘴唇微张，像是等着什么。）",
+            "……请再多摸一会儿……好吗？……让我觉得……自己是有价值的……"
+          ]
+        },
+        {
+          "id": "selene_contact_n",
+          "trigger": "BodyContact",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "……！大、大人……",
+            "（她的魔力光晕不受控制地闪烁了一下。）",
+            "请、请不要靠这么近……我会分心的……"
+          ]
+        },
+        {
+          "id": "selene_contact_f",
+          "trigger": "BodyContact",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……",
+            "（她感受到您肩膀的温度，全身微微僵硬。）",
+            "……大人的体温……比任何暖身魔法都要温暖呢……"
+          ]
+        },
+        {
+          "id": "selene_contact_l",
+          "trigger": "BodyContact",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯。",
+            "（她轻轻把头靠在您的肩膀上，法杖从手中滑落。）",
+            "……靠在大人身上的时候……觉得连时间都变慢了……"
+          ]
+        },
+        {
+          "id": "selene_hug_n",
+          "trigger": "Hug",
+          "gate": {
+            "favorMax": 99
+          },
+          "weight": 4,
+          "lines": [
+            "……！",
+            "（她的全身在一瞬间变得僵硬，法杖咣当一声掉在地上。）",
+            "大、大人……？！请、请问这是……某种测试吗……？"
+          ]
+        },
+        {
+          "id": "selene_hug_f",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……",
+            "（过了好一会儿，她才小心翼翼地把手搭在您的背上。）",
+            "……被大人抱着……心跳好快……",
+            "但、但是……好温暖……"
+          ]
+        },
+        {
+          "id": "selene_hug_c",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她靠在你怀里，双手轻轻抓住了你的衣服。）",
+            "……一直……这样下去……也可以吗？"
+          ]
+        },
+        {
+          "id": "selene_hug_l",
+          "trigger": "Hug",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……大人。",
+            "（她把脸埋在你怀里，双手紧紧抓着你的后背。）",
+            "……大人的怀抱……比任何防护结界都要安全……",
+            "……请不要放开我。……求您了。"
+          ]
+        },
+        {
+          "id": "selene_hug_sad",
+          "trigger": "Hug",
+          "emotion": "Sad",
+          "priority": 6,
+          "exclusive": true,
+          "lines": [
+            "……",
+            "（她把脸埋在你怀里，肩膀微微颤抖，法杖掉在地上也没去捡。）",
+            "……我总是做不好……什么都说不好……",
+            "只有在大人的怀里……才觉得自己不是废物……"
+          ]
+        },
+        {
+          "id": "selene_kiss_first",
+          "trigger": "Kiss",
+          "gate": {
+            "once": true
+          },
+          "priority": 8,
+          "lines": [
+            "……！",
+            "（她的瞳孔骤然放大，嘴里的咒文戛然而止。）",
+            "（她头顶的魔力光晕猛地散了形，明明灭灭。）",
+            "大、大……大人……！",
+            "（她的脸一下子红到了耳根，法杖指着您，抖个不停。）",
+            "您……您这是……",
+            "……下次……请一定要先告诉我……"
+          ]
+        },
+        {
+          "id": "selene_kiss_f",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "……",
+            "（她缓缓合上眼帘，长长的睫毛微微颤动。）",
+            "（分开的时候，她低着头，双手把法杖攥得死紧。）",
+            "……大、大人……我的魔力……全都乱了……"
+          ]
+        },
+        {
+          "id": "selene_kiss_l",
+          "trigger": "Kiss",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "weight": 5,
+          "lines": [
+            "……嗯……",
+            "（她闭上眼，微微仰起脸，温顺地等待着。）",
+            "（吻落下的时候，她手里的法杖散发出柔和的光芒。）",
+            "……大人……和你在一起的时候……魔力好像会自己流出来……"
+          ]
+        },
+        {
+          "id": "selene_refused_tired",
+          "trigger": "TalkRefused",
+          "emotion": "Tired",
+          "weight": 4,
+          "lines": [
+            "……嗯。",
+            "魔力消耗太多了……请让我先恢复一下。",
+            "……对不起。"
+          ]
+        },
+        {
+          "id": "selene_invited_n",
+          "trigger": "Invited",
+          "weight": 6,
+          "lines": [
+            "好的，大人！",
+            "……请让我证明自己的价值！"
+          ]
+        },
+        {
+          "id": "selene_invited_l",
+          "trigger": "Invited",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 5,
+          "weight": 6,
+          "lines": [
+            "……遵命，大人。",
+            "无论大人去哪里……赛琳都会用魔法为您开路的。"
+          ]
+        },
+        {
+          "id": "selene_bond_fond",
+          "trigger": "BondUp",
+          "gate": {
+            "bondMin": "Fond"
+          },
+          "once": true,
+          "priority": 20,
+          "lines": [
+            "大人……",
+            "最近施法的时候，总觉得魔力比以前充沛了……",
+            "在学院的时候，老师们总说我太紧张所以魔力不纯……",
+            "但在这里……不知道为什么，很自然地就放松了呢。",
+            "……谢谢大人。"
+          ]
+        },
+        {
+          "id": "selene_bond_close",
+          "trigger": "BondUp",
+          "gate": {
+            "bondMin": "Close"
+          },
+          "once": true,
+          "priority": 20,
+          "lines": [
+            "大人……",
+            "我最近常常在想……",
+            "在学院的时候，我以为魔法就是一切。",
+            "但现在我明白了……",
+            "比起魔法……有一个人可以真心对待，才是最珍贵的。",
+            "……这句话，请让我收回去。我还没准备好。"
+          ]
+        },
+        {
+          "id": "selene_bond_lover",
+          "trigger": "BondUp",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "once": true,
+          "priority": 20,
+          "lines": [
+            "大人……",
+            "我、我知道……像这样说出来是不对的……",
+            "但是，赛琳已经……已经喜欢上大人了。",
+            "从您收留我这个一无是处的新人的那天起……",
+            "……对不起。我知道这很突然。",
+            "但请您……不要赶我走。"
+          ]
+        },
+        {
+          "id": "selene_seek_n",
+          "trigger": "Seek",
+          "kind": "Narration",
+          "weight": 5,
+          "lines": [
+            "赛琳似乎有话想对大人说，手里攥着一本魔导书来回踱步。"
+          ]
+        },
+        {
+          "id": "selene_seek_l",
+          "trigger": "Seek",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 5,
+          "lines": [
+            "赛琳的法杖发出微微的光芒，她的目光一直追随着大人的身影。"
+          ]
+        },
+        {
+          "id": "selene_seek_giveup",
+          "trigger": "SeekGaveUp",
+          "kind": "Narration",
+          "weight": 5,
+          "lines": [
+            "赛琳犹豫了片刻，把魔导书紧紧抱在怀里，转身回去了。"
+          ]
+        },
+        {
+          "id": "selene_meal_n",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "weight": 3,
+          "lines": [
+            "赛琳一边吃饭一边翻阅魔导书，差点把汤洒在书页上。"
+          ]
+        },
+        {
+          "id": "selene_meal_f",
+          "trigger": "Meal",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "赛琳吃了几口，偷偷抬头看了一眼大人的方向。"
+          ]
+        },
+        {
+          "id": "selene_sleep_n",
+          "trigger": "Sleep",
+          "kind": "Narration",
+          "weight": 3,
+          "lines": [
+            "赛琳抱着法杖睡下了，嘴里还在呢喃着咒文。"
+          ]
+        },
+        {
+          "id": "selene_wake_n",
+          "trigger": "Wake",
+          "kind": "Narration",
+          "weight": 3,
+          "lines": [
+            "赛琳醒来后第一件事是确认法杖还在身边。"
+          ]
+        },
+        {
+          "id": "selene_dayend_n",
+          "trigger": "DayEnd",
+          "kind": "Narration",
+          "weight": 3,
+          "lines": [
+            "赛琳检查了一遍今天的魔法练习记录，吹熄灯前还在默背咒文。"
+          ]
+        },
+        {
+          "id": "selene_dayend_l",
+          "trigger": "DayEnd",
+          "kind": "Narration",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 4,
+          "weight": 4,
+          "lines": [
+            "赛琳在灯下写完魔法日记，最后一行写的是大人的名字。",
+            "（她慌忙把那页折了起来。）"
+          ]
+        },
+        {
+          "id": "selene_idle_study",
+          "trigger": "Idle",
+          "kind": "Narration",
+          "weight": 4,
+          "lines": [
+            "（她盘腿坐在地上，面前摊开一本古旧的魔导书，口中念念有词。）"
+          ]
+        },
+        {
+          "id": "selene_idle_practice",
+          "trigger": "Idle",
+          "weight": 5,
+          "lines": [
+            "（她的指尖凝聚着一颗小小的光球，光球忽大忽小地律动着。）",
+            "大人，您看！我今天的火球术比昨天稳定多了！"
+          ]
+        },
+        {
+          "id": "selene_idle_f_1",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Fond",
+            "bondMax": "Fond"
+          },
+          "weight": 4,
+          "lines": [
+            "大人……",
+            "今天我在院子里施法的时候，蝴蝶停在了我的法杖上。",
+            "……大概是因为魔力很平稳吧。",
+            "和大人在的领地里……魔力总是特别温顺。"
+          ]
+        },
+        {
+          "id": "selene_idle_l_1",
+          "trigger": "Idle",
+          "gate": {
+            "bondMin": "Lover"
+          },
+          "priority": 7,
+          "exclusive": true,
+          "weight": 5,
+          "lines": [
+            "……",
+            "（她悄悄走到您身边，用魔杖的尾端轻轻碰了碰您的手臂。）",
+            "……大人。",
+            "我施法的时候……脑子里全都是您的脸。",
+            "……这样的我，是不是很没出息呢……"
+          ]
+        },
+        {
+          "id": "selene_talk_llm",
+          "trigger": "Talk",
+          "gate": {
+            "favorMin": 100
+          },
+          "priority": 2,
+          "lines": [
+            "……嗯。请吩咐。"
+          ],
+          "generation": {
+            "instruction": "玩家主动与年轻魔法师赛琳搭话。用认真努力、偶尔紧张但又暗含热情的语气回应。使用大人作为称呼。偶尔提到魔法术语。句式短促。不要傲娇，不要活泼，不要直白表白。",
+            "style": "认真、努力、偶有紧张。句尾常用……、呢、哦、吧。一到两句。",
+            "lineCount": 2,
+            "maxCharsPerLine": 30,
+            "cacheMinutes": 20,
+            "options": {
+              "temperature": "0.85"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "cleanup",
+      "title": "大人的房间",
+      "genre": "日常",
+      "rate": 1000,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "璐米埃尔正在认真地打扫您的房间。"
+            },
+            "大人，您有什么事吗？",
+            "如果有哪里做得不够好，请尽管吩咐。"
+          ],
+          "choices": [
+            {
+              "id": "help",
+              "label": "「我帮你一起打扫。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            },
+            {
+              "id": "watch",
+              "label": "「不用了，你继续吧。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "help",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "您接过她手中的抹布，帮她一起擦拭窗棂。"
+            },
+            "……大人？",
+            "啊……请、请不要做这种事……这是我分内的工作……",
+            "（但她没有真的阻止您，只是把抹布递了过来。）"
+          ]
+        },
+        {
+          "id": "watch",
+          "lines": [
+            "……好的。",
+            "那我把这边也擦一下。",
+            "大人如果有什么吩咐……请随时说。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "打扫完毕，她收好工具，朝您欠了欠身。"
+            },
+            "……打扫完了。如果还需要什么，请告诉我。",
+            "能为您效劳……是这个女仆的荣幸。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "打扫了房间。"
+      ],
+      "flag": "cleanup_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "night_talk",
+      "title": "夜里的对话",
+      "genre": "日常",
+      "rate": 300,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "夜深了，她端着茶走到您身旁。"
+            },
+            "大人，夜深了还不休息吗？",
+            "……如果有什么烦心事的话……请告诉我吧。"
+          ],
+          "choices": [
+            {
+              "id": "talk",
+              "label": "「陪我坐一会儿吧。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "rest",
+              "label": "「你先去休息吧。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "talk",
+          "lines": [
+            "……好的。",
+            "（她安静地坐在您身旁，双手叠在膝上。）",
+            "大人的茶……要续一杯吗？",
+            "（她轻轻凑近，替您把茶盏满了。）",
+            "……大人。",
+            "能像这样陪着您……我已经很满足了。"
+          ]
+        },
+        {
+          "id": "rest",
+          "lines": [
+            "……好的。",
+            "那大人也早点休息。",
+            "……晚安，大人。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……夜深了。",
+            "那大人请早些休息吧。",
+            "我就在隔壁……有事请随时叫我。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "夜里陪璐米埃尔坐了一会儿。"
+      ],
+      "gate": {
+        "hourMin": 20,
+        "bondMin": "Fond"
+      },
+      "flag": "night_talk_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 1
+    },
+    {
+      "id": "cooking_help",
+      "title": "灶台旁",
+      "genre": "日常",
+      "rate": 500,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "厨房里飘来阵阵香味。"
+            },
+            "大人，您到厨房来了……",
+            "请稍等一下，汤马上就好了。"
+          ],
+          "choices": [
+            {
+              "id": "taste",
+              "label": "「我尝尝味道。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 30
+                }
+              ]
+            },
+            {
+              "id": "wait",
+              "label": "「我等你做好。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 20
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "taste",
+          "lines": [
+            "大人，请小心烫……",
+            "（她舀了一小勺汤送到您嘴边，手微微有些发抖。）",
+            "……咸淡怎么样？",
+            "啊……太好了。大人觉得合口味的话……我就放心了。"
+          ]
+        },
+        {
+          "id": "wait",
+          "lines": [
+            "……好的。",
+            "请大人坐在那边等一会儿。",
+            "厨房里烟熏火燎的……请不要靠太近。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "饭菜端上桌来，热气腾腾。"
+            },
+            "大人，请慢用。",
+            "……如果不够的话，我再去做。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "在灶台旁陪璐米埃尔做了饭。"
+      ],
+      "gate": {
+        "activities": [
+          "Cooking"
+        ],
+        "bondMin": "Fond"
+      },
+      "flag": "cooking_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "rain_shelter",
+      "title": "屋檐避雨",
+      "genre": "日常",
+      "rate": 400,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "外面下起了大雨。她站在屋檐下，望着雨帘。"
+            },
+            "……大人，您也过来了。"
+          ],
+          "choices": [
+            {
+              "id": "stand",
+              "label": "「站在她旁边避雨。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                }
+              ]
+            },
+            {
+              "id": "umbrella",
+              "label": "「把外套披在她肩上。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stand",
+          "lines": [
+            "……嗯。",
+            "（两人并肩站着，谁也没有说话。只有雨声在耳边回响。）",
+            "大人……",
+            "雨声让人心里很平静呢。"
+          ]
+        },
+        {
+          "id": "umbrella",
+          "lines": [
+            "……大人？",
+            "（她微微一怔，感受到落在肩上的温度。）",
+            "大人的外套……您自己不冷吗？",
+            "……谢谢您。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……雨渐渐小了呢。",
+            "大人，请进屋吧。",
+            "……小心脚下，别滑倒了。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "雨天和璐米埃尔在屋檐下并肩站着。"
+      ],
+      "gate": {
+        "weather": "Rain",
+        "bondMin": "Fond"
+      },
+      "cooldownDays": 2
+    },
+    {
+      "id": "old_scar",
+      "title": "手臂上的旧痕",
+      "genre": "回忆",
+      "rate": 300,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她卷起袖子洗手时，你看见她小臂内侧有一道浅浅的白色旧伤痕。"
+            },
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她察觉到了您的视线，把袖子放了下来。"
+            },
+            "……有什么不对吗？"
+          ],
+          "choices": [
+            {
+              "id": "ask",
+              "label": "「那道伤是怎么回事？」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            },
+            {
+              "id": "hold",
+              "label": "「轻轻握了握她的手腕。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 55
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ask",
+          "lines": [
+            "……小时候开荒的时候不小心被石块划到的。",
+            "那时候大人您还慌慌张张地帮我包扎来着……",
+            "……都是很久以前的事了。"
+          ]
+        },
+        {
+          "id": "hold",
+          "lines": [
+            "……大人？",
+            "（她低头看了看您握着她手腕的手，没有抽开。）",
+            "……很痒。",
+            "……开个玩笑而已。大人别当真。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……去睡吧，大人。",
+            "明天还有活。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 30
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "看见了璐米埃尔手臂上的旧痕。"
+      ],
+      "gate": {
+        "bondMin": "Close"
+      },
+      "flag": "old_scar_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "first_snow",
+      "title": "初雪",
+      "genre": "季节",
+      "rate": 800,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "今年的第一场雪落了下来。院子里白了一层。"
+            },
+            "（她站在门口，伸出手接了一片雪花。）",
+            "大人，今年的雪来得早呢。"
+          ],
+          "choices": [
+            {
+              "id": "out",
+              "label": "「一起出去走走。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 20
+                }
+              ]
+            },
+            {
+              "id": "warm",
+              "label": "「把外套披在她肩上。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "out",
+          "lines": [
+            "……大人？",
+            "（她跟着您走到院子中间，雪花落在她的发梢上。）",
+            "……大人的手好暖和。",
+            "（她没有把手抽回去。）"
+          ]
+        },
+        {
+          "id": "warm",
+          "lines": [
+            "……大人？",
+            "（她微微一怔，感受到披在肩上的温度。）",
+            "……谢谢您。",
+            "（她把外套往您那边拉了一半。）",
+            "……大人也别着凉了。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……雪还在下呢。",
+            "大人，进屋吧。",
+            "再站下去，两个人都要感冒了。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 15
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "和璐米埃尔一起看了今年的初雪。"
+      ],
+      "gate": {
+        "weather": "Snow",
+        "season": "Winter"
+      },
+      "flag": "snow_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "well_memory",
+      "title": "水井旁的回忆",
+      "genre": "回忆",
+      "rate": 350,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她在井边打水。桶放下去，过了好一会儿才听到落水声。"
+            },
+            "……这口井很深呢。"
+          ],
+          "choices": [
+            {
+              "id": "deep",
+              "label": "「你以前怕这口井吗？」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            },
+            {
+              "id": "quiet",
+              "label": "「什么都不说，帮她一起打水。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 55
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "deep",
+          "lines": [
+            "……小时候确实有点怕。",
+            "总觉得井底黑漆漆的，看不到底……",
+            "不过现在习惯了。每天都来打水，早就不再害怕了。"
+          ]
+        },
+        {
+          "id": "quiet",
+          "lines": [
+            "……大人？",
+            "（她看着您默默握住辘轳的另一端，帮她把水桶拉上来。）",
+            "……谢谢您。",
+            "两个人一起打，确实快多了呢。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她把水倒进水缸，用围裙擦了擦手。"
+            },
+            "……不早了。大人请早点休息吧。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "在水井旁和璐米埃尔一起打水聊天。"
+      ],
+      "gate": {
+        "bondMin": "Close"
+      },
+      "flag": "well_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "tailoring",
+      "title": "灯下缝衣",
+      "genre": "日常",
+      "rate": 600,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她坐在油灯下，手里拿着针线，正在缝补一件旧衣服。"
+            },
+            "……大人，您还没休息吗？",
+            "灯有点暗……您坐过来一些吧。"
+          ],
+          "choices": [
+            {
+              "id": "sit",
+              "label": "「坐到她旁边看她缝。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            },
+            {
+              "id": "help",
+              "label": "「我帮你穿线。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 45
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sit",
+          "lines": [
+            "……灯有点暗呢。",
+            "大人往那边挪一挪……挡着光了。",
+            "（她的针脚在灯光下走得飞快。）",
+            "……这件是大人的衣服。袖口磨破了。"
+          ]
+        },
+        {
+          "id": "help",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "您接过针线，穿了半天也没穿进去。"
+            },
+            "……给我。",
+            "（她伸手拿回去，一下就穿好了。）",
+            "……大人的手还是这么笨呢。",
+            "……啊，对不起。我不该这么说的。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "最后一针收好，她把衣服抖开看了看。"
+            },
+            "……好了。",
+            "……大人，明天穿这件吧。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "陪璐米埃尔在灯下缝补衣物。"
+      ],
+      "gate": {
+        "hourMin": 18,
+        "bondMin": "Fond"
+      },
+      "flag": "tailoring_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 1
+    },
+    {
+      "id": "storm_night",
+      "title": "雷雨之夜",
+      "genre": "日常",
+      "rate": 500,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "雷声很近。屋里油灯的火苗晃了一下。"
+            },
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "你发现她站在你的门口，没有进来。"
+            },
+            "……大人。吵到您了吗？"
+          ],
+          "choices": [
+            {
+              "id": "comein",
+              "label": "「进来吧。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "ask",
+              "label": "「你怕打雷？」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "comein",
+          "lines": [
+            "……好的。",
+            "（她走进来，在靠门的椅子上安静坐下。）",
+            "我坐一会儿就走……",
+            "（又一声雷响。她没有走。）"
+          ]
+        },
+        {
+          "id": "ask",
+          "lines": [
+            "……不怕。",
+            "只是……不喜欢而已。",
+            "（她把手拢在袖子里，站在门口没动。）"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……雷声小了。",
+            "大人请休息吧。",
+            "……我就在隔壁。有事请叫我。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "雷雨夜里璐米埃尔在您门口站了很久。"
+      ],
+      "gate": {
+        "weather": "Rain",
+        "hourMin": 20,
+        "bondMin": "Fond"
+      },
+      "cooldownDays": 3
+    },
+    {
+      "id": "mood_low_comfort",
+      "title": "心情低落",
+      "genre": "日常",
+      "rate": 300,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她注意到您神色不对。"
+            },
+            "大人……您看起来不太舒服。",
+            "如果有什么烦心事的话……请告诉我。"
+          ],
+          "choices": [
+            {
+              "id": "talk",
+              "label": "「跟她倾诉一下。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 20
+                }
+              ]
+            },
+            {
+              "id": "silent",
+              "label": "「摇摇头，什么都不说。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 25
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "talk",
+          "lines": [
+            "……我听着呢。",
+            "（她安静地坐在您对面，双手叠在膝上，认真地听着。）",
+            "……大人，不管发生什么事……我都会陪在您身边的。"
+          ]
+        },
+        {
+          "id": "silent",
+          "lines": [
+            "……好的。",
+            "那大人如果想说的时候……随时告诉我。",
+            "我就在这里。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人……",
+            "请别把所有事情都一个人扛着。",
+            "……虽然我帮不上什么大忙，但至少……可以陪在您身边。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "璐米埃尔察觉到大人的低落，默默陪伴在旁。"
+      ],
+      "gate": {
+        "bondMin": "Fond"
+      },
+      "cooldownDays": 2
+    },
+    {
+      "id": "scars_reveal",
+      "title": "手心的茧",
+      "genre": "回忆",
+      "rate": 250,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她在擦桌子的时候，你注意到她的手掌上磨出了一层薄茧。"
+            },
+            "（她察觉到您的视线，把手缩回袖子里。）"
+          ],
+          "choices": [
+            {
+              "id": "ask",
+              "label": "「你的手……怎么回事？」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            },
+            {
+              "id": "hold",
+              "label": "「握住她的手仔细看。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 60
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ask",
+          "lines": [
+            "……干家务磨出来的。",
+            "搬柴、打水、切菜……这些事做久了，手上就会长茧。",
+            "……这是女仆应尽的本分。不算什么。"
+          ]
+        },
+        {
+          "id": "hold",
+          "lines": [
+            "……大人？",
+            "（她低头看着您握住她手的动作，耳根微微泛红。）",
+            "这样的手……很粗糙吧。",
+            "……对不起。让大人看到不好看的一面。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……我去准备晚饭了。",
+            "大人请先坐一会儿。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "注意到璐米埃尔手上的茧。"
+      ],
+      "gate": {
+        "bondMin": "Close"
+      },
+      "flag": "scars_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "star_night",
+      "title": "星空下的约定",
+      "genre": "闲情",
+      "rate": 350,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "晴朗的夜晚，繁星满天。她坐在院子里的长凳上，仰望着星空。"
+            },
+            "……大人，您也出来了。",
+            "今晚的星星真多呢。"
+          ],
+          "choices": [
+            {
+              "id": "sit",
+              "label": "「坐在她旁边一起看。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 45
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "talk",
+              "label": "「你在看哪颗星？」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sit",
+          "lines": [
+            "……大人。",
+            "（两人并肩坐着，头顶是浩瀚的银河。）",
+            "小时候我们一起在院子里看星星……好像是很久以前的事了。",
+            "……但现在也很好。"
+          ]
+        },
+        {
+          "id": "talk",
+          "lines": [
+            "……那颗最亮的。",
+            "小时候村里的老人说，每颗亮星都代表着一位守护者。",
+            "我在想……大人的守护星是哪一颗呢。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……夜深了呢。",
+            "大人，请早点休息吧。",
+            "……晚安，大人。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 15
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "和璐米埃尔一起在院子里看星星。"
+      ],
+      "gate": {
+        "weather": "Clear",
+        "hourMin": 21,
+        "bondMin": "Close"
+      },
+      "cooldownDays": 3
+    },
+    {
+      "id": "gift_flower",
+      "title": "一朵野花",
+      "genre": "日常",
+      "rate": 400,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她从外面回来，手里握着一朵小小的野花。"
+            },
+            "……大人。",
+            "这个……我在路边看到的。",
+            "（她把花递了过来，没有看您的眼睛。）"
+          ],
+          "choices": [
+            {
+              "id": "accept",
+              "label": "「接过来，道声谢。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "tease",
+              "label": "「你也会送我东西啊。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accept",
+          "lines": [
+            "……大人喜欢就好。",
+            "……我去找个瓶子把它插起来。",
+            "（她嘴角微微上扬，很快又收了回去。）"
+          ]
+        },
+        {
+          "id": "tease",
+          "lines": [
+            "……只是顺手摘的而已。",
+            "……请不要想太多。",
+            "（她的耳根微微泛红。）",
+            "……我去把它插到水碗里。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……我去做饭了。",
+            "大人请等一下。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "璐米埃尔送给您一朵野花。"
+      ],
+      "gate": {
+        "bondMin": "Fond"
+      },
+      "flag": "flower_given",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 2
+    },
+    {
+      "id": "leaving_worry",
+      "title": "离别的牵挂",
+      "genre": "日常",
+      "rate": 200,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她站在门口，看着您准备出门。"
+            },
+            "大人……您今天要出去吗？",
+            "……路上请小心。"
+          ],
+          "choices": [
+            {
+              "id": "promise",
+              "label": "「我很快就回来。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            },
+            {
+              "id": "ask",
+              "label": "「你在担心我？」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 55
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "promise",
+          "lines": [
+            "……好的。",
+            "我等您回来。",
+            "……请注意安全。"
+          ]
+        },
+        {
+          "id": "ask",
+          "lines": [
+            "……！",
+            "不、不是那样的……",
+            "我只是……作为女仆，担心大人的安全而已。",
+            "……请不要打趣我了。快去吧。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她站在门口目送您走远，直到您的身影消失在道路尽头。"
+            }
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 15
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "璐米埃尔在门口目送您出门。"
+      ],
+      "gate": {
+        "bondMin": "Fond",
+        "hourMax": 10
+      },
+      "cooldownDays": 1
+    },
+    {
+      "id": "return_greeting",
+      "title": "归来",
+      "genre": "日常",
+      "rate": 800,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "您推开门回来。她从屋里快步走出来。"
+            },
+            "大人，您回来了。",
+            "……欢迎回来。"
+          ],
+          "choices": [
+            {
+              "id": "tired",
+              "label": "「今天很累。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "good",
+              "label": "「今天很顺利。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tired",
+          "lines": [
+            "大人辛苦了。",
+            "我去给您准备热水和晚饭。",
+            "……请先坐下歇一歇。",
+            "（她快步走向厨房，脚步声比平时更急促。）"
+          ]
+        },
+        {
+          "id": "good",
+          "lines": [
+            "……那就好。",
+            "看到大人平安回来……我就安心了。",
+            "晚饭已经准备好了，请慢用。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人……",
+            "不管外面发生了什么……回到这里，就请放下吧。",
+            "……我会一直在您身边的。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 25
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "回来时璐米埃尔迎接了您。"
+      ],
+      "gate": {
+        "bondMin": "Fond"
+      },
+      "flag": "return_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 1
+    },
+    {
+      "id": "night_restless",
+      "title": "辗转难眠",
+      "genre": "日常",
+      "rate": 300,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "深夜，您发现她坐在院子里的石阶上，望着夜空。"
+            },
+            "……大人。您怎么还没休息？"
+          ],
+          "choices": [
+            {
+              "id": "sit",
+              "label": "「坐在她旁边。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "ask",
+              "label": "「你也睡不着？」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sit",
+          "lines": [
+            "……嗯。",
+            "（您在她身旁坐下。石阶很凉，但谁也没有提。）",
+            "……大人。",
+            "像这样安安静静地坐着……什么话都不用说……也很舒服呢。"
+          ]
+        },
+        {
+          "id": "ask",
+          "lines": [
+            "……嗯。",
+            "有时候会这样。",
+            "……没什么原因。",
+            "……不过，大人来了之后，好像没那么难熬了。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……夜深了。",
+            "大人请去休息吧。",
+            "……我也回去了。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "深夜和璐米埃尔一起坐在院子的石阶上。"
+      ],
+      "gate": {
+        "bondMin": "Close",
+        "hourMin": 22
+      },
+      "cooldownDays": 2
+    },
+    {
+      "id": "measuring",
+      "title": "量身做衣",
+      "genre": "日常",
+      "rate": 500,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她拿着软尺站在您面前，脖子上挂着针线包。"
+            },
+            "大人，我给您量一下身形。",
+            "……旧衣服有些紧了，我给您做一套新的。"
+          ],
+          "choices": [
+            {
+              "id": "still",
+              "label": "「站直不动。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 30
+                }
+              ]
+            },
+            {
+              "id": "tease",
+              "label": "「你量得很认真呢。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "still",
+          "lines": [
+            "……好的。",
+            "（她拉起软尺，仔细量过您的肩宽和臂长。）",
+            "……量好了。大约三天就能做好。",
+            "……请期待一下。"
+          ]
+        },
+        {
+          "id": "tease",
+          "lines": [
+            "……这是女仆的工作。",
+            "（她的耳根微微泛红，但手上没有停。）",
+            "……请别乱动。量偏了就不合身了。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……量好了。",
+            "大人，衣服做好后我会给您试穿的。",
+            "……请期待一下。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "璐米埃尔为您量身准备做新衣。"
+      ],
+      "gate": {
+        "bondMin": "Fond"
+      },
+      "flag": "measuring_done",
+      "requireFlagValue": 0,
+      "doneValue": 1
+    },
+    {
+      "id": "spar_training",
+      "title": "练武",
+      "genre": "武艺",
+      "rate": 450,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她在院子里挥舞着一柄没开刃的铁剑，步伐干净利落。"
+            },
+            "……大人。",
+            "您想练练吗？"
+          ],
+          "choices": [
+            {
+              "id": "spar",
+              "label": "「持剑上场。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "learn",
+              "label": "「请教她的剑术。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "spar",
+          "lines": [
+            "……好的。",
+            "（双剑交击。她的动作精准而克制。）",
+            "……大人的下盘有些虚浮。",
+            "请注意重心。",
+            "（她收剑后退半步，微微喘息。）",
+            "……大人进步了不少呢。"
+          ]
+        },
+        {
+          "id": "learn",
+          "lines": [
+            "好的……大人请看。",
+            "（她站到您身后，双手从后方握住您的手腕纠正姿势。）",
+            "……肩膀放松。发力要从腰传到剑尖。",
+            "（她的呼吸近在耳畔。）",
+            "……感觉到了吗？"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……练得不错。",
+            "大人，请擦擦汗。",
+            "（她递过来一块干净的布巾。）"
+          ],
+          "effects": [
+            {
+              "kind": "Stamina",
+              "amount": 15
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "和璐米埃尔在院子里练武切磋。"
+      ],
+      "gate": {
+        "hourMin": 6,
+        "hourMax": 10,
+        "bondMin": "Fond"
+      },
+      "cooldownDays": 2
+    },
+    {
+      "id": "fever_care",
+      "title": "发热照料",
+      "genre": "日常",
+      "rate": 400,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "您浑身滚烫，脚步虚浮地走进屋。"
+            },
+            "大人！",
+            "（她快步上前扶住您。）",
+            "您的额头好烫……请躺下！"
+          ],
+          "choices": [
+            {
+              "id": "rest",
+              "label": "「听她的话躺下。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 20
+                }
+              ]
+            },
+            {
+              "id": "stubborn",
+              "label": "「没事，小病而已。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 30
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rest",
+          "lines": [
+            "……好的。",
+            "（她用浸过凉水的布巾一遍遍敷在您的额头上。）",
+            "大人，请安心休息。",
+            "……今夜我守在这里，一步也不离开。"
+          ]
+        },
+        {
+          "id": "stubborn",
+          "lines": [
+            "……大人！",
+            "（她没有理会您的话，直接把您按到床上。）",
+            "请躺下。这是女仆的命令……不，是请求。",
+            "……请让我照顾您。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "黎明时分热度终于退了。她趴在您的枕边沉沉睡着，手里还攥着那块用过的布巾。"
+            }
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 30
+            },
+            {
+              "kind": "Mood",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "发热时璐米埃尔彻夜照料。"
+      ],
+      "gate": {
+        "bondMin": "Close"
+      },
+      "flag": "fever_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 3
+    },
+    {
+      "id": "trade_market",
+      "title": "集市同行",
+      "genre": "日常",
+      "rate": 400,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "集市上人来人往。她走在您身后半步的地方。"
+            },
+            "大人，人真多呢。",
+            "……请跟紧我。"
+          ],
+          "choices": [
+            {
+              "id": "hand",
+              "label": "「牵住她的手。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 45
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "front",
+              "label": "「走在她前面挡住人流。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 35
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hand",
+          "lines": [
+            "……大人？",
+            "（她的手缩了一下，然后安静地任由您牵着。）",
+            "……人多，手被牵着……不容易走散呢。"
+          ]
+        },
+        {
+          "id": "front",
+          "lines": [
+            "……大人。",
+            "（她跟在您身后，步子比平时跟得更紧了。）",
+            "……谢谢您。",
+            "其实我自己也可以的……但被大人护着……感觉不太坏。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……买的东西都齐了。",
+            "大人，我们回去吧。",
+            "天黑之前要到家。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "和璐米埃尔一起去了集市。"
+      ],
+      "gate": {
+        "bondMin": "Fond",
+        "hourMin": 8
+      },
+      "cooldownDays": 3
+    },
+    {
+      "id": "crying_night",
+      "title": "无声的眼泪",
+      "genre": "回忆",
+      "rate": 200,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "深夜，您发现她蹲在走廊的阴影里，肩膀微微发抖。"
+            },
+            "……大人。",
+            "对不起，让您看到了……"
+          ],
+          "choices": [
+            {
+              "id": "hug",
+              "label": "「什么都不说，抱住她。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 70
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 25
+                }
+              ]
+            },
+            {
+              "id": "wait",
+              "label": "「安静地坐在她旁边。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hug",
+          "lines": [
+            "……大、大人……",
+            "（她把脸埋进您的胸口，肩膀抖得更厉害了。）",
+            "……请别看我的脸。就一会儿……",
+            "（过了很久，她的呼吸终于平复下来。）"
+          ]
+        },
+        {
+          "id": "wait",
+          "lines": [
+            "……",
+            "（您什么也没说，只是安静地陪着她。过了很久，她的呼吸慢慢平稳下来。）",
+            "……谢谢您。",
+            "……能不说吗，刚才的事。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人……",
+            "请不要告诉别人。",
+            "……我们回去休息吧。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 30
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "深夜发现璐米埃尔独自哭泣。"
+      ],
+      "gate": {
+        "bondMin": "Close",
+        "hourMin": 22,
+        "emotion": "Sad"
+      },
+      "flag": "crying_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 3
+    },
+    {
+      "id": "daily_morning",
+      "title": "清晨的日常",
+      "genre": "日常",
+      "rate": 600,
+      "characters": [
+        "璐米埃尔"
+      ],
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "清晨的阳光洒进屋内。她已经把洗脸水备好了。"
+            },
+            "大人，早上好。",
+            "水温刚好，请洗脸吧。"
+          ],
+          "choices": [
+            {
+              "id": "thanks",
+              "label": "「辛苦了。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 30
+                }
+              ]
+            },
+            {
+              "id": "breakfast",
+              "label": "「早餐吃什么？」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 25
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "thanks",
+          "lines": [
+            "……不辛苦。这是女仆的分内事。",
+            "……不过，大人特意说一声……我很开心。"
+          ]
+        },
+        {
+          "id": "breakfast",
+          "lines": [
+            "今天烤了面包，还有炖菜。",
+            "……请您慢用。不够的话我再做。"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人，今天也要加油呢。",
+            "……我会把家里打理好的。"
+          ],
+          "effects": [
+            {
+              "kind": "Mood",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "清晨的日常起居。"
+      ],
+      "gate": {
+        "hourMin": 5,
+        "hourMax": 9
+      },
+      "flag": "morning_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "cooldownDays": 1
+    },
+    {
+      "id": "selene_magic_fail",
+      "title": "失控的法术",
+      "genre": "日常",
+      "rate": 400,
+      "characters": [
+        "赛琳"
+      ],
+      "cooldownDays": 2,
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "一阵刺眼的白光从赛琳的房间里炸开，紧接着是一声闷响。"
+            },
+            "大人！对、对不起！",
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她从房里冲出来，头发被烧焦了几缕，脸上一片烟灰。"
+            },
+            "我只是在练习新的攻击咒文……结果魔力过载了……"
+          ],
+          "choices": [
+            {
+              "id": "check",
+              "label": "「你没事吧？」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 10
+                }
+              ]
+            },
+            {
+              "id": "scold",
+              "label": "「在外面练！说了多少遍了！」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 25
+                },
+                {
+                  "kind": "Mood",
+                  "amount": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "check",
+          "lines": [
+            "……我没事。只是头发有点焦了……",
+            "（她低下头，声音越来越小。）",
+            "我真的……很没用呢。明明在学院里学了好几年……"
+          ]
+        },
+        {
+          "id": "scold",
+          "lines": [
+            "……对、对不起！",
+            "（她紧紧攥着法杖，眼眶泛红。）",
+            "我以后一定在外面练……请再给我一次机会……"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人……",
+            "总有一天我会成为让大人骄傲的魔法师的。",
+            "……请再给我一点时间。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "赛琳的魔法实验又失控了。"
+      ]
+    },
+    {
+      "id": "selene_magic_success",
+      "title": "成功的法术",
+      "genre": "日常",
+      "rate": 500,
+      "characters": [
+        "赛琳"
+      ],
+      "cooldownDays": 2,
+      "gate": {
+        "bondMin": "Fond"
+      },
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "一道柔和的蓝光在赛琳的掌心稳定地流转，照亮了整个房间。"
+            },
+            "大人！您看！",
+            "我成功了！我终于施展出完整的辅助魔法了！",
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她的眼睛亮晶晶的，法杖在手中兴奋地颤抖。"
+            }
+          ],
+          "choices": [
+            {
+              "id": "praise",
+              "label": "「做得好。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 60
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 20
+                }
+              ]
+            },
+            {
+              "id": "calm",
+              "label": "「继续努力。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 30
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "praise",
+          "lines": [
+            "……大人夸我了……",
+            "（她的眼眶突然湿润了。）",
+            "在学院的时候……从来没有人对我说过这句话……",
+            "大人……谢谢您……",
+            "（她深深低头行礼，肩膀微微颤抖。）"
+          ]
+        },
+        {
+          "id": "calm",
+          "lines": [
+            "……是。",
+            "我会继续努力的。",
+            "（虽然嘴上这么说，但她的嘴角止不住地上扬。）"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "大人……",
+            "这个辅助魔法可以为领地的所有人提供夜视效果。",
+            "……终于有能帮到大家的力量了。"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 30
+            },
+            {
+              "kind": "Mood",
+              "amount": 15
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "赛琳成功施展了新的辅助魔法。"
+      ]
+    },
+    {
+      "id": "selene_magic_book",
+      "title": "魔导书与旧痕",
+      "genre": "回忆",
+      "rate": 300,
+      "characters": [
+        "赛琳"
+      ],
+      "flag": "magic_book_done",
+      "requireFlagValue": 0,
+      "doneValue": 1,
+      "gate": {
+        "bondMin": "Close"
+      },
+      "steps": [
+        {
+          "id": "open",
+          "lines": [
+            {
+              "kind": "Narration",
+              "speaker": "",
+              "text": "她正抱着一本封面破旧的魔导书，指尖轻轻抚过书页上的墨迹。"
+            },
+            "大人……这本书是我入学第一天买的。",
+            "那时候我什么都没有……只买得起最便宜的基础咒文入门。"
+          ],
+          "choices": [
+            {
+              "id": "mem",
+              "label": "「你现在可不是当初那个新人了。」",
+              "gotoStep": 1,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 50
+                },
+                {
+                  "kind": "Mood",
+                  "amount": 15
+                }
+              ]
+            },
+            {
+              "id": "quiet",
+              "label": "「什么都不说，安静听她说。」",
+              "gotoStep": 2,
+              "effects": [
+                {
+                  "kind": "Favor",
+                  "amount": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "mem",
+          "lines": [
+            "……嗯。",
+            "在学院的时候，我总是被嘲笑出身平民。",
+            "他们说……平民魔法师的魔力天生就不够纯。",
+            "……但我一直相信，努力可以弥补天赋的差距。",
+            "大人……您也是这样想的吧？"
+          ]
+        },
+        {
+          "id": "quiet",
+          "lines": [
+            "……",
+            "（她把书抱得更紧了一些。）",
+            "这本书陪着我度过了最艰难的学生时代。",
+            "每一次被嘲笑……我就回来翻这一页。",
+            "这里写着……'真正的魔法不在于天赋，而在于永不放弃的信念。'"
+          ]
+        },
+        {
+          "id": "close",
+          "lines": [
+            "……大人。",
+            "这本书……我想永远留在身边。",
+            "就像……我想永远留在大人身边一样。",
+            "（她红着脸低下了头。）"
+          ],
+          "effects": [
+            {
+              "kind": "Favor",
+              "amount": 30
+            }
+          ]
+        }
+      ],
+      "summary": [
+        "看到了赛琳珍藏的旧魔导书。"
+      ]
+    }
+  ]
+}

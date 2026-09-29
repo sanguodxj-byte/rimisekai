@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d0ibuxfy5dsou"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Ink/InkRoot.cs" id="1_root"]
+
+[node name="InkRoot" type="Node"]
+script = ExtResource("1_root")

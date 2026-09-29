@@ -1,0 +1,12 @@
+{
+  "money": 10000,
+  "startRoomId": 1,
+  "startCharacterName": "",
+  "voicePath": "res://content/voice.json",
+
+  "stock": { "干粮": 5, "木材": 10, "石材": 10 },
+
+  "characters": [
+    { "name": "你", "master": true }
+  ]
+}

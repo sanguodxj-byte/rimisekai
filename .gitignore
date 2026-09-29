@@ -1,0 +1,25 @@
+# ===== Godot =====
+.godot/
+
+# ===== .NET 构建产物 =====
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ===== Python =====
+__pycache__/
+*.pyc
+
+# ===== 日志与临时文件 =====
+*.log
+*.tmp
+
+# ===== 本地会话/工具配置 =====
+.claude/settings.local.json
+.zcode/
+
+# ===== 测试运行时导出的预览图（写到当前目录）=====
+/world_map_preview.bmp
+/poi_*.bmp

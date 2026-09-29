@@ -1,0 +1,32 @@
+<Project>
+
+  <!--
+    必须在 Sdk.props 之前设置。
+    Godot 工程根是仓库根（project.godot 与 Rimisekai.sln 都在那里），本项目只是子目录；
+    而 Godot.NET.Sdk 默认以 csproj 所在目录为工程根，会把脚本的 res:// 路径记成
+    res://src/…，与实际位置 res://RimisekaiFrontend/src/… 不符，运行时找不到 C# 类。
+    用 <Project Sdk="…"> 简写时 Sdk.props 在文件体之前求值，赋值会太晚，
+    所以这里改成显式 Import，并先算出规范化的绝对路径。
+  -->
+  <PropertyGroup>
+    <GodotProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..'))</GodotProjectDir>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Godot.NET.Sdk" Version="4.7.0" />
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Rimisekai</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>RimisekaiFrontend</AssemblyName>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RimisekaiCore\RimisekaiCore.csproj" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Godot.NET.Sdk" Version="4.7.0" />
+
+</Project>
