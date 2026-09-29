@@ -41,7 +41,7 @@ public partial class InkTitleScreen : Control
     private const float MenuStep = 100f;
     private const float MenuTop = 582f;
 
-    private static readonly string TexPath = "res://title_reference.png";
+    private static readonly string TexPath = "res://assets/title_reference.png";
 
     private List<Entry> _menu = new();
     private int _hover = -1;
