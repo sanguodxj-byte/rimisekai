@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 276)">
+    <!-- 两柄锋利的波浪反手短刃 X 形凶猛交叉（Dual Wielding Daggers） -->
+    <g transform="rotate(-45)">
+      <polygon fill="#E9EFEA" points="0,-220 25,-150 18,30 45,35 45,50 -45,50 -45,35 -18,30 -25,-150"/>
+      <rect x="-8" y="50" width="16" height="75" rx="2" fill="#E9EFEA"/>
+      <circle cx="0" cy="140" r="18" fill="#E9EFEA"/>
+    </g>
+    <g transform="rotate(45)">
+      <polygon fill="#E9EFEA" points="0,-220 25,-150 18,30 45,35 45,50 -45,50 -45,35 -18,30 -25,-150"/>
+      <rect x="-8" y="50" width="16" height="75" rx="2" fill="#E9EFEA"/>
+      <circle cx="0" cy="140" r="18" fill="#E9EFEA"/>
+    </g>
+    <!-- 交叉核心光芒负形切分 -->
+    <polygon fill="#000000" points="0,-25 15,0 0,25 -15,0"/>
+    <circle cx="0" cy="0" r="5" fill="#E9EFEA"/>
+  </g>
+</svg>

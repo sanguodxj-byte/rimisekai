@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(269, 232) scale(0.90)">
+    <path fill="#E9EFEA" d="
+      M -220,180
+      L -240,-10
+      L -160,-120
+      L -30,-110
+      L 60,-40
+      L 150,-20
+      L 210,80
+      L 180,200
+      L 0,220
+      Z
+    "/>
+    <path fill="#000000" d="M -160,-120 L -70,10 L 150,-20 L 140,-40 L -60,-10 L -140,-130 Z"/>
+    <path fill="#000000" d="M -70,10 L -50,220 L -24,220 L -46,26 Z"/>
+    <g transform="translate(60, -110) rotate(24)">
+      <rect x="-70" y="-70" width="140" height="140" fill="#000000"/>
+      <polygon fill="#E9EFEA" points="0,-64 64,0 0,64 -64,0"/>
+      <polygon fill="#000000" points="0,-40 40,0 0,40 -40,0"/>
+      <polygon fill="#E9EFEA" points="0,-24 24,0 0,24 -24,0"/>
+    </g>
+    <g transform="translate(140, -40) rotate(-15)">
+      <rect x="-46" y="-46" width="92" height="92" fill="#000000"/>
+      <polygon fill="#E9EFEA" points="0,-42 42,0 0,42 -42,0"/>
+      <polygon fill="#000000" points="0,-20 20,0 0,20 -20,0"/>
+    </g>
+  </g>
+</svg>

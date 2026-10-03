@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(314, 264) rotate(-32) scale(0.9)">
+    <!-- 斧：**斜放的战斧** —— 斜柄 + 顶端一片楔形大斧刃 + 一小块斧背。
+         上一版斧刃虽然做成了楔形，但柄是**竖直**的，实机 40px 下「竖杆 + 一侧挂一块形状」
+         仍然是旗帜的构图，被判成「旗子/锤子」。
+         现在整把**斜放 32 度** —— 旗帜是竖的，斧是斜挥的；刃的上缘/下缘用斜直线收边。 -->
+    <rect x="-26" y="-240" width="52" height="460" rx="16" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M -26,-176 L -172,-216 Q -244,-80 -172,56 L -26,20 Z"/>
+    <rect x="26" y="-158" width="62" height="120" rx="18" fill="#E9EFEA"/>
+  </g>
+</svg>

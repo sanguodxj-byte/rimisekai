@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(288, 261) scale(0.85)">
+    <!-- 戟：长杆 + **单侧**月牙斧刃 + 顶端枪尖 + 背侧小钩。
+         上一版枪尖拉得又细又长，实机读成"鹤嘴锄/剑"。
+         戟的关键是"长杆 + 只有一边有刃"，单侧不对称才不会被认成锤。 -->
+    <rect x="-22" y="-124" width="44" height="364" rx="12" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M 0,-252 L 30,-138 L -30,-138 Z"/>
+    <path fill="#E9EFEA" d="M -22,-138 L -144,-176 C -200,-126 -204,-26 -148,22 L -22,-14 Z"/>
+    <path fill="#E9EFEA" d="M 22,-130 L 110,-168 L 94,-112 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(244, 256) rotate(-22)">
+    <!-- 上环圈（饱满圆润） -->
+    <ellipse cx="0" cy="-75" rx="120" ry="90" fill="#E9EFEA"/>
+    <ellipse cx="0" cy="-75" rx="65" ry="44" fill="#000000"/>
+    <!-- 下环圈（饱满圆润） -->
+    <ellipse cx="0" cy="75" rx="120" ry="90" fill="#E9EFEA"/>
+    <ellipse cx="0" cy="75" rx="65" ry="44" fill="#000000"/>
+    <!-- 中间粗绑扎带（宽大厚实，两边略凸，带两条清晰刻线） -->
+    <rect x="-85" y="-30" width="170" height="60" rx="14" fill="#E9EFEA"/>
+    <rect x="-75" y="-22" width="150" height="12" fill="#000000"/>
+    <rect x="-75" y="10" width="150" height="12" fill="#000000"/>
+    <!-- 软软贴在下环边缘的一小截短绳尾 -->
+    <path fill="#E9EFEA" d="M 50,70 C 90,90 120,130 115,165 C 110,185 85,185 80,165 C 75,140 50,110 30,90 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(207, 304) scale(0.82) rotate(24)">
+    <!-- 贯穿中轴的长麦茎（粗24） -->
+    <rect x="-12" y="-220" width="24" height="440" rx="12" fill="#E9EFEA"/>
+    <!-- 左右两侧斜向对称生长的6粒饱满麦粒（每个宽56，长90） -->
+    <!-- 左1 -->
+    <g transform="translate(-56, 80) rotate(-40)"><ellipse rx="32" ry="56" fill="#E9EFEA"/></g>
+    <!-- 右1 -->
+    <g transform="translate(56, 40) rotate(40)"><ellipse rx="32" ry="56" fill="#E9EFEA"/></g>
+    <!-- 左2 -->
+    <g transform="translate(-56, -10) rotate(-40)"><ellipse rx="32" ry="56" fill="#E9EFEA"/></g>
+    <!-- 右2 -->
+    <g transform="translate(56, -50) rotate(40)"><ellipse rx="32" ry="56" fill="#E9EFEA"/></g>
+    <!-- 左3 -->
+    <g transform="translate(-52, -100) rotate(-40)"><ellipse rx="30" ry="52" fill="#E9EFEA"/></g>
+    <!-- 右3 -->
+    <g transform="translate(52, -140) rotate(40)"><ellipse rx="30" ry="52" fill="#E9EFEA"/></g>
+    <!-- 顶端直立的末端麦粒 -->
+    <g transform="translate(0, -180)"><ellipse rx="26" ry="46" fill="#E9EFEA"/></g>
+    <!-- 顶端伸出的两根修长麦芒（尖端向左右张开） -->
+    <path fill="#E9EFEA" d="M -12,-180 C -40,-230 -80,-270 -130,-290 L -120,-270 C -76,-250 -40,-215 -12,-170 Z"/>
+    <path fill="#E9EFEA" d="M 12,-180 C 40,-230 80,-270 130,-290 L 120,-270 C 76,-250 40,-215 12,-170 Z"/>
+  </g>
+</svg>

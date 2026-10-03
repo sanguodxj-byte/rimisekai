@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 倾斜旋转的厚重宏伟星环（宽大实心厚带，杜绝细线锯齿） -->
+    <path fill="#E9EFEA" transform="rotate(-35)" d="
+      M -230,0
+      C -230,-70 230,-70 230,0
+      C 230,70 -230,70 -230,0
+      Z
+    "/>
+    <ellipse cx="0" cy="0" rx="160" ry="32" fill="#000000" transform="rotate(-35)"/>
+
+    <!-- 中央饱满纯实心以太母核（八角共鸣星晶体） -->
+    <polygon fill="#E9EFEA" points="
+      0,-140 28,-40 120,-120 40,-28
+      140,0 40,28 120,120 28,40
+      0,140 -28,40 -120,120 -40,28
+      -140,0 -40,-28 -120,-120 -28,-40
+    "/>
+
+    <!-- 星核正中心镶嵌的高亮纯晶球 -->
+    <circle cx="0" cy="0" r="52" fill="#000000"/>
+    <circle cx="0" cy="0" r="38" fill="#E9EFEA"/>
+    <circle cx="-10" cy="-10" r="10" fill="#000000"/>
+  </g>
+</svg>

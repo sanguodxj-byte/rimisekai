@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(240, 266) rotate(45)">
+    <!-- 单面开刃的优美微弧大太刀（Katana Blade） -->
+    <!-- 剑身带有向左微弯的弧度，刃尖是锐利斜切尖（Kissaki） -->
+    <path fill="#E9EFEA" d="
+      M 0,-235
+      C -5,-215 -18,-150 -25,-60
+      C -30,10 -25,45 -22,60
+      L -2,60
+      C -5,45 -10,10 -5,-60
+      C 0,-150 12,-215 15,-230
+      Z
+    "/>
+
+    <!-- 经典圆形/椭圆形实心刀镡（Tsuba Guard） -->
+    <ellipse cx="-12" cy="65" rx="35" ry="12" fill="#E9EFEA"/>
+    <ellipse cx="-12" cy="65" rx="20" ry="6" fill="#000000"/>
+
+    <!-- 太刀长长的双手柄（Tsuka，带菱形缠绳目贯纹理） -->
+    <path fill="#E9EFEA" d="
+      M -20,70 L -4,70 L 15,185 L -1,185 Z
+    "/>
+    <!-- 刀柄缠绳菱形孔（负形小菱形切口） -->
+    <polygon fill="#000000" points="-12,85 -7,92 -12,99 -17,92"/>
+    <polygon fill="#000000" points="-9,110 -4,117 -9,124 -14,117"/>
+    <polygon fill="#000000" points="-6,135 -1,142 -6,149 -11,142"/>
+    <polygon fill="#000000" points="-3,160 2,167 -3,174 -8,167"/>
+
+    <!-- 刀尾包金柄头（Kashira） -->
+    <polygon fill="#E9EFEA" points="-3,185 17,185 14,195 -6,195"/>
+  </g>
+</svg>

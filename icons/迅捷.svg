@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(252, 258) scale(0.86) rotate(-15)">
+    <!-- 极度利落纯粹的经典 Z 字形折角劈刺大闪电（无任何杂质方块） -->
+    <polygon fill="#E9EFEA" points="
+      35,-235
+      -85,-35
+      25,-35
+      -75,235
+      105,-5
+      -10,-5
+      95,-235
+    "/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 221) scale(0.88)">
+    <!-- 居中长木柄（贯穿，长420，宽54） -->
+    <rect x="-27" y="-160" width="54" height="420" rx="18" fill="#E9EFEA"/>
+    <rect x="-44" y="226" width="88" height="34" rx="14" fill="#E9EFEA"/>
+    <!-- 顶部横贯的巨大方铁锤头（宽280，高140） -->
+    <rect x="-140" y="-180" width="280" height="140" rx="20" fill="#E9EFEA"/>
+    <!-- 左右两端重击钢箍（负形） -->
+    <rect x="-110" y="-180" width="24" height="140" fill="#000000"/>
+    <rect x="86" y="-180" width="24" height="140" fill="#000000"/>
+  </g>
+</svg>

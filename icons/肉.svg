@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(258, 252) scale(0.86) rotate(-25)">
+    <rect x="-220" y="-36" width="110" height="72" rx="32" fill="#E9EFEA"/>
+    <circle cx="-210" cy="-38" r="48" fill="#E9EFEA"/>
+    <circle cx="-210" cy="38" r="48" fill="#E9EFEA"/>
+    <ellipse cx="-130" cy="0" rx="18" ry="64" fill="#000000"/>
+    <path fill="#E9EFEA" d="
+      M -130,-50
+      C -60,-80 40,-130 140,-110
+      C 220,-90 250,-10 240,60
+      C 230,140 140,190 40,170
+      C -60,150 -100,80 -130,50
+      Z
+    "/>
+    <path fill="#000000" d="M -70,-60 L -50,80 L -30,76 L -50,-64 Z"/>
+    <path fill="#000000" d="M 20,-110 L 40,170 L 64,166 L 44,-114 Z"/>
+    <path fill="#000000" d="M 120,-110 L 140,150 L 164,142 L 144,-114 Z"/>
+  </g>
+</svg>

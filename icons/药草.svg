@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(283, 248) rotate(-30) scale(0.88)">
+    <!-- 药草（材料）：三片宽叶连茎扎成一束，**整束斜放着**。
+         上一版是「三片窄叶向上收成尖 + 竖茎 + 扎带」，实机下正好是一支火把（火苗 + 柄），
+         被读成「火炬」。现在① 整束斜放 30 度（火把永远是竖的）；② 叶子加宽、顶端做圆，
+         不再收成火苗尖；③ 三片叶高低错落、互不对称。 -->
+    <g transform="translate(-55,65) rotate(64.8)">
+      <rect x="-94" y="-14" width="188" height="28" rx="14" fill="#E9EFEA"/>
+    </g>
+    <g transform="translate(10,48) rotate(95.6)">
+      <rect x="-103" y="-14" width="206" height="28" rx="14" fill="#E9EFEA"/>
+    </g>
+    <g transform="translate(67,85) rotate(128.9)">
+      <rect x="-83" y="-14" width="166" height="28" rx="14" fill="#E9EFEA"/>
+    </g>
+    <g transform="translate(-95,-80) rotate(-24)">
+      <path fill="#E9EFEA" d="M 0,-104 C 66,-52 66,52 0,104 C -66,52 -66,-52 0,-104 Z"/>
+    </g>
+    <g transform="translate(20,-118) rotate(6)">
+      <path fill="#E9EFEA" d="M 0,-104 C 66,-52 66,52 0,104 C -66,52 -66,-52 0,-104 Z"/>
+    </g>
+    <g transform="translate(122,-48) rotate(40)">
+      <path fill="#E9EFEA" d="M 0,-104 C 66,-52 66,52 0,104 C -66,52 -66,-52 0,-104 Z"/>
+    </g>
+    <g transform="translate(-5,158) rotate(-25)">
+      <rect x="-98" y="-30" width="196" height="60" rx="26" fill="#E9EFEA"/>
+    </g>
+  </g>
+</svg>

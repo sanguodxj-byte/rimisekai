@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 240)">
+    <!-- 巍峨耸立的要塞城堡城墙（带三个凹凸城垛垛口） -->
+    <path fill="#E9EFEA" d="
+      M -190,-160
+      L -190,-70
+      L -125,-70
+      L -125,-160
+      L -60,-160
+      L -60,-70
+      L 60,-70
+      L 60,-160
+      L 125,-160
+      L 125,-70
+      L 190,-70
+      L 190,-160
+      L 220,-160
+      L 190,190
+      L -190,190
+      L -220,-160
+      Z
+    "/>
+    <!-- 城墙工字形坚实石砖砌缝（负形深缝，交代厚重巨石） -->
+    <rect x="-190" y="-10" width="380" height="12" fill="#000000"/>
+    <rect x="-190" y="85" width="380" height="12" fill="#000000"/>
+    <rect x="-65" y="-70" width="12" height="60" fill="#000000"/>
+    <rect x="65" y="-70" width="12" height="60" fill="#000000"/>
+    <rect x="-135" y="-10" width="12" height="95" fill="#000000"/>
+    <rect x="0" y="-10" width="12" height="95" fill="#000000"/>
+    <rect x="135" y="-10" width="12" height="95" fill="#000000"/>
+    <rect x="-65" y="85" width="12" height="105" fill="#000000"/>
+    <rect x="65" y="85" width="12" height="105" fill="#000000"/>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<Project Sdk="Godot.NET.Sdk/4.7.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <RootNamespace>Rimisekai</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>RimisekaiFrontend</AssemblyName>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="RimisekaiCore\RimisekaiCore.csproj" />
+    <Compile Include="RimisekaiFrontend\src\**\*.cs" Exclude="RimisekaiFrontend\src\Tools\InkCapture.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 278) scale(0.86)">
+    <!-- 底部两根交错的粗燃烧木柴（厚实平稳基座） -->
+    <g transform="translate(0, 180)">
+      <rect x="-180" y="-16" width="360" height="38" rx="14" transform="rotate(-6)" fill="#E9EFEA"/>
+      <rect x="-170" y="-10" width="340" height="12" transform="rotate(-6)" fill="#000000"/>
+      <rect x="-170" y="-16" width="340" height="38" rx="14" transform="rotate(8)" fill="#E9EFEA"/>
+      <rect x="-160" y="-10" width="320" height="12" transform="rotate(8)" fill="#000000"/>
+    </g>
+    <!-- 从木柴上方熊熊升腾的饱满实心烈焰（厚实大体块，宽340，高380） -->
+    <path fill="#E9EFEA" d="
+      M -120,160
+      C -180,80 -180,0 -130,-70
+      C -105,-50 -90,-10 -80,40
+      C -70,-30 -50,-120 0,-230
+      C 20,-160 40,-110 40,-40
+      C 60,-80 85,-140 140,-180
+      C 125,-120 120,-60 100,10
+      C 160,0 180,80 140,160
+      Z
+    "/>
+    <!-- 内部仅带一道跳跃撕裂火缝（深黑小负形，增加流动层次，绝不挖空镂空骨架化） -->
+    <path fill="#000000" d="
+      M -20,160
+      C -40,100 -50,50 -20,10
+      C -5,30 5,60 10,100
+      C 20,40 30,-20 40,-80
+      C 55,-30 65,30 50,110
+      C 40,140 10,160 -20,160
+      Z
+    "/>
+    <!-- 顶端飞溅的两颗明亮火星粒子 -->
+    <circle cx="0" cy="-256" r="18" fill="#E9EFEA"/>
+    <circle cx="130" cy="-206" r="16" fill="#E9EFEA"/>
+    <circle cx="-130" cy="-90" r="14" fill="#E9EFEA"/>
+  </g>
+</svg>

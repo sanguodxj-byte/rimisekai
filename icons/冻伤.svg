@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 六向分支主雪晶（纯正雪花结构，每条臂带有优雅对生分枝） -->
+    <g transform="rotate(0)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+    <g transform="rotate(60)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+    <g transform="rotate(120)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+    <g transform="rotate(180)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+    <g transform="rotate(240)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+    <g transform="rotate(300)">
+      <polygon fill="#E9EFEA" points="-7,-30 7,-30 7,-215 0,-235 -7,-215"/>
+      <polygon fill="#E9EFEA" points="-7,-110 -65,-165 -50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="7,-110 65,-165 50,-180 0,-140"/>
+      <polygon fill="#E9EFEA" points="-7,-50 -45,-90 -35,-100 0,-70"/>
+      <polygon fill="#E9EFEA" points="7,-50 45,-90 35,-100 0,-70"/>
+    </g>
+
+    <!-- 中心实心正六边形晶核 -->
+    <polygon fill="#E9EFEA" points="0,-45 39,-22 39,22 0,45 -39,22 -39,-22"/>
+    <circle cx="0" cy="0" r="16" fill="#000000"/>
+    <circle cx="0" cy="0" r="6" fill="#E9EFEA"/>
+  </g>
+</svg>

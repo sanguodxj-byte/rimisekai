@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 255) scale(0.84)">
+    <!-- 长枪：竖直的宽叶形枪头 + 明显外扩的枪箍 + 长杆 + 杆尾墩。
+         上一版枪头太小太尖，实机读成"一支箭"。枪头必须宽大、枪箍必须外扩。 -->
+    <path fill="#E9EFEA" d="M 0,-252 C 36,-198 48,-148 48,-116 C 48,-80 28,-56 0,-42 C -28,-56 -48,-80 -48,-116 C -48,-148 -36,-198 0,-252 Z"/>
+    <rect x="-40" y="-52" width="80" height="60" rx="18" fill="#E9EFEA"/>
+    <rect x="-22" y="0" width="44" height="230" rx="10" fill="#E9EFEA"/>
+    <rect x="-36" y="220" width="72" height="34" rx="14" fill="#E9EFEA"/>
+  </g>
+</svg>
