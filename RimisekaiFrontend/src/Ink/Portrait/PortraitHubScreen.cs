@@ -177,6 +177,8 @@ public partial class PortraitHubScreen : Control
         LeaveTradeIfOpen();
         CloseTransient();
         _push = PushPage.None;
+        if (i != _tab)
+            StartTabSlide(_tab);
         _tab = i;
         if (_tab == 3 && _storeMode == 1)
             _vm.Hub.OpenTrade();
@@ -213,30 +215,24 @@ public partial class PortraitHubScreen : Control
         _widgets.Clear();
         _scrollAreas.Clear();
         _sheetTop = -1f;
-        // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发。
-        PortraitFrame.SetPress(_pressed && !_dragging ? _pressRect : null);
+        // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发（之后浅填淡出）。
+        ApplyPress();
         PortraitFrame.Backdrop(this);
 
         if (_push != PushPage.None)
-            DrawPushed();
+            DrawPushLayer();
         else if (ConversationActive)
         {
+            _pushShown = PushPage.None;
+            _sheetWasOpen = false;
             DrawScene();
             DrawToast();
             return;
         }
         else
         {
-            switch (_tab)
-            {
-                case 0: DrawTerritory(); break;
-                case 1: DrawRoster(); break;
-                case 2: DrawQuestBoard(); break;
-                case 3: DrawStore(); break;
-                default: DrawLog(); break;
-            }
-            DrawHud();
-            DrawTabBar();
+            _pushShown = PushPage.None;
+            DrawRootTab();
         }
 
         if (_vm.StorageOpen)
@@ -251,27 +247,30 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawSlotSheet);
         else if (_sheet == SheetKind.Item)
             OpenSheetLayer(DrawItemSheet);
+        else
+            _sheetWasOpen = false;
 
         DrawToast();
     }
 
-    /// <summary>
-    /// 抽屉层：下层画面已画完，这里把它的命中块与滚动区整个清掉（只剩压暗的背景），
-    /// 再由 draw 画面板并注册抽屉自己的命中块；draw 返回面板上沿。
-    /// 抽屉之上的压暗区是一整块「收起」命中块。
-    /// </summary>
-    private void OpenSheetLayer(Func<float> draw)
+    /// <summary>根页签：内容＋HUD＋五页签。</summary>
+    private void DrawRootTab()
     {
-        _widgets.Clear();
-        _scrollAreas.Clear();
-        _sheetTop = draw();
-        _widgets.Insert(0, new PortraitWidget(new Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop),
-            PortraitAction.SheetClose, 0, true, "收起"));
+        switch (_tab)
+        {
+            case 0: DrawTerritory(); break;
+            case 1: DrawRoster(); break;
+            case 2: DrawQuestBoard(); break;
+            case 3: DrawStore(); break;
+            default: DrawLog(); break;
+        }
+        DrawHud();
+        DrawTabBar();
     }
 
-    private void DrawPushed()
+    private void DrawPushed(PushPage page)
     {
-        switch (_push)
+        switch (page)
         {
             case PushPage.Character: DrawCharacterPage(); break;
             case PushPage.Disc: DrawSkillPage(); break;
@@ -370,18 +369,24 @@ public partial class PortraitHubScreen : Control
         var bar = PortraitLayout.TabBar;
         DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y), InkStyle.Bg);
         PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, bar.Position.Y);
+        // 当前页签的骨白药丸：切页签时从旧位置滑到新位置，图标在药丸压住时反黑。
+        var pillX = TabPillX();
+        var cy = PortraitLayout.Tab(0).Position.Y + 70f;
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
-            var on = i == _tab && _push == PushPage.None;
             var cx = r.GetCenter().X;
-            var cy = r.Position.Y + 70f;
-            var pill = new Rect2(cx - 76f, cy - 40f, 152f, 80f);
-            if (on)
-                PortraitFrame.RoundRect(this, pill, 40f, InkStyle.Line);
-            else if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, pill, 40f, PortraitFrame.PressFill);
-            PortraitGlyph.TabIcons[i](this, cx, cy, 26f, on ? InkStyle.Bg : InkStyle.Dim);
+            if (i != _tab && PortraitFrame.IsPressed(r))
+                PortraitFrame.RoundRect(this, new Rect2(cx - 76f, cy - 40f, 152f, 80f), 40f, PortraitFrame.PressFill);
+        }
+        PortraitFrame.RoundRect(this, new Rect2(pillX - 76f, cy - 40f, 152f, 80f), 40f, InkStyle.Line);
+        for (var i = 0; i < PortraitLayout.TabCount; i++)
+        {
+            var r = PortraitLayout.Tab(i);
+            var on = i == _tab;
+            var cx = r.GetCenter().X;
+            var covered = Mathf.Abs(pillX - cx) < 50f;
+            PortraitGlyph.TabIcons[i](this, cx, cy, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
             InkDraw.Text(this, new Vector2(cx, cy + 84f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
@@ -420,6 +425,14 @@ public partial class PortraitHubScreen : Control
 
     public override void _GuiInput(InputEvent e)
     {
+        if (InputLocked)
+        {
+            _pressed = _dragging = false;
+            _pressRect = null;
+            _pressWidget = null;
+            ResetListDrag();
+            return;
+        }
         if (HandleSkillInput(e) || HandleListInput(e))
             return;
         if (e is InputEventMouseMotion { ButtonMask: not 0 } motion)
@@ -441,7 +454,9 @@ public partial class PortraitHubScreen : Control
             _pressed = true;
             _dragging = false;
             _pressPos = mb.Position;
-            _pressRect = Hit(mb.Position)?.Widget.Rect;
+            _pressWidget = Hit(mb.Position)?.Widget;
+            _pressRect = _pressWidget?.Rect;
+            _pressHeld = 0f;
             QueueRedraw();
             return;
         }
@@ -450,6 +465,7 @@ public partial class PortraitHubScreen : Control
             return;
         _pressed = false;
         _pressRect = null;
+        _pressWidget = null;
         if (_dragging)
         {
             QueueRedraw();
@@ -467,6 +483,7 @@ public partial class PortraitHubScreen : Control
         if (hit == null || !hit.Value.Widget.Enabled)
             return;
         var w = hit.Value.Widget;
+        Flash(w.Rect);
         _vm.Hub.BeginOperation();
         var before = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
         switch (w.Action)
@@ -481,10 +498,10 @@ public partial class PortraitHubScreen : Control
                 OpenRename();
                 return;
             case PortraitAction.SheetClose:
-                CloseSheet();
+                RequestSheetClose();
                 break;
             case PortraitAction.Back:
-                Back();
+                RequestBack();
                 break;
             default:
                 Execute(w);

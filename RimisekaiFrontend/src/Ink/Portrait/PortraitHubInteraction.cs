@@ -273,26 +273,6 @@ public partial class PortraitHubScreen
                 firstChoice, v => _pan["scene_choices"] = v, PortraitLayout.SceneChoiceStep);
     }
 
-    public override void _Process(double delta)
-    {
-        // 对话打字机逐字显现。
-        if (Visible && ConversationActive && _conversationReveal < _conversationText.Length)
-        {
-            _conversationReveal = Math.Min(_conversationText.Length, _conversationReveal + (float)delta * 30f);
-            QueueRedraw();
-        }
-        // 提示签 3 秒后淡出。
-        if (_notice.Length > 0 && _noticeAge <= 3f)
-        {
-            _noticeAge += (float)delta;
-            if (_noticeAge > 3f)
-                QueueRedraw();
-        }
-        // 技能星盘视角动效：动画进行中逐帧重绘，静止时零开销。
-        if (_push == PushPage.Disc && AdvanceSkillView(delta))
-            QueueRedraw();
-    }
-
     private bool ExecuteInteraction(PortraitWidget widget)
     {
         var hub = _vm.Hub;

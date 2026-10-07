@@ -20,8 +20,15 @@ public static partial class PortraitLayout
     public static Rect2 Cell(int x, int y) =>
         new(MapOrigin.X + x * MapCell, MapOrigin.Y + y * MapCell, MapCell, MapCell);
 
-    /// <summary>格内名字下方的角色小圆标带（自右向左排）。</summary>
-    public static Vector2 CellToken(Rect2 cell, int i) => new(cell.End.X - 38f - i * 52f, cell.End.Y - 38f);
+    /// <summary>格内名字下方的棋子带：底线贴格内框上方 14px，左右各让 16px。</summary>
+    public static Rect2 CellPieces(Rect2 cell) => new(cell.Position.X + 22f, cell.End.Y - 84f, cell.Size.X - 44f, 64f);
+
+    /// <summary>格内棋子：高 58、步距 44（184 宽的格放三枚）。</summary>
+    public const float PieceHeight = 58f;
+    public const float PieceStep = 44f;
+
+    /// <summary>「此刻」头像右下角的棋子徽半径。</summary>
+    public const float BadgeRadius = 30f;
 
     public static float NowRuleY => MapFrame.End.Y + 60f;
 

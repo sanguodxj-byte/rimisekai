@@ -103,6 +103,7 @@ public partial class PortraitHubScreen
         _dragging = false;
         _pressPos = point;
         _pressRect = Hit(point)?.Widget.Rect;
+        _pressWidget = null;
         QueueRedraw();
         return true;
     }

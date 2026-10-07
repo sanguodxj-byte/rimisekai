@@ -49,7 +49,6 @@ public static partial class PortraitLayout
     public const int FontDisplay = 110;
 
     /// <summary>网格格内角色小圆标的首字（圆标直径 48，图标级，不算正文）。</summary>
-    public const int FontToken = 30;
 
     /// <summary>屏边留白与通用标题带。</summary>
     public const int Pad = 40;

@@ -13,12 +13,18 @@ namespace Rimisekai.Portrait;
 public static class PortraitFrame
 {
     private static Rect2? _press;
+    private static float _pressStrength = 1f;
 
     /// <summary>
     /// 按下态：矩形与它一致者按选中画。触摸没有悬停，按下当场不给反馈就只剩"点没点中"的疑问。
     /// 每个画面在 _Draw 开头调一次（没有按下就传 null）；后画的画面会覆盖前一个的值。
+    /// strength＜1 是松手后的淡出（按压浅填随之变淡）。
     /// </summary>
-    public static void SetPress(Rect2? rect) => _press = rect;
+    public static void SetPress(Rect2? rect, float strength = 1f)
+    {
+        _press = rect;
+        _pressStrength = strength;
+    }
 
     private static bool Pressed(Rect2 r) =>
         _press is { } p && p.Position == r.Position && p.Size == r.Size;
@@ -27,7 +33,7 @@ public static class PortraitFrame
     public static bool IsPressed(Rect2 r) => Pressed(r);
 
     /// <summary>按压填色（自绘块与 Button 共用同一档，保持全界面一致）。</summary>
-    public static Color PressFill => new(InkStyle.Line, 0.16f);
+    public static Color PressFill => new(InkStyle.Line, 0.16f * _pressStrength);
 
     private static IReadOnlyList<Vector2> Loop(Rect2 r) => new[]
     {
@@ -321,13 +327,15 @@ public static class PortraitFrame
             active ? InkStyle.Line : InkStyle.WoodDark, active ? PortraitLayout.LineHair : PortraitLayout.LineHair - 1f);
     }
 
+    /// <summary>抽屉上方压暗的满档透明度。</summary>
+    public const float ScrimAlpha = 0.66f;
+
     /// <summary>
-    /// 底部抽屉：先把上方整幅压暗（下层画面仍可见、但已不可点——命中块由调用方移除），
-    /// 再铺一块圆顶面板与把手。返回面板矩形。
+    /// 底部抽屉：一块圆顶面板与把手，返回面板矩形。上方压暗由调用方画
+    /// （压暗随抽屉滑入淡入，下层命中块也由调用方移除）。
     /// </summary>
     public static Rect2 Sheet(CanvasItem ci, float top)
     {
-        ci.DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top + 60f), new Color(InkStyle.Bg, 0.66f));
         var r = new Rect2(0, top, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - top + 80f);
         RoundRect(ci, r, 56f, InkStyle.Panel, InkStyle.Dim, PortraitLayout.LineHair - 1f);
         RoundRect(ci, new Rect2(PortraitLayout.CanvasWidth / 2f - 70f, top + 24f, 140f, 12f), 6f, InkStyle.WoodDark);

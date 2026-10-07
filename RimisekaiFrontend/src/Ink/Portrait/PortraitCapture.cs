@@ -43,6 +43,8 @@ public partial class PortraitCapture : Node
         }
         if (_prefix.Length == 0 && _dump.Length == 0)
             return;
+        // 截图与命中块核对一律取终态：动效直接跳完（CheckMotion 里临时关掉，专门核对过渡本身）。
+        PortraitMotion.Instant = true;
         if (_prefix.Length > 0)
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_prefix))!);
         _root = new PortraitRoot { Name = "PortraitRoot" };
@@ -96,6 +98,48 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "room sheet opens"); Shoot("room_sheet", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0));
+        // 点别的房间格＝当场前往（不弹抽屉）；长按房间格才弹设施抽屉；「此刻」只列同区的人。
+        _steps.Enqueue(TapOtherRoom);
+        _steps.Enqueue(CheckMovedWithoutSheet);
+        _steps.Enqueue(() => Hold(_root.HubScreen, _holdAt = CellCenter(_homeRoom)));
+        _steps.Enqueue(() => _root.HubScreen._Process(PortraitMotion.LongPress + 0.05));
+        _steps.Enqueue(CheckLongPressSheet);
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RoomGo, _homeRoom));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.PlayerRoomId == _homeRoom, "room sheet go returns home");
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        });
+        _steps.Enqueue(CheckMotion);
+        _steps.Enqueue(() => _root.HubScreen._Process(0.06));
+        _steps.Enqueue(() => Shoot("motion_sheet_mid", _root.HubScreen));
+        _steps.Enqueue(FinishMotion);
+        _steps.Enqueue(CheckSheetClosed);
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugAnimating, "push page slide-in runs"); _root.HubScreen._Process(0.06); });
+        _steps.Enqueue(() => Shoot("motion_push_mid", _root.HubScreen));
+        _steps.Enqueue(() => { _root.HubScreen._Process(1); _root.HubScreen.DebugPress(PortraitAction.Back, 0); });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugAnimating && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Back),
+                "push page slide-out plays before back");
+            _root.HubScreen._Process(1);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(!_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Back), "push page gone after slide-out");
+            _root.HubScreen.ShowTab(2);
+        });
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugAnimating, "tab pill slides"); _root.HubScreen._Process(0.07); });
+        _steps.Enqueue(() => Shoot("motion_tab_mid", _root.HubScreen));
+        _steps.Enqueue(() => { _root.HubScreen._Process(1); _root.HubScreen.ShowTab(0); });
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen._Process(1);
+            Require(!_root.HubScreen.DebugAnimating && _root.HubScreen.DebugTab == 0, "motion settles back on territory");
+            PortraitMotion.Instant = true;
+            _root.HubScreen.SetProcess(true);
+            _root.HubScreen.QueueRedraw();
+        });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Build, 0));
         _steps.Enqueue(() => Shoot("build", _root.HubScreen));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
@@ -232,6 +276,105 @@ public partial class PortraitCapture : Node
         _root.ModalLayer.Choose("title");
         Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Title, "combat settings returns to title");
     }
+
+    private int _homeRoom = -1;
+    private int _otherRoom = -1;
+    private Vector2 _holdAt;
+
+    private Vector2 CellCenter(int roomId) =>
+        _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.Cell && w.Index == roomId).Rect.GetCenter();
+
+    private void TapOtherRoom()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        _homeRoom = hub.PlayerRoomId;
+        _otherRoom = hub.Map().First(r => r.Open && r.Id != _homeRoom).Id;
+        Tap(_root.HubScreen, CellCenter(_otherRoom));
+    }
+
+    private void CheckMovedWithoutSheet()
+    {
+        var screen = _root.HubScreen;
+        var hub = screen.DebugHub;
+        Require(hub.PlayerRoomId == _otherRoom, "cell tap moves player there");
+        Require(!screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "cell tap does not open sheet");
+        var rooms = hub.State.Territory.Rooms;
+        var region = rooms.First(r => r.Id == hub.PlayerRoomId).RegionId;
+        Require(region == hub.RegionId, "player region tracks player room");
+        var party = hub.Party();
+        Require(screen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).All(w =>
+            party.First(c => c.Id == w.Index) is var card
+            && (card.IsPlayer || rooms.Exists(r => r.Id == card.RoomId && r.RegionId == region))), "now strip lists same-area only");
+        Shoot("territory_moved", screen);
+    }
+
+    private void CheckLongPressSheet()
+    {
+        var screen = _root.HubScreen;
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo && w.Index == _homeRoom && w.Enabled),
+            "long press opens room sheet");
+        Release(screen, _holdAt);
+    }
+
+    /// <summary>
+    /// 过渡本身：关掉直跳，开抽屉 / 推入页 / 切页签，确认过渡在走、期间不收输入，
+    /// 推进 1 秒后状态落定、命中块是终态布局。
+    /// </summary>
+    private void CheckMotion()
+    {
+        var screen = _root.HubScreen;
+        var hub = screen.DebugHub;
+        PortraitMotion.Instant = false;
+        // 帧时长随渲染负载漂移：停掉自走的 _Process，由核对步骤手动推进，结果不随机器快慢变。
+        screen.SetProcess(false);
+        screen.DebugPress(PortraitAction.Cell, hub.PlayerRoomId);
+        screen.QueueRedraw();
+    }
+
+    private void FinishMotion()
+    {
+        var screen = _root.HubScreen;
+        Require(screen.DebugAnimating, "sheet slide-in runs");
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "sheet hit blocks registered at final layout");
+        // 过渡中点压暗区不应收起（输入锁住）。
+        Tap(screen, new Vector2(PortraitLayout.CanvasWidth / 2f, 200f));
+        screen._Process(1);
+        Require(!screen.DebugAnimating, "sheet slide-in settles");
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "input ignored during sheet transition");
+        screen.DebugPress(PortraitAction.SheetClose, 0);
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo) && screen.DebugAnimating,
+            "sheet close plays before state changes");
+        screen._Process(1);
+    }
+
+    private void CheckSheetClosed()
+    {
+        var screen = _root.HubScreen;
+        Require(!screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "sheet closed after slide-out");
+        screen.DebugPress(PortraitAction.Build, 0);
+    }
+
+    private static void Tap(Control control, Vector2 position)
+    {
+        Hold(control, position);
+        Release(control, position);
+    }
+
+    private static void Hold(Control control, Vector2 position)
+    {
+        var viewport = control.GetViewport();
+        viewport.PushInput(new InputEventMouseMotion { Position = position, GlobalPosition = position });
+        viewport.PushInput(new InputEventMouseButton
+        {
+            ButtonIndex = MouseButton.Left, Pressed = true, Position = position, GlobalPosition = position,
+        });
+    }
+
+    private static void Release(Control control, Vector2 position) =>
+        control.GetViewport().PushInput(new InputEventMouseButton
+        {
+            ButtonIndex = MouseButton.Left, Pressed = false, Position = position, GlobalPosition = position,
+        });
 
     private void PrepareRosterAndIcons()
     {

@@ -9,8 +9,9 @@ using Rimisekai.Ink;
 namespace Rimisekai.Portrait;
 
 /// <summary>
-/// 领地页签：提示条（最新操作反馈）、5×5 领地网格、「此刻」头像带、出行 / 建造两枚浮动药丸；
-/// 点房间格弹设施抽屉（设施、在场的人、可做的事、拆除 / 前往）。
+/// 领地页签：提示条（最新操作反馈）、5×5 领地网格（格底棋子＝在场的人）、
+/// 「此刻」头像带（只列与主角同区的人）、出行 / 建造两枚浮动药丸。
+/// 点房间格＝当场前往；再点主角所在的格、或长按任一房间格，弹设施抽屉（设施、在场的人、拆除）。
 /// 世界层（出行后）网格换成兴趣点格，点格即进入该地点。
 /// </summary>
 public partial class PortraitHubScreen
@@ -90,17 +91,8 @@ public partial class PortraitHubScreen
         InkDraw.TextBounded(this, new Rect2(inner.Position.X + 8f, c.Y - 46f, inner.Size.X - 16f, 64f), room.Name,
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, room.Vacant ? InkStyle.Dim : InkStyle.Line, "cm");
 
-        var here = _vm.Cards().Where(card => card.RoomId == room.Id).OrderByDescending(card => card.IsPlayer).ToArray();
-        for (var i = 0; i < here.Length && i < 3; i++)
-        {
-            var at = PortraitLayout.CellToken(r, i);
-            if (i == 2 && here.Length > 3)
-            {
-                InkDraw.Text(this, at, $"+{here.Length - 2}", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
-                break;
-            }
-            DrawToken(at, here[i]);
-        }
+        DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id).OrderByDescending(card => card.IsPlayer).ToArray(),
+            PortraitLayout.CellPieces(r));
 
         if (picked || _vm.IsPlayerRoom(room.Id))
         {
@@ -113,21 +105,42 @@ public partial class PortraitHubScreen
         _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, true, room.Name));
     }
 
-    /// <summary>格内角色小圆标：主角实心骨白黑字，其余黑底骨白环。</summary>
-    private void DrawToken(Vector2 at, CharacterCard card)
+    /// <summary>
+    /// 格底棋子：在场的人一人一枚（主角＝王，好感高者＝后，其余按好感取车 / 象 / 马 / 兵），
+    /// 底线对齐、居中排开；放不下时最后一位换成「+N」。
+    /// </summary>
+    private void DrawCellPieces(IReadOnlyList<CharacterCard> cards, Rect2 area)
     {
-        if (card.IsPlayer)
-        {
-            DrawCircle(at, 24f, InkStyle.Line);
-            InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Bg, "cm");
-        }
-        else
-        {
-            DrawCircle(at, 24f, InkStyle.Bg);
-            DrawArc(at, 24f, 0f, Mathf.Tau, 32, InkStyle.Line, 3f, true);
-            InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Line, "cm");
-        }
+        if (cards.Count == 0)
+            return;
+        var capacity = Math.Max(1, (int)(area.Size.X / PortraitLayout.PieceStep));
+        var shown = cards.Count > capacity ? capacity - 1 : cards.Count;
+        var slots = cards.Count > capacity ? capacity : shown;
+        var start = area.GetCenter().X - (slots - 1) * PortraitLayout.PieceStep / 2f;
+        for (var i = 0; i < shown; i++)
+            InkDraw.Chess(this, new Vector2(start + i * PortraitLayout.PieceStep, area.End.Y),
+                PortraitLayout.PieceHeight, InkDraw.PieceFor(cards[i]));
+        if (cards.Count > capacity)
+            InkDraw.Text(this, new Vector2(start + shown * PortraitLayout.PieceStep, area.End.Y - PortraitLayout.PieceHeight * 0.4f),
+                $"+{cards.Count - shown}", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
     }
+
+    /// <summary>「此刻」头像右下角的棋子徽：黑底骨白环里一枚与领地格同款的棋子。</summary>
+    private void DrawPieceBadge(Vector2 center, CharacterCard card)
+    {
+        DrawCircle(center, PortraitLayout.BadgeRadius, InkStyle.Bg);
+        DrawArc(center, PortraitLayout.BadgeRadius, 0f, Mathf.Tau, 40, InkStyle.Line, 3f, true);
+        InkDraw.Chess(this, center + new Vector2(0f, PortraitLayout.BadgeRadius * 0.62f),
+            PortraitLayout.BadgeRadius * 1.3f, InkDraw.PieceFor(card));
+    }
+
+    /// <summary>
+    /// 与主角同区：所在房间的 <see cref="Room.RegionId"/> 等于 <c>HubSession.RegionId</c>
+    /// （主角所在的 5×5 区，Enter / Move 时随主角更新）。领地分区 0..8，兴趣点的房间从 9 起另编区号，
+    /// 所以主角出门在外时，留在领地的人不算同区。不在任何房间（RoomId＜0）的人不算。
+    /// </summary>
+    private bool SameAreaAsPlayer(CharacterCard card) =>
+        card.IsPlayer || _vm.Hub.State.Territory.Rooms.Exists(r => r.Id == card.RoomId && r.RegionId == _vm.Hub.RegionId);
 
     /// <summary>当前时段（0/6/12/18 时起各 6 小时）。</summary>
     private int CurrentSlot => Math.Clamp(_vm.Hub.Header().Hour / 6, 0, WorkSlot.Count - 1);
@@ -150,16 +163,16 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>
-    /// 「此刻」：全员头像＋名字＋此刻的安排。与主角同房的人点了即交流；主角与不在场的人点了看角色详情。
-    /// 人多时整条横拖。
+    /// 「此刻」：与主角同区的人（头像＋棋子徽＋名字＋此刻的安排）。与主角同房的人点了即交流；
+    /// 主角与同区别房的人点了看角色详情。人多时整条横拖。
     /// </summary>
     private void DrawNowStrip()
     {
-        var cards = _vm.Cards();
+        var cards = _vm.Cards().Where(SameAreaAsPlayer).ToArray();
         var strip = PortraitLayout.NowStrip;
-        var total = (int)(PortraitLayout.Pad * 2f + cards.Count * PortraitLayout.NowSlot);
+        var total = (int)(PortraitLayout.Pad * 2f + cards.Length * PortraitLayout.NowSlot);
         var offset = Pan("now", total, (int)strip.Size.X);
-        for (var i = 0; i < cards.Count; i++)
+        for (var i = 0; i < cards.Length; i++)
         {
             var card = cards[i];
             var r = PortraitLayout.NowCard(i, offset);
@@ -170,7 +183,8 @@ public partial class PortraitHubScreen
             if (PortraitFrame.IsPressed(r))
                 PortraitFrame.RoundRect(this, r, 24f, PortraitFrame.PressFill);
             PortraitFrame.Avatar(this, new Vector2(cx, r.Position.Y + 84f), 66f,
-                PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: card.RoomId < 0 && !card.IsPlayer);
+                PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: !present);
+            DrawPieceBadge(new Vector2(cx + 56f, r.Position.Y + 130f), card);
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 168f, r.Size.X, 56f), card.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 226f, r.Size.X, 52f),
@@ -182,6 +196,14 @@ public partial class PortraitHubScreen
     }
 
     // ---------- 设施抽屉 ----------
+
+    private void OpenRoomSheet(int roomId)
+    {
+        _sheetRoom = roomId;
+        _sheet = SheetKind.Room;
+        _pan.Remove("room_fixtures");
+        QueueRedraw();
+    }
 
     private float DrawRoomSheet()
     {
@@ -266,9 +288,14 @@ public partial class PortraitHubScreen
                         SetNotice("这里无法进入。");
                     return true;
                 }
-                _sheetRoom = w.Index;
-                _sheet = SheetKind.Room;
-                _pan.Remove("room_fixtures");
+                // 点格即前往；已在这格里再点，才弹设施抽屉（长按任一格也弹，见 StepLongPress）。
+                if (_vm.IsPlayerRoom(w.Index))
+                    OpenRoomSheet(w.Index);
+                else
+                {
+                    hub.Enter(w.Index);
+                    SetNotice($"你来到了{RoomNameOf(w.Index)}。");
+                }
                 return true;
             case PortraitAction.HubWorld:
                 hub.ToggleWorldLayer();
