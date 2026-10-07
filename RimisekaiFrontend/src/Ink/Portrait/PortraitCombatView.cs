@@ -194,7 +194,7 @@ public partial class PortraitCombatView : Control
     }
 
     /// <summary>
-    /// 速度跑条（沿用历史版）：敌阵左侧竖轨，顶端一道出手线；中线分左右两列——左列我方、右列敌方，
+    /// 速度跑条（沿用历史版）：左上竖轨（顶栏下、敌阵上），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
     /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
     private void DrawTurnOrder(Battle battle)
@@ -202,7 +202,7 @@ public partial class PortraitCombatView : Control
         var track = PortraitLayout.CombatTrack;
         var alive = battle.Members.Where(m => m.Alive).ToList();
         var cx = track.GetCenter().X;
-        const float size = 50f, minGap = 60f;
+        const float size = 40f;
         var top = track.Position.Y + 30f + size / 2f;
         var bottom = track.End.Y - size / 2f - 6f;
         // 出手线：轨顶一道骨白横线，两端菱珠。
@@ -220,6 +220,8 @@ public partial class PortraitCombatView : Control
             var members = alive.Where(m => (m.Side == battle.ControlledSide) == ally).OrderBy(m => m.NextActAt).ThenBy(m => m.Id).ToList();
             if (members.Count == 0)
                 continue;
+            // 同列间距随人数收紧，保证整列收在轨内、不越出跑条区。
+            var minGap = members.Count > 1 ? MathF.Min(46f, (bottom - top) / (members.Count - 1)) : 46f;
             var ys = new List<float>();
             foreach (var m in members)
             {
@@ -250,7 +252,7 @@ public partial class PortraitCombatView : Control
                 {
                     InkDraw.Jewel(this, c, size / 2f + 2f, InkStyle.Dim);
                     InkDraw.Jewel(this, c, size / 2f - 2f, InkStyle.Bg);
-                    InkDraw.Text(this, c, m.Name[..1], 30, InkStyle.Dim, "cm");
+                    InkDraw.Text(this, c, m.Name[..1], 24, InkStyle.Dim, "cm");
                 }
             }
         }
