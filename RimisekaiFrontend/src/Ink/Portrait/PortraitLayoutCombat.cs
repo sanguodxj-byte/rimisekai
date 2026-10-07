@@ -16,8 +16,8 @@ public static partial class PortraitLayout
     // 同日再改：回合数居中；行动顺序条撤掉，改成左上的竖向速度跑条（只占原顺序条与首领条左段，战场网格不动）（沿用历史版：顶端出手线，左列我方右列敌方）。
     public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
     public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
-    /// <summary>首领条：原位原宽（40, 270, 1000, 90），任何改动不得侵占。</summary>
-    public static Rect2 CombatBoss => new(40, SafeTop + 270f, 1000, 90f);
+    /// <summary>首领条：紧贴顶栏下方（主人定 2026-10-08：不留无用空白），宽 1000，不得被侵占。</summary>
+    public static Rect2 CombatBoss => new(40, CombatTop.End.Y + 10f, 1000, 90f);
     public static Rect2 CombatRound => CombatTop;
     /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
     public static Rect2 CombatGearHit => new(CanvasWidth - Pad - 118f, SafeTop + 6f, 118f, 118f);
@@ -35,7 +35,7 @@ public static partial class PortraitLayout
     public const float CombatTrackWidth = 220f;
     /// <summary>敌阵上缘：与原版同为 SafeTop+380，跑条改动不得移动它。</summary>
     private static float FieldTop => SafeTop + 380f;
-    public static Rect2 CombatTrack => new(CombatField.Position.X + 20f, FieldTop + 20f, CombatTrackWidth, 400f);
+    public static Rect2 CombatTrack => new(CombatField.Position.X + 20f, CombatBoss.End.Y + 20f, CombatTrackWidth, 460f);
     public static Rect2 CombatField => new(40, FieldTop, 1000, CombatActions.Position.Y - 30f - FieldTop);
     /// <summary>
     /// 战场容器（主人定 2026-10-08）：从首领名称行起到行动面板上缘，首领条＋跑条＋敌阵网格同属一个容器（region 仍叫 enemies）。
