@@ -196,7 +196,7 @@ public partial class PortraitCombatView : Control
     }
 
     /// <summary>
-    /// 速度跑条（沿用历史版）：左上竖轨（屏顶到敌阵上缘），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
+    /// 速度跑条（沿用历史版）：左上竖轨（屏顶到首领条上缘），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
     /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
     private void DrawTurnOrder(Battle battle)
@@ -204,11 +204,11 @@ public partial class PortraitCombatView : Control
         var track = PortraitLayout.CombatTrack;
         var alive = battle.Members.Where(m => m.Alive).ToList();
         var cx = track.GetCenter().X;
-        const float size = 72f;
-        var top = track.Position.Y + 30f + size / 2f;
-        var bottom = track.End.Y - size / 2f - 6f;
+        const float size = 52f;
+        var top = track.Position.Y + 24f + size / 2f;
+        var bottom = track.End.Y - size / 2f - 2f;
         // 出手线：轨顶一道骨白横线，两端菱珠。
-        var lineY = track.Position.Y + 14f;
+        var lineY = track.Position.Y + 10f;
         DrawRect(new Rect2(track.Position.X, lineY - 2f, track.Size.X, 4f), InkStyle.Line);
         InkDraw.Jewel(this, new Vector2(track.Position.X, lineY), 7f, InkStyle.Line);
         InkDraw.Jewel(this, new Vector2(track.End.X, lineY), 7f, InkStyle.Line);
@@ -223,7 +223,7 @@ public partial class PortraitCombatView : Control
             if (members.Count == 0)
                 continue;
             // 同列间距随人数收紧，保证整列收在轨内、不越出跑条区。
-            var minGap = members.Count > 1 ? MathF.Min(82f, (bottom - top) / (members.Count - 1)) : 82f;
+            var minGap = members.Count > 1 ? MathF.Min(60f, (bottom - top) / (members.Count - 1)) : 60f;
             var ys = new List<float>();
             foreach (var m in members)
             {
@@ -406,7 +406,7 @@ public partial class PortraitCombatView : Control
     }
 
     /// <summary>
-    /// 行动面板（夹在敌阵与我方卡之间）：石板面板＋「某某 的行动」＋当前招式名；2×2 大钮（攻击 / 技能 / 道具 / 逃跑），
+    /// 行动面板（夹在敌阵与我方卡之间）：石板面板＋2×2 大钮上下居中（主人定：不放「某某 的行动」与招式名这类无效信息行）；（攻击 / 技能 / 道具 / 逃跑），
     /// 我方行动者就绪时点亮，跑条流动期全暗不可点。技能 / 道具弹分页弹窗，其余直接生效。
     /// </summary>
     private void DrawOpEntry(Battle battle)
@@ -414,14 +414,6 @@ public partial class PortraitCombatView : Control
         var panel = PortraitLayout.CombatActions;
         PortraitFrame.Dock(this, panel, closed: true);
         var enabled = _actor != null;
-        if (_actor != null)
-        {
-            InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, panel.Position.Y + 70f), $"{_actor.Name} 的行动",
-                PortraitLayout.FontBody, InkStyle.Line, "lm");
-            InkDraw.TextBounded(this, new Rect2(PortraitLayout.CanvasWidth / 2f, panel.Position.Y + 40f,
-                    PortraitLayout.CanvasWidth / 2f - PortraitLayout.Pad - 20f, 60f), battle.CurrentActionName,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-        }
         for (var slot = 0; slot < OpLabels.Length; slot++)
         {
             var rect = PortraitLayout.CombatButton(slot);
