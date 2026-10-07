@@ -256,28 +256,35 @@ public partial class PortraitHubScreen
     // ---------- 日志 ----------
 
     /// <summary>
-    /// 日志时间线：Core 的日志是「一次操作一份快照」（环境 / 他人 / 自己三层），没有时间戳与类型，
-    /// 所以只按当日分组、不做类型筛选。每条前一枚菱，竖线串起来。
+    /// 日志时间线：Core 的近期日志（<c>HubSession.History</c>，最旧在前），每条一句「a，b」。
+    /// 按游戏日分组（日序标题＋一条渐隐线），最新的日子与条目在最上；每条前一枚菱，竖线串起来。
     /// </summary>
     private void DrawLog()
     {
         var view = PortraitLayout.LogView;
-        var entries = _vm.LogLines();
+        var history = _vm.Hub.History;
         var offset = _pan.GetValueOrDefault("log");
         var y = view.Position.Y + 30f - offset;
-        var day = $"第 {_vm.Hub.State.Clock.Day} 日";
-        InkDraw.Text(this, new Vector2(PortraitLayout.Pad, y + 30f), day, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad + 30f + InkDraw.Measure(day, PortraitLayout.FontBody).X, y + 30f),
-            new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 30f), InkStyle.WoodDark, 2f);
-        y += 110f;
         const float rail = 80f;
         var textX = rail + 50f;
         var width = PortraitLayout.CanvasWidth - PortraitLayout.Pad - textX - 20f;
-        for (var i = 0; i < entries.Count; i++)
+        var day = -1;
+        for (var i = history.Count - 1; i >= 0; i--)
         {
-            var lines = InkDraw.WrapLines(entries[i], width, PortraitLayout.FontMeta);
+            var entry = history[i];
+            if (entry.Day != day)
+            {
+                day = entry.Day;
+                var label = $"第 {day} 日";
+                InkDraw.Text(this, new Vector2(PortraitLayout.Pad, y + 30f), label, PortraitLayout.FontBody, InkStyle.Line, "lm");
+                InkDraw.FadeRule(this, PortraitLayout.Pad + 30f + InkDraw.Measure(label, PortraitLayout.FontBody).X,
+                    PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 30f, PortraitLayout.LineHair, InkStyle.Dim, InkDraw.FadeTaper.Right);
+                y += 110f;
+            }
+            var lines = InkDraw.WrapLines(entry.Text, width, PortraitLayout.FontMeta);
             var height = Mathf.Max(1, lines.Count) * PortraitLayout.LogLineHeight;
-            if (i < entries.Count - 1)
+            var last = i == 0 || history[i - 1].Day != day;
+            if (!last)
                 InkDraw.InkLine(this, new Vector2(rail, y + 50f), new Vector2(rail, y + height + 40f), InkStyle.Hover, 3f);
             InkDraw.Jewel(this, new Vector2(rail, y + 30f), 12f, InkStyle.Line);
             for (var k = 0; k < lines.Count; k++)

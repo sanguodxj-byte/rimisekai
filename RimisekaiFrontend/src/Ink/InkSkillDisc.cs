@@ -528,7 +528,7 @@ public static class InkSkillDisc
         {
             // 效果描述接在最后一行行格之外：上面一条渐隐细线分隔，正文折行。
             var effectTop = start1 + specLines.Count * slotH + effectGap;
-            InkFrame.FadingRule(ci, left + 16f, left + width - 16f, effectTop - effectGap / 2f, 7850);
+            InkFrame.FadingRule(ci, left + 16f, left + width - 16f, effectTop - effectGap / 2f);
             var ey = effectTop;
             foreach (var line in effectLines)
             {

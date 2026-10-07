@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using Rimisekai.Character;
 using Rimisekai.Save;
@@ -14,7 +15,8 @@ public sealed class HubSnapshot
     /// <summary>出发去兴趣点前站的本家房间；-1 = 没出过门。</summary>
     public int TerritoryHomeRoom { get; set; } = -1;
     public Dictionary<int, int> Presence { get; set; } = new();
-    public List<string> Log { get; set; } = new();
+    /// <summary>近期日志（两段式，最旧在前）。</summary>
+    public List<LogEntryData> Log { get; set; } = new();
 
     /// <summary>最近一次出发去集市的日期（按出发日计，0 点刷新次数）。-1 = 还没去过。</summary>
     public int MarketSettledDay { get; set; } = -1;
@@ -26,6 +28,16 @@ public sealed class HubSnapshot
     public List<StagedActorData> StagedActors { get; set; } = new();
 }
 
+/// <summary>一条日志的存档行。</summary>
+public sealed class LogEntryData
+{
+    public LogKind Kind { get; set; }
+    public string Fact { get; set; } = "";
+    public string Feel { get; set; } = "";
+    public int Day { get; set; }
+    public int Minutes { get; set; }
+}
+
 public sealed partial class HubSession
 {
     public HubSnapshot Snapshot() => new()
@@ -35,7 +47,7 @@ public sealed partial class HubSession
         Selected = SelectedCharacterId,
         TerritoryHomeRoom = _territoryHomeRoomId,
         Presence = new Dictionary<int, int>(_presence),
-        Log = _log.ConvertAll(l => l.Text),
+        Log = History.Select(l => new LogEntryData { Kind = l.Kind, Fact = l.Fact, Feel = l.Feel, Day = l.Day, Minutes = l.Minutes }).ToList(),
         MarketSettledDay = MarketSettledDay,
         StagedActors = CaptureStagedActors(),
     };
@@ -50,8 +62,7 @@ public sealed partial class HubSession
             Enter(snapshot.PlayerRoom);
         if (snapshot.Selected >= 0)
             Select(snapshot.Selected);
-        foreach (var text in snapshot.Log)
-            Write(text);
+        _book.Restore(snapshot.Log.Select(l => new LogEntry(l.Kind, l.Fact, l.Feel, l.Day, l.Minutes)));
         // 读档即人在据点：在集市状态是行程中的临时态，不进存档。
         AtMarket = false;
         MarketSettledDay = snapshot.MarketSettledDay;

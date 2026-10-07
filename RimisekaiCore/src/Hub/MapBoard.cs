@@ -211,7 +211,7 @@ public sealed partial class HubSession
             _presence[master.Id] = roomId;
         // 恶劣天气进室外房间：赶路更费劲。
         WorldEffects.SpendMoveStamina(master, State.Territory, roomId, State.Weather);
-        Write($"你走进了{next.Name}。");
+        WriteArrival(roomId);
         DropSelectionIfGone();
         return true;
     }

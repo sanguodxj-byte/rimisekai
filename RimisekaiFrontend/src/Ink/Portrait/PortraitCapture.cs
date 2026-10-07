@@ -101,6 +101,9 @@ public partial class PortraitCapture : Node
         // 点别的房间格＝当场前往（不弹抽屉）；长按房间格才弹设施抽屉；「此刻」只列同区的人。
         _steps.Enqueue(TapOtherRoom);
         _steps.Enqueue(CheckMovedWithoutSheet);
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(4));
+        _steps.Enqueue(() => Shoot("log_timeline", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
         _steps.Enqueue(() => Hold(_root.HubScreen, _holdAt = CellCenter(_homeRoom)));
         _steps.Enqueue(() => _root.HubScreen._Process(PortraitMotion.LongPress + 0.05));
         _steps.Enqueue(CheckLongPressSheet);
@@ -158,6 +161,12 @@ public partial class PortraitCapture : Node
                 "storage scrollbar reaches last item without covering transfer buttons");
             Shoot("storage_scrolled", _root.HubScreen);
         });
+        _steps.Enqueue(() => { _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0); _root.HubScreen.ShowTab(0); });
+        _steps.Enqueue(CheckCrowdedTerritory);
+        _steps.Enqueue(() => Shoot("territory_crowded", _root.HubScreen));
+        _steps.Enqueue(PressNowPager);
+        _steps.Enqueue(CheckNowPageTurned);
+        _steps.Enqueue(CheckNowPageWrapped);
         _steps.Enqueue(() =>
         {
             // 开局前排留空：StartBattle 应收拢阵型——空列后排一路顶到第一排，同列被挡者停在阻挡者身后。
@@ -305,8 +314,67 @@ public partial class PortraitCapture : Node
         Require(screen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).All(w =>
             party.First(c => c.Id == w.Index) is var card
             && (card.IsPlayer || rooms.Exists(r => r.Id == card.RoomId && r.RegionId == region))), "now strip lists same-area only");
+        var room = rooms.First(r => r.Id == hub.PlayerRoomId);
+        Require(hub.History.Count > 0 && hub.History[^1].Kind == LogKind.Scene && hub.History[^1].Text.StartsWith($"你来到了{room.Name}"),
+            "cell tap writes a scene log entry");
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.Tab && w.Index == 4 && w.Rect == PortraitLayout.LogPanel),
+            "log panel taps through to log tab");
+        Require(PortraitLayout.LogPanel.Size.Y >= 400f && PortraitLayout.LogPanel.End.Y < PortraitLayout.MapFrame.Position.Y
+            && PortraitLayout.NowStrip.End.Y <= PortraitLayout.TravelButton.Position.Y && PortraitLayout.MapCell >= PortraitLayout.TouchMin,
+            "log panel is tall and grid plus strip sit below it");
+        Require(LogEntry.Compose("细雨落在菜垄上。", "你闻到了泥土的气味。") == "细雨落在菜垄上，你闻到了泥土的气味。"
+            && LogEntry.Compose("天气转为雨天。", "") == "天气转为雨天。", "log entry joins a and b with a comma");
         Shoot("territory_moved", screen);
     }
+
+    /// <summary>满员：格内至多 4 枚（3 枚＋「+」），「此刻」每页 4 人并出翻页三角钮。</summary>
+    private void CheckCrowdedTerritory()
+    {
+        var screen = _root.HubScreen;
+        var hub = screen.DebugHub;
+        Require(PortraitHubScreen.PieceSlots(4) == (4, false) && PortraitHubScreen.PieceSlots(5) == (3, true)
+            && PortraitHubScreen.PieceSlots(18) == (3, true), "cell pieces cap at four with a plus mark");
+        Require(PortraitLayout.PieceStep * (PortraitLayout.PieceCap - 1) + PortraitLayout.PieceHeight * 0.5f
+            <= PortraitLayout.CellPieces(PortraitLayout.Cell(0, 0)).Size.X, "four pieces fit inside a cell");
+        var crowd = hub.Party().Count(c => c.RoomId == hub.PlayerRoomId);
+        Require(crowd > PortraitLayout.PieceCap, "crowded room fixture");
+        var avatars = screen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).ToArray();
+        Require(avatars.Length == PortraitLayout.NowPageSize, "now strip shows four per page");
+        var pager = screen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.NowPage);
+        Require(pager.Rect.Size.X >= PortraitLayout.TouchMin && pager.Rect.Size.Y >= PortraitLayout.TouchMin
+            && avatars.All(a => a.Rect.End.X <= pager.Rect.Position.X), "now strip pager sits right of the fourth avatar");
+    }
+
+    private int[] _nowFirstPage = Array.Empty<int>();
+
+    private int[] NowIds() =>
+        _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).Select(w => w.Index).ToArray();
+
+    private int NowPages()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        var total = hub.Party().Count(c => c.IsPlayer || hub.State.Territory.Rooms.Exists(r => r.Id == c.RoomId && r.RegionId == hub.RegionId));
+        return (total + PortraitLayout.NowPageSize - 1) / PortraitLayout.NowPageSize;
+    }
+
+    /// <summary>翻页（上）：记下首页，按一次三角钮。</summary>
+    private void PressNowPager()
+    {
+        _nowFirstPage = NowIds();
+        _root.HubScreen.DebugPress(PortraitAction.NowPage, 0);
+    }
+
+    /// <summary>翻页（中）：换成了下 4 人；再按到翻过末页。</summary>
+    private void CheckNowPageTurned()
+    {
+        Require(NowIds().Length > 0 && !NowIds().Intersect(_nowFirstPage).Any(), "now pager turns to the next four");
+        for (var i = 1; i < NowPages(); i++)
+            _root.HubScreen.DebugPress(PortraitAction.NowPage, 0);
+    }
+
+    /// <summary>翻页（下）：翻过末页回到首页。</summary>
+    private void CheckNowPageWrapped() =>
+        Require(NowIds().SequenceEqual(_nowFirstPage), "now pager wraps to the first page");
 
     private void CheckLongPressSheet()
     {

@@ -72,6 +72,7 @@ public enum PortraitAction
     RoomGo,
     RoomDemolish,
     NowAvatar,
+    NowPage,
     CharacterSegment,
     SkillCard,
     OpenDisc,
@@ -157,6 +158,7 @@ public partial class PortraitHubScreen : Control
         _interactionOpen = _giftOpen = _observing = false;
         _socialCategory = -1;
         _sheetRoom = -1;
+        _nowPage = 0;
         _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
         _developmentFacilityFirst = _developmentRoomFirst = _developmentActionFirst = 0;
         _tradeQty.Clear();
@@ -394,11 +396,12 @@ public partial class PortraitHubScreen : Control
     }
 
     /// <summary>
-    /// 操作反馈：领地页签上由提示条常显；其余画面在底部弹一枚 3 秒的浅填签，不拦输入。
+    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。领地页签上若这句已是日志面板最新一条就不再弹。
     /// </summary>
     private void DrawToast()
     {
-        if (_notice.Length == 0 || _noticeAge > 3f || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f))
+        if (_notice.Length == 0 || _noticeAge > 3f
+            || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f && _vm.Hub.History.Count > 0 && _vm.Hub.History[^1].Text == _notice))
             return;
         var bottom = _sheetTop >= 0f ? _sheetTop - 30f
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;

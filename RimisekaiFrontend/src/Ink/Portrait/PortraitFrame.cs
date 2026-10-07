@@ -113,20 +113,9 @@ public static class PortraitFrame
             PortraitLayout.OrnamentWidth, PortraitLayout.OrnamentJewel);
     }
 
-    public static void FadingRule(CanvasItem ci, float left, float right, float y)
-    {
-        if (right <= left)
-            return;
-        var seg = (right - left) / 3f;
-        for (var i = 0; i < 3; i++)
-        {
-            var a = 1f - i * 0.3f;
-            InkDraw.Ink(ci, new[]
-            {
-                new Vector2(left + i * seg, y), new Vector2(left + (i + 1) * seg, y),
-            }, new Color(InkStyle.Dim, a), PortraitLayout.LineHair);
-        }
-    }
+    /// <summary>竖版分割细线：与横版同一画法（<see cref="InkDraw.FadeRule"/>），最粗处取细线档 5px。</summary>
+    public static void FadingRule(CanvasItem ci, float left, float right, float y) =>
+        InkDraw.FadeRule(ci, left, right, y, PortraitLayout.LineHair, InkStyle.Dim);
 
     /// <summary>
     /// 按钮：双线矩形。放不下就在 [FontMeta, FontBody] 内自动缩字号，不截断不溢出。
@@ -342,12 +331,15 @@ public static class PortraitFrame
         return new Rect2(0, top, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - top);
     }
 
-    /// <summary>分节线「──◆ 标题 ◆──」：两侧暗木直线，标题两旁各一枚实心菱。label 空则只画渐隐线。</summary>
+    /// <summary>
+    /// 分节线「──◆ 标题 ◆──」：标题两旁各一枚实心菱，两翼各一截渐隐线（靠标题一端最亮，向屏边收尖）。
+    /// label 空则只画一条正中嵌小菱的渐隐线。
+    /// </summary>
     public static void SectionRule(CanvasItem ci, float x1, float x2, float y, string label = "")
     {
         if (label.Length == 0)
         {
-            FadingRule(ci, x1, x2, y);
+            InkDraw.FadeRule(ci, x1, x2, y, PortraitLayout.LineHair, InkStyle.Dim, lozenge: true);
             return;
         }
         var w = InkDraw.Measure(label, PortraitLayout.FontMeta).X;
@@ -355,8 +347,8 @@ public static class PortraitFrame
         InkDraw.Text(ci, new Vector2(cx, y), label, PortraitLayout.FontMeta, InkStyle.Line, "cm");
         InkDraw.Jewel(ci, new Vector2(cx - w / 2f - 34f, y), 9f, InkStyle.Line);
         InkDraw.Jewel(ci, new Vector2(cx + w / 2f + 34f, y), 9f, InkStyle.Line);
-        InkDraw.InkLine(ci, new Vector2(x1, y), new Vector2(cx - w / 2f - 60f, y), InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
-        InkDraw.InkLine(ci, new Vector2(cx + w / 2f + 60f, y), new Vector2(x2, y), InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
+        InkDraw.FadeRule(ci, x1, cx - w / 2f - 56f, y, PortraitLayout.LineHair, InkStyle.Dim, InkDraw.FadeTaper.Left);
+        InkDraw.FadeRule(ci, cx + w / 2f + 56f, x2, y, PortraitLayout.LineHair, InkStyle.Dim, InkDraw.FadeTaper.Right);
     }
 
     /// <summary>菱形刻度：n 枚，前 k 枚实心骨白，其余暗木小菱。half 表示第 k+1 枚画成半亮。</summary>
