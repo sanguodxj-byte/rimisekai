@@ -122,17 +122,8 @@ public partial class PortraitHubScreen
         InkDraw.TextBounded(this, new Rect2(inner.Position.X + 8f, c.Y - 46f, inner.Size.X - 16f, 64f), room.Name,
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, room.Vacant ? InkStyle.Dim : InkStyle.Line, "cm");
 
-        var here = _vm.Cards().Where(card => card.RoomId == room.Id).OrderByDescending(card => card.IsPlayer).ToArray();
-        for (var i = 0; i < here.Length && i < 3; i++)
-        {
-            var at = PortraitLayout.CellToken(r, i);
-            if (i == 2 && here.Length > 3)
-            {
-                InkDraw.Text(this, at, $"+{here.Length - 2}", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
-                break;
-            }
-            DrawToken(at, here[i]);
-        }
+        DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id).OrderByDescending(card => card.IsPlayer).ToArray(),
+            PortraitLayout.CellPieces(r));
 
         if (picked || _vm.IsPlayerRoom(room.Id))
         {
@@ -145,22 +136,37 @@ public partial class PortraitHubScreen
         _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, true, room.Name));
     }
 
-    /// <summary>格内角色小方标（头像一律正方形）：主角骨白实底黑字，其余黑底骨白框。</summary>
-    private void DrawToken(Vector2 at, CharacterCard card)
+    /// <summary>
+    /// 格底国际象棋棋子（主人定，自 ui-motion-territory 分支 8498768/320e7f2 移植，不得再换成方标）：
+    /// 在场的人一人一枚（主角＝王，好感高者＝后，其余按好感取车 / 象 / 马 / 兵），底线对齐、居中排开，
+    /// 至多 <see cref="PortraitLayout.PieceCap"/> 枚；多于此数时第 4 位换成一枚实心「+」。
+    /// </summary>
+    private void DrawCellPieces(IReadOnlyList<CharacterCard> cards, Rect2 area)
     {
-        if (card.IsPlayer)
-        {
-            var box = new Rect2(at - new Vector2(24f, 24f), new Vector2(48f, 48f));
-            DrawRect(box, InkStyle.Line);
-            InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Bg, "cm");
-        }
-        else
-        {
-            var box = new Rect2(at - new Vector2(24f, 24f), new Vector2(48f, 48f));
-            DrawRect(box, InkStyle.Bg);
-            DrawRect(box, InkStyle.Line, false, 3f);
-            InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Line, "cm");
-        }
+        if (cards.Count == 0)
+            return;
+        var (shown, overflow) = PieceSlots(cards.Count);
+        var slots = overflow ? shown + 1 : shown;
+        var start = area.GetCenter().X - (slots - 1) * PortraitLayout.PieceStep / 2f;
+        for (var i = 0; i < shown; i++)
+            InkDraw.Chess(this, new Vector2(start + i * PortraitLayout.PieceStep, area.End.Y),
+                PortraitLayout.PieceHeight, InkDraw.PieceFor(cards[i]));
+        if (overflow)
+            PortraitGlyph.Plus(this, start + shown * PortraitLayout.PieceStep, area.End.Y - PortraitLayout.PieceHeight * 0.4f,
+                PortraitLayout.PieceHeight * 0.32f, InkStyle.Line);
+    }
+
+    /// <summary>格内 count 个人要画几枚棋子、要不要在最后补一枚「+」（多于 4 人时 3 枚棋子＋「+」）。</summary>
+    public static (int Pieces, bool Plus) PieceSlots(int count) =>
+        count > PortraitLayout.PieceCap ? (PortraitLayout.PieceCap - 1, true) : (count, false);
+
+    /// <summary>「此刻」头像右下角的棋子徽：黑底骨白环里一枚与领地格同款的棋子。</summary>
+    private void DrawPieceBadge(Vector2 center, CharacterCard card)
+    {
+        DrawCircle(center, PortraitLayout.BadgeRadius, InkStyle.Bg);
+        DrawArc(center, PortraitLayout.BadgeRadius, 0f, Mathf.Tau, 40, InkStyle.Line, 3f, true);
+        InkDraw.Chess(this, center + new Vector2(0f, PortraitLayout.BadgeRadius * 0.62f),
+            PortraitLayout.BadgeRadius * 1.3f, InkDraw.PieceFor(card));
     }
 
     /// <summary>当前时段（0/6/12/18 时起各 6 小时）。</summary>
@@ -205,6 +211,7 @@ public partial class PortraitHubScreen
                 PortraitFrame.RoundRect(this, r, 24f, PortraitFrame.PressFill);
             PortraitFrame.Avatar(this, new Vector2(cx, r.Position.Y + 84f), 66f,
                 PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: card.RoomId < 0 && !card.IsPlayer);
+            DrawPieceBadge(new Vector2(cx + 56f, r.Position.Y + 130f), card);
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 168f, r.Size.X, 56f), card.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 226f, r.Size.X, 52f),
