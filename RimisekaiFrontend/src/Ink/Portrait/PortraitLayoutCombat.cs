@@ -112,21 +112,25 @@ public static partial class PortraitLayout
 
     public static Rect2 AllyCard(int index)
     {
+        // 卡体在头像区下段；上段 AllyBuffBand 留给头顶 buff（卡外，主人定 2026-10-08）。
         var width = (CombatAvatars.Size.X - 3f * 16f) / 4f;
-        return new Rect2(CombatAvatars.Position.X + index * (width + 16f), CombatAvatars.Position.Y, width, CombatAvatars.Size.Y);
+        return new Rect2(CombatAvatars.Position.X + index * (width + 16f), CombatAvatars.Position.Y + AllyBuffBand, width,
+            CombatAvatars.Size.Y - AllyBuffBand);
     }
 
-    /// <summary>我方卡自上而下：buff 两排（头顶）→ 头像（半径 AllyAvatarRadius）→ 名字 → 血条。</summary>
+    /// <summary>头像区上段 buff 带高：两排图标＋角标；卡体（300 高）在其下。</summary>
+    public const float AllyBuffBand = 140f;
+    /// <summary>我方卡体内自上而下：头像（半径 AllyAvatarRadius）→ 名字 → 血条。</summary>
     public const float AllyAvatarRadius = 70f;
-    public static Vector2 AllyAvatar(Rect2 card) => new(card.GetCenter().X, card.Position.Y + 230f);
-    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.Position.Y + 308f, card.Size.X - 24, 56);
-    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 24, card.Position.Y + 380f, card.Size.X - 48, 14);
+    public static Vector2 AllyAvatar(Rect2 card) => new(card.GetCenter().X, card.Position.Y + 96f);
+    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.Position.Y + 174f, card.Size.X - 24, 56);
+    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 24, card.Position.Y + 246f, card.Size.X - 48, 14);
     public static Rect2 EnemyName(Rect2 card) => new(card.Position + new Vector2(4, 6), new Vector2(card.Size.X - 8, 32));
     public static Rect2 EnemyMeter(Rect2 card) => new(card.Position.X + 6, card.End.Y - 16, card.Size.X - 12, 10);
     public static Rect2 EnemyImage(Rect2 card) => new(card.Position.X + 4, card.Position.Y + 42,
         card.Size.X - 8, Math.Max(0, card.Size.Y - 100));
     /// <summary>
-    /// buff 图标：角色头顶两排，每排 3 枚（48px、步距 76），最多 6 枚。数字角标右下、向右伸进 28px 的列间空当，
+    /// buff 图标：卡体上方（卡外）头顶两排，每排 3 枚（48px、步距 76），最多 6 枚。数字角标右下、向右伸进 28px 的列间空当，
     /// 三位数也不压到邻格图标；排间留 16px 不被下排遮挡。
     /// </summary>
     public const int StatusPerRow = 3;
@@ -137,7 +141,7 @@ public static partial class PortraitLayout
         var row = index / StatusPerRow;
         var col = index % StatusPerRow;
         var left = card.Position.X + (card.Size.X - (step * (StatusPerRow - 1) + size + 20f)) / 2f; // +20：末列角标伸出量
-        return new Rect2(left + col * step, card.Position.Y + 16f + row * 64f, size, size);
+        return new Rect2(left + col * step, card.Position.Y - AllyBuffBand + 6f + row * 64f, size, size);
     }
 
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
