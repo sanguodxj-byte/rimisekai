@@ -20,6 +20,13 @@ public partial class PortraitHubScreen
 
     private readonly List<ScrollArea> _scrollAreas = new();
     private readonly Dictionary<string, int> _pan = new();
+
+    /// <summary>核对用：直接设某滚动区的偏移（越界由下一帧 Pan 夹回）。</summary>
+    public void DebugPan(string key, int value)
+    {
+        _pan[key] = value;
+        QueueRedraw();
+    }
     private string _scrollActive = "";
     private int _scrollPointer = -2;
     private Vector2 _scrollPressPosition;

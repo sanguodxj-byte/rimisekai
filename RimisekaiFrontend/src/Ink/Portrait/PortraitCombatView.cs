@@ -368,13 +368,13 @@ public partial class PortraitCombatView : Control
     }
 
     /// <summary>
-    /// 行动面板：圆顶面板＋「某某 的行动」＋当前招式名；2×2 大钮（攻击 / 技能 / 道具 / 逃跑），
+    /// 行动面板（夹在敌阵与我方卡之间）：石板面板＋「某某 的行动」＋当前招式名；2×2 大钮（攻击 / 技能 / 道具 / 逃跑），
     /// 我方行动者就绪时点亮，跑条流动期全暗不可点。技能 / 道具弹分页弹窗，其余直接生效。
     /// </summary>
     private void DrawOpEntry(Battle battle)
     {
         var panel = PortraitLayout.CombatActions;
-        PortraitFrame.Dock(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)));
+        PortraitFrame.Dock(this, panel, closed: true);
         var enabled = _actor != null;
         if (_actor != null)
         {

@@ -81,6 +81,27 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.ShowTab(1));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RosterPick, _root.HubScreen.DebugHub.State.Roster.Master!.Id));
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.CharacterSegment), "character page segments"); Shoot("char_status", _root.HubScreen); });
+        // 特质签、装备格可点：各弹一枚纯展示弹窗（标题＝特质名 / 装备名或槽名）。
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.TraitInfo, 0));
+        _steps.Enqueue(() =>
+        {
+            var trait = _root.HubScreen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.TraitInfo && w.Index == 0);
+            Require(trait.Label != null && _root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title == trait.Label,
+                "trait tag opens its detail popup");
+            Shoot("char_trait_popup", _root.HubScreen);
+            _root.ModalLayer.Dismiss();
+            _root.HubScreen.DebugPan("character", 4000);
+        });
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.EquipInfo), "equipment slots clickable"); Shoot("char_equip", _root.HubScreen); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.EquipInfo, 0));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Body.Length > 0, "equipment slot opens its detail popup");
+            Shoot("char_equip_popup", _root.HubScreen);
+            _root.ModalLayer.Dismiss();
+            _root.HubScreen.DebugPan("character", 0);
+        });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 2));
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.ScheduleSlot), "schedule timeline blocks"); Shoot("char_schedule", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 1));

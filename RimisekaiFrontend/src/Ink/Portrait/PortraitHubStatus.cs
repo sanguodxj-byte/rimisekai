@@ -42,7 +42,10 @@ public partial class PortraitHubScreen
     private static string RoleOf(CharacterState who) => who.IsMaster ? "领主" : "同伴";
 
     private IEnumerable<string> TraitsOf(CharacterState who) =>
-        Rimisekai.Character.Traits.Catalog.Where(d => who.Has(d.Trait)).Select(d => d.Name);
+        TraitDefsOf(who).Select(d => d.Name);
+
+    private IEnumerable<PersonalityTraits.Def> TraitDefsOf(CharacterState who) =>
+        Rimisekai.Character.Traits.Catalog.Where(d => who.Has(d.Trait));
 
     // ---------- 名册 ----------
 
@@ -204,15 +207,21 @@ public partial class PortraitHubScreen
         {
             PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "特质");
             y += 50f;
+            // 特质签可点（弹窗看说明）：命中块 118 高、画出来的签 80 高居中，行距 128 免得上下命中块相叠。
             float x = PortraitLayout.Pad;
-            foreach (var trait in traits)
+            for (var i = 0; i < traits.Count; i++)
             {
-                if (x + PortraitFrame.ChipWidth(trait) > PortraitLayout.CanvasWidth - PortraitLayout.Pad)
+                var trait = traits[i];
+                var w = Mathf.Max(PortraitLayout.TouchMin, PortraitFrame.ChipWidth(trait) - 16f);
+                if (x + w > PortraitLayout.CanvasWidth - PortraitLayout.Pad)
                 {
                     x = PortraitLayout.Pad;
-                    y += 96f;
+                    y += 128f;
                 }
-                x += PortraitFrame.Tag(this, new Vector2(x, y), trait, 80f) + 20f;
+                var r = new Rect2(x, y + 40f - PortraitLayout.TouchMin / 2f, w, PortraitLayout.TouchMin);
+                PortraitFrame.Chip(this, r, trait, false, 80f);
+                AddClipped(r, view, PortraitAction.TraitInfo, i, true, trait);
+                x += w + 20f;
             }
             y += 140f;
         }
@@ -229,6 +238,7 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 46f), EquipSlots.Label(slot), PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 20f, r.Position.Y + 76f, r.Size.X - 40f, 60f), equip,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, equip == "空" ? InkStyle.WoodDark : InkStyle.Line, "cm");
+            AddClipped(r, view, PortraitAction.EquipInfo, i, true, EquipSlots.Label(slot));
         }
         y += (DisplayEquipSlots.Length + 1) / 2 * 166f;
         return y;
@@ -344,9 +354,50 @@ public partial class PortraitHubScreen
             case PortraitAction.OpenDisc:
                 _push = PushPage.Disc;
                 return true;
+            case PortraitAction.TraitInfo:
+                ShowTraitInfo(w.Index);
+                return true;
+            case PortraitAction.EquipInfo:
+                ShowEquipInfo(w.Index);
+                return true;
             default:
                 return false;
         }
+    }
+
+    /// <summary>特质说明弹窗：标题＝特质名，正文＝光谱分组＋内容表里的基调句（纯展示，点任意处关闭）。</summary>
+    private void ShowTraitInfo(int index)
+    {
+        var def = TraitDefsOf(Who).ElementAtOrDefault(index);
+        if (def == null)
+            return;
+        var lines = new List<string>();
+        if (def.Group.Length > 0)
+            lines.Add(def.Group);
+        if (def.Keynote.Length > 0)
+            lines.Add(def.Keynote);
+        ModalWanted!(new InkModalPage { Title = def.Name, Body = string.Join("\n", lines) });
+    }
+
+    /// <summary>装备详情弹窗：有实例装备列 Core 的逐行详情；武器槽列武器类型；空槽写未装备（纯展示）。</summary>
+    private void ShowEquipInfo(int index)
+    {
+        if (index < 0 || index >= DisplayEquipSlots.Length)
+            return;
+        var who = Who;
+        var slot = DisplayEquipSlots[index];
+        var registry = _vm.Hub.State.Equips;
+        var id = who.EquippedId(slot);
+        var gear = string.IsNullOrEmpty(id) ? null : registry.Get(id);
+        var name = EquipmentName(who, slot, registry);
+        string body;
+        if (gear != null)
+            body = string.Join("\n", gear.DescribeDetails());
+        else if (name != "空")
+            body = $"槽位　{EquipSlots.Label(slot)}";
+        else
+            body = "未装备";
+        ModalWanted!(new InkModalPage { Title = name == "空" ? EquipSlots.Label(slot) : name, Body = body });
     }
 
     private static string EquipmentName(CharacterState who, EquipSlot slot, EquipRegistry registry)

@@ -21,14 +21,7 @@ public partial class PortraitHubScreen
 
     private void DrawTerritory()
     {
-        if (_notice.Length > 0)
-        {
-            var strip = PortraitLayout.AlertStrip;
-            PortraitFrame.Card(this, strip);
-            PortraitGlyph.Bell(this, strip.Position.X + 60f, strip.GetCenter().Y, 24f, InkStyle.Line);
-            InkDraw.TextBounded(this, new Rect2(strip.Position.X + 110f, strip.Position.Y, strip.Size.X - 140f, strip.Size.Y),
-                _notice, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        }
+        DrawTerritoryLog();
 
         PortraitFrame.NotchedFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
@@ -46,6 +39,45 @@ public partial class PortraitHubScreen
         var build = PortraitLayout.BuildButton;
         PortraitFrame.Pill(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
         _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, !WorldLayer, "建造"));
+    }
+
+    /// <summary>
+    /// 日志栏：卡片里自下而上列最近几条日志，每条一行（过长截断），最新一条亮色、其余灰；
+    /// 有尚未入日志的操作反馈（3 秒内）时，它顶替最新一行。整卡可点，转到日志页签。
+    /// </summary>
+    private void DrawTerritoryLog()
+    {
+        var strip = PortraitLayout.AlertStrip;
+        PortraitFrame.Card(this, strip);
+        PortraitGlyph.Bell(this, strip.Position.X + 56f, strip.Position.Y + 58f, 24f, InkStyle.Dim);
+        InkDraw.Text(this, new Vector2(strip.Position.X + 96f, strip.Position.Y + 58f), "日志",
+            PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+
+        var lines = new List<string>(_vm.LogLines());
+        var latest = lines.Count > 0 ? lines[^1] : "";
+        if (_notice.Length > 0 && _noticeAge <= 3f && _notice != latest)
+            lines.Add(_notice);
+        var top = strip.Position.Y + 110f;
+        var bottom = strip.End.Y - 20f;
+        var fit = Math.Max(0, (int)((bottom - top) / PortraitLayout.TerritoryLogLine));
+        var shown = lines.Skip(Math.Max(0, lines.Count - fit)).ToArray();
+        var x = strip.Position.X + 56f;
+        var width = strip.Size.X - 56f - 40f;
+        for (var i = 0; i < shown.Length; i++)
+        {
+            var newest = i == shown.Length - 1;
+            var cy = bottom - (shown.Length - i - 0.5f) * PortraitLayout.TerritoryLogLine;
+            InkDraw.Jewel(this, new Vector2(x, cy), 7f, newest ? InkStyle.Line : InkStyle.WoodDark);
+            var line = InkDraw.WrapLines(shown[i], width - 40f, PortraitLayout.FontMeta);
+            var text = line.Count > 1 ? line[0].TrimEnd() + "…" : shown[i];
+            InkDraw.TextBounded(this, new Rect2(x + 30f, cy - PortraitLayout.TerritoryLogLine / 2f, width - 30f,
+                PortraitLayout.TerritoryLogLine), text, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
+                newest ? InkStyle.Line : InkStyle.Dim, "lm");
+        }
+        if (shown.Length == 0)
+            InkDraw.Text(this, new Vector2(strip.GetCenter().X, (top + bottom) / 2f), "暂无记录",
+                PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        _widgets.Add(new PortraitWidget(strip, PortraitAction.Tab, PortraitLayout.TabCount - 1, true, "日志"));
     }
 
     private void DrawCell(int x, int y)

@@ -74,6 +74,8 @@ public enum PortraitAction
     NowAvatar,
     CharacterSegment,
     SkillCard,
+    TraitInfo,
+    EquipInfo,
     OpenDisc,
     StoreSegment,
     StockCategory,

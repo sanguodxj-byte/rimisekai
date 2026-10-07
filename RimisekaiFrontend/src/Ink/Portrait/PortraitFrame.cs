@@ -475,13 +475,21 @@ public static class PortraitFrame
     /// 固定底座（战斗行动面板、建造面板）：与抽屉同一套暗纹石板＋顶沿银白双线＋两上角银白角花，
     /// 不压暗上层、不画徽饰（底座顶沿两端常有文字）。r 为底座矩形（可越出画布下沿）。
     /// </summary>
-    public static void Dock(CanvasItem ci, Rect2 r)
+    public static void Dock(CanvasItem ci, Rect2 r, bool closed = false)
     {
         ci.DrawRect(r, InkStyle.Panel);
         GothicArt.Tile(ci, r, 0.85f);
         ci.DrawRect(new Rect2(r.Position.X, r.Position.Y, r.Size.X, 4f), InkStyle.Line);
         ci.DrawLine(new Vector2(r.Position.X, r.Position.Y + 13f), new Vector2(r.End.X, r.Position.Y + 13f), InkStyle.Dim, 2f);
-        GothicArt.TopCorners(ci, r, 96f, 0.95f);
+        if (!closed)
+        {
+            GothicArt.TopCorners(ci, r, 96f, 0.95f);
+            return;
+        }
+        // 夹在画面中段的面板：底沿同样双线收口，四角角花。
+        ci.DrawRect(new Rect2(r.Position.X, r.End.Y - 4f, r.Size.X, 4f), InkStyle.Line);
+        ci.DrawLine(new Vector2(r.Position.X, r.End.Y - 13f), new Vector2(r.End.X, r.End.Y - 13f), InkStyle.Dim, 2f);
+        GothicArt.Corners(ci, r, 96f, 0.95f);
     }
 
     /// <summary>分节线「──◆ 标题 ◆──」：两侧银白渐隐线，标题两旁各一枚金菱嵌黑芯。label 空则只画渐隐线。</summary>
