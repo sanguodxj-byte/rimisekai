@@ -15,7 +15,7 @@ public static partial class PortraitLayout
     // 2026-10-08 主人改：行动面板夹在敌阵与我方之间，我方卡贴屏底；敌阵向下吃满余下高度，屏底不留空。
     // 同日再改：回合数居中；行动顺序条撤掉，改成左上的竖向速度跑条（只占原顺序条与首领条左段，战场网格不动）（沿用历史版：顶端出手线，左列我方右列敌方）。
     public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
-    public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
+    public static Rect2 CombatTop => new(CombatTrack.End.X + 16f, SafeTop, CanvasWidth - CombatTrack.End.X - 16f, 130f);
     public static Rect2 CombatBoss => new(CombatTrack.End.X + 16f, CombatTop.End.Y + 140f, 1040f - CombatTrack.End.X - 16f, 90f);
     public static Rect2 CombatRound => CombatTop;
     /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
@@ -26,12 +26,15 @@ public static partial class PortraitLayout
     public static Rect2 CombatAvatars => new(40, CanvasHeight - Pad - CombatAvatarsHeight, 1000, CombatAvatarsHeight);
     public static Rect2 CombatActions => new(0, CombatAvatars.Position.Y - 30f - CombatActionsHeight, CanvasWidth, CombatActionsHeight);
     /// <summary>
-    /// 左上竖向速度跑条：宽 120，占原行动顺序条＋首领条左段（顶栏下方到敌阵上缘），无命中块。
+    /// 左上竖向速度跑条：宽 220，从屏顶安全区一直到敌阵上缘（顶栏、首领条都右移让位），无命中块。
+    /// 同日主人嫌 120 宽、220 高的版本太小：加宽加高、头像放大到 72。
     /// 2026-10-08 主人定：各区互不侵占，跑条不得挤占战场——敌阵网格几何保持原样（40, 380, 1000, …）。
     /// </summary>
-    public const float CombatTrackWidth = 120f;
-    public static Rect2 CombatTrack => new(40, CombatTop.End.Y + 10f, CombatTrackWidth, 220f);
-    public static Rect2 CombatField => new(40, CombatTop.End.Y + 250f, 1000, CombatActions.Position.Y - 30f - CombatTop.End.Y - 250f);
+    public const float CombatTrackWidth = 220f;
+    /// <summary>敌阵上缘：与原版同为 SafeTop+380，跑条改动不得移动它。</summary>
+    private static float FieldTop => SafeTop + 380f;
+    public static Rect2 CombatTrack => new(40, SafeTop + 10f, CombatTrackWidth, FieldTop - 20f - SafeTop - 10f);
+    public static Rect2 CombatField => new(40, FieldTop, 1000, CombatActions.Position.Y - 30f - FieldTop);
     /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
     {
@@ -41,8 +44,8 @@ public static partial class PortraitLayout
     /// <summary>首领血条右侧的行动点行：实心菱 18px、间距 30px。</summary>
     public static Vector2 BossPipCenter(int index, int count) =>
         new(CombatBoss.End.X - 20f - (count - 1 - index) * 30f, CombatBoss.Position.Y + 64f);
-    public static Rect2 BossName => new(CombatBoss.Position.X, CombatBoss.Position.Y, 420f, 52f);
-    public static Rect2 BossHp => new(CombatBoss.Position.X + 440f, CombatBoss.Position.Y, 420f, 52f);
+    public static Rect2 BossName => new(CombatBoss.Position.X, CombatBoss.Position.Y, CombatBoss.Size.X / 2f - 10f, 52f);
+    public static Rect2 BossHp => new(CombatBoss.GetCenter().X + 10f, CombatBoss.Position.Y, CombatBoss.Size.X / 2f - 10f, 52f);
     public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 58f, CombatBoss.Size.X - 160f, 14f);
 
     // 纵深档位放缓：前后排卡片尺寸差距减小（最远排内宽仍 148px，26px 字号完整可显）。

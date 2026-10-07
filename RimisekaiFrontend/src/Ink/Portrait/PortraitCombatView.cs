@@ -186,15 +186,17 @@ public partial class PortraitCombatView : Control
     /// <summary>顶栏：左战场名、中回合数（右侧是设置齿轮）。</summary>
     private void DrawTopBar(Battle battle)
     {
+        // 回合数在整屏正中（x=540），地名小字居中压在其下；左侧让给跑条。
         var top = PortraitLayout.CombatTop;
-        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top.Position.Y, 300f, top.Size.Y), battle.PlaceName,
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        InkDraw.Text(this, top.GetCenter(), $"第 {battle.Round} 回合",
-            PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        var cx = PortraitLayout.CanvasWidth / 2f;
+        InkDraw.Text(this, new Vector2(cx, top.Position.Y + 48f), $"第 {battle.Round} 回合",
+            PortraitLayout.FontBody, InkStyle.Line, "cm");
+        InkDraw.TextBounded(this, new Rect2(cx - 220f, top.Position.Y + 76f, 440f, 44f), battle.PlaceName,
+            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
     }
 
     /// <summary>
-    /// 速度跑条（沿用历史版）：左上竖轨（顶栏下、敌阵上），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
+    /// 速度跑条（沿用历史版）：左上竖轨（屏顶到敌阵上缘），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
     /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
     private void DrawTurnOrder(Battle battle)
@@ -202,7 +204,7 @@ public partial class PortraitCombatView : Control
         var track = PortraitLayout.CombatTrack;
         var alive = battle.Members.Where(m => m.Alive).ToList();
         var cx = track.GetCenter().X;
-        const float size = 40f;
+        const float size = 72f;
         var top = track.Position.Y + 30f + size / 2f;
         var bottom = track.End.Y - size / 2f - 6f;
         // 出手线：轨顶一道骨白横线，两端菱珠。
@@ -221,7 +223,7 @@ public partial class PortraitCombatView : Control
             if (members.Count == 0)
                 continue;
             // 同列间距随人数收紧，保证整列收在轨内、不越出跑条区。
-            var minGap = members.Count > 1 ? MathF.Min(46f, (bottom - top) / (members.Count - 1)) : 46f;
+            var minGap = members.Count > 1 ? MathF.Min(82f, (bottom - top) / (members.Count - 1)) : 82f;
             var ys = new List<float>();
             foreach (var m in members)
             {
@@ -252,7 +254,7 @@ public partial class PortraitCombatView : Control
                 {
                     InkDraw.Jewel(this, c, size / 2f + 2f, InkStyle.Dim);
                     InkDraw.Jewel(this, c, size / 2f - 2f, InkStyle.Bg);
-                    InkDraw.Text(this, c, m.Name[..1], 24, InkStyle.Dim, "cm");
+                    InkDraw.Text(this, c, m.Name[..1], PortraitLayout.FontMeta, InkStyle.Dim, "cm");
                 }
             }
         }
