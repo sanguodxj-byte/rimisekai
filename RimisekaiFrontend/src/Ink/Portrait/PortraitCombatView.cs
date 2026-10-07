@@ -186,17 +186,17 @@ public partial class PortraitCombatView : Control
     /// <summary>顶栏：左战场名、中回合数（右侧是设置齿轮）。</summary>
     private void DrawTopBar(Battle battle)
     {
-        // 回合数在整屏正中（x=540），地名小字居中压在其下；左侧让给跑条。
+        // 顶栏容器一行：左上「地名」（直角括号）、正中回合数、右上设置齿轮（齿轮另画）。
         var top = PortraitLayout.CombatTop;
         var cx = PortraitLayout.CanvasWidth / 2f;
-        InkDraw.Text(this, new Vector2(cx, top.Position.Y + 48f), $"第 {battle.Round} 回合",
-            PortraitLayout.FontBody, InkStyle.Line, "cm");
-        InkDraw.TextBounded(this, new Rect2(cx - 220f, top.Position.Y + 76f, 440f, 44f), battle.PlaceName,
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        var cy = top.GetCenter().Y;
+        InkDraw.Text(this, new Vector2(cx, cy), $"第 {battle.Round} 回合", PortraitLayout.FontBody, InkStyle.Line, "cm");
+        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad, cy - 30f, cx - 120f - PortraitLayout.Pad, 60f),
+            $"「{battle.PlaceName}」", PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
     }
 
     /// <summary>
-    /// 速度跑条（沿用历史版）：左上竖轨（屏顶到首领条上缘），顶端一道出手线；中线分左右两列——左列我方、右列敌方，
+    /// 速度跑条（沿用历史版）：嵌在战场容器内、首领条下方的左上竖轨，顶端一道出手线；中线分左右两列——左列我方、右列敌方，
     /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
     private void DrawTurnOrder(Battle battle)

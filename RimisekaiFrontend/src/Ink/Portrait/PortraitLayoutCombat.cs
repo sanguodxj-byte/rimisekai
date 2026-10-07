@@ -37,6 +37,11 @@ public static partial class PortraitLayout
     private static float FieldTop => SafeTop + 380f;
     public static Rect2 CombatTrack => new(CombatField.Position.X + 20f, FieldTop + 20f, CombatTrackWidth, 400f);
     public static Rect2 CombatField => new(40, FieldTop, 1000, CombatActions.Position.Y - 30f - FieldTop);
+    /// <summary>
+    /// 战场容器（主人定 2026-10-08）：从首领名称行起到行动面板上缘，首领条＋跑条＋敌阵网格同属一个容器（region 仍叫 enemies）。
+    /// 网格几何 CombatField 与首领条位置不变；顶栏（「地名」/ 回合 / 设置）是另一个容器。
+    /// </summary>
+    public static Rect2 CombatArena => new(40, CombatBoss.Position.Y, 1000, CombatField.End.Y - CombatBoss.Position.Y);
     /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
     {
@@ -122,8 +127,7 @@ public static partial class PortraitLayout
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
     {
         new PortraitRegion("top", CombatTop),
-        new PortraitRegion("boss", CombatBoss),
-        new PortraitRegion("enemies", CombatField), new PortraitRegion("actions", CombatActions),
+        new PortraitRegion("enemies", CombatArena), new PortraitRegion("actions", CombatActions),
         new PortraitRegion("avatars", CombatAvatars),
     };
 }
