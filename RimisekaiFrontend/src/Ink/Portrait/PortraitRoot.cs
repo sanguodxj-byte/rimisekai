@@ -399,7 +399,7 @@ public partial class PortraitTitleView : Control
         {
             var r = PortraitLayout.TitleButton(i);
             var enabled = true;
-            PortraitFrame.Pill(this, r, labels[i], primary: i == 1, enabled: enabled, sub: i == 1 ? latest : "",
+            PortraitFrame.Plaque(this, r, labels[i], primary: i == 1, enabled: enabled, sub: i == 1 ? latest : "",
                 size: i == 1 ? 56 : PortraitLayout.FontBody);
             _hits.Add(new PortraitWidget(r, PortraitAction.Tab, i, enabled, labels[i]));
         }
@@ -457,7 +457,9 @@ public partial class PortraitTitleView : Control
             var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
             var volume = InkSettings.CurrentMasterVolume;
             PortraitFrame.Bar(this, track, volume);
-            DrawCircle(new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 28f, InkStyle.Line);
+            var knob = new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y);
+            InkDraw.Jewel(this, knob, 30f, InkStyle.Line);
+            InkDraw.Jewel(this, knob, 11f, InkStyle.Bg);
             var band = new Rect2(track.Position.X - 60f, y, track.Size.X + 120f, PortraitLayout.TouchMin);
             for (var i = 0; i <= 4; i++)
             {
@@ -473,11 +475,11 @@ public partial class PortraitTitleView : Control
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
         var back = PortraitLayout.PageBack;
         if (PortraitFrame.IsPressed(back))
-            PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, back.Grow(-8f));
         PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
         _hits.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
         InkDraw.Text(this, top.GetCenter(), load ? "读取进度" : "设置", PortraitLayout.FontPlace, InkStyle.Line, "cm");
-        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
+        PortraitFrame.SectionRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
     }
 
     public override void _GuiInput(InputEvent e)

@@ -81,7 +81,7 @@ public partial class PortraitHubScreen
         var pill = new Rect2(r.End.X - 30f - pillW, y + 30f, pillW, 66f);
         if (r.Size.X - 220f - pillW > InkDraw.Measure(who.Name, PortraitLayout.FontPlace).X + 260f)
         {
-            PortraitFrame.RoundRect(this, pill, 33f, null, InkStyle.Dim, 3f);
+            PortraitFrame.Brackets(this, pill, InkStyle.Dim);
             InkDraw.TextBounded(this, pill.Grow(-16f), activity, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
         }
 
@@ -245,7 +245,7 @@ public partial class PortraitHubScreen
         {
             var row = rows[i];
             var r = new Rect2(PortraitLayout.Pad + i % 3 * (w + 20f), y + i / 3 * 130f, w, 110f);
-            PortraitFrame.RoundRect(this, r, 20f, null, InkStyle.WoodDark, 3f);
+            PortraitFrame.Bevel(this, r, 20f, null, InkStyle.WoodDark, 3f);
             InkDraw.Text(this, new Vector2(r.Position.X + 28f, r.GetCenter().Y - (withMeter ? 6f : 0f)), row.Name,
                 PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             InkDraw.Text(this, new Vector2(r.End.X - 28f, r.GetCenter().Y - (withMeter ? 6f : 0f)), row.Value,

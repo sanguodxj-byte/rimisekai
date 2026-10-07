@@ -35,7 +35,7 @@ public partial class PortraitHubScreen
     private void DrawDevelopment()
     {
         var model = DevelopmentModel();
-        PortraitFrame.NotchedFrame(this, PortraitLayout.DevelopmentFrame, InkStyle.Bg);
+        PortraitFrame.GothicFrame(this, PortraitLayout.DevelopmentFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
             for (var x = 0; x < PortraitLayout.GridCols; x++)
                 InkDraw.Ink(this, RectLoop(PortraitLayout.DevelopmentCell(x, y).Grow(-6f)), new Color(InkStyle.WoodDark, 0.5f), 2f);
@@ -77,7 +77,7 @@ public partial class PortraitHubScreen
         }
 
         var panel = PortraitLayout.DevelopmentPanel;
-        PortraitFrame.RoundRect(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)), 56f, InkStyle.Panel, InkStyle.Dim, 4f);
+        PortraitFrame.Tablet(this, panel, crest: false);
         var counts = new[] { model.ActionRows.Count, model.FacilityRows.Count, model.RoomRows.Count };
         var labels = DevelopmentTabs.Select((t, i) => counts[i] > 0 ? $"{t} {counts[i]}" : t).ToArray();
         var seg = PortraitLayout.DevelopmentSegment;

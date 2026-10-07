@@ -210,7 +210,7 @@ public partial class PortraitCombatView : Control
             if (ally)
             {
                 if (_actor?.Id == m.Id)
-                    DrawCircle(c, 54f, InkStyle.Line);
+                    PortraitFrame.Poly(this, PortraitFrame.QuatrefoilPoints(c, 56f), InkStyle.Line);
                 PortraitFrame.Avatar(this, c, 44f, tex, m.Name, ring: _actor?.Id != m.Id);
             }
             else
@@ -374,7 +374,7 @@ public partial class PortraitCombatView : Control
     private void DrawOpEntry(Battle battle)
     {
         var panel = PortraitLayout.CombatActions;
-        PortraitFrame.RoundRect(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)), 50f, InkStyle.Panel, InkStyle.Dim, 4f);
+        PortraitFrame.Tablet(this, panel, crest: false);
         var enabled = _actor != null;
         if (_actor != null)
         {
@@ -389,8 +389,7 @@ public partial class PortraitCombatView : Control
             var rect = PortraitLayout.CombatButton(slot);
             var pressed = PortraitFrame.IsPressed(rect);
             var armed = enabled && slot == 0 && _armed == BattleSkills.AttackId;
-            PortraitFrame.RoundRect(this, rect, 28f, pressed ? PortraitFrame.PressFill : InkStyle.Bg,
-                enabled ? InkStyle.Line : InkStyle.WoodDark, 4f);
+            PortraitFrame.PlaqueBody(this, rect, primary: false, enabled, pressed);
             var ink = enabled ? InkStyle.Line : InkStyle.Dim;
             OpGlyphs[slot](this, rect.Position.X + 80f, rect.GetCenter().Y, 34f, ink);
             InkDraw.Text(this, new Vector2(rect.Position.X + 150f, rect.GetCenter().Y), OpLabels[slot], PortraitLayout.FontTitle, ink, "lm");
@@ -416,7 +415,7 @@ public partial class PortraitCombatView : Control
         var hit = PortraitLayout.CombatGearHit;
         _hits.Add(new PortraitWidget(hit, PortraitAction.CombatSettings, 0, true, "设置"));
         if (PortraitFrame.IsPressed(hit))
-            PortraitFrame.RoundRect(this, hit.Grow(-10f), 49f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, hit.Grow(-10f));
         PortraitGlyph.Gear(this, hit.GetCenter().X, hit.GetCenter().Y, 28f, InkStyle.Line);
     }
 

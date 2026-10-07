@@ -84,7 +84,7 @@ public partial class PortraitHubScreen
                 PortraitLayout.QuestCardHeight);
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
-            PortraitFrame.NotchedFrame(this, r);
+            PortraitFrame.GothicFrame(this, r);
             var x = r.Position.X + 50f;
             var size = def.MaxPartySize > 0 ? $"{def.MaxPartySize} 人" : "";
             var pillW = size.Length > 0 ? InkDraw.Measure(size, PortraitLayout.FontMeta).X + 56f : 0f;
@@ -93,7 +93,7 @@ public partial class PortraitHubScreen
             if (size.Length > 0)
             {
                 var pill = new Rect2(r.End.X - 50f - pillW, r.Position.Y + 44f, pillW, 64f);
-                PortraitFrame.RoundRect(this, pill, 32f, null, InkStyle.Dim, 3f);
+                PortraitFrame.Brackets(this, pill, InkStyle.Dim);
                 InkDraw.Text(this, pill.GetCenter(), size, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             }
             InkDraw.Text(this, new Vector2(x, r.Position.Y + 150f), "难度", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
@@ -114,7 +114,7 @@ public partial class PortraitHubScreen
             PortraitGlyph.Coin(this, x + 18f, take.GetCenter().Y, 18f, InkStyle.Dim);
             InkDraw.TextBounded(this, new Rect2(x + 54f, take.Position.Y, take.Position.X - x - 74f, take.Size.Y),
                 string.Join(" · ", def.Rewards), PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Pill(this, take, "接取", primary: true);
+            PortraitFrame.Plaque(this, take, "接取", primary: true);
             AddClipped(take, view, PortraitAction.QuestTake, i, true, def.Id.ToString());
         }
         if (defs.Count == 0)
@@ -170,7 +170,7 @@ public partial class PortraitHubScreen
             }
             else
             {
-                PortraitFrame.RoundRect(this, r, 18f, null, i < cap ? InkStyle.WoodDark : new Color(InkStyle.WoodDark, 0.4f), 3f);
+                PortraitFrame.Bevel(this, r, 18f, null, i < cap ? InkStyle.WoodDark : new Color(InkStyle.WoodDark, 0.4f), 3f);
                 if (i < cap)
                 {
                     PortraitGlyph.Plus(this, r.GetCenter().X, r.Position.Y + 130f, 36f, InkStyle.WoodDark);
@@ -200,12 +200,13 @@ public partial class PortraitHubScreen
             var dot = new Vector2(r.End.X - 70f, r.GetCenter().Y);
             if (on)
             {
-                DrawCircle(dot, 40f, InkStyle.Line);
+                InkDraw.Jewel(this, dot, 46f, InkStyle.Line);
                 PortraitGlyph.Check(this, dot.X, dot.Y, 22f, InkStyle.Bg);
             }
             else
             {
-                DrawArc(dot, 40f, 0f, Mathf.Tau, 40, can ? InkStyle.Line : InkStyle.WoodDark, 3f, true);
+                PortraitFrame.Poly(this, new[] { dot + new Vector2(0, -46f), dot + new Vector2(46f, 0), dot + new Vector2(0, 46f),
+                    dot + new Vector2(-46f, 0) }, null, can ? InkStyle.Line : InkStyle.WoodDark, 3f);
                 PortraitGlyph.Plus(this, dot.X, dot.Y, 22f, can ? InkStyle.Line : InkStyle.WoodDark);
             }
             _widgets.Add(new PortraitWidget(r, PortraitAction.PartyPick, who.Id, can, who.Name));
@@ -218,7 +219,7 @@ public partial class PortraitHubScreen
         InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, footer.Position.Y + 20f, 480f, 140f), FoesOf(def),
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
         var go = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 440f, footer.Position.Y + 26f, 440f, 140f);
-        PortraitFrame.Pill(this, go, "出发", primary: true, glyph: PortraitGlyph.Swords);
+        PortraitFrame.Plaque(this, go, "出发", primary: true, glyph: PortraitGlyph.Swords);
         _widgets.Add(new PortraitWidget(go, PortraitAction.QuestStart, 0, true, "出发"));
         return top;
     }
@@ -325,7 +326,7 @@ public partial class PortraitHubScreen
         var total = (int)(slots.Count * step + 220f);
         var offset = Pan("system", total, (int)view.Size.Y);
         var add = new Rect2(PortraitLayout.Pad, view.Position.Y - offset, PortraitLayout.FullWidth, 200f);
-        PortraitFrame.RoundRect(this, add, 18f, PortraitFrame.IsPressed(add) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
+        PortraitFrame.Bevel(this, add, 18f, PortraitFrame.IsPressed(add) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
         PortraitGlyph.Plus(this, add.GetCenter().X, add.Position.Y + 76f, 34f, InkStyle.Dim);
         InkDraw.Text(this, new Vector2(add.GetCenter().X, add.Position.Y + 150f), "保存当前进度", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         AddClipped(add, view, PortraitAction.SaveNow, 0, true, "保存");
@@ -367,7 +368,9 @@ public partial class PortraitHubScreen
         var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
         var volume = InkSettings.CurrentMasterVolume;
         PortraitFrame.Bar(this, track, volume);
-        DrawCircle(new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 28f, InkStyle.Line);
+        var knob = new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y);
+        InkDraw.Jewel(this, knob, 30f, InkStyle.Line);
+        InkDraw.Jewel(this, knob, 11f, InkStyle.Bg);
         for (var i = 0; i <= 4; i++)
         {
             var cx = track.Position.X + track.Size.X * i / 4f;

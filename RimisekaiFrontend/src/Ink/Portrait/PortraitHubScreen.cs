@@ -288,7 +288,7 @@ public partial class PortraitHubScreen : Control
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
         var back = PortraitLayout.PageBack;
         if (PortraitFrame.IsPressed(back))
-            PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, back.Grow(-8f));
         PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
         var cy = top.GetCenter().Y;
@@ -301,11 +301,11 @@ public partial class PortraitHubScreen : Control
         {
             var r = PortraitLayout.PageAction;
             if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, r.Grow(-8f), 40f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, r.Grow(-8f));
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), action, PortraitLayout.FontBody, InkStyle.Line, "rm");
             _widgets.Add(new PortraitWidget(r, actionKind, 0, true, action));
         }
-        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
+        PortraitFrame.SectionRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ public partial class PortraitHubScreen : Control
 
         var place = PortraitLayout.HudPlace;
         if (PortraitFrame.IsPressed(place))
-            PortraitFrame.RoundRect(this, place, 30f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, place);
         var title = _vm.MapTitle();
         var money = items[3].Value;
         var moneyWidth = InkDraw.Measure(money, PortraitLayout.FontMeta).X + 120f;
@@ -340,7 +340,8 @@ public partial class PortraitHubScreen : Control
 
         var pill = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - moneyWidth, PortraitLayout.HudLine1 - 38f,
             moneyWidth, 76f);
-        PortraitFrame.RoundRect(this, pill, 38f, null, InkStyle.WoodDark, 3f);
+        PortraitFrame.Poly(this, PortraitFrame.LozengeCapPoints(pill, 22f), null, InkStyle.WoodDark, 3f);
+        PortraitFrame.Poly(this, PortraitFrame.LozengeCapPoints(pill.Grow(-8f), 17f), null, new Color(InkStyle.WoodDark, 0.6f), 1.5f);
         PortraitGlyph.Coin(this, pill.Position.X + 46f, pill.GetCenter().Y, 20f, InkStyle.Line);
         InkDraw.Text(this, new Vector2(pill.End.X - 32f, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "rm");
 
@@ -358,38 +359,53 @@ public partial class PortraitHubScreen : Control
 
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))
-            PortraitFrame.RoundRect(this, sys.Grow(-10f), 49f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, sys.Grow(-10f));
         PortraitGlyph.Gear(this, sys.GetCenter().X, sys.GetCenter().Y, 26f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(sys, PortraitAction.OpenSystem, 0, true, "系统"));
 
-        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, hud.End.Y - 2f);
+        PortraitFrame.SectionRule(this, 0f, PortraitLayout.CanvasWidth, hud.End.Y - 2f);
     }
 
-    /// <summary>底部五页签：图标＋字，当前页签＝骨白实心药丸托底、图标反黑。</summary>
+    /// <summary>
+    /// 底部五页签＝一条雕花檐壁：上沿双线，五个页签各占一龛（龛与龛之间一根细柱、柱头一枚小菱），
+    /// 当前页签＝一扇骨白实心尖拱窗托住图标（图标反黑），切页签时这扇窗从旧龛滑到新龛。
+    /// </summary>
     private void DrawTabBar()
     {
         var bar = PortraitLayout.TabBar;
         DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y), InkStyle.Bg);
-        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, bar.Position.Y);
-        // 当前页签的骨白药丸：切页签时从旧位置滑到新位置，图标在药丸压住时反黑。
-        var pillX = TabPillX();
+        var y0 = bar.Position.Y;
+        DrawLine(new Vector2(0, y0), new Vector2(PortraitLayout.CanvasWidth, y0), InkStyle.Dim, 3f, true);
+        DrawLine(new Vector2(0, y0 + 10f), new Vector2(PortraitLayout.CanvasWidth, y0 + 10f), new Color(InkStyle.WoodDark, 0.9f), 2f, true);
         var cy = PortraitLayout.Tab(0).Position.Y + 70f;
+        // 龛：每个页签一道压暗尖拱轮廓（自檐下垂到字下），柱：页签缝上一根细柱＋柱头菱
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
+            if (i > 0)
+            {
+                var x = r.Position.X;
+                DrawLine(new Vector2(x, y0 + 30f), new Vector2(x, bar.End.Y - 30f), new Color(InkStyle.WoodDark, 0.8f), 2f, true);
+                InkDraw.Jewel(this, new Vector2(x, y0 + 30f), 6f, InkStyle.WoodDark);
+            }
             var cx = r.GetCenter().X;
             if (i != _tab && PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, new Rect2(cx - 76f, cy - 40f, 152f, 80f), 40f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, new Rect2(cx - 70f, cy - 64f, 140f, 110f));
         }
-        PortraitFrame.RoundRect(this, new Rect2(pillX - 76f, cy - 40f, 152f, 80f), 40f, InkStyle.Line);
+        // 当前页签的尖拱窗：从旧位置滑到新位置，图标在窗压住时反黑。
+        var markX = TabPillX();
+        var win = new Rect2(markX - 64f, cy - 66f, 128f, 112f);
+        PortraitFrame.Arch(this, win, 46f, InkStyle.Line);
+        PortraitFrame.Arch(this, win.Grow(8f), 52f, null, new Color(InkStyle.Line, 0.55f), 2f);
+        InkDraw.Jewel(this, new Vector2(markX, win.Position.Y - 22f), 6f, InkStyle.Line);
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
             var on = i == _tab;
             var cx = r.GetCenter().X;
-            var covered = Mathf.Abs(pillX - cx) < 50f;
-            PortraitGlyph.TabIcons[i](this, cx, cy, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
-            InkDraw.Text(this, new Vector2(cx, cy + 84f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
+            var covered = Mathf.Abs(markX - cx) < 50f;
+            PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
+            InkDraw.Text(this, new Vector2(cx, cy + 90f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
         }
@@ -407,7 +423,7 @@ public partial class PortraitHubScreen : Control
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;
         var width = Mathf.Min(PortraitLayout.FullWidth, InkDraw.Measure(_notice, PortraitLayout.FontMeta).X + 96f);
         var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - 96f, width, 96f);
-        PortraitFrame.RoundRect(this, r, 48f, InkStyle.Hover, InkStyle.Dim, 3f);
+        PortraitFrame.Poly(this, PortraitFrame.LozengeCapPoints(r, 34f), InkStyle.Hover, InkStyle.Dim, 3f);
         InkDraw.TextBounded(this, r.Grow(-24f), _notice, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
     }
 

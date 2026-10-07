@@ -45,7 +45,7 @@ public partial class PortraitModalLayer
         var bodyHeight = lines.Count * PortraitLayout.ModalLineHeight + (lines.Count > 0 ? 30f : 0f);
         var arrow = page.HasInteractiveControls ? 0f : PortraitLayout.ModalArrowBand;
         _modalPanel = PortraitLayout.ModalBounds(PortraitLayout.ModalPad * 2f + heading + bodyHeight + controls + arrow);
-        PortraitFrame.NotchedFrame(this, _modalPanel, new Color(0.03f, 0.03f, 0.03f));
+        PortraitFrame.GothicFrame(this, _modalPanel, new Color(InkStyle.Panel, 1f), crest: true);
 
         var top = _modalPanel.Position.Y + PortraitLayout.ModalPad;
         if (page.Title.Length > 0)
@@ -67,17 +67,17 @@ public partial class PortraitModalLayer
         if (_modalTotal > _modalVisible && _modalVisible > 0)
         {
             var track = new Rect2(_modalPanel.End.X - 36f, _modalBody.Position.Y, 6f, _modalBody.Size.Y);
-            PortraitFrame.RoundRect(this, track, 3f, InkStyle.Hover);
+            PortraitFrame.Bevel(this, track, 3f, InkStyle.Hover);
             var h = Mathf.Max(48f, track.Size.Y * _modalVisible / _modalTotal);
             var y0 = track.Position.Y + (track.Size.Y - h) * _modalFirst / (_modalTotal - _modalVisible);
-            PortraitFrame.RoundRect(this, new Rect2(track.Position.X, y0, 6f, h), 3f, InkStyle.Dim);
+            PortraitFrame.Bevel(this, new Rect2(track.Position.X, y0, 6f, h), 3f, InkStyle.Dim);
         }
 
         var y = top + shownBody;
         if (page.Input != null)
         {
             _modalInput = new Rect2(_modalBody.Position.X, y, textWidth, PortraitLayout.TouchComfort);
-            PortraitFrame.RoundRect(this, _modalInput, 22f, InkStyle.Panel, InkStyle.Line, 4f);
+            PortraitFrame.Bevel(this, _modalInput, 22f, InkStyle.Panel, InkStyle.Line, 4f);
             var text = page.Input.Text.Length > 0 ? page.Input.Text : page.Input.Placeholder;
             InkDraw.TextBounded(this, new Rect2(_modalInput.Position.X + 40f, _modalInput.Position.Y, textWidth - 220f, _modalInput.Size.Y),
                 text, PortraitLayout.FontBody, PortraitLayout.FontMeta, page.Input.Text.Length > 0 ? InkStyle.Line : InkStyle.Dim, "lm");
@@ -101,7 +101,7 @@ public partial class PortraitModalLayer
                 y += PortraitLayout.ModalButtonHeight + PortraitLayout.ModalGap;
             }
             var primary = choice.Id == "confirm" || page.Choices.Count == 1;
-            PortraitFrame.Pill(this, rect, choice.Label, primary: primary, enabled: choice.Enabled);
+            PortraitFrame.Plaque(this, rect, choice.Label, primary: primary, enabled: choice.Enabled);
             _hits.Add(new PortraitWidget(rect, PortraitAction.ModalChoice, i, choice.Enabled, choice.Id));
         }
         if (!page.HasInteractiveControls)
@@ -136,7 +136,7 @@ public partial class PortraitModalLayer
         _modalPanel = PortraitLayout.ModalBounds(height);
         _modalBody = new Rect2();
         _modalTotal = _modalVisible = 0;
-        PortraitFrame.NotchedFrame(this, _modalPanel, new Color(0.03f, 0.03f, 0.03f));
+        PortraitFrame.GothicFrame(this, _modalPanel, new Color(InkStyle.Panel, 1f), crest: true);
         var cx = _modalPanel.GetCenter().X;
         var y = _modalPanel.Position.Y + 120f;
         InkDraw.TextBounded(this, new Rect2(_modalPanel.Position.X + 60f, y - 70f, _modalPanel.Size.X - 120f, 140f), page.Title,
@@ -177,7 +177,7 @@ public partial class PortraitModalLayer
             y += 150f;
         }
         var go = new Rect2(_modalPanel.Position.X + 80f, _modalPanel.End.Y - 70f - 128f, _modalPanel.Size.X - 160f, 128f);
-        PortraitFrame.Pill(this, go, "返回领地", primary: true);
+        PortraitFrame.Plaque(this, go, "返回领地", primary: true);
     }
 
     private bool HandleModalScroll(InputEvent input)

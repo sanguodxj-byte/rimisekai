@@ -24,7 +24,7 @@ public partial class PortraitHubScreen
     {
         DrawLogPanel();
 
-        PortraitFrame.NotchedFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
+        PortraitFrame.GothicFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
             for (var x = 0; x < PortraitLayout.GridCols; x++)
                 DrawCell(x, y);
@@ -35,10 +35,10 @@ public partial class PortraitHubScreen
 
         var travel = PortraitLayout.TravelButton;
         var travelLabel = WorldLayer ? "返回领地" : "出行";
-        PortraitFrame.Pill(this, travel, travelLabel, glyph: WorldLayer ? PortraitGlyph.Castle : PortraitGlyph.Map);
+        PortraitFrame.Plaque(this, travel, travelLabel, glyph: WorldLayer ? PortraitGlyph.Castle : PortraitGlyph.Map);
         _widgets.Add(new PortraitWidget(travel, PortraitAction.HubWorld, 0, true, travelLabel));
         var build = PortraitLayout.BuildButton;
-        PortraitFrame.Pill(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
+        PortraitFrame.Plaque(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
         _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, !WorldLayer, "建造"));
     }
 
@@ -124,8 +124,8 @@ public partial class PortraitHubScreen
     /// <summary>「此刻」头像右下角的棋子徽：黑底骨白环里一枚与领地格同款的棋子。</summary>
     private void DrawPieceBadge(Vector2 center, CharacterCard card)
     {
-        DrawCircle(center, PortraitLayout.BadgeRadius, InkStyle.Bg);
-        DrawArc(center, PortraitLayout.BadgeRadius, 0f, Mathf.Tau, 40, InkStyle.Line, 3f, true);
+        var badge = new Rect2(center - Vector2.One * PortraitLayout.BadgeRadius, Vector2.One * PortraitLayout.BadgeRadius * 2f);
+        PortraitFrame.Poly(this, PortraitFrame.ChamferPoints(badge, PortraitLayout.BadgeRadius * 0.55f), InkStyle.Bg, InkStyle.Line, 3f);
         InkDraw.Chess(this, center + new Vector2(0f, PortraitLayout.BadgeRadius * 0.62f),
             PortraitLayout.BadgeRadius * 1.3f, InkDraw.PieceFor(card));
     }
@@ -178,7 +178,7 @@ public partial class PortraitHubScreen
             var present = card.IsPlayer || card.RoomId == _vm.Hub.PlayerRoomId;
             var cx = r.GetCenter().X;
             if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, r, 24f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, r);
             PortraitFrame.Avatar(this, new Vector2(cx, r.Position.Y + 84f), 66f,
                 PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: !present);
             DrawPieceBadge(new Vector2(cx + 56f, r.Position.Y + 130f), card);
@@ -193,7 +193,7 @@ public partial class PortraitHubScreen
             return;
         var pager = PortraitLayout.NowPager;
         if (PortraitFrame.IsPressed(pager))
-            PortraitFrame.RoundRect(this, pager, 24f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, pager);
         var c = new Vector2(pager.GetCenter().X, PortraitLayout.NowStrip.Position.Y + 84f);
         DrawColoredPolygon(new[] { c + new Vector2(-18f, -30f), c + new Vector2(26f, 0f), c + new Vector2(-18f, 30f) }, InkStyle.Line);
         _widgets.Add(new PortraitWidget(pager, PortraitAction.NowPage, 0, true, "下一页"));
@@ -209,9 +209,10 @@ public partial class PortraitHubScreen
     {
         var panel = PortraitLayout.LogPanel;
         var pressed = PortraitFrame.IsPressed(panel);
-        PortraitFrame.Card(this, panel);
+        PortraitFrame.GothicFrame(this, panel, InkStyle.Panel, ornate: false);
+        PortraitFrame.CornerRivets(this, panel.Grow(-24f), InkStyle.Dim);
         if (pressed)
-            PortraitFrame.RoundRect(this, panel, 24f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, panel);
         _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
         var area = PortraitLayout.LogPanelText;
         var history = _vm.Hub.History;
@@ -310,7 +311,7 @@ public partial class PortraitHubScreen
         {
             var f = fixtures[first + i];
             var row = PortraitLayout.RoomSheetRow(i);
-            PortraitFrame.RoundRect(this, row, 22f, null, InkStyle.WoodDark, 3f);
+            PortraitFrame.Bevel(this, row, 22f, null, InkStyle.WoodDark, 3f);
             var workers = _vm.WorkersAtFixture(f.Id);
             InkDraw.TextBounded(this, new Rect2(row.Position.X + 40f, row.Position.Y, 360f, row.Size.Y), f.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
@@ -320,16 +321,16 @@ public partial class PortraitHubScreen
                 PortraitFrame.Avatar(this, new Vector2(row.Position.X + 560f + k * 70f, row.GetCenter().Y), 28f,
                     PortraitAvatars.Resolve(_vm.FindById(workers[k].Id)), workers[k].Name, ring: false);
             var use = PortraitLayout.RoomSheetUse(row);
-            PortraitFrame.Pill(this, use, "使用", enabled: !WorldLayer);
+            PortraitFrame.Plaque(this, use, "使用", enabled: !WorldLayer);
             _widgets.Add(new PortraitWidget(use, PortraitAction.Fixture, f.Id, !WorldLayer, f.Name));
         }
         RegisterScroll("room_fixtures", new Rect2(0, PortraitLayout.RoomSheetRow(0).Position.Y, PortraitLayout.CanvasWidth,
             visible * 140f), fixtures.Count, visible, first, v => _pan["room_fixtures"] = v, 140f);
 
         var canDemolish = !WorldLayer && !here;
-        PortraitFrame.Pill(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
+        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomDemolish, room.Id, canDemolish, "拆除"));
-        PortraitFrame.Pill(this, PortraitLayout.SheetFooterRight, here ? "已在此处" : "前往", primary: true, enabled: !here);
+        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterRight, here ? "已在此处" : "前往", primary: true, enabled: !here);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterRight, PortraitAction.RoomGo, room.Id, !here, "前往"));
         return sheet.Position.Y;
     }

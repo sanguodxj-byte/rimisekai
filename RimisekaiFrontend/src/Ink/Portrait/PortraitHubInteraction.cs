@@ -110,7 +110,7 @@ public partial class PortraitHubScreen
         {
             var row = rows[first + i];
             var rect = PortraitLayout.InteractionRow(top, i);
-            PortraitFrame.Pill(this, rect, row.Action == PortraitAction.GiftItem ? ItemName(row.Label) : row.Label,
+            PortraitFrame.Plaque(this, rect, row.Action == PortraitAction.GiftItem ? ItemName(row.Label) : row.Label,
                 enabled: row.Enabled);
             _widgets.Add(row with { Rect = rect });
         }
@@ -141,7 +141,7 @@ public partial class PortraitHubScreen
             var at = first + i;
             var row = rows[at];
             var rect = PortraitLayout.StorageRow(i);
-            PortraitFrame.RoundRect(this, rect, 22f, null, InkStyle.WoodDark, 3f);
+            PortraitFrame.Bevel(this, rect, 22f, null, InkStyle.WoodDark, 3f);
             var name = ItemName(row.ItemId);
             var icon = new Vector2(rect.Position.X + 66f, rect.GetCenter().Y);
             InkDraw.Jewel(this, icon, 34f, InkStyle.Dim);
@@ -155,7 +155,7 @@ public partial class PortraitHubScreen
             {
                 var br = PortraitLayout.StorageButton(rect, b);
                 var enabled = b == 0 ? row.InBag > 0 : row.InStorage > 0;
-                PortraitFrame.Pill(this, br, b == 0 ? "放入" : "取出", primary: b == 1, enabled: enabled);
+                PortraitFrame.Plaque(this, br, b == 0 ? "放入" : "取出", primary: b == 1, enabled: enabled);
                 _widgets.Add(new PortraitWidget(br, b == 0 ? PortraitAction.StoreIn : PortraitAction.StoreOut, at, enabled, row.ItemId));
             }
         }
@@ -237,7 +237,7 @@ public partial class PortraitHubScreen
         else
             InkDraw.Text(this, new Vector2(60f, dialog.Position.Y - 70f), speaker, PortraitLayout.FontTitle, InkStyle.Line, "lm");
 
-        PortraitFrame.NotchedFrame(this, dialog, new Color(InkStyle.Panel, 0.92f));
+        PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, 0.92f));
         var textArea = PortraitLayout.SceneText(dialog);
         var shown = text[..Math.Min(text.Length, (int)_conversationReveal)];
         var lines = InkDraw.WrapLines(shown, textArea.Size.X - 20f, PortraitLayout.FontBody);
@@ -264,7 +264,7 @@ public partial class PortraitHubScreen
         {
             var choice = choices[firstChoice + i];
             var rect = PortraitLayout.SceneChoice(visibleChoices, i);
-            PortraitFrame.Pill(this, rect, choice.Label, primary: i == 0);
+            PortraitFrame.Plaque(this, rect, choice.Label, primary: i == 0);
             _widgets.Add(new PortraitWidget(rect, PortraitAction.ConversationChoice, choice.Id, true, choice.Label));
         }
         if (choices.Length > visibleChoices)

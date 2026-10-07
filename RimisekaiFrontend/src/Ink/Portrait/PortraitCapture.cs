@@ -132,7 +132,7 @@ public partial class PortraitCapture : Node
             Require(!_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Back), "push page gone after slide-out");
             _root.HubScreen.ShowTab(2);
         });
-        _steps.Enqueue(() => { Require(_root.HubScreen.DebugAnimating, "tab pill slides"); _root.HubScreen._Process(0.07); });
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugAnimating, "tab arch slides"); _root.HubScreen._Process(0.07); });
         _steps.Enqueue(() => Shoot("motion_tab_mid", _root.HubScreen));
         _steps.Enqueue(() => { _root.HubScreen._Process(1); _root.HubScreen.ShowTab(0); });
         _steps.Enqueue(() =>
