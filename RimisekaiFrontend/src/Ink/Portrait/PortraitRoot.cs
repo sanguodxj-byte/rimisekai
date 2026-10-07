@@ -73,6 +73,8 @@ public partial class PortraitRoot : Control
         }
         SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Stop;
+        // 顶栏与页签都从安全区之下起排：刘海/状态栏占去的高度写进版式。
+        PortraitLayout.SafeTop = SafeInset().Y;
 
         _pack = new ContentPack();
         _flow = new GameFlow { Name = "PortraitFlow" };
@@ -341,7 +343,10 @@ public partial class PortraitRoot : Control
     }
 }
 
-/// <summary>标题画面：底图＋四个入口钮，全部落在拇指区。</summary>
+/// <summary>
+/// 标题画面：标志＋入口钮（继续＝主钮带最近存档副行；开始 / 设置并排描边钮；退出窄钮）。
+/// 设置与读档是标题画面自带的推入页（顶栏返回＋卡片列表）。
+/// </summary>
 public partial class PortraitTitleView : Control
 {
     public Action? StartRequested;
@@ -363,6 +368,8 @@ public partial class PortraitTitleView : Control
     public IReadOnlyList<PortraitWidget> DebugWidgets => _hits;
     public string DebugSystemPage => _systemPage;
 
+    private const float SlotStep = 250f;
+
     public override void _Ready()
     {
         // 只挪锚点不修偏移 = 控件停在 0×0：画得出来但 _GuiInput 永远收不到点击。
@@ -381,18 +388,20 @@ public partial class PortraitTitleView : Control
             DrawSystem();
             return;
         }
-        // 整屏花框：细双线＋四角卷草＋贴角排线，与参考稿同一套装帧（纯黑底，与标志、插画的黑场同色）。
-        PortraitFrame.Plate(this, PortraitLayout.TitleFrame, InkStyle.Bg);
         if (_art != null)
             DrawTextureRectRegion(_art, PortraitLayout.TitleArt, PortraitLayout.TitleArtSource);
+        PortraitFrame.SectionRule(this, 160f, PortraitLayout.CanvasWidth - 160f, PortraitLayout.TitleArt.End.Y + 80f);
 
-        _hits.Clear();
-        var labels = new[] { "开始", "继续", "设置", "退出" };
+        var saves = InkSaveStore.ListSaves();
+        var latest = saves.Count > 0 ? $"{saves[0].TerritoryName} · 第 {saves[0].Day} 日" : "";
+        var labels = new[] { "新的开始", "继续", "设置", "退出" };
         for (var i = 0; i < labels.Length; i++)
         {
             var r = PortraitLayout.TitleButton(i);
-            PortraitFrame.Button(this, r, labels[i], beads: true);
-            _hits.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, labels[i]));
+            var enabled = true;
+            PortraitFrame.Pill(this, r, labels[i], primary: i == 1, enabled: enabled, sub: i == 1 ? latest : "",
+                size: i == 1 ? 56 : PortraitLayout.FontBody);
+            _hits.Add(new PortraitWidget(r, PortraitAction.Tab, i, enabled, labels[i]));
         }
     }
 
@@ -404,38 +413,71 @@ public partial class PortraitTitleView : Control
         QueueRedraw();
     }
 
+    private Rect2 ListView => new(0, PortraitLayout.PageBody.Position.Y + 30f, PortraitLayout.CanvasWidth,
+        PortraitLayout.CanvasHeight - PortraitLayout.PageBody.Position.Y - 30f);
+
     private void DrawSystem()
     {
         var load = _systemPage == InkSystemScreen.PageLoad;
-        PortraitFrame.Title(this, new Rect2(0, PortraitLayout.Content.Position.Y,
-            PortraitLayout.CanvasWidth, PortraitLayout.TitleBand), load ? "读取进度" : "设置");
-        var back = PortraitLayout.OverlayBack;
-        PortraitFrame.Button(this, back, "返回");
-        _hits.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
+        var view = ListView;
         if (load)
         {
             var slots = InkSaveStore.ListSaves();
-            var hasScroll = slots.Count > PortraitLayout.OverlayRows;
-            _first = Math.Clamp(_first, 0, Math.Max(0, slots.Count - PortraitLayout.OverlayRows));
-            for (var i = 0; i < PortraitLayout.OverlayRows && _first + i < slots.Count; i++)
+            var max = Math.Max(0, (int)(slots.Count * SlotStep - view.Size.Y));
+            _first = Math.Clamp(_first, 0, max);
+            for (var i = 0; i < slots.Count; i++)
             {
-                var slot = slots[_first + i];
-                var row = PortraitLayout.ListRow(i + 2, hasScroll);
-                PortraitFrame.Button(this, row, slot.TerritoryName, value: $"{slot.Day} 日");
-                _hits.Add(new PortraitWidget(row, PortraitAction.SavePick, i, true, slot.FilePath));
+                var slot = slots[i];
+                var r = new Rect2(PortraitLayout.Pad, view.Position.Y + i * SlotStep - _first, PortraitLayout.FullWidth, 230f);
+                if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
+                    continue;
+                PortraitFrame.Card(this, r);
+                var thumb = new Rect2(r.Position.X + 40f, r.Position.Y + 35f, 220f, 160f);
+                DrawRect(thumb, InkStyle.Bg);
+                InkDraw.Ink(this, new[] { thumb.Position, new Vector2(thumb.End.X, thumb.Position.Y), thumb.End,
+                    new Vector2(thumb.Position.X, thumb.End.Y), thumb.Position }, InkStyle.Dim, 3f);
+                PortraitGlyph.Castle(this, thumb.GetCenter().X, thumb.GetCenter().Y, 44f, InkStyle.Dim);
+                var x = thumb.End.X + 40f;
+                InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 36f, r.End.X - x - 200f, 70f), slot.TerritoryName,
+                    PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+                InkDraw.Text(this, new Vector2(r.End.X - 40f, r.Position.Y + 72f), $"第 {slot.Day} 日", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+                var time = DateTime.ParseExact(slot.Timestamp, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 130f, r.End.X - x - 40f, 60f),
+                    time.ToString("yyyy-MM-dd HH时mm分", System.Globalization.CultureInfo.InvariantCulture),
+                    PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+                var shown = r.Intersection(view);
+                if (shown.Size.Y >= PortraitLayout.TouchMin)
+                    _hits.Add(new PortraitWidget(shown, PortraitAction.SavePick, i, true, slot.FilePath));
             }
         }
         else
         {
-            for (var i = 0; i < 2; i++)
+            var y = view.Position.Y + 20f;
+            InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, y + 59f), "主音量", PortraitLayout.FontBody, InkStyle.Line, "lm");
+            var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
+            var volume = InkSettings.CurrentMasterVolume;
+            PortraitFrame.Bar(this, track, volume);
+            DrawCircle(new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 28f, InkStyle.Line);
+            var band = new Rect2(track.Position.X - 60f, y, track.Size.X + 120f, PortraitLayout.TouchMin);
+            for (var i = 0; i <= 4; i++)
             {
-                var row = PortraitLayout.ListRow(i + 2, false);
-                PortraitFrame.Button(this, row, i == 0 ? "主音量" : "垂直同步",
-                    value: i == 0 ? $"{(int)(InkSettings.CurrentMasterVolume * 100)}"
-                        : InkSettings.CurrentVSync ? "开" : "关");
-                _hits.Add(new PortraitWidget(row, PortraitAction.SystemToggle, i, true, ""));
+                var cx = track.Position.X + track.Size.X * i / 4f;
+                _hits.Add(new PortraitWidget(new Rect2(cx - track.Size.X / 8f, y, track.Size.X / 4f, PortraitLayout.TouchMin).Intersection(band),
+                    PortraitAction.SystemToggle, i, true, $"{i * 25}"));
             }
+            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 150f), $"{(int)(volume * 100)}",
+                PortraitLayout.FontMeta, InkStyle.Dim, "rm");
         }
+
+        var top = PortraitLayout.PageTop;
+        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
+        var back = PortraitLayout.PageBack;
+        if (PortraitFrame.IsPressed(back))
+            PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
+        PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
+        _hits.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
+        InkDraw.Text(this, top.GetCenter(), load ? "读取进度" : "设置", PortraitLayout.FontPlace, InkStyle.Line, "cm");
+        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
     }
 
     public override void _GuiInput(InputEvent e)
@@ -443,13 +485,20 @@ public partial class PortraitTitleView : Control
         if (e is InputEventMouseMotion motion && _pressed)
         {
             var dy = motion.Position.Y - _press.Y;
-            if (Math.Abs(dy) >= 24f)
+            if (Math.Abs(dy) >= PortraitLayout.ListDragThreshold)
                 _dragging = true;
             if (_dragging && _systemPage == InkSystemScreen.PageLoad)
             {
-                _first = _pressFirst - (int)(dy / PortraitLayout.RowHeight);
+                _first = Math.Max(0, _pressFirst - (int)dy);
                 QueueRedraw();
             }
+            return;
+        }
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown, Pressed: true } wheel
+            && _systemPage == InkSystemScreen.PageLoad)
+        {
+            _first = Math.Max(0, _first + (wheel.ButtonIndex == MouseButton.WheelUp ? -120 : 120));
+            QueueRedraw();
             return;
         }
         if (e is not InputEventMouseButton { ButtonIndex: MouseButton.Left } mb)
@@ -478,18 +527,14 @@ public partial class PortraitTitleView : Control
             var hit = _hits[i];
             if (!hit.Rect.HasPoint(mb.Position) || !hit.Rect.HasPoint(_press))
                 continue;
+            if (!hit.Enabled)
+                break;
             if (hit.Action == PortraitAction.Back)
                 _systemPage = "";
             else if (hit.Action == PortraitAction.SavePick)
                 LoadRequested?.Invoke(hit.Label);
             else if (hit.Action == PortraitAction.SystemToggle)
-            {
-                if (hit.Index == 0)
-                    InkSettings.ApplyMasterVolume(InkSettings.CurrentMasterVolume >= 0.99f
-                        ? 0f : Mathf.Min(1f, InkSettings.CurrentMasterVolume + 0.1f));
-                else
-                    InkSettings.ApplyVSync(!InkSettings.CurrentVSync);
-            }
+                InkSettings.ApplyMasterVolume(hit.Index / 4f);
             else
                 switch (hit.Index)
                 {

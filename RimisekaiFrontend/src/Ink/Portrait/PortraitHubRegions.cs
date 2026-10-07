@@ -3,68 +3,41 @@ using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
+/// <summary>
+/// 运行时隔离检查读的分区：每个画面态一组互不交叠的矩形，命中块必须落在某一区内。
+/// 抽屉打开时只剩「压暗区（点了收起）＋抽屉面板」两区——下层命中块此时已整体移除。
+/// </summary>
 public partial class PortraitHubScreen
 {
     public IReadOnlyList<PortraitRegion> DebugVisualRegions
     {
         get
         {
-            var regions = new List<PortraitRegion> { new("header", PortraitLayout.Header) };
-            if (OverlayActive)
-            {
-                if (_page == InkPage.Schedule && _systemPage.Length == 0 && !_questMode && !_vm.StorageOpen)
-                    regions.AddRange(ScheduleRegions());
-                else if (_page == InkPage.Develop && _systemPage.Length == 0 && !_questMode && !_vm.StorageOpen)
-                    regions.AddRange(DevelopmentRegions());
-                else if (_page == InkPage.Status && _systemPage.Length == 0 && !_questMode && !_vm.StorageOpen)
-                    regions.AddRange(StatusRegions());
-                else if (_page == InkPage.Skills && _systemPage.Length == 0 && !_questMode && !_vm.StorageOpen)
-                    regions.AddRange(SkillRegions());
-                else
+            if (_sheetTop >= 0f)
+                return new[]
                 {
-                    regions.Add(new PortraitRegion("back", PortraitLayout.OverlayBack));
-                    foreach (var area in _scrollAreas)
-                        regions.Add(new PortraitRegion(area.Id, area.Area));
-                    if (_page == InkPage.Trade)
-                        regions.Add(new PortraitRegion("trade_action", PortraitLayout.TradeRunRow));
-                    else if (_systemPage == InkSystemScreen.PageSave)
-                        regions.Add(new PortraitRegion("save_action", PortraitLayout.SystemSaveRow));
-                    else if (_systemPage == InkSystemScreen.PageSettings || _questMode)
-                    {
-                        regions.RemoveRange(1, regions.Count - 1);
-                        regions.Add(new PortraitRegion("content", PortraitLayout.Content));
-                    }
-                    else if (_page != InkPage.None && !_vm.StorageOpen)
-                    {
-                        var count = PageModel().DetailActions.Count;
-                        for (var i = 0; i < count; i++)
-                            regions.Add(new PortraitRegion($"page_action_{i}", RowAt(RowsTop +
-                                (PortraitLayout.OverlayRows - count + i) * PortraitLayout.RowHeight, 0)));
-                    }
-                }
-            }
-            else if (ConversationActive)
+                    new PortraitRegion("sheet_backdrop", new Godot.Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop)),
+                    new PortraitRegion("sheet", new Godot.Rect2(0, _sheetTop, PortraitLayout.CanvasWidth,
+                        PortraitLayout.CanvasHeight - _sheetTop)),
+                };
+            if (_push == PushPage.Disc)
+                return SkillRegions();
+            if (_push == PushPage.Build)
+                return DevelopmentRegions();
+            if (_push != PushPage.None)
+                return new[]
+                {
+                    new PortraitRegion("page_top", PortraitLayout.PageTop),
+                    new PortraitRegion("page_body", PortraitLayout.PageBody),
+                };
+            if (ConversationActive)
+                return new[] { new PortraitRegion("scene", new Godot.Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight)) };
+            return new[]
             {
-                // 对话只把地图网格区换成对话框，下方头像带与设施栏仍常显。
-                regions.Add(new PortraitRegion("conversation_box", PortraitLayout.ConversationBox));
-                regions.Add(new PortraitRegion("avatars", PortraitLayout.AvatarArea));
-                regions.Add(new PortraitRegion("fixtures", PortraitLayout.FixtureArea));
-            }
-            else if (_interactionOpen)
-            {
-                regions.Add(new PortraitRegion("back", PortraitLayout.OverlayBack));
-                regions.Add(new PortraitRegion("interaction", PortraitLayout.InteractionList));
-            }
-            else if (_tab == 0)
-            {
-                regions.Add(new PortraitRegion("map_grid", PortraitLayout.GridArea));
-                regions.Add(new PortraitRegion("avatars", PortraitLayout.AvatarArea));
-                regions.Add(new PortraitRegion("fixtures", PortraitLayout.FixtureArea));
-            }
-            else
-                regions.Add(new PortraitRegion("content", PortraitLayout.Content));
-            regions.Add(new PortraitRegion("tabs", PortraitLayout.TabBar));
-            return regions;
+                new PortraitRegion("hud", PortraitLayout.Hud),
+                new PortraitRegion("body", PortraitLayout.Body),
+                new PortraitRegion("tabs", PortraitLayout.TabBar),
+            };
         }
     }
 }

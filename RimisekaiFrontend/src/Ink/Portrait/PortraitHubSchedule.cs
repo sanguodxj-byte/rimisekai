@@ -2,147 +2,166 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Rimisekai.Character;
 using Rimisekai.Housing;
 using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
+/// <summary>
+/// 日程：竖向 24 小时时间轴，四个 6 小时时段块（工作＝骨白实心、娱乐＝浅填描边、空闲＝暗描边），
+/// 一条「此刻」横线。点时段块弹排班抽屉：空闲钮＋房间签＋该房设施行（点设施即把这一段排过去，
+/// 设施有工作行动算工作，否则算娱乐；再点一次取消）。数据走 InkCharacterPageBuilder 的日程模型。
+/// </summary>
 public partial class PortraitHubScreen
 {
-    private int _scheduleMemberId = -1;
     private int _scheduleSlot;
     private int _scheduleRoomId = -1;
-    private int _scheduleMemberFirst;
-    private int _scheduleFacilityFirst;
-    private int _scheduleOutputFirst;
+
+    private const float HourPitch = 46f;
 
     private void OpenSchedule()
     {
-        _scheduleMemberId = _vm.Hub.State.Roster.Master!.Id;
         _scheduleRoomId = _vm.Hub.PlayerRoomId;
-        _scheduleSlot = 0;
-        _scheduleMemberFirst = _scheduleFacilityFirst = _scheduleOutputFirst = 0;
+        _scheduleSlot = CurrentSlot;
     }
 
-    private InkPageModel ScheduleModel() => InkCharacterPageBuilder.Build(_vm, InkPage.Schedule,
-        _vm.Hub.State.Roster.Find(_scheduleMemberId)!, selected: _scheduleSlot,
-        roomId: _scheduleRoomId, facilityFirst: _scheduleFacilityFirst, memberFirst: _scheduleMemberFirst)!;
+    private InkPageModel ScheduleModel() => InkCharacterPageBuilder.Build(_vm, InkPage.Schedule, Who,
+        selected: _scheduleSlot, roomId: _scheduleRoomId)!;
 
-    private void DrawSchedule()
+    private static string SlotRange(int slot) => $"{slot * 6}时至{slot * 6 + 6}时";
+
+    private float DrawScheduleSegment(CharacterState who, float y, Rect2 view)
     {
-        var model = ScheduleModel();
-        var work = model.Work!;
-        DrawPageTop(model.Title);
-        DrawBack();
-        var memberRowHeight = Math.Max(PortraitLayout.RowHeight, work.Members.Max(row =>
-            InkDraw.WrapLines(_vm.Hub.State.Roster.Find(row.TargetNumber)!.Name,
-                PortraitLayout.ScheduleMembers.Size.X - PortraitLayout.TouchMin - 44f, PortraitLayout.FontMeta).Count)
-            * PortraitLayout.FontMeta + 24f);
-        var memberVisible = (int)(PortraitLayout.ScheduleMembers.Size.Y / memberRowHeight);
-        _scheduleMemberFirst = Math.Clamp(_scheduleMemberFirst, 0,
-            Math.Max(0, work.Members.Count - memberVisible));
-        for (var i = 0; i < memberVisible && i + _scheduleMemberFirst < work.Members.Count; i++)
+        var top = y + 30f;
+        for (var h = 0; h <= 24; h += 3)
         {
-            var row = work.Members[i + _scheduleMemberFirst];
-            var name = _vm.Hub.State.Roster.Find(row.TargetNumber)!.Name;
-            var rect = PortraitLayout.ScrolledRow(PortraitLayout.ScheduleMembers, i, memberRowHeight, work.Members.Count > memberVisible);
-            PortraitFrame.Button(this, rect, name, selected: row.TargetNumber == _scheduleMemberId);
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.ScheduleMember, row.TargetNumber, row.Enabled, name));
+            var hy = top + h * HourPitch;
+            InkDraw.Text(this, new Vector2(124f, hy), $"{h}时", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+            InkDraw.InkLine(this, new Vector2(136f, hy), new Vector2(170f, hy), InkStyle.WoodDark, 2f);
         }
-        RegisterScroll("schedule_members", PortraitLayout.ScheduleMembers, work.Members.Count,
-            memberVisible, _scheduleMemberFirst, first => _scheduleMemberFirst = first, memberRowHeight);
+        InkDraw.InkLine(this, new Vector2(152f, top), new Vector2(152f, top + 24 * HourPitch), InkStyle.WoodDark, 3f);
 
         for (var slot = 0; slot < WorkSlot.Count; slot++)
         {
-            var row = model.Rows[slot];
-            var rect = PortraitLayout.ScheduleSlot(slot);
-            var top = PortraitLayout.ScheduleSlotTop(slot);
-            var bottom = PortraitLayout.ScheduleSlotBottom(slot);
-            var assignment = _vm.Hub.AssignmentOf(_scheduleMemberId, slot);
-            PortraitFrame.Button(this, rect, "", selected: slot == _scheduleSlot);
-            InkDraw.TextBounded(this, top.Grow(-12f), row.Name, PortraitLayout.FontMeta,
-                PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            var activity = assignment.FacilityId >= 0 ? _vm.Hub.FacilityName(assignment.FacilityId) : row.Value;
-            InkDraw.TextBounded(this, bottom.Grow(-12f), activity, PortraitLayout.FontBody,
-                PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            _widgets.Add(new PortraitWidget(top, PortraitAction.ScheduleSlot, slot, row.Enabled, row.Name));
-            _widgets.Add(new PortraitWidget(bottom, PortraitAction.ScheduleSlot, slot, row.Enabled, row.Name));
-            if (assignment.FacilityId >= 0)
-            {
-                var cancel = PortraitLayout.ScheduleCancel(slot);
-                PortraitFrame.Button(this, cancel, "取消");
-                _widgets.Add(new PortraitWidget(cancel, PortraitAction.ScheduleCancel, slot, true, "取消"));
-            }
+            var a = _vm.Hub.AssignmentOf(who.Id, slot);
+            var r = new Rect2(190f, top + slot * 6 * HourPitch + 5f, PortraitLayout.CanvasWidth - 60f - 190f, 6 * HourPitch - 10f);
+            var pressed = PortraitFrame.IsPressed(r);
+            var work = a.Mode == SlotMode.Work && a.FacilityId >= 0;
+            var fun = a.Mode == SlotMode.Entertainment && a.FacilityId >= 0;
+            if (work)
+                PortraitFrame.RoundRect(this, r, 20f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
+            else
+                PortraitFrame.RoundRect(this, r, 20f, pressed ? PortraitFrame.PressFill : fun ? InkStyle.Hover : InkStyle.Bg,
+                    fun ? InkStyle.Dim : InkStyle.WoodDark, 3f);
+            var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}"
+                : fun ? $"娱乐 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
+            var ink = work ? InkStyle.Bg : fun ? InkStyle.Line : InkStyle.Dim;
+            InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 40f, r.Size.X - 80f, 70f), label,
+                PortraitLayout.FontBody, PortraitLayout.FontMeta, ink, "lm");
+            InkDraw.Text(this, new Vector2(r.Position.X + 40f, r.End.Y - 50f), SlotRange(slot), PortraitLayout.FontMeta,
+                work ? InkStyle.WoodDark : InkStyle.Dim, "lm");
+            AddClipped(r, view, PortraitAction.ScheduleSlot, slot, true, SlotRange(slot));
         }
 
-        foreach (var room in work.Rooms)
-        {
-            var rect = PortraitLayout.ScheduleCell(room.X, room.Y);
-            PortraitFrame.Button(this, rect, room.Name, selected: room.Id == _scheduleRoomId);
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.ScheduleRoom, room.Id, true, room.Name));
-        }
+        var header = _vm.Hub.Header();
+        var ny = top + (header.Hour + header.Minute / 60f) * HourPitch;
+        InkDraw.InkLine(this, new Vector2(152f, ny), new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, ny), InkStyle.Line, 4f);
+        InkDraw.Jewel(this, new Vector2(152f, ny), 14f, InkStyle.Line);
+        return top + 24 * HourPitch + 40f;
+    }
 
-        var facilities = work.Facilities.Where(row => _vm.Hub.FacilityIsWorkbench(row.TargetNumber)).ToArray();
-        _scheduleFacilityFirst = Math.Clamp(_scheduleFacilityFirst, 0, Math.Max(0, facilities.Length - 2));
-        for (var i = 0; i < 2 && i + _scheduleFacilityFirst < facilities.Length; i++)
-        {
-            var row = facilities[i + _scheduleFacilityFirst];
-            var rect = PortraitLayout.ScrolledRow(PortraitLayout.ScheduleFacilities, i, hasScroll: facilities.Length > 2);
-            PortraitFrame.Row(this, rect, row.Name, row.Value, row.TargetNumber == work.AssignedFacilityId);
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.ScheduleFacility, row.TargetNumber, row.Enabled, row.Name));
-        }
-        RegisterScroll("schedule_facilities", PortraitLayout.ScheduleFacilities, facilities.Length, 2,
-            _scheduleFacilityFirst, first => _scheduleFacilityFirst = first);
+    // ---------- 排班抽屉 ----------
 
-        _scheduleOutputFirst = Math.Clamp(_scheduleOutputFirst, 0, Math.Max(0, work.Outputs.Count - 2));
-        for (var i = 0; i < 2 && i + _scheduleOutputFirst < work.Outputs.Count; i++)
+    private float DrawSlotSheet()
+    {
+        var top = 900f;
+        PortraitFrame.Sheet(this, top);
+        var model = ScheduleModel();
+        var work = model.Work!;
+        var current = _vm.Hub.AssignmentOf(_charId, _scheduleSlot);
+        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top + PortraitLayout.SheetTitleOffset - 40f, 760f, 80f),
+            $"{Who.Name} · {SlotRange(_scheduleSlot)}", PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
+        var close = PortraitLayout.SheetClose(top);
+        PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
+        _widgets.Add(new PortraitWidget(close, PortraitAction.SheetClose, 0, true, "收起"));
+
+        var free = new Rect2(PortraitLayout.Pad, top + PortraitLayout.SheetContentOffset, PortraitLayout.FullWidth, PortraitLayout.TouchMin);
+        var isFree = current.Mode == SlotMode.Free || current.FacilityId < 0;
+        PortraitFrame.Pill(this, free, "空闲", primary: isFree);
+        _widgets.Add(new PortraitWidget(free, PortraitAction.ScheduleCancel, _scheduleSlot, true, "空闲"));
+
+        PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, free.End.Y + 50f, "房间");
+        var chips = new Rect2(0, free.End.Y + 90f, PortraitLayout.CanvasWidth, PortraitLayout.TouchMin);
+        var widths = work.Rooms.Select(room => PortraitFrame.ChipWidth(room.Name)).ToArray();
+        var total = (int)(PortraitLayout.Pad * 2f + widths.Sum() + 16f * Math.Max(0, widths.Length - 1));
+        var offset = Pan("slot_rooms", total, (int)chips.Size.X);
+        float x = PortraitLayout.Pad - offset;
+        for (var i = 0; i < work.Rooms.Count; i++)
         {
-            var row = work.Outputs[i + _scheduleOutputFirst];
-            PortraitFrame.Row(this, PortraitLayout.ScrolledRow(PortraitLayout.ScheduleOutputs, i, hasScroll: work.Outputs.Count > 2), row.Name, row.Value, false);
+            var room = work.Rooms[i];
+            var r = new Rect2(x, chips.Position.Y, widths[i], chips.Size.Y);
+            PortraitFrame.Chip(this, r, room.Name, room.Id == _scheduleRoomId);
+            AddClipped(r, chips, PortraitAction.ScheduleRoom, room.Id, true, room.Name);
+            x += widths[i] + 16f;
         }
-        RegisterScroll("schedule_outputs", PortraitLayout.ScheduleOutputs, work.Outputs.Count, 2,
-            _scheduleOutputFirst, first => _scheduleOutputFirst = first);
+        RegisterScroll("slot_rooms", chips, total, (int)chips.Size.X, offset, v => _pan["slot_rooms"] = v, 1f, horizontal: true);
+
+        PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, chips.End.Y + 50f, "设施");
+        var listTop = chips.End.Y + 90f;
+        var visible = (int)((PortraitLayout.CanvasHeight - 60f - listTop) / PortraitLayout.SheetRowStep);
+        var facilities = work.Facilities;
+        var first = Math.Clamp(Pan("slot_facilities", facilities.Count, visible), 0, Math.Max(0, facilities.Count - visible));
+        for (var i = 0; i < visible && first + i < facilities.Count; i++)
+        {
+            var row = facilities[first + i];
+            var r = new Rect2(PortraitLayout.Pad, listTop + i * PortraitLayout.SheetRowStep, PortraitLayout.FullWidth, 124f);
+            var on = row.TargetNumber == current.FacilityId && !isFree;
+            PortraitFrame.Card(this, r, on, 22f);
+            InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y, r.Size.X - 300f, r.Size.Y), row.Name,
+                PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            var kind = _vm.Hub.FacilityIsWorkbench(row.TargetNumber) ? "工作" : "娱乐";
+            PortraitFrame.Tag(this, new Vector2(r.End.X - 40f - PortraitFrame.ChipWidth(kind) + 16f, r.GetCenter().Y - 33f), kind, 66f, on);
+            _widgets.Add(new PortraitWidget(r, PortraitAction.ScheduleFacility, row.TargetNumber, row.Enabled, row.Name));
+        }
+        RegisterScroll("slot_facilities", new Rect2(0, listTop, PortraitLayout.CanvasWidth, visible * PortraitLayout.SheetRowStep),
+            facilities.Count, visible, first, v => _pan["slot_facilities"] = v, PortraitLayout.SheetRowStep);
+        return top;
     }
 
     private bool ExecuteSchedule(PortraitWidget widget)
     {
         switch (widget.Action)
         {
-            case PortraitAction.ScheduleMember:
-                _scheduleMemberId = widget.Index;
-                _scheduleOutputFirst = 0;
-                return true;
             case PortraitAction.ScheduleSlot:
                 _scheduleSlot = widget.Index;
-                _scheduleOutputFirst = 0;
+                var assigned = _vm.Hub.AssignmentOf(_charId, _scheduleSlot);
+                if (assigned.FacilityId >= 0)
+                {
+                    var facility = _vm.Hub.State.Territory.Facilities.Find(f => f.Id == assigned.FacilityId);
+                    if (facility != null)
+                        _scheduleRoomId = facility.RoomId;
+                }
+                _sheet = SheetKind.Slot;
+                _pan.Remove("slot_facilities");
                 return true;
             case PortraitAction.ScheduleRoom:
                 _scheduleRoomId = widget.Index;
-                _scheduleFacilityFirst = 0;
+                _pan.Remove("slot_facilities");
                 return true;
             case PortraitAction.ScheduleCancel:
-                _vm.Hub.Assign(_scheduleMemberId, widget.Index, SlotMode.Free, -1);
-                _scheduleOutputFirst = 0;
+                _vm.Hub.Assign(_charId, widget.Index, SlotMode.Free, -1);
                 return true;
             case PortraitAction.ScheduleFacility:
-                var current = _vm.Hub.AssignmentOf(_scheduleMemberId, _scheduleSlot);
-                _vm.Hub.Assign(_scheduleMemberId, _scheduleSlot,
-                    current.FacilityId == widget.Index ? SlotMode.Free : SlotMode.Work,
-                    current.FacilityId == widget.Index ? -1 : widget.Index);
-                _scheduleOutputFirst = 0;
+                var current = _vm.Hub.AssignmentOf(_charId, _scheduleSlot);
+                if (current.FacilityId == widget.Index && current.Mode != SlotMode.Free)
+                    _vm.Hub.Assign(_charId, _scheduleSlot, SlotMode.Free, -1);
+                else
+                    _vm.Hub.Assign(_charId, _scheduleSlot,
+                        _vm.Hub.FacilityIsWorkbench(widget.Index) ? SlotMode.Work : SlotMode.Entertainment, widget.Index);
                 return true;
             default:
                 return false;
         }
     }
-
-    private IReadOnlyList<PortraitRegion> ScheduleRegions() => new[]
-    {
-        new PortraitRegion("back", PortraitLayout.OverlayBack),
-        new PortraitRegion("schedule_members", PortraitLayout.ScheduleMembers),
-        new PortraitRegion("schedule_slots", PortraitLayout.ScheduleSlots),
-        new PortraitRegion("schedule_grid", PortraitLayout.ScheduleGrid),
-        new PortraitRegion("schedule_facilities", PortraitLayout.ScheduleFacilities),
-        new PortraitRegion("schedule_outputs", PortraitLayout.ScheduleOutputs),
-    };
 }

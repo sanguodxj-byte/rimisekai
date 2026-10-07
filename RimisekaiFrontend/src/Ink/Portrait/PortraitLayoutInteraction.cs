@@ -2,55 +2,38 @@ using Godot;
 
 namespace Rimisekai.Portrait;
 
+/// <summary>
+/// 交互几何：交互抽屉（设施行动 / 交流）、存取抽屉（仓库类设施）、对话整屏。
+/// </summary>
 public static partial class PortraitLayout
 {
-    // ---------- 对话（地图网格区变为对话框）----------
-    //
-    // 主人 2026-10-05 定：对话时不再整屏铺开，只把**地图网格区**换成对话框，
-    // 下方的角色头像带与设施栏仍常显。对话框内部自上而下：页面入口行 / 说话人 / 正文 / 选项。
+    public const float SheetRowStep = 140f;
 
-    public static Rect2 InteractionList => PageListArea(OverlayRows);
+    /// <summary>交互抽屉：行数决定抽屉高度，最多铺到 900。</summary>
+    public static float InteractionSheetTop(int rows) =>
+        Mathf.Max(900f, CanvasHeight - 60f - Mathf.Min(rows, 8) * SheetRowStep - SheetContentOffset);
+    public static Rect2 InteractionRow(float top, int i) =>
+        new(Pad, top + SheetContentOffset + i * SheetRowStep, FullWidth, TouchMin);
+    public static int InteractionRows(float top) => (int)((CanvasHeight - 60f - top - SheetContentOffset) / SheetRowStep);
 
-    /// <summary>对话框＝地图网格区（0,120,1080,1080），与网格同一 footprint。</summary>
-    public static Rect2 ConversationBox => GridArea;
+    /// <summary>存取抽屉：上沿 760；每行＝菱形首字＋名称＋仓/包数量＋放入/取出两枚药丸。</summary>
+    public const float StorageSheetTop = 760f;
+    public static Rect2 StorageRow(int i) => new(Pad, StorageSheetTop + SheetContentOffset + 40f + i * SheetRowStep, FullWidth, 124f);
+    public static int StorageRows => (int)((CanvasHeight - 60f - StorageRow(0).Position.Y) / SheetRowStep);
+    public static Rect2 StorageButton(Rect2 row, int b) =>
+        new(row.End.X - (2 - b) * 200f + 10f, row.Position.Y + 3f, 190f, TouchMin);
 
-    /// <summary>页面入口行（状态 / 技能 / 日程），对话框顶部一行三格。</summary>
-    public static Rect2 ConversationEntry(int index) => new(
-        Pad + index * ((CanvasWidth - Pad * 2f) / 3f), ConversationBox.Position.Y + Pad,
-        (CanvasWidth - Pad * 2f) / 3f, RowHeight);
+    // ---------- 对话整屏 ----------
 
-    public static Rect2 ConversationName => new(
-        Pad, ConversationEntry(0).End.Y + 24f, CanvasWidth - Pad * 2f, 96f);
+    /// <summary>右上：状态 / 技能 / 日程三枚入口签。</summary>
+    public static Rect2 SceneEntry(int i) => new(CanvasWidth - Pad - (3 - i) * 190f, SafeTop + 20f, 174f, TouchMin);
 
-    /// <summary>正文区：高 408＝5 行（行高 80），放不下走滑条。</summary>
-    public static Rect2 ConversationText => new(
-        Pad, ConversationName.End.Y + 12f, CanvasWidth - Pad * 2f, 408f);
-
-    /// <summary>选项区：最多三行。</summary>
-    public static Rect2 ConversationChoices => new(
-        Pad, ConversationText.End.Y + 12f, CanvasWidth - Pad * 2f, RowHeight * 3f);
-
-    /// <summary>
-    /// 无选项时「点击继续」的命中块：入口行以下的整块（含说话人、正文、选项区），
-    /// 右侧让出滑条列避免与滚动条抢命中。高度远大于触控下限。
-    /// </summary>
-    public static Rect2 ConversationAdvance => new(
-        Pad, ConversationName.Position.Y, CanvasWidth - Pad * 2f - TouchMin - 16f,
-        ConversationBox.End.Y - ConversationName.Position.Y);
-
-    /// <summary>继续提示：纯实心向下三角，落在对话框底部中央。</summary>
-    public static Vector2[] ConversationArrow
-    {
-        get
-        {
-            var center = new Vector2(ConversationBox.GetCenter().X, ConversationChoices.End.Y - 40f);
-            return new[]
-            {
-                center + new Vector2(-22f, -16f), center + new Vector2(22f, -16f), center + new Vector2(0f, 16f),
-            };
-        }
-    }
-
-    public const int ConversationVisibleLines = 5;
-    public const int ConversationVisibleChoices = 3;
+    public const float SceneChoiceStep = 140f;
+    public static Rect2 SceneChoice(int visible, int i) =>
+        new(60f, CanvasHeight - 40f - visible * SceneChoiceStep + i * SceneChoiceStep, CanvasWidth - 120f, 120f);
+    public static Rect2 SceneDialog(int visibleChoices) =>
+        new(30f, CanvasHeight - 40f - visibleChoices * SceneChoiceStep - 24f - 470f, CanvasWidth - 60f, 470f);
+    public static Rect2 SceneText(Rect2 dialog) => new(dialog.Position.X + 60f, dialog.Position.Y + 50f, dialog.Size.X - 120f, 400f);
+    public const float SceneLineHeight = 80f;
+    public const int SceneVisibleLines = 5;
 }

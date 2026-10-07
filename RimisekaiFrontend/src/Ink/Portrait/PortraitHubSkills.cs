@@ -68,14 +68,14 @@ public partial class PortraitHubScreen
     public string[] DebugSkillIds => SkillTiles(BuildSkillPage().Disc!).Select(tile => tile.Id).ToArray();
     private IReadOnlyList<PortraitRegion> SkillRegions() => new[]
     {
-        new PortraitRegion("back", PortraitLayout.OverlayBack),
+        new PortraitRegion("page_top", PortraitLayout.PageTop),
         new PortraitRegion("skill_disc", PortraitLayout.SkillDiscPanel),
         new PortraitRegion("skill_controls", PortraitLayout.SkillControls),
         new PortraitRegion("skill_detail", PortraitLayout.SkillDetailArea),
     };
 
     private InkPageModel BuildSkillPage() => InkCharacterPageBuilder.Build(_vm, InkPage.Skills,
-        _vm.ChatPartner() ?? _vm.Hub.State.Roster.Master,
+        Who,
         selectedSkillId: _skillSelectedId, focusedSector: _skillFocusedSector,
         viewZoom: _skillViewZoom, viewPivot: _skillViewPivot, viewRotation: _skillViewRotation)!;
 
@@ -129,7 +129,7 @@ public partial class PortraitHubScreen
     /// <summary>星盘内容贴图（2x 超采样），由 DrawSkillPage 缩回面板矩形绘制。</summary>
     private Texture2D? SkillDiscTexture()
     {
-        if (_page != InkPage.Skills)
+        if (_push != PushPage.Disc)
             return null;
         var view = EnsureSkillView();
         var want = SubViewport.UpdateMode.Always;
@@ -149,7 +149,6 @@ public partial class PortraitHubScreen
     {
         var page = BuildSkillPage();
         DrawPageTop(page.Title);
-        DrawBack();
         var disc = page.Disc;
         if (disc == null)
         {
@@ -186,7 +185,7 @@ public partial class PortraitHubScreen
             }
             InkDraw.TextBounded(this, PortraitLayout.SkillFocusedLabel,
                 disc.SectorLabels[disc.FocusedSector], PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Button(this, PortraitLayout.SkillResetButton, "‹ 全盘视角");
+            PortraitFrame.Pill(this, PortraitLayout.SkillResetButton, "全盘视角", glyph: PortraitGlyph.Back);
             _widgets.Add(new PortraitWidget(PortraitLayout.SkillResetButton, PortraitAction.SkillReset, 0, true, "‹ 全盘视角"));
             DrawTextureRect(ResourceLoader.Load<Texture2D>("res://assets/disc_nav_button.svg"),
                 PortraitLayout.SkillNavigation, false);
@@ -269,7 +268,7 @@ public partial class PortraitHubScreen
 
     private void ExecuteSkillWidget(PortraitWidget widget)
     {
-        if (_page != InkPage.Skills || !widget.Enabled)
+        if (_push != PushPage.Disc || !widget.Enabled)
             return;
         switch (widget.Action)
         {
@@ -302,7 +301,7 @@ public partial class PortraitHubScreen
 
     private bool HandleSkillInput(InputEvent e)
     {
-        if (_page != InkPage.Skills)
+        if (_push != PushPage.Disc)
             return false;
         switch (e)
         {

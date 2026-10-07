@@ -64,9 +64,34 @@ public enum PortraitAction
     DevelopmentFacility,
     DevelopmentRoom,
     DevelopmentAction,
+    // ---- 2026-10-07 重设计新增 ----
+    Rename,
+    OpenSystem,
+    Build,
+    SheetClose,
+    RoomGo,
+    RoomDemolish,
+    NowAvatar,
+    CharacterSegment,
+    SkillCard,
+    OpenDisc,
+    StoreSegment,
+    StockCategory,
+    StockSearch,
+    StockItem,
+    TradeSegment,
+    TradeMinus,
+    TradePlus,
+    CraftStation,
+    CraftRecipe,
+    CraftToggle,
+    QuestTake,
+    SystemSegment,
+    VolumeSet,
+    DevelopmentTab,
 }
 
-/// <summary>一个可点块。命中判定按注册逆序（后注册者画在上、先命中），与横屏同一套约定。</summary>
+/// <summary>一个可点块。命中判定按注册逆序（后注册者画在上、先命中）。</summary>
 public readonly record struct PortraitWidget(Rect2 Rect, PortraitAction Action, int Index, bool Enabled,
     string Label, Vector2[]? Polygon = null)
 {
@@ -75,22 +100,43 @@ public readonly record struct PortraitWidget(Rect2 Rect, PortraitAction Action, 
 }
 
 /// <summary>
-/// 竖屏据点界面：顶栏 + 内容区 + 底部页签带。与横屏 InkHubScreen 平行存在，互不引用。
+/// 竖屏据点界面（2026-10-07 重设计）：
+/// 根页签＝HUD＋内容＋五页签（领地 / 角色 / 委托 / 仓储 / 日志）；
+/// 推入页＝顶栏＋整页（角色详情 / 技能星盘 / 建造 / 系统）；
+/// 设施、编成、排班、存取、交互走底部抽屉；对话铺满整屏。
 ///
-/// 触摸取向的三处与横屏不同：点击在**松开**时才派发（按下即走会误触），
-/// 列表靠**拖动**滚动（没有滚轮），一切可点块不低于 118px＝48dp。
+/// 触摸取向：点击在**松开**时才派发，列表靠**拖动**滚动，一切可点块不低于 118px＝48dp。
+/// 滚动内容先画、HUD/页签/固定条后画（不透明底），越界的部分被盖住——不另做裁剪。
+/// 抽屉打开时先清掉下层全部命中块，下层只作压暗的背景，点不到。
 /// </summary>
 public partial class PortraitHubScreen : Control
 {
-    private static readonly string[] TabLabels = { "地图", "日志", "角色", "操作" };
+    private enum PushPage
+    {
+        None,
+        Character,
+        Disc,
+        Build,
+        System,
+    }
+
+    private enum SheetKind
+    {
+        None,
+        Room,
+        Party,
+        Slot,
+        Item,
+    }
 
     private readonly List<PortraitWidget> _widgets = new();
     private InkViewModel _vm = null!;
     private string _notice = "";
+    private float _noticeAge;
     private int _tab;
-    private int _listFirst;
-    private int _fixtureFirst;
-    private int _selectedCell = -1;
+    private PushPage _push;
+    private SheetKind _sheet;
+    private float _sheetTop = -1f;
     private bool _pressed;
     private bool _dragging;
     private Vector2 _pressPos;
@@ -105,22 +151,19 @@ public partial class PortraitHubScreen : Control
     {
         _vm = vm;
         _tab = 0;
-        _page = InkPage.None;
-        _systemPage = "";
-        _questMode = false;
+        _push = PushPage.None;
+        _sheet = SheetKind.None;
         _notice = "";
-        _listFirst = _fixtureFirst = 0;
         _interactionOpen = _giftOpen = _observing = false;
         _socialCategory = -1;
-        _selectedCell = -1;
+        _sheetRoom = -1;
         _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
         _developmentFacilityFirst = _developmentRoomFirst = _developmentActionFirst = 0;
-        _tradeHeld = _tradeMarket = _rowSel = -1;
-        _tradeHeldFirst = _tradeMarketFirst = 0;
+        _tradeQty.Clear();
         _party.Clear();
-        _statusAbilityOpen = false;
-        _statusAbilityFirst = 0;
-        _statusAbilityTotal = 0;
+        _questSel = -1;
+        _storeMode = 0;
+        _pan.Clear();
         ResetListDrag();
         ResetSkillView();
         Size = new Vector2(PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight);
@@ -128,16 +171,28 @@ public partial class PortraitHubScreen : Control
         MouseFilter = MouseFilterEnum.Stop;
     }
 
+    /// <summary>切到某个根页签：收起推入页与抽屉，离开交易段即散集。</summary>
     public void ShowTab(int i)
     {
+        LeaveTradeIfOpen();
+        CloseTransient();
+        _push = PushPage.None;
         _tab = i;
-        CloseOverlay();
+        if (_tab == 3 && _storeMode == 1)
+            _vm.Hub.OpenTrade();
+        ResetListDrag();
+        QueueRedraw();
+    }
+
+    /// <summary>收起抽屉与交互（不动根页签）。</summary>
+    private void CloseTransient()
+    {
+        _sheet = SheetKind.None;
         _interactionOpen = false;
         _giftOpen = false;
         _socialCategory = -1;
-        _listFirst = 0;
-        ResetListDrag();
-        QueueRedraw();
+        if (_vm.StorageOpen)
+            _vm.Hub.CloseStorage();
     }
 
     /// <summary>核对用：按动作命中一次，走与点击完全相同的派发路。</summary>
@@ -157,263 +212,209 @@ public partial class PortraitHubScreen : Control
     {
         _widgets.Clear();
         _scrollAreas.Clear();
+        _sheetTop = -1f;
         // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发。
         PortraitFrame.SetPress(_pressed && !_dragging ? _pressRect : null);
         PortraitFrame.Backdrop(this);
-        DrawHeader();
 
-        if (DrawOverlay() || DrawInteraction())
+        if (_push != PushPage.None)
+            DrawPushed();
+        else if (ConversationActive)
+        {
+            DrawScene();
+            DrawToast();
             return;
-
-        switch (_tab)
-        {
-            case 0: DrawMap(); break;
-            case 1: DrawLog(); break;
-            case 2: DrawRoster(); break;
-            default: DrawOps(); break;
-        }
-
-        DrawTabBar();
-        DrawNotice();
-    }
-
-    private void DrawHeader()
-    {
-        // 顶栏是通栏窄条，四角就是地点名与金钱的落脚处：不发角花，只留细双线。
-        PortraitFrame.Panel(this, PortraitLayout.Header, InkStyle.Panel, flourish: 0f);
-
-        // 四个状态格之间各缀一枚小实心菱：把四项读成四项，而不是一串挨着的数。
-        for (var i = 1; i < 4; i++)
-            InkDraw.Jewel(this, new Vector2(PortraitLayout.HeaderSlot(i).Position.X,
-                PortraitLayout.Header.GetCenter().Y), 4f, new Color(InkStyle.Dim, 0.85f));
-
-        InkDraw.Text(this, new Vector2(PortraitLayout.PlaceNameRect.Position.X,
-                PortraitLayout.Header.GetCenter().Y),
-            _vm.PlaceTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-
-        var items = _vm.HeaderItems();
-        for (var i = 0; i < items.Count; i++)
-            InkDraw.Text(this, new Vector2(PortraitLayout.HeaderSlot(i).GetCenter().X,
-                    PortraitLayout.Header.GetCenter().Y),
-                items[i].Value, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-    }
-
-    private void DrawMap()
-    {
-        for (var y = 0; y < PortraitLayout.GridRows; y++)
-            for (var x = 0; x < PortraitLayout.GridCols; x++)
-                DrawCell(x, y);
-
-        DrawAvatars();
-        DrawFixtures();
-    }
-
-    /// <summary>
-    /// 角色头像带：删掉地点插画带后空出的中部常显。
-    /// 每张卡＝方形头像＋名牌＋体力细线。只画主角所在房间里的角色。纯展示，不带新的交互。
-    /// </summary>
-    private void DrawAvatars()
-    {
-        var cards = _vm.Avatars();
-        for (var i = 0; i < PortraitLayout.AvatarSlots; i++)
-        {
-            var rect = PortraitLayout.AvatarCard(i);
-            PortraitFrame.Panel(this, rect, InkStyle.Bg, flourish: 0f);
-            if (i >= cards.Count)
-                continue;
-            var who = cards[i];
-            var present = who.RoomId >= 0 || who.IsPlayer;
-
-            var character = _vm.FindById(who.Id);
-            var tex = PortraitAvatars.Resolve(character);
-            if (tex != null)
-            {
-                var area = PortraitLayout.AvatarImage(rect);
-                var size = tex.GetSize();
-                var scale = Mathf.Min(area.Size.X / size.X, area.Size.Y / size.Y);
-                DrawTextureRect(tex, new Rect2(area.GetCenter() - size * scale / 2f, size * scale), false);
-                if (!present)
-                    DrawRect(area, new Color(InkStyle.Bg, 0.55f));
-            }
-
-            InkDraw.TextBounded(this, PortraitLayout.AvatarName(rect), who.Name,
-                PortraitLayout.FontBody, PortraitLayout.FontMeta, present ? InkStyle.Line : InkStyle.Dim, "cm");
-            var stamina = character?.Condition.Stamina ?? 0;
-            var maxStamina = character?.Condition.MaxStamina ?? 0;
-            if (maxStamina > 0)
-                InkDynamicMeter.Draw(this, $"portrait_hub_avatar_{who.Id}",
-                    PortraitLayout.AvatarMeter(rect), Mathf.Clamp((float)stamina / maxStamina, 0f, 1f), true);
-        }
-    }
-
-    private void DrawCell(int x, int y)
-    {
-        var r = PortraitLayout.Cell(x, y);
-        var room = _vm.RoomAt(x, y);
-        var c = r.GetCenter();
-
-        if (room == null)
-        {
-            // 未开拓的空格：只留一圈虚线，不写任何字。
-            DashedLoop(r.Grow(-8f), new Color(InkStyle.Dim, 0.5f));
-            return;
-        }
-
-        if (!room.Open)
-        {
-            // 已有房间但未开放：压暗的实线格，只报房名。
-            InkDraw.Ink(this, RectLoop(r.Grow(-4f)), new Color(InkStyle.Dim, 0.8f), PortraitLayout.LineHair);
-            InkDraw.Text(this, c, room.Name, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         }
         else
         {
-            var picked = _selectedCell == room.Id;
-            var pressed = PortraitFrame.IsPressed(r);
-            DrawRect(r.Grow(-4f), pressed ? PortraitFrame.PressFill : picked ? InkStyle.Hover : InkStyle.Inset);
-            var picture = RoomImageProvider?.Invoke(room.Id);
-            if (picture != null)
+            switch (_tab)
             {
-                var area = PortraitLayout.RoomPicture(r);
-                var size = picture.GetSize();
-                var scale = Mathf.Min(area.Size.X / size.X, area.Size.Y / size.Y);
-                DrawTextureRect(picture, new Rect2(area.GetCenter() - size * scale / 2, size * scale), false);
+                case 0: DrawTerritory(); break;
+                case 1: DrawRoster(); break;
+                case 2: DrawQuestBoard(); break;
+                case 3: DrawStore(); break;
+                default: DrawLog(); break;
             }
-            // 已开放：双线格（外主线＋内暗线），与面板同一套框线语汇。按下时外线加粗。
-            InkDraw.Ink(this, RectLoop(r.Grow(-4f)), InkStyle.Line,
-                pressed ? PortraitLayout.LineBold + 2f : PortraitLayout.LineBold);
-            InkDraw.Ink(this, RectLoop(r.Grow(-12f)), new Color(InkStyle.Dim, 0.7f), PortraitLayout.LineHair);
-            InkDraw.Text(this, new Vector2(c.X, r.Position.Y + 52f), room.Name,
-                PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            DrawMarkers(_vm.Cards().Where(card => card.RoomId == room.Id).ToArray(), PortraitLayout.RoomMarkers(r));
+            DrawHud();
+            DrawTabBar();
         }
 
-        _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, room.Open, room.Name));
+        if (_vm.StorageOpen)
+            OpenSheetLayer(DrawStorageSheet);
+        else if (_interactionOpen)
+            OpenSheetLayer(DrawInteractionSheet);
+        else if (_sheet == SheetKind.Room)
+            OpenSheetLayer(DrawRoomSheet);
+        else if (_sheet == SheetKind.Party)
+            OpenSheetLayer(DrawPartySheet);
+        else if (_sheet == SheetKind.Slot)
+            OpenSheetLayer(DrawSlotSheet);
+        else if (_sheet == SheetKind.Item)
+            OpenSheetLayer(DrawItemSheet);
+
+        DrawToast();
     }
 
-    /// <summary>虚线矩形：未开拓的格子只给一圈虚线，与开发页同一套语汇。</summary>
-    private void DashedLoop(Rect2 r, Color color)
+    /// <summary>
+    /// 抽屉层：下层画面已画完，这里把它的命中块与滚动区整个清掉（只剩压暗的背景），
+    /// 再由 draw 画面板并注册抽屉自己的命中块；draw 返回面板上沿。
+    /// 抽屉之上的压暗区是一整块「收起」命中块。
+    /// </summary>
+    private void OpenSheetLayer(Func<float> draw)
     {
-        var corners = new[]
-        {
-            r.Position, new Vector2(r.End.X, r.Position.Y), r.End, new Vector2(r.Position.X, r.End.Y), r.Position,
-        };
-        for (var i = 0; i < 4; i++)
-            InkDraw.Dashed(this, corners[i], corners[i + 1], color, PortraitLayout.LineHair, dash: 22f, gap: 16f);
+        _widgets.Clear();
+        _scrollAreas.Clear();
+        _sheetTop = draw();
+        _widgets.Insert(0, new PortraitWidget(new Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop),
+            PortraitAction.SheetClose, 0, true, "收起"));
     }
 
-    private void DrawFixtures()
+    private void DrawPushed()
     {
-        var area = PortraitLayout.FixtureArea;
-        // 设施行横贯整块面板直到下沿两角，发角花必与行文打架：只留细双线。
-        PortraitFrame.Panel(this, area, new Color(InkStyle.Bg, 0f), flourish: 0f);
-        var fixtures = _vm.Fixtures();
-        var visible = PortraitLayout.FixtureVisibleRows;
-        _fixtureFirst = Math.Clamp(_fixtureFirst, 0, Math.Max(0, fixtures.Count - visible));
-        for (var i = 0; i < visible && i + _fixtureFirst < fixtures.Count; i++)
+        switch (_push)
         {
-            var fixture = fixtures[i + _fixtureFirst];
-            var seats = _vm.Seats(fixture);
-            var rect = PortraitLayout.ScrolledRow(PortraitLayout.FixtureList, i, hasScroll: fixtures.Count > visible);
-            PortraitFrame.Row(this, rect, fixture.Name, $"{seats.Used}/{seats.Capacity}", fixture.PlayerHere);
-            DrawMarkers(_vm.Hub.WorkersAtFixture(fixture.Id), PortraitLayout.FixtureMarkers(rect));
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.Fixture, fixture.Id, true, fixture.Name));
+            case PushPage.Character: DrawCharacterPage(); break;
+            case PushPage.Disc: DrawSkillPage(); break;
+            case PushPage.Build: DrawDevelopment(); break;
+            default: DrawSystem(); break;
         }
-        RegisterScroll("fixtures", PortraitLayout.FixtureList, fixtures.Count, visible,
-            _fixtureFirst, first => _fixtureFirst = first);
     }
 
-    private void DrawLog()
+    /// <summary>推入页顶栏：左返回、中标题（可带副行）、右侧可选一枚文字钮。不透明底，盖住滚上来的内容。</summary>
+    private void DrawPageTop(string title, string sub = "", string action = "", PortraitAction actionKind = PortraitAction.Back)
     {
-        var lines = _vm.LogLines();
-        _listFirst = ClampFirst(_listFirst, lines.Count);
-        var hasScroll = lines.Count > PortraitLayout.VisibleRows;
-        for (var i = 0; i < PortraitLayout.VisibleRows; i++)
+        var top = PortraitLayout.PageTop;
+        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
+        var back = PortraitLayout.PageBack;
+        if (PortraitFrame.IsPressed(back))
+            PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
+        PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
+        _widgets.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
+        var cy = top.GetCenter().Y;
+        var titleRect = new Rect2(200f, cy - (sub.Length > 0 ? 62f : 40f), PortraitLayout.CanvasWidth - 400f, 80f);
+        InkDraw.TextBounded(this, titleRect, title, PortraitLayout.FontPlace, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        if (sub.Length > 0)
+            InkDraw.TextBounded(this, new Rect2(160f, cy + 14f, PortraitLayout.CanvasWidth - 320f, 52f), sub,
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        if (action.Length > 0)
         {
-            var at = _listFirst + i;
-            if (at >= lines.Count)
-                break;
-            PortraitFrame.Row(this, PortraitLayout.ListRow(i, hasScroll), lines[at], "", false);
+            var r = PortraitLayout.PageAction;
+            if (PortraitFrame.IsPressed(r))
+                PortraitFrame.RoundRect(this, r.Grow(-8f), 40f, PortraitFrame.PressFill);
+            InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), action, PortraitLayout.FontBody, InkStyle.Line, "rm");
+            _widgets.Add(new PortraitWidget(r, actionKind, 0, true, action));
         }
-        DrawScroll(lines.Count);
+        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
     }
 
-    private void DrawRoster()
+    /// <summary>
+    /// HUD：第一行地名（领地内可点改名）＋金钱签；第二行季节·天气·时刻＋系统钮。
+    /// 时间随操作推进（Core 无倍速），所以这里没有暂停/倍速控件。
+    /// </summary>
+    private void DrawHud()
     {
-        var cards = _vm.CardsHere();
-        _listFirst = ClampFirst(_listFirst, cards.Count);
-        var hasScroll = cards.Count > PortraitLayout.VisibleRows;
-        for (var i = 0; i < PortraitLayout.VisibleRows; i++)
+        var hud = PortraitLayout.Hud;
+        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, hud.End.Y), InkStyle.Bg);
+        var header = _vm.Hub.Header();
+        var items = _vm.HeaderItems();
+
+        var place = PortraitLayout.HudPlace;
+        if (PortraitFrame.IsPressed(place))
+            PortraitFrame.RoundRect(this, place, 30f, PortraitFrame.PressFill);
+        var title = _vm.MapTitle();
+        var money = items[3].Value;
+        var moneyWidth = InkDraw.Measure(money, PortraitLayout.FontMeta).X + 120f;
+        var titleMax = PortraitLayout.CanvasWidth - PortraitLayout.Pad * 2f - moneyWidth - 90f;
+        var titleSize = InkDraw.FitSize(title, titleMax, PortraitLayout.FontPlace, PortraitLayout.FontMeta);
+        var shown = InkDraw.Ellipsize(title, titleMax, titleSize);
+        InkDraw.Text(this, new Vector2(place.Position.X + 20f, PortraitLayout.HudLine1), shown, titleSize, InkStyle.Line, "lm");
+        if (_vm.CanRenameTerritory)
         {
-            var at = _listFirst + i;
-            if (at >= cards.Count)
-                break;
-            var card = cards[at];
-            var rect = PortraitLayout.ScrolledRow(PortraitLayout.ListArea, i, PortraitLayout.RowHeight, hasScroll);
-            PortraitFrame.Row(this, rect, card.Name, card.IsPlayer ? "你" : "",
-                _vm.Hub.SelectedCharacterId == card.Id);
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.RosterPick, card.Id, true, card.Name));
+            PortraitGlyph.Pen(this, place.Position.X + 20f + InkDraw.Measure(shown, titleSize).X + 40f,
+                PortraitLayout.HudLine1, 16f, InkStyle.Dim);
+            _widgets.Add(new PortraitWidget(new Rect2(place.Position, new Vector2(
+                    Mathf.Min(place.Size.X, InkDraw.Measure(shown, titleSize).X + 100f), place.Size.Y)),
+                PortraitAction.Rename, 0, true, "改名"));
         }
-        DrawScroll(cards.Count);
+
+        var pill = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - moneyWidth, PortraitLayout.HudLine1 - 38f,
+            moneyWidth, 76f);
+        PortraitFrame.RoundRect(this, pill, 38f, null, InkStyle.WoodDark, 3f);
+        PortraitGlyph.Coin(this, pill.Position.X + 46f, pill.GetCenter().Y, 20f, InkStyle.Line);
+        InkDraw.Text(this, new Vector2(pill.End.X - 32f, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "rm");
+
+        var y = PortraitLayout.HudLine2;
+        var x = PortraitLayout.Pad + 20f;
+        var season = $"{items[0].Value} 第{_vm.Hub.State.Clock.Week}日";
+        PortraitGlyph.Leaf(this, x + 18f, y, 18f, InkStyle.Dim);
+        InkDraw.Text(this, new Vector2(x + 50f, y), season, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        x += 50f + InkDraw.Measure(season, PortraitLayout.FontMeta).X + 36f;
+        PortraitGlyph.Weather(this, header.Weather, x + 18f, y, 18f, InkStyle.Dim);
+        InkDraw.Text(this, new Vector2(x + 50f, y), items[1].Value, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        x += 50f + InkDraw.Measure(items[1].Value, PortraitLayout.FontMeta).X + 36f;
+        PortraitGlyph.Clock(this, x + 18f, y, 18f, InkStyle.Dim);
+        InkDraw.Text(this, new Vector2(x + 50f, y), items[2].Value, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+
+        var sys = PortraitLayout.HudSystem;
+        if (PortraitFrame.IsPressed(sys))
+            PortraitFrame.RoundRect(this, sys.Grow(-10f), 49f, PortraitFrame.PressFill);
+        PortraitGlyph.Gear(this, sys.GetCenter().X, sys.GetCenter().Y, 26f, InkStyle.Line);
+        _widgets.Add(new PortraitWidget(sys, PortraitAction.OpenSystem, 0, true, "系统"));
+
+        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, hud.End.Y - 2f);
     }
 
-    /// <summary>世界层格子里房名即兴趣点名（导出表按 NameZh/NameEn 落名）。</summary>
-    private string RoomName(int roomId)
-    {
-        foreach (var room in _vm.Rooms())
-            if (room.Id == roomId)
-                return room.Name;
-        return "";
-    }
-
-    private void DrawOps()
-    {
-        PortraitFrame.Title(this, new Rect2(0, PortraitLayout.Content.Position.Y,
-            PortraitLayout.CanvasWidth, PortraitLayout.TitleBand), "操作");
-        for (var i = 0; i < AllEntries.Length; i++)
-        {
-            var r = PortraitLayout.OpRow(i + 1);
-            PortraitFrame.Button(this, r, InkPageModel.Info(AllEntries[i]).Label);
-            _widgets.Add(new PortraitWidget(r, PortraitAction.Entry, i, true, AllEntries[i].ToString()));
-        }
-        var sys = PortraitLayout.OpRow(AllEntries.Length + 1);
-        PortraitFrame.Button(this, sys, "设置");
-        _widgets.Add(new PortraitWidget(sys, PortraitAction.Entry, AllEntries.Length, true, "设置"));
-        var world = PortraitLayout.OpRow(AllEntries.Length + 2);
-        var worldLabel = _vm.Hub.Layer == Rimisekai.Hub.MapLayer.World ? "返回领地" : "世界大地图";
-        PortraitFrame.Button(this, world, worldLabel);
-        _widgets.Add(new PortraitWidget(world, PortraitAction.HubWorld, 0, true, worldLabel));
-    }
-
+    /// <summary>底部五页签：图标＋字，当前页签＝骨白实心药丸托底、图标反黑。</summary>
     private void DrawTabBar()
     {
-        // 页签带不发角花：四个页签正好铺满整条，角花会被页签的底盖掉，白画。
-        PortraitFrame.Panel(this, PortraitLayout.TabBar, InkStyle.Inset, flourish: 0f);
+        var bar = PortraitLayout.TabBar;
+        DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y), InkStyle.Bg);
+        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, bar.Position.Y);
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
-            PortraitFrame.Button(this, r, TabLabels[i], selected: i == _tab && !OverlayActive);
-            _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, TabLabels[i]));
+            var on = i == _tab && _push == PushPage.None;
+            var cx = r.GetCenter().X;
+            var cy = r.Position.Y + 70f;
+            var pill = new Rect2(cx - 76f, cy - 40f, 152f, 80f);
+            if (on)
+                PortraitFrame.RoundRect(this, pill, 40f, InkStyle.Line);
+            else if (PortraitFrame.IsPressed(r))
+                PortraitFrame.RoundRect(this, pill, 40f, PortraitFrame.PressFill);
+            PortraitGlyph.TabIcons[i](this, cx, cy, 26f, on ? InkStyle.Bg : InkStyle.Dim);
+            InkDraw.Text(this, new Vector2(cx, cy + 84f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
+                on ? InkStyle.Line : InkStyle.Dim, "cm");
+            _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
         }
     }
 
-    private void DrawScroll(int total, int? visibleRows = null)
+    /// <summary>
+    /// 操作反馈：领地页签上由提示条常显；其余画面在底部弹一枚 3 秒的浅填签，不拦输入。
+    /// </summary>
+    private void DrawToast()
     {
-        var visible = visibleRows.HasValue ? visibleRows.Value :
-            OverlayActive ? PortraitLayout.OverlayRows : PortraitLayout.VisibleRows;
-        var area = OverlayActive ? PortraitLayout.PageListArea(visible) : PortraitLayout.ListArea;
-        RegisterScroll("page_list", area, total, visible, _listFirst, first => _listFirst = first);
+        if (_notice.Length == 0 || _noticeAge > 3f || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f))
+            return;
+        var bottom = _sheetTop >= 0f ? _sheetTop - 30f
+            : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;
+        var width = Mathf.Min(PortraitLayout.FullWidth, InkDraw.Measure(_notice, PortraitLayout.FontMeta).X + 96f);
+        var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - 96f, width, 96f);
+        PortraitFrame.RoundRect(this, r, 48f, InkStyle.Hover, InkStyle.Dim, 3f);
+        InkDraw.TextBounded(this, r.Grow(-24f), _notice, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
     }
 
-    private void DrawNotice()
+    /// <summary>在滚动视口内登记命中块：只登记露在视口里的部分，露出的短边不足触控下限就不登记。</summary>
+    private void AddClipped(Rect2 rect, Rect2 viewport, PortraitAction action, int index, bool enabled, string label)
     {
-        if (_notice.Length == 0)
+        var shown = rect.Intersection(viewport);
+        if (shown.Size.X < PortraitLayout.TouchMin || shown.Size.Y < PortraitLayout.TouchMin)
             return;
-        var r = new Rect2(PortraitLayout.Pad, PortraitLayout.TabBar.Position.Y - 90,
-            PortraitLayout.CanvasWidth - PortraitLayout.Pad * 2f, 74);
-        if (_widgets.Any(widget => widget.Rect.Intersects(r)))
-            return;
-        InkDraw.Text(this, r.GetCenter(), _notice, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        _widgets.Add(new PortraitWidget(shown, action, index, enabled, label));
     }
+
+    /// <summary>滚动视口上方的遮罩：把滚出视口顶的内容盖掉（之后再画固定控件）。</summary>
+    private void MaskAbove(Rect2 viewport, Color? color = null) =>
+        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, viewport.Position.Y), color ?? InkStyle.Bg);
 
     // ---------- 输入 ----------
 
@@ -467,52 +468,106 @@ public partial class PortraitHubScreen : Control
             return;
         var w = hit.Value.Widget;
         _vm.Hub.BeginOperation();
+        var before = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
         switch (w.Action)
         {
-            case PortraitAction.Cell:
-                if (_vm.Hub.Layer == Rimisekai.Hub.MapLayer.World)
-                {
-                    // 世界层：点兴趣点所在格进入该地点（与横版同一出口）。
-                    var poi = _vm.Hub.State.World.Pois.Find(p =>
-                        p.NameZh == RoomName(w.Index) || p.NameEn == RoomName(w.Index));
-                    var entered = poi != null && _vm.Hub.EnterWorldPoi(poi.Id);
-                    _notice = entered ? "" : "这里无法进入。";
-                    break;
-                }
-                _vm.Hub.Enter(w.Index);
-                _selectedCell = w.Index;
-                Notice();
-                break;
-
-            case PortraitAction.HubWorld:
-                _vm.Hub.ToggleWorldLayer();
-                _tab = 0;
-                _selectedCell = -1;
-                Notice();
-                break;
-            case PortraitAction.Fixture:
-                if (_vm.Hub.Use(w.Index))
-                {
-                    _vm.Hub.ClearSelection();
-                    OpenInteraction();
-                }
-                Notice();
-                break;
             case PortraitAction.Tab:
                 ShowTab(w.Index);
                 return;
-            case PortraitAction.Entry:
-                OpenEntry(w.Index);
+            case PortraitAction.OpenSystem:
+                OpenSystemPage(InkSystemScreen.PageSave);
                 return;
+            case PortraitAction.Rename:
+                OpenRename();
+                return;
+            case PortraitAction.SheetClose:
+                CloseSheet();
+                break;
+            case PortraitAction.Back:
+                Back();
+                break;
             default:
-                ExecuteOverlay(w);
+                Execute(w);
                 break;
         }
+        var after = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
+        if (after.Length > 0 && after != before)
+            SetNotice(after);
         QueueRedraw();
     }
 
+    private void Execute(PortraitWidget w)
+    {
+        if (ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
+            || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w))
+            return;
+        switch (w.Action)
+        {
+            case PortraitAction.SkillSector:
+            case PortraitAction.SkillNode:
+            case PortraitAction.SkillReset:
+            case PortraitAction.SkillPrevious:
+            case PortraitAction.SkillNext:
+                ExecuteSkillWidget(w);
+                break;
+        }
+    }
+
+    /// <summary>抽屉的收起：交互抽屉逐级退（赠礼 → 类别 → 关闭），存取抽屉关设施，其余直接收。</summary>
+    private void CloseSheet()
+    {
+        if (_vm.StorageOpen)
+            _vm.Hub.CloseStorage();
+        else if (_interactionOpen)
+            InteractionBack();
+        else
+            _sheet = SheetKind.None;
+    }
+
+    /// <summary>顶栏返回：星盘回角色详情，其余推入页回根页签。</summary>
+    private void Back()
+    {
+        ResetSkillView();
+        if (_push == PushPage.Disc)
+        {
+            _push = PushPage.Character;
+            return;
+        }
+        if (_push == PushPage.Build)
+            _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
+        _push = PushPage.None;
+        _sheet = SheetKind.None;
+        if (_tab == 3 && _storeMode == 1)
+            _vm.Hub.OpenTrade();
+    }
+
+    private void SetNotice(string text)
+    {
+        _notice = text;
+        _noticeAge = 0f;
+    }
+
     private void Notice() =>
-        _notice = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
+        SetNotice(_vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "");
+
+    /// <summary>领地改名：原生输入框弹窗（软键盘中文输入法只认 LineEdit）。</summary>
+    private void OpenRename()
+    {
+        var page = InkModalFactory.CreateInputQuestion("领地命名", "", _vm.TerritoryName, 8, name =>
+        {
+            var trimmed = name.Trim();
+            if (trimmed.Length == 0)
+                SetNotice("名字不能为空。");
+            else
+            {
+                _vm.Hub.State.Territory.Name = trimmed;
+                SetNotice($"领地改名为「{trimmed}」。");
+            }
+            QueueRedraw();
+        });
+        page.Choices.Insert(0, new InkModalChoice { Id = "cancel", Label = "取消", OnSelected = () => { } });
+        ModalWanted!(page);
+    }
 
     /// <summary>注册逆序命中：后注册的画在上层，先命中。</summary>
     private (int Index, PortraitWidget Widget)? Hit(Vector2 at)
@@ -523,23 +578,19 @@ public partial class PortraitHubScreen : Control
         return null;
     }
 
-    private static int ClampFirst(int first, int total) =>
-        Mathf.Clamp(first, 0, System.Math.Max(0, total - PortraitLayout.VisibleRows));
-
     private static IReadOnlyList<Vector2> RectLoop(Rect2 r) => new[]
     {
         r.Position, new Vector2(r.End.X, r.Position.Y), r.End, new Vector2(r.Position.X, r.End.Y), r.Position,
     };
 
-    private void DrawMarkers(IReadOnlyList<Rimisekai.Hub.CharacterCard> cards, Rect2 area)
+    /// <summary>虚线矩形。</summary>
+    private void DashedLoop(Rect2 r, Color color)
     {
-        var capacity = Math.Max(1, (int)(area.Size.X / PortraitLayout.MarkerStep));
-        var shown = Math.Min(cards.Count, capacity);
-        var start = area.GetCenter().X - (shown - 1) * PortraitLayout.MarkerStep / 2;
-        for (var i = 0; i < shown; i++)
-            InkDraw.Chess(this, new Vector2(start + i * PortraitLayout.MarkerStep, area.End.Y),
-                PortraitLayout.MarkerHeight, InkDraw.PieceFor(cards[i]), isLimitCap: false);
-        if (cards.Count > shown)
-            InkDraw.Text(this, area.End, $"+{cards.Count - shown}", PortraitLayout.FontMeta, InkStyle.Dim, "rb");
+        var corners = new[]
+        {
+            r.Position, new Vector2(r.End.X, r.Position.Y), r.End, new Vector2(r.Position.X, r.End.Y), r.Position,
+        };
+        for (var i = 0; i < 4; i++)
+            InkDraw.Dashed(this, corners[i], corners[i + 1], color, PortraitLayout.LineHair - 2f, dash: 22f, gap: 16f);
     }
 }
