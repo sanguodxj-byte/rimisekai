@@ -159,7 +159,7 @@ public partial class PortraitCombatView : Control
             var allies = B.Members.Where(m => m.Side == B.ControlledSide).Take(4).ToArray();
             for (var i = 0; i < allies.Length; i++)
                 if (allies[i].Id == unitId)
-                    return PortraitLayout.AllyCard(i, allies[i].ThreatTier).GetCenter();
+                    return PortraitLayout.AllyCard(i).GetCenter();
         }
         return PortraitLayout.CombatField.GetCenter();
     }
@@ -173,83 +173,51 @@ public partial class PortraitCombatView : Control
         if (battle == null)
             return;
         InkCombatRenderer.DrawCombatBackground(this, PortraitLayout.CombatBackground, dimFactor: 0.32f);
+        DrawTopBar(battle);
         DrawBoss(battle);
         BuildEnemyGeometry(battle);
         DrawEnemyField(battle);
-        // 跑条最后画：大方卡（如 4x4 居中首领）不得盖住轨道与敌方标识。
-        DrawSpeedBar(battle);
-        DrawOpEntry(battle);
+        DrawTurnOrder(battle);
         DrawAllies(battle);
+        DrawOpEntry(battle);
         DrawSettingsGear();
     }
 
-    /// <summary>
-    /// 速度跑条：无外框（战斗白名单件）。中线一根竖细线分左右两列——左列我方、右列敌方，
-    /// 各列按出手先后自上而下排，越靠上越先出手。
-    /// </summary>
-    private void DrawSpeedBar(Battle battle)
+    /// <summary>顶栏：左战场名、中回合数（右侧是设置齿轮）。</summary>
+    private void DrawTopBar(Battle battle)
     {
-        var track = PortraitLayout.CombatSpeedTrack;
-        var alive = battle.Members.Where(m => m.Alive).ToList();
-        if (alive.Count == 0)
-            return;
-        var span = alive.Max(m => m.NextActAt) - battle.Time;
-        if (span <= 0)
-            return;
-        var cx = track.GetCenter().X;
-        InkDraw.InkLine(this, new Vector2(cx, track.Position.Y),
-            new Vector2(cx, track.End.Y), InkStyle.Dim, PortraitLayout.LineHair);
-        const float size = 46f, minGap = 54f;
-        var top = track.Position.Y + size / 2f;
-        var bottom = track.End.Y - size / 2f;
-        foreach (var ally in new[] { true, false })
+        var top = PortraitLayout.CombatTop;
+        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top.Position.Y, 420f, top.Size.Y), battle.PlaceName,
+            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+        InkDraw.Text(this, new Vector2(top.GetCenter().X + 110f, top.GetCenter().Y), $"第 {battle.Round} 回合",
+            PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+    }
+
+    /// <summary>
+    /// 行动顺序条：存活者按下次出手先后自左而右；我方圆形头像、敌方菱形，正在等指令的我方行动者实心骨白托底。
+    /// </summary>
+    private void DrawTurnOrder(Battle battle)
+    {
+        var order = PortraitLayout.CombatOrder;
+        InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, order.GetCenter().Y), "行动顺序", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        var alive = battle.Members.Where(m => m.Alive).OrderBy(m => m.NextActAt).ThenBy(m => m.Id).Take(6).ToArray();
+        for (var i = 0; i < alive.Length; i++)
         {
-            var columnX = track.Position.X + track.Size.X * (ally ? 0.25f : 0.75f);
-            var members = alive.Where(m => (m.Side == battle.ControlledSide) == ally).OrderBy(m => m.NextActAt).ToList();
-            if (members.Count == 0)
-                continue;
-            // 先按出手进度自上而下排、向下错峰；顶到轨道底端后向上回推，保证同列互不叠。
-            var ys = new List<float>();
-            foreach (var m in members)
+            var m = alive[i];
+            var c = PortraitLayout.CombatOrderToken(i);
+            var ally = m.Side == battle.ControlledSide;
+            var tex = TrackImageProvider?.Invoke(m) ?? UnitImageProvider?.Invoke(m);
+            if (ally)
             {
-                var p = Mathf.Clamp(1f - (m.NextActAt - battle.Time) / (float)span, 0f, 1f);
-                ys.Add(bottom - (bottom - top) * p);
+                if (_actor?.Id == m.Id)
+                    DrawCircle(c, 54f, InkStyle.Line);
+                PortraitFrame.Avatar(this, c, 44f, tex, m.Name, ring: _actor?.Id != m.Id);
             }
-            for (var i = 1; i < ys.Count; i++)
-                if (ys[i] < ys[i - 1] + minGap)
-                    ys[i] = ys[i - 1] + minGap;
-            for (var i = ys.Count - 2; i >= 0; i--)
-                if (ys[i] > ys[i + 1] - minGap)
-                    ys[i] = ys[i + 1] - minGap;
-            // 链尾若越出轨道底端，整链上移收回；成员多到顶满时由绘制处的 Max 收口。
-            if (ys[^1] > bottom)
+            else
             {
-                var shift = ys[^1] - bottom;
-                for (var i = 0; i < ys.Count; i++)
-                    ys[i] -= shift;
-            }
-            for (var i = 0; i < members.Count; i++)
-            {
-                var y = MathF.Max(ys[i], top);
-                var m = members[i];
-                // 小图位优先用头像裁切（怪物头像/角色头像），无则回退战场立绘/菱形。
-                var tex = TrackImageProvider?.Invoke(m) ?? UnitImageProvider?.Invoke(m);
-                if (tex != null)
-                {
-                    // 头像本身就是半身像：整幅画在轨上，敌方压暗区分阵营。
-                    var mod = ally ? Colors.White : new Color(1f, 1f, 1f, 0.55f);
-                    DrawTextureRect(tex, new Rect2(columnX - size / 2f, y - size / 2f, size, size), false, mod);
-                }
-                else
-                {
-                    var r = ally ? 10f : 7f;
-                    var col = ally ? InkStyle.Line : new Color(InkStyle.Dim, 0.9f);
-                    DrawColoredPolygon(new[]
-                    {
-                        new Vector2(columnX, y - r), new Vector2(columnX + r, y),
-                        new Vector2(columnX, y + r), new Vector2(columnX - r, y),
-                    }, col);
-                }
+                InkDraw.Jewel(this, c, 48f, InkStyle.Dim);
+                InkDraw.Jewel(this, c, 44f, InkStyle.Bg);
+                InkDraw.Text(this, c, m.Name[..1], PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             }
         }
     }
@@ -259,22 +227,15 @@ public partial class PortraitCombatView : Control
         var boss = battle.Members.Find(m => m.Alive && m.Side != battle.ControlledSide && m.Size > 1);
         if (boss == null)
             return;
-        InkDraw.TextBounded(this, PortraitLayout.BossName, boss.Name, PortraitLayout.FontTitle,
-            PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        InkDraw.TextBounded(this, PortraitLayout.BossName, boss.Name, PortraitLayout.FontBody,
+            PortraitLayout.FontMeta, InkStyle.Line, "lm");
         InkDraw.TextBounded(this, PortraitLayout.BossHp, $"HP {boss.Hp} / {boss.MaxHp}",
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-        InkDynamicMeter.Draw(this, $"portrait_boss_{boss.Id}", PortraitLayout.BossMeter, (float)boss.Hp / boss.MaxHp);
-        // 血条下方按内容声明的行动点数画实心菱（默认 1 枚）。
+            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+        PortraitFrame.Bar(this, PortraitLayout.BossMeter, (float)boss.Hp / boss.MaxHp);
+        // 血条右侧按内容声明的行动点数画实心菱（默认 1 枚）。
         var pips = Math.Max(1, boss.ActionPoints);
         for (var i = 0; i < pips; i++)
-        {
-            var c = PortraitLayout.BossPipCenter(i, pips);
-            DrawColoredPolygon(new[]
-            {
-                new Vector2(c.X, c.Y - 9f), new Vector2(c.X + 9f, c.Y),
-                new Vector2(c.X, c.Y + 9f), new Vector2(c.X - 9f, c.Y),
-            }, InkStyle.Line);
-        }
+            InkDraw.Jewel(this, PortraitLayout.BossPipCenter(i, pips), 9f, InkStyle.Line);
     }
 
     private void BuildEnemyGeometry(Battle battle)
@@ -331,8 +292,7 @@ public partial class PortraitCombatView : Control
                 {
                     // 有立绘：取消卡片框，仅显示去背立绘，血量条压在立绘底缘，名字在立绘正下方。
                     DrawUnitImage(unit, new Rect2(shaken.Position + new Vector2(4, 4), shaken.Size - new Vector2(8, 8)));
-                    InkDynamicMeter.Draw(this, $"portrait_enemy_{unit.Id}",
-                        new Rect2(shaken.Position.X + 6, shaken.End.Y - 14, shaken.Size.X - 12, 10),
+                    PortraitFrame.Bar(this, new Rect2(shaken.Position.X + 6, shaken.End.Y - 14, shaken.Size.X - 12, 10),
                         (float)unit.Hp / unit.MaxHp);
                     InkDraw.TextBounded(this, new Rect2(shaken.Position.X, shaken.End.Y + 6f, shaken.Size.X, 34),
                         unit.Name, PortraitLayout.FontBody, 26, InkStyle.Line, "cm");
@@ -345,7 +305,7 @@ public partial class PortraitCombatView : Control
                     // 血量走血量条（满宽槽线），名字在顶；远排卡缩小后也不出现文字截断。
                     InkDraw.TextBounded(this, PortraitLayout.EnemyName(shaken), unit.Name,
                         PortraitLayout.FontBody, 26, InkStyle.Line, "cm");
-                    InkDynamicMeter.Draw(this, $"portrait_enemy_{unit.Id}", PortraitLayout.EnemyMeter(shaken), (float)unit.Hp / unit.MaxHp);
+                    PortraitFrame.Bar(this, PortraitLayout.EnemyMeter(shaken), (float)unit.Hp / unit.MaxHp);
                 }
             }
             if (PickColumn)
@@ -362,6 +322,7 @@ public partial class PortraitCombatView : Control
         }
     }
 
+    /// <summary>我方卡一排：圆形头像、名字、血条、状态图标；正在等指令的行动者卡片浅填骨白描边。</summary>
     private void DrawAllies(Battle battle)
     {
         var allies = battle.Members.Where(m => m.Side == battle.ControlledSide).Take(4).ToArray();
@@ -369,15 +330,14 @@ public partial class PortraitCombatView : Control
         {
             var unit = allies[i];
             var shake = InkCombatFx.GetOffset(unit.Id);
-            var rect = new Rect2(PortraitLayout.AllyCard(i, unit.ThreatTier).Position + shake,
-                PortraitLayout.AllyCard(i, unit.ThreatTier).Size);
-            DrawRect(rect, InkStyle.Bg);
-            PortraitFrame.CardOutline(this, rect, highlighted: _actor?.Id == unit.Id);
-            DrawUnitImage(unit, PortraitLayout.AllyImage(rect));
+            var card = PortraitLayout.AllyCard(i);
+            var rect = new Rect2(card.Position + shake, card.Size);
+            PortraitFrame.Card(this, rect, _actor?.Id == unit.Id, 22f);
+            PortraitFrame.Avatar(this, PortraitLayout.AllyAvatar(rect), 52f, UnitImageProvider?.Invoke(unit), unit.Name,
+                dim: !unit.Alive);
             InkDraw.TextBounded(this, PortraitLayout.AllyName(rect), unit.Name,
-                PortraitLayout.FontMeta, 26, unit.Alive ? InkStyle.Line : InkStyle.Dim, "cm");
-            // 血量走血量条（与敌方卡片同一套动效槽），不再画数字。
-            InkDynamicMeter.Draw(this, $"portrait_ally_{unit.Id}", PortraitLayout.AllyMeter(rect), (float)unit.Hp / unit.MaxHp);
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, unit.Alive ? InkStyle.Line : InkStyle.Dim, "cm");
+            PortraitFrame.Bar(this, PortraitLayout.AllyMeter(rect), (float)unit.Hp / unit.MaxHp);
             for (var s = 0; s < unit.Statuses.Count && s < 4; s++)
             {
                 var status = unit.Statuses[s];
@@ -390,21 +350,9 @@ public partial class PortraitCombatView : Control
                     StatusKind.Dot => status.Power,
                     _ => status.Points,
                 });
-                var label = strength.ToString();
-                // 白字黑描边：八向偏移先画黑边再画白字，图标画得上也读得出。
-                var at = new Vector2(iconRect.End.X - 1f, iconRect.End.Y + 3f);
-                for (var o = 0; o < 8; o++)
-                {
-                    var a = o * MathF.PI / 4f;
-                    InkDraw.Text(this, at + new Vector2(MathF.Cos(a), MathF.Sin(a)) * 3f,
-                        label, 24, InkStyle.Bg, "rb");
-                }
-                InkDraw.Text(this, at, label, 24, InkStyle.Line, "rb");
+                InkDraw.Text(this, new Vector2(iconRect.End.X - 1f, iconRect.End.Y + 3f), strength.ToString(), 26, InkStyle.Line, "rb");
             }
-            if (_actor?.Id == unit.Id)
-                // 行动者箭头悬在操作面板与 buff 图标条之间（箭头整体在锚点上方 12..34px）。
-                InkCharRenderer.DrawTurnIndicator(this, new Vector2(rect.GetCenter().X, rect.Position.Y - 68f), 2f);
-            _hits.Add(new PortraitWidget(rect, PortraitAction.CombatAct, unit.Id,
+            _hits.Add(new PortraitWidget(card, PortraitAction.CombatAct, unit.Id,
                 _actor != null && unit.Alive && Armed?.Target == SkillTarget.Ally, unit.Name));
         }
     }
@@ -420,26 +368,44 @@ public partial class PortraitCombatView : Control
     }
 
     /// <summary>
-    /// 操作面板：2×2 四钮（攻击 / 技能 / 防御 / 逃跑），我方行动者就绪时点亮，无滑条。
-    /// 技能钮弹出技能分页弹窗，其余三钮直接生效。
+    /// 行动面板：圆顶面板＋「某某 的行动」＋当前招式名；2×2 大钮（攻击 / 技能 / 道具 / 逃跑），
+    /// 我方行动者就绪时点亮，跑条流动期全暗不可点。技能 / 道具弹分页弹窗，其余直接生效。
     /// </summary>
     private void DrawOpEntry(Battle battle)
     {
-        PortraitFrame.Panel(this, PortraitLayout.CombatActions, InkStyle.Panel, flourish: 0f);
-        // 跑条流动期（无就绪行动者）四钮全暗不可操作；我方行动者就绪即点亮。
-        var enabled = battle != null && _actor != null;
+        var panel = PortraitLayout.CombatActions;
+        PortraitFrame.RoundRect(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)), 50f, InkStyle.Panel, InkStyle.Dim, 4f);
+        var enabled = _actor != null;
+        if (_actor != null)
+        {
+            InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, panel.Position.Y + 70f), $"{_actor.Name} 的行动",
+                PortraitLayout.FontBody, InkStyle.Line, "lm");
+            InkDraw.TextBounded(this, new Rect2(PortraitLayout.CanvasWidth / 2f, panel.Position.Y + 40f,
+                    PortraitLayout.CanvasWidth / 2f - PortraitLayout.Pad - 20f, 60f), battle.CurrentActionName,
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+        }
         for (var slot = 0; slot < OpLabels.Length; slot++)
         {
             var rect = PortraitLayout.CombatButton(slot);
-            PortraitFrame.Button(this, rect, OpLabels[slot], enabled: enabled);
-            // 全暗：罩层连框线一起盖住（Grow(3) 覆盖外描边全宽），不留亮边。
-            if (!enabled)
-                DrawRect(rect.Grow(3), new Color(InkStyle.Bg, 0.55f));
+            var pressed = PortraitFrame.IsPressed(rect);
+            var armed = enabled && slot == 0 && _armed == BattleSkills.AttackId;
+            PortraitFrame.RoundRect(this, rect, 28f, pressed ? PortraitFrame.PressFill : InkStyle.Bg,
+                enabled ? InkStyle.Line : InkStyle.WoodDark, 4f);
+            var ink = enabled ? InkStyle.Line : InkStyle.Dim;
+            OpGlyphs[slot](this, rect.Position.X + 80f, rect.GetCenter().Y, 34f, ink);
+            InkDraw.Text(this, new Vector2(rect.Position.X + 150f, rect.GetCenter().Y), OpLabels[slot], PortraitLayout.FontTitle, ink, "lm");
+            if (armed)
+                InkDraw.Jewel(this, new Vector2(rect.End.X - 50f, rect.GetCenter().Y), 10f, InkStyle.Line);
             _hits.Add(new PortraitWidget(rect, PortraitAction.CombatMenu, slot, enabled, OpLabels[slot]));
         }
     }
 
     private static readonly string[] OpLabels = { "攻击", "技能", "道具", "逃跑" };
+
+    private static readonly Action<CanvasItem, float, float, float, Color>[] OpGlyphs =
+    {
+        PortraitGlyph.Swords, PortraitGlyph.Scroll, PortraitGlyph.Bag, PortraitGlyph.Flee,
+    };
 
     /// <summary>
     /// 设置齿轮：右上角实心齿轮（战斗白名单外的浮件，无外框、无标题牌）。
@@ -449,21 +415,9 @@ public partial class PortraitCombatView : Control
     {
         var hit = PortraitLayout.CombatGearHit;
         _hits.Add(new PortraitWidget(hit, PortraitAction.CombatSettings, 0, true, "设置"));
-        var c = hit.GetCenter();
-        const float body = 30f, tip = 42f, hole = 12f;
-        for (var i = 0; i < 8; i++)
-        {
-            var a = i * MathF.PI / 4f + MathF.PI / 8f;
-            var dir = new Vector2(MathF.Cos(a), MathF.Sin(a));
-            var side = new Vector2(-dir.Y, dir.X);
-            DrawColoredPolygon(new[]
-            {
-                c + dir * (body - 4f) + side * 10f, c + dir * tip + side * 7f,
-                c + dir * tip - side * 7f, c + dir * (body - 4f) - side * 10f,
-            }, InkStyle.Line);
-        }
-        DrawCircle(c, body, InkStyle.Line);
-        DrawCircle(c, hole, InkStyle.Bg);
+        if (PortraitFrame.IsPressed(hit))
+            PortraitFrame.RoundRect(this, hit.Grow(-10f), 49f, PortraitFrame.PressFill);
+        PortraitGlyph.Gear(this, hit.GetCenter().X, hit.GetCenter().Y, 28f, InkStyle.Line);
     }
 
     /// <summary>设置弹窗：保存进度 / 读取进度 / 回到主界面 / 返回（战斗中随时可开）。</summary>

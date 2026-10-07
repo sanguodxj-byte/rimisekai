@@ -23,8 +23,8 @@
 `[display]` 基准都已落为竖版，编辑器 F5、真机、导出三条路统一走 `Portrait.tscn`。
 
 - 竖版代码在 `RimisekaiFrontend/src/Ink/Portrait/`；坐标唯一来源是
-  `PortraitLayout.cs` / `PortraitLayoutCombat.cs` / `PortraitLayoutIcons.cs` /
-  `PortraitLayoutSkills.cs`（都是 `static partial class PortraitLayout`）。
+  `PortraitLayout*.cs`（都是 `static partial class PortraitLayout`：骨架 / 领地 Icons /
+  卡片流 Lists / 抽屉与对话 Interaction / 建造 Development / 弹窗 Modal / 战斗 Combat / 星盘 Skills）。
 - **横版入口层已删除并归档**：`Main.tscn`、`InkRoot.cs`、`InkScreenRouter.cs`、
   `InkTitleScreen.cs`、`InkQuestScreen.cs`、`InkTransition.cs`、`Tools/InkCapture.cs`、
   `Tools/Capture.tscn`（14 个文件含 `.uid`，在
@@ -36,7 +36,24 @@
   传递依赖 55 个原横版文件里的 50 个（渲染器与页面模型被竖版直接复用），删不掉。
   **改这些文件就是改竖版**，一律按竖版基线改，不许再往里加横屏分支。
 - 本文件下面出现的 **1920×1080、`InkLayout*.cs`、五面板＋顶栏＋底部按钮行** 等横屏口径
-  属遗留描述，一律以本条为准；竖版按 `PortraitLayout` 三段骨架（顶栏 / 内容区 / 底部页签带）执行。
+  属遗留描述，一律以本条为准；竖版骨架见下一节。
+
+### 竖版骨架（2026-10-07 重设计，主人授权：只锁调色板，布局/导航/字体/交互/装饰可改）
+
+- **根页签**＝顶部 HUD（安全区下 210 高：一行地名＋改名笔＋金钱签，二行季节·天气·时刻＋系统齿轮）
+  ＋内容区＋**底部五页签**（领地 / 角色 / 委托 / 仓储 / 日志，210 高，当前页签骨白实心药丸托底）。
+  旧的「4 页签 / 地图·日志·角色·操作 / 操作面板入口 / 四大页面」口径全部作废。
+- **推入页**＝顶栏（返回＋标题，150 高）＋整页，不带页签：角色详情（立绘头＋分段 状态/技能/日程）、
+  技能星盘、建造（原开发页）、系统（存档/设置）。
+- **底部抽屉**（压暗上层＋圆顶面板＋把手；打开时下层命中块整体移除，点压暗区即收起）：
+  设施（点领地格）、交互/交流、仓库存取、编成（接委托）、排班（点日程时段）、物品详情。
+- 对话/演出铺满整屏：立绘作底、名牌、缺角双线框正文、药丸选项。战斗：顶栏 → 行动顺序条 → 首领血条
+  → 敌阵 → 我方卡一排 → 底部 2×2 行动面板。
+- 组件语汇在 `PortraitFrame`（Pill 药丸钮 / Segmented 分段 / Chip 标签签 / Card 圆角卡 / Sheet 抽屉 /
+  SectionRule「─◆ 标题 ◆─」/ Ticks 菱形刻度 / Bar 圆头条 / NotchedFrame 缺角双线框＋角珠 / Avatar 圆头像），
+  线描图标在 `PortraitGlyph`。主操作＝骨白实心黑字，一屏一个；次操作＝黑底骨白描边。
+- 滚动一律「拖内容」：卡片流按像素、抽屉定高列表按行，右缘一条细指示条；滚动内容先画、固定件后画盖住。
+- 时间推进随操作（Core 无倍速），HUD 不放暂停/倍速控件。
 
 ### 调色板与字体
 
@@ -58,6 +75,8 @@
 - 双线框 `InkFrame.Panel`：主面板，框内收角花卷草。
 - 角花 `CornerFlourish`：沿框边向内长，**不得外溢**（相邻面板间隙窄，外溢会打架）。
 - 🚨 **边框形态已定稿：细双线框＋四角角花（2026-10-01 主人定，禁止再动）**。
+  ⚠ 2026-10-07 竖版重设计获授权改装饰：竖版改用圆角卡片与缺角双线框（`PortraitFrame.NotchedFrame`），
+  角花只留在标题画面与技能星盘。
   主人原话：**「都不通过，回到最初的边框形态」**。
   `Panel` / `PanelFrame` / `Zone` 一律走 `Ink` 双线（外线 2px `Line` ＋ 内线 1px `Dim`）
   ＋ `CornerFlourishes` 四角角花——**与任务最初完全一致**。
@@ -138,7 +157,7 @@
 
 - 画布 **1080×2340**（与 project.godot stretch 基准一致），坐标唯一来源是
   `Portrait/PortraitLayout*.cs` 这组文件（都是 `static partial class PortraitLayout`：
-  `PortraitLayout.cs` 管三段骨架与据点，另有 Combat / Icons / Skills 各管一屏），
+  `PortraitLayout.cs` 管 HUD / 页签 / 推入页顶栏 / 抽屉通用件，其余各管一屏），
   绘制与命中判定都从它取，禁止各算一套。
   ⚠ **唯一还活着的 `InkLayout` 入口是技能盘几何**（`PolygonBounds` 与 8 个
   `SkillDisc*/TransformDisc*` 助手，在 `InkLayoutSkill.cs`），它内部仍是 1920×1080 基准——
@@ -344,6 +363,8 @@
   存储行/开发页设施与房间列表/日程页设施列表等）一律给**竖向滑条**（`InkDraw.Scrollbar`
   ＋ `InkLayout.ScrollBarRect`），支持**滚轮滚动**与**拖拽滑块**。禁止用翻页钮替代，
   更禁止静默裁切（画到边界就 `break`）。
+  ⚠ 竖版（2026-10-07 起）：改为**拖内容滚动＋滚轮**，右缘只画细指示条（`PortraitHubScreen.RegisterScroll`），
+  不再有可拖的滑块轨道；禁止翻页、禁止静默裁切的要求不变。
 - 🚨 **小文本框一律自动缩字号**：按钮与文本框中放不下的文字，用 `InkDraw.FitSize` /
   `InkDraw.TextFitted` 在 `[min, max]` 内自动缩字号（下限 12-14），**不得截断、不得溢出**。
   `InkFrame.Button` 已内建该收缩。

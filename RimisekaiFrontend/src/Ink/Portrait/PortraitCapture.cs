@@ -58,10 +58,10 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("title", _root.TitleView));
         _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(2)));
         _steps.Enqueue(() => CheckTitlePage("settings", InkSystemScreen.PageSettings));
-        _steps.Enqueue(() => PressTitle(PortraitLayout.OverlayBack));
+        _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
         _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(1)));
         _steps.Enqueue(() => CheckTitlePage("load", InkSystemScreen.PageLoad));
-        _steps.Enqueue(() => PressTitle(PortraitLayout.OverlayBack));
+        _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
         _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(0)));
         _steps.Enqueue(PrepareRosterAndIcons);
         for (var tab = 0; tab < PortraitLayout.TabCount; tab++)
@@ -70,29 +70,43 @@ public partial class PortraitCapture : Node
             _steps.Enqueue(() => _root.HubScreen.ShowTab(index));
             _steps.Enqueue(() => Shoot($"tab{index}", _root.HubScreen));
         }
-        for (var entry = 0; entry < 7; entry++)
-        {
-            var index = entry;
-            _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
-            _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Entry, index));
-            _steps.Enqueue(() => Shoot($"entry{index}", _root.HubScreen));
-        }
+        // 仓储三段
         _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Entry, 4));
-        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.StatusAbilityToggle), "status page ability controls"); Shoot("status", _root.HubScreen); });
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StatusAbilityToggle, 0));
-        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.StatusAbilityToggle), "status ability expansion"));
-        _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Entry, 5));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
+        _steps.Enqueue(() => Shoot("store_trade", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 2));
+        _steps.Enqueue(() => Shoot("store_craft", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 0));
+        // 角色详情三段＋技能星盘
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(1));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RosterPick, _root.HubScreen.DebugHub.State.Roster.Master!.Id));
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.CharacterSegment), "character page segments"); Shoot("char_status", _root.HubScreen); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 2));
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.ScheduleSlot), "schedule timeline blocks"); Shoot("char_schedule", _root.HubScreen); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 1));
+        _steps.Enqueue(() => Shoot("char_skills", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.OpenDisc, 0));
         _steps.Enqueue(() => ClickSkillPolygon(PortraitAction.SkillSector, 0));
         _steps.Enqueue(() => { CheckSkills(); Shoot("skills_focus", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SkillReset, 0));
         _steps.Enqueue(() => Require(_root.HubScreen.DebugSkillSector == -1, "skill reset"));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
+        // 设施抽屉、建造、系统
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "room sheet opens"); Shoot("room_sheet", _root.HubScreen); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Build, 0));
+        _steps.Enqueue(() => Shoot("build", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.OpenSystem, 0));
+        _steps.Enqueue(() => Shoot("system", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
         _steps.Enqueue(OpenStorage);
         _steps.Enqueue(() => Shoot("storage", _root.HubScreen));
         _steps.Enqueue(PrepareOverflowCases);
         _steps.Enqueue(() => Shoot("storage_long", _root.HubScreen));
-        _steps.Enqueue(() => DragHub(PortraitLayout.ListTrack(PortraitLayout.StorageList)));
+        _steps.Enqueue(() => DragHubUp(new Rect2(0, PortraitLayout.StorageRow(0).Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.StorageRows * PortraitLayout.SheetRowStep)));
         _steps.Enqueue(() =>
         {
             var rows = _root.HubScreen.DebugHub.StorageRows();
@@ -246,7 +260,7 @@ public partial class PortraitCapture : Node
             var member = generator.Generate(hub.State.Roster).State;
             hub.Place(member.Id, hub.PlayerRoomId);
         }
-        Require(hub.StorageRows().Count > PortraitLayout.StorageItemRows, "long storage fixture");
+        Require(hub.StorageRows().Count > PortraitLayout.StorageRows, "long storage fixture");
         _root.HubScreen.QueueRedraw();
     }
 
@@ -395,7 +409,8 @@ public partial class PortraitCapture : Node
     {
         var cards = _root.CombatView.DebugWidgets.Where(w => w.Action == PortraitAction.CombatAct).ToArray();
         Require(cards.Length == 4, "four bottom avatar cards");
-        Require(cards.Select(w => w.Rect.Position.Y).Distinct().Count() == 4, "threat tiers produce four card heights");
+        // 2026-10-07 重设计：我方卡一排等高（不再按威胁档错层）。
+        Require(cards.Select(w => w.Rect.Position.Y).Distinct().Count() == 1, "ally cards share one row");
         Require(cards.All(w => PortraitLayout.CombatAvatars.Encloses(w.Rect)), "avatars contained in bottom region");
     }
     /// <summary>操作面板 2×2 四钮：核对标签，点「道具」开道具页（含返回）。</summary>

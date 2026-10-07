@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Rimisekai.Ink;
@@ -106,15 +107,6 @@ public static class PortraitFrame
             PortraitLayout.OrnamentWidth, PortraitLayout.OrnamentJewel);
     }
 
-    /// <summary>一行字＋一条三段渐隐线。禁止标题牌、禁止端珠。</summary>
-    public static void Title(CanvasItem ci, Rect2 r, string text, int size = PortraitLayout.FontTitle)
-    {
-        var x = r.Position.X + PortraitLayout.Pad;
-        var y = r.Position.Y + 20f;
-        InkDraw.Text(ci, new Vector2(x, y), text, size, InkStyle.Line, "lt");
-        FadingRule(ci, x, r.End.X - PortraitLayout.Pad, y + size + 18f);
-    }
-
     public static void FadingRule(CanvasItem ci, float left, float right, float y)
     {
         if (right <= left)
@@ -173,19 +165,6 @@ public static class PortraitFrame
     }
 
     /// <summary>
-    /// 弱化按钮：单层极细暗线，不给白双线——用在内容为主、按钮只作出口的场合，
-    /// 让画面重心留在内容上（如状态页的能力抽屉）。
-    /// </summary>
-    public static void SubtleButton(CanvasItem ci, Rect2 r, bool selected = false)
-    {
-        var pressed = Pressed(r);
-        var active = selected || pressed;
-        ci.DrawRect(r, pressed ? PressFill : active ? InkStyle.Hover : InkStyle.Inset);
-        InkDraw.Ink(ci, Loop(r), active ? InkStyle.Line : new Color(InkStyle.Dim, 0.65f),
-            active ? PortraitLayout.LineHair + 1f : PortraitLayout.LineHair);
-    }
-
-    /// <summary>
     /// 战斗头像卡片框：不填底（底由调用方铺，免得盖掉插画），可点目标用粗亮框标出。
     /// 横屏那版 1.3px 的框在手机上是 0.08mm，读不出一条线，所以竖屏另给毫米档。
     /// </summary>
@@ -197,34 +176,290 @@ public static class PortraitFrame
             PortraitLayout.LineHair - 1f);
     }
 
+    // ======================================================================
+    // 2026-10-07 新语汇：圆角药丸钮、分段控件、标签签、卡片、底部抽屉、
+    // 分节线「─◆ 标题 ◆─」、菱形刻度、圆头进度条、缺角双线框＋角珠、圆形头像。
+    // 颜色一律取 InkStyle 调色板（透明度可变），线条一律直线/圆弧，不抖动。
+    // ======================================================================
+
+    /// <summary>圆角矩形的顶点环（顺时针、首尾不重复）。radius 自动收在短边一半以内。</summary>
+    public static Vector2[] RoundRectPoints(Rect2 r, float radius, int arcSteps = 8)
+    {
+        var rad = Mathf.Min(radius, Mathf.Min(r.Size.X, r.Size.Y) / 2f);
+        var pts = new List<Vector2>();
+        void Corner(Vector2 c, float a0)
+        {
+            for (var i = 0; i <= arcSteps; i++)
+            {
+                var a = a0 + Mathf.Pi / 2f * i / arcSteps;
+                pts.Add(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * rad);
+            }
+        }
+        Corner(new Vector2(r.End.X - rad, r.Position.Y + rad), -Mathf.Pi / 2f);
+        Corner(new Vector2(r.End.X - rad, r.End.Y - rad), 0f);
+        Corner(new Vector2(r.Position.X + rad, r.End.Y - rad), Mathf.Pi / 2f);
+        Corner(new Vector2(r.Position.X + rad, r.Position.Y + rad), Mathf.Pi);
+        return pts.ToArray();
+    }
+
+    /// <summary>圆角矩形：fill 为空不填，line 为空不描。</summary>
+    public static void RoundRect(CanvasItem ci, Rect2 r, float radius, Color? fill, Color? line = null,
+        float width = PortraitLayout.LineHair)
+    {
+        var pts = RoundRectPoints(r, radius);
+        if (fill is { } f)
+            ci.DrawColoredPolygon(pts, f);
+        if (line is { } l)
+        {
+            var loop = new Vector2[pts.Length + 1];
+            pts.CopyTo(loop, 0);
+            loop[^1] = pts[0];
+            ci.DrawPolyline(loop, l, width, true);
+        }
+    }
+
     /// <summary>
-    /// 列表行：整行一个手指位。
-    /// 未选中只留一条极细分隔线——一行一圈框会把整页读成表格；分隔线才读得成"一条一条的账目"。
-    /// 选中与按下才起双线框＋浅填。只做浅填与线宽变化，不改线色。
+    /// 药丸钮：primary＝骨白实底黑字（一屏只给一个主操作）；否则黑底骨白描边。
+    /// 不可用时描边降为暗木色、字降为银灰。glyph 非空时图标在字左。sub 是第二行小字。
     /// </summary>
-    public static void Row(CanvasItem ci, Rect2 r, string name, string value, bool selected)
+    public static void Pill(CanvasItem ci, Rect2 r, string label, bool primary = false, bool enabled = true,
+        Action<CanvasItem, float, float, float, Color>? glyph = null, string sub = "", int size = PortraitLayout.FontBody)
     {
         var pressed = Pressed(r);
-        if (selected || pressed)
+        Color text;
+        if (primary && enabled)
         {
-            ci.DrawRect(r, pressed ? PressFill : InkStyle.Hover);
-            InkDraw.Ink(ci, Loop(r.Grow(-6f)), InkStyle.Line, PortraitLayout.LineHair + 1f);
-            InkDraw.Ink(ci, Loop(r.Grow(-12f)), InkStyle.Dim, PortraitLayout.LineHair);
+            RoundRect(ci, r, r.Size.Y / 2f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
+            text = InkStyle.Bg;
         }
         else
-            InkDraw.InkLine(ci, new Vector2(r.Position.X + 14f, r.End.Y - 3f),
-                new Vector2(r.End.X - 14f, r.End.Y - 3f), new Color(InkStyle.Dim, 0.42f),
-                PortraitLayout.LineHair);
+        {
+            RoundRect(ci, r, r.Size.Y / 2f, pressed ? PressFill : InkStyle.Bg,
+                enabled ? InkStyle.Line : InkStyle.WoodDark, enabled ? PortraitLayout.LineHair : PortraitLayout.LineHair - 1f);
+            text = enabled ? InkStyle.Line : InkStyle.Dim;
+        }
+        var cy = r.GetCenter().Y - (sub.Length > 0 ? 18f : 0f);
+        var room = r.Size.X - r.Size.Y * 0.6f - (glyph != null ? 76f : 0f);
+        var fit = InkDraw.FitSize(label, room, size, PortraitLayout.FontMeta);
+        var tw = InkDraw.Measure(label, fit).X;
+        if (glyph != null)
+        {
+            var start = r.GetCenter().X - (56f + 20f + tw) / 2f;
+            glyph(ci, start + 28f, cy, 26f, text);
+            InkDraw.Text(ci, new Vector2(start + 76f, cy), label, fit, text, "lm");
+        }
+        else
+            InkDraw.Text(ci, new Vector2(r.GetCenter().X, cy), label, fit, text, "cm");
+        if (sub.Length > 0)
+            InkDraw.TextBounded(ci, new Rect2(r.Position.X + r.Size.Y / 2f, cy + 22f, r.Size.X - r.Size.Y, 48f), sub,
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, primary && enabled ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+    }
 
-        var inner = r.Grow(-14f);
-        var hasIcon = InkIcon.Draw(ci, name, PortraitLayout.RowIcon(r));
-        var text = PortraitLayout.RowText(r, hasIcon);
-        var valueWidth = value.Length > 0
-            ? Mathf.Min(text.Size.X * 0.42f, InkDraw.Measure(value, PortraitLayout.FontMeta).X + 20f) : 0f;
-        var nameRect = new Rect2(text.Position, new Vector2(text.Size.X - valueWidth, text.Size.Y));
-        InkDraw.TextBounded(ci, nameRect, name, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        if (value.Length > 0)
-            InkDraw.TextBounded(ci, new Rect2(text.End.X - valueWidth, text.Position.Y, valueWidth, text.Size.Y),
-                value, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+    /// <summary>分段控件第 i 段的矩形（整段可点，命中块与画面同源）。</summary>
+    public static Rect2 SegmentRect(Rect2 r, int count, int i)
+    {
+        var w = r.Size.X / count;
+        return new Rect2(r.Position.X + i * w, r.Position.Y, w, r.Size.Y);
+    }
+
+    /// <summary>分段控件：圆角槽＋选中段骨白实心药丸。</summary>
+    public static void Segmented(CanvasItem ci, Rect2 r, IReadOnlyList<string> labels, int selected)
+    {
+        RoundRect(ci, r, r.Size.Y / 2f, InkStyle.Panel, InkStyle.WoodDark, PortraitLayout.LineHair - 1f);
+        for (var i = 0; i < labels.Count; i++)
+        {
+            var seg = SegmentRect(r, labels.Count, i);
+            var inner = seg.Grow(-10f);
+            var on = i == selected;
+            if (on)
+                RoundRect(ci, inner, inner.Size.Y / 2f, InkStyle.Line);
+            else if (Pressed(seg))
+                RoundRect(ci, inner, inner.Size.Y / 2f, PressFill);
+            InkDraw.TextBounded(ci, inner.Grow(-12f), labels[i], PortraitLayout.FontBody, PortraitLayout.FontMeta,
+                on ? InkStyle.Bg : InkStyle.Dim, "cm");
+        }
+    }
+
+    /// <summary>标签签宽度：字宽＋左右各 36。</summary>
+    public static float ChipWidth(string label, int size = PortraitLayout.FontMeta) =>
+        InkDraw.Measure(label, size).X + 72f;
+
+    /// <summary>
+    /// 标签签：命中块是整格 r（≥118 高），画出来的药丸在格内垂直居中、高 visual。
+    /// 选中＝骨白实心黑字；未选＝暗木色描边银灰字。
+    /// </summary>
+    public static void Chip(CanvasItem ci, Rect2 r, string label, bool selected, float visual = 96f)
+    {
+        var pill = new Rect2(r.Position.X, r.GetCenter().Y - visual / 2f, r.Size.X, visual);
+        if (selected)
+            RoundRect(ci, pill, visual / 2f, InkStyle.Line);
+        else
+            RoundRect(ci, pill, visual / 2f, Pressed(r) ? PressFill : null, InkStyle.WoodDark, PortraitLayout.LineHair - 1f);
+        InkDraw.TextBounded(ci, pill.Grow(-20f), label, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
+            selected ? InkStyle.Bg : InkStyle.Dim, "cm");
+    }
+
+    /// <summary>只读小签（特质等）：暗木描边，不可点。</summary>
+    public static float Tag(CanvasItem ci, Vector2 at, string label, float height = 72f, bool lit = false)
+    {
+        var w = ChipWidth(label) - 16f;
+        var r = new Rect2(at, new Vector2(w, height));
+        if (lit)
+            RoundRect(ci, r, height / 2f, InkStyle.Line);
+        else
+            RoundRect(ci, r, height / 2f, null, InkStyle.WoodDark, PortraitLayout.LineHair - 1f);
+        InkDraw.Text(ci, r.GetCenter(), label, PortraitLayout.FontMeta, lit ? InkStyle.Bg : InkStyle.Dim, "cm");
+        return w;
+    }
+
+    /// <summary>卡片：圆角，未选暗木细描边，选中/按下时 Hover 浅填＋骨白描边。</summary>
+    public static void Card(CanvasItem ci, Rect2 r, bool selected = false, float radius = 24f)
+    {
+        var pressed = Pressed(r);
+        var active = selected || pressed;
+        RoundRect(ci, r, radius, pressed ? PressFill : active ? InkStyle.Hover : InkStyle.Panel,
+            active ? InkStyle.Line : InkStyle.WoodDark, active ? PortraitLayout.LineHair : PortraitLayout.LineHair - 1f);
+    }
+
+    /// <summary>
+    /// 底部抽屉：先把上方整幅压暗（下层画面仍可见、但已不可点——命中块由调用方移除），
+    /// 再铺一块圆顶面板与把手。返回面板矩形。
+    /// </summary>
+    public static Rect2 Sheet(CanvasItem ci, float top)
+    {
+        ci.DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top + 60f), new Color(InkStyle.Bg, 0.66f));
+        var r = new Rect2(0, top, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - top + 80f);
+        RoundRect(ci, r, 56f, InkStyle.Panel, InkStyle.Dim, PortraitLayout.LineHair - 1f);
+        RoundRect(ci, new Rect2(PortraitLayout.CanvasWidth / 2f - 70f, top + 24f, 140f, 12f), 6f, InkStyle.WoodDark);
+        return new Rect2(0, top, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - top);
+    }
+
+    /// <summary>分节线「──◆ 标题 ◆──」：两侧暗木直线，标题两旁各一枚实心菱。label 空则只画渐隐线。</summary>
+    public static void SectionRule(CanvasItem ci, float x1, float x2, float y, string label = "")
+    {
+        if (label.Length == 0)
+        {
+            FadingRule(ci, x1, x2, y);
+            return;
+        }
+        var w = InkDraw.Measure(label, PortraitLayout.FontMeta).X;
+        var cx = (x1 + x2) / 2f;
+        InkDraw.Text(ci, new Vector2(cx, y), label, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        InkDraw.Jewel(ci, new Vector2(cx - w / 2f - 34f, y), 9f, InkStyle.Line);
+        InkDraw.Jewel(ci, new Vector2(cx + w / 2f + 34f, y), 9f, InkStyle.Line);
+        InkDraw.InkLine(ci, new Vector2(x1, y), new Vector2(cx - w / 2f - 60f, y), InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
+        InkDraw.InkLine(ci, new Vector2(cx + w / 2f + 60f, y), new Vector2(x2, y), InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
+    }
+
+    /// <summary>菱形刻度：n 枚，前 k 枚实心骨白，其余暗木小菱。half 表示第 k+1 枚画成半亮。</summary>
+    public static void Ticks(CanvasItem ci, float x, float y, int n, float k, float size = 30f, float gap = 20f)
+    {
+        for (var i = 0; i < n; i++)
+        {
+            var cx = x + i * (size + gap) + size / 2f;
+            var c = new Vector2(cx, y);
+            if (i + 1 <= k)
+                InkDraw.Jewel(ci, c, size / 2f, InkStyle.Line);
+            else if (i < k)
+            {
+                InkDraw.Jewel(ci, c, size / 2f, InkStyle.WoodDark);
+                ci.DrawColoredPolygon(new[] { c + new Vector2(0, -size / 2f), c, c + new Vector2(0, size / 2f),
+                    c + new Vector2(-size / 2f, 0) }, InkStyle.Line);
+            }
+            else
+                InkDraw.Jewel(ci, c, size / 2f, InkStyle.WoodDark);
+        }
+    }
+
+    /// <summary>圆头进度条：暗木细槽＋骨白实心填充（填充至少一个圆头宽）。</summary>
+    public static void Bar(CanvasItem ci, Rect2 r, float frac)
+    {
+        RoundRect(ci, r, r.Size.Y / 2f, null, InkStyle.WoodDark, 3f);
+        var f = Mathf.Clamp(frac, 0f, 1f);
+        if (f <= 0f)
+            return;
+        var w = Mathf.Max(r.Size.Y, r.Size.X * f);
+        RoundRect(ci, new Rect2(r.Position, new Vector2(w, r.Size.Y)), r.Size.Y / 2f, InkStyle.Line);
+    }
+
+    /// <summary>缺角双线框：外框八边形主线，内收 14px 暗木细线，四角嵌空心菱＋实心小菱。</summary>
+    public static void NotchedFrame(CanvasItem ci, Rect2 r, Color? fill = null, bool jewels = true)
+    {
+        const float c = 22f;
+        var x = r.Position.X;
+        var y = r.Position.Y;
+        var w = r.Size.X;
+        var h = r.Size.Y;
+        var pts = new[]
+        {
+            new Vector2(x + c, y), new Vector2(x + w - c, y), new Vector2(x + w, y + c), new Vector2(x + w, y + h - c),
+            new Vector2(x + w - c, y + h), new Vector2(x + c, y + h), new Vector2(x, y + h - c), new Vector2(x, y + c),
+        };
+        ci.DrawColoredPolygon(pts, fill ?? InkStyle.Panel);
+        var loop = new Vector2[pts.Length + 1];
+        pts.CopyTo(loop, 0);
+        loop[^1] = pts[0];
+        ci.DrawPolyline(loop, InkStyle.Line, PortraitLayout.LineHair, true);
+        InkDraw.Ink(ci, Loop(r.Grow(-14f)), InkStyle.WoodDark, 2.5f);
+        if (!jewels)
+            return;
+        foreach (var corner in new[] { r.Position, new Vector2(r.End.X, y), new Vector2(x, r.End.Y), r.End })
+        {
+            InkDraw.Jewel(ci, corner, 13f, InkStyle.Line);
+            InkDraw.Jewel(ci, corner, 9f, InkStyle.Bg);
+            InkDraw.Jewel(ci, corner, 4f, InkStyle.Line);
+        }
+    }
+
+    /// <summary>圆形头像：贴图按正方形裁上半身后套进圆；无图则 Panel 底＋名字首字。ring 外圈骨白环。</summary>
+    public static void Avatar(CanvasItem ci, Vector2 center, float radius, Texture2D? tex, string name,
+        bool ring = true, bool dim = false)
+    {
+        const int steps = 48;
+        var pts = new Vector2[steps];
+        var uvs = new Vector2[steps];
+        for (var i = 0; i < steps; i++)
+        {
+            var a = Mathf.Tau * i / steps;
+            var d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+            pts[i] = center + d * radius;
+            uvs[i] = d;
+        }
+        if (tex != null)
+        {
+            var size = tex.GetSize();
+            var side = Mathf.Min(size.X, size.Y);
+            var origin = new Vector2((size.X - side) / 2f, 0f);
+            for (var i = 0; i < steps; i++)
+                uvs[i] = (origin + (uvs[i] * 0.5f + new Vector2(0.5f, 0.5f)) * side) / size;
+            ci.DrawColoredPolygon(pts, dim ? new Color(1f, 1f, 1f, 0.45f) : Colors.White, uvs, tex);
+        }
+        else
+        {
+            ci.DrawColoredPolygon(pts, InkStyle.Panel);
+            if (name.Length > 0)
+                InkDraw.Text(ci, center, name[..1], (int)Mathf.Max(PortraitLayout.FontMeta, radius * 0.8f),
+                    dim ? InkStyle.Dim : InkStyle.Line, "cm");
+        }
+        if (ring)
+            ci.DrawArc(center, radius + 6f, 0f, Mathf.Tau, 56, dim ? InkStyle.WoodDark : InkStyle.Line, 4f, true);
+    }
+
+    /// <summary>纵向渐隐：自 topAlpha 到 botAlpha 的黑罩（压在插画下缘，让文字读得出）。</summary>
+    public static void Fade(CanvasItem ci, Rect2 r, float topAlpha, float botAlpha)
+    {
+        ci.DrawPolygon(new[] { r.Position, new Vector2(r.End.X, r.Position.Y), r.End, new Vector2(r.Position.X, r.End.Y) },
+            new[] { new Color(InkStyle.Bg, topAlpha), new Color(InkStyle.Bg, topAlpha),
+                new Color(InkStyle.Bg, botAlpha), new Color(InkStyle.Bg, botAlpha) });
+    }
+
+    /// <summary>贴图按覆盖方式铺进矩形（anchorY＝竖向取景位置 0 顶 1 底），超出部分裁掉。</summary>
+    public static void Cover(CanvasItem ci, Texture2D tex, Rect2 r, float anchorY = 0f)
+    {
+        var size = tex.GetSize();
+        var scale = Mathf.Max(r.Size.X / size.X, r.Size.Y / size.Y);
+        var src = new Vector2(r.Size.X / scale, r.Size.Y / scale);
+        var origin = new Vector2((size.X - src.X) / 2f, (size.Y - src.Y) * anchorY);
+        ci.DrawTextureRectRegion(tex, r, new Rect2(origin, src));
     }
 }

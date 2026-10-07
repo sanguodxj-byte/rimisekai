@@ -11,31 +11,30 @@ public readonly record struct PortraitRegion(string Name, Rect2 Rect);
 /// <summary>战斗几何同时供绘制、点选与运行时隔离检查使用。</summary>
 public static partial class PortraitLayout
 {
-    public static readonly Rect2 CombatBackground = new(0, 0, CanvasWidth, 1310);
-    public static readonly Rect2 CombatBoss = new(40, 32, 1000, 212);
-    public static readonly Rect2 CombatRound = new(40, 264, 1000, 72);
-    /// <summary>速度跑条轨道：左上角竖轨（无外框），中线分左右两列——左列我方、右列敌方，各自越靠上越先出手。</summary>
-    public static Rect2 CombatSpeedTrack => new(52f, 260f, 96f, 800f);
-    /// <summary>右上角设置齿轮：命中块 118px，完整收在顶部 boss 区条带内（boss 文字居中，右上为空角）。</summary>
-    public static Rect2 CombatGearHit => new(CanvasWidth - 162f, 44f, 118f, 118f);
-    /// <summary>操作面板 2×2 四钮：攻击 / 技能 / 防御 / 逃跑，无滑条。</summary>
+    // 2026-10-07 重设计：顶栏（战场名 / 回合 / 设置）→ 行动顺序条 → 首领血条 → 透视敌阵 → 我方卡一排 → 底部行动面板。
+    public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
+    public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
+    public static Rect2 CombatOrder => new(0, CombatTop.End.Y, CanvasWidth, 130f);
+    public static Rect2 CombatBoss => new(40, CombatOrder.End.Y + 10f, 1000, 90f);
+    public static Rect2 CombatRound => CombatTop;
+    /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
+    public static Rect2 CombatGearHit => new(CanvasWidth - Pad - 118f, SafeTop + 6f, 118f, 118f);
+    public static Vector2 CombatOrderToken(int i) => new(300f + i * 125f, CombatOrder.GetCenter().Y);
+    public static Rect2 CombatField => new(40, CombatBoss.End.Y + 20f, 1000, 760);
+    public static Rect2 CombatAvatars => new(40, CombatField.End.Y + 30f, 1000, 300f);
+    public static Rect2 CombatActions => new(0, CombatAvatars.End.Y + 30f, CanvasWidth, CanvasHeight - CombatAvatars.End.Y - 30f);
+    /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
     {
-        var inner = CombatActions.Grow(-24f);
-        var width = (inner.Size.X - 16f) / 2f;
-        var height = (inner.Size.Y - 16f) / 2f;
-        return new Rect2(inner.Position.X + slot % 2 * (width + 16f),
-            inner.Position.Y + slot / 2 * (height + 16f), width, height);
+        var width = (CanvasWidth - 100f) / 2f;
+        return new Rect2(40f + slot % 2 * (width + 20f), CombatActions.Position.Y + 120f + slot / 2 * 220f, width, 200f);
     }
-    /// <summary>首领血条下方的行动点行：实心菱 18px、间距 30px，水平居中。</summary>
+    /// <summary>首领血条右侧的行动点行：实心菱 18px、间距 30px。</summary>
     public static Vector2 BossPipCenter(int index, int count) =>
-        new(CombatBoss.GetCenter().X + (index - (count - 1) / 2f) * 30f, CombatBoss.Position.Y + 202f);
-    public static readonly Rect2 CombatField = new(40, 360, 1000, 890);
-    public static readonly Rect2 CombatActions = new(40, 1340, 1000, 392);
-    public static readonly Rect2 CombatAvatars = new(40, 1744, 1000, 556);
-    public static Rect2 BossName => new(CombatBoss.Position, new Vector2(CombatBoss.Size.X, 68));
-    public static Rect2 BossHp => new(CombatBoss.Position.X, CombatBoss.Position.Y + 74, CombatBoss.Size.X, 58);
-    public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 152, CombatBoss.Size.X, 30);
+        new(CombatBoss.End.X - 20f - (count - 1 - index) * 30f, CombatBoss.Position.Y + 64f);
+    public static Rect2 BossName => new(CombatBoss.Position.X, CombatBoss.Position.Y, 420f, 52f);
+    public static Rect2 BossHp => new(CombatBoss.Position.X + 440f, CombatBoss.Position.Y, 420f, 52f);
+    public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 58f, CombatBoss.Size.X - 160f, 14f);
 
     // 纵深档位放缓：前后排卡片尺寸差距减小（最远排内宽仍 148px，26px 字号完整可显）。
     /// <summary>3D DRPG 纵深投影深度分档（从近到远）。</summary>
@@ -89,29 +88,27 @@ public static partial class PortraitLayout
     public static Rect2 EnemyColumnCard(Rect2 card, int offset, int size) =>
         new(card.Position.X + offset * card.Size.X / size, card.Position.Y, card.Size.X / size, card.Size.Y);
 
-    public static Rect2 AllyCard(int index, int threatTier)
+    public static Rect2 AllyCard(int index)
     {
         var width = (CombatAvatars.Size.X - 3f * 16f) / 4f;
-        return new Rect2(CombatAvatars.Position.X + index * (width + 16f),
-            1856f - (Math.Clamp(threatTier, 0, 5) - 3) * 12f, width, 360f);
+        return new Rect2(CombatAvatars.Position.X + index * (width + 16f), CombatAvatars.Position.Y, width, CombatAvatars.Size.Y);
     }
 
-    /// <summary>头像占满卡内上部（buff 图标在卡外上方，不占卡内空间）。</summary>
-    public static Rect2 AllyImage(Rect2 card) => new(card.Position + new Vector2(16, 16),
-        new Vector2(card.Size.X - 32, card.Size.Y - 152));
-    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.End.Y - 128, card.Size.X - 24, 60);
-    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 16, card.End.Y - 46, card.Size.X - 32, 16);
+    public static Vector2 AllyAvatar(Rect2 card) => new(card.GetCenter().X, card.Position.Y + 72f);
+    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.Position.Y + 132f, card.Size.X - 24, 56);
+    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 24, card.Position.Y + 202f, card.Size.X - 48, 14);
     public static Rect2 EnemyName(Rect2 card) => new(card.Position + new Vector2(4, 6), new Vector2(card.Size.X - 8, 32));
     public static Rect2 EnemyMeter(Rect2 card) => new(card.Position.X + 6, card.End.Y - 16, card.Size.X - 12, 10);
     public static Rect2 EnemyImage(Rect2 card) => new(card.Position.X + 4, card.Position.Y + 42,
         card.Size.X - 8, Math.Max(0, card.Size.Y - 100));
     /// <summary>buff 图标条：悬在角色卡上方（卡外），绝不落入卡内头像区。</summary>
-    public static Rect2 StatusIcon(Rect2 card, int index) => new(card.Position.X + 16 + index * 52,
-        card.Position.Y - 56, 44, 44);
+    public static Rect2 StatusIcon(Rect2 card, int index) => new(card.Position.X + 20 + index * 52,
+        card.Position.Y + 234f, 44, 44);
 
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
     {
-        new PortraitRegion("boss", CombatBoss), new PortraitRegion("round", CombatRound),
+        new PortraitRegion("top", CombatTop), new PortraitRegion("order", CombatOrder),
+        new PortraitRegion("boss", CombatBoss),
         new PortraitRegion("enemies", CombatField), new PortraitRegion("actions", CombatActions),
         new PortraitRegion("avatars", CombatAvatars),
     };

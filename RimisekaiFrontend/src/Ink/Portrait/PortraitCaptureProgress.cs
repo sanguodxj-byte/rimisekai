@@ -24,16 +24,16 @@ public partial class PortraitCapture
 
     private void EnqueueProgressChecks()
     {
-        _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
-        _steps.Enqueue(() => ClickHub(PortraitAction.Entry, 3));
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(1));
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
             _scheduleProbeMember = hub.State.Roster.Members.First(member => !member.IsMaster).Id;
             var fixture = hub.State.Territory.Facilities.First(f => f.Built && hub.FacilityIsWorkbench(f.Id));
             _scheduleProbeFacility = fixture.Id;
-            ClickHub(PortraitAction.ScheduleMember, _scheduleProbeMember);
+            _root.HubScreen.DebugPress(PortraitAction.RosterPick, _scheduleProbeMember);
         });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 2));
         _steps.Enqueue(() => ClickHub(PortraitAction.ScheduleSlot, 1));
         _steps.Enqueue(() =>
         {
@@ -59,9 +59,8 @@ public partial class PortraitCapture
         _steps.Enqueue(() => Require(_root.HubScreen.DebugHub.AssignmentOf(_scheduleProbeMember, 1).Mode == SlotMode.Free,
             "schedule selecting assigned facility toggles it off"));
 
-        _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
-        _steps.Enqueue(() => ClickHub(PortraitAction.Entry, 7));
-        _steps.Enqueue(() => ClickHub(PortraitAction.SystemPage, 0));
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
+        _steps.Enqueue(() => ClickHub(PortraitAction.OpenSystem, 0));
         _steps.Enqueue(() =>
         {
             _savedMoney = _root.HubScreen.DebugHub.State.Money;
@@ -75,6 +74,7 @@ public partial class PortraitCapture
             _root.HubScreen.OpenSystemPage(InkSystemScreen.PageLoad);
         });
         _steps.Enqueue(() => ClickHub(PortraitAction.SavePick, 0));
+        _steps.Enqueue(() => ClickModal("confirm"));
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugHub.State.Money == _savedMoney, "in-game load restores saved state");
@@ -97,7 +97,9 @@ public partial class PortraitCapture
             _facilityProbeLast = id;
             _root.HubScreen.QueueRedraw();
         });
-        _steps.Enqueue(() => DragHub(PortraitLayout.ListTrack(PortraitLayout.FixtureList)));
+        _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() => DragHubUp(new Rect2(0, PortraitLayout.RoomSheetRow(0).Position.Y, PortraitLayout.CanvasWidth,
+            PortraitLayout.RoomSheetRows * 140f)));
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Fixture && w.Index == _facilityProbeLast),
@@ -110,7 +112,7 @@ public partial class PortraitCapture
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.FixtureRun),
                 "fixture click exposes declared facility actions");
             Shoot("fixture_actions", _root.HubScreen);
-            _root.HubScreen.ShowTab(2);
+            _root.HubScreen.ShowTab(0);
         });
         _steps.Enqueue(() =>
         {
@@ -122,8 +124,9 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() =>
         {
-            var card = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.RosterPick);
-            ClickHub(card.Action, card.Index);
+            var hub = _root.HubScreen.DebugHub;
+            var member = hub.State.Roster.Members.First(m => !m.IsMaster);
+            ClickHub(PortraitAction.NowAvatar, member.Id);
         });
         _steps.Enqueue(() => ClickHub(PortraitAction.SocialCategory, 0));
         _steps.Enqueue(() =>
@@ -162,15 +165,18 @@ public partial class PortraitCapture
         // 接下委托即战斗：任务页选单、点名、开打，核对真切入战斗页且 QuestRun 随行。
         _steps.Enqueue(() =>
         {
-            _root.HubScreen.ShowTab(3);
-            ClickHub(PortraitAction.Entry, 6);
+            _root.HubScreen.ShowTab(2);
         });
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.QuestPick),
-                "quest page lists available commissions");
-            ClickHub(PortraitAction.QuestPick, 0);
-            var member = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.PartyPick);
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.QuestTake),
+                "quest board lists available commissions");
+            ClickHub(PortraitAction.QuestTake, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Shoot("party_sheet", _root.HubScreen);
+            var member = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.PartyPick && w.Enabled);
             ClickHub(member.Action, member.Index);
         });
         _steps.Enqueue(() => ClickHub(PortraitAction.QuestStart, 0));
@@ -200,7 +206,8 @@ public partial class PortraitCapture
             Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Hub, "hub phase restored after quest battle");
         });
 
-        _steps.Enqueue(() => ClickHub(PortraitAction.Entry, 2));
+        _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Build, 0));
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -211,8 +218,8 @@ public partial class PortraitCapture
             hub.State.Roster.Master!.Bag.Add("木材", 100);
             hub.State.Roster.Master!.Bag.Add("石材", 100);
             var widget = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == "空地");
-            _developmentProbeX = (int)((widget.Rect.Position.X - PortraitLayout.DevelopmentGrid.Position.X) / 200f);
-            _developmentProbeY = (int)((widget.Rect.Position.Y - PortraitLayout.DevelopmentGrid.Position.Y) / 200f);
+            _developmentProbeX = (int)((widget.Rect.Position.X - PortraitLayout.DevelopmentGrid.Position.X) / PortraitLayout.DevCell);
+            _developmentProbeY = (int)((widget.Rect.Position.Y - PortraitLayout.DevelopmentGrid.Position.Y) / PortraitLayout.DevCell);
             _developmentProbeCount = hub.State.Territory.VacantDevelopCount;
             ClickHub(widget.Action, widget.Index);
         });
@@ -243,6 +250,7 @@ public partial class PortraitCapture
             var row = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentAction && w.Enabled);
             ClickHub(row.Action, row.Index);
         });
+        _steps.Enqueue(() => ClickHub(PortraitAction.DevelopmentTab, 2));
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -322,12 +330,17 @@ public partial class PortraitCapture
             });
     }
 
-    private void DragHub(Rect2 track)
+    /// <summary>在滚动区里自下而上拖内容（反复几次，确保拖到底）。</summary>
+    private void DragHubUp(Rect2 area)
     {
-        var top = new Vector2(track.GetCenter().X, track.Position.Y + 8f);
-        var bottom = new Vector2(track.GetCenter().X, track.End.Y - 8f);
-        _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = top });
-        _root.HubScreen._GuiInput(new InputEventMouseMotion { Position = bottom, ButtonMask = MouseButtonMask.Left });
-        _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = bottom });
+        for (var i = 0; i < 6; i++)
+        {
+            var bottom = new Vector2(area.GetCenter().X, area.End.Y - 8f);
+            var top = new Vector2(area.GetCenter().X, area.Position.Y + 8f);
+            _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = bottom });
+            _root.HubScreen._GuiInput(new InputEventMouseMotion { Position = top, ButtonMask = MouseButtonMask.Left });
+            _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = top });
+            _root.HubScreen.QueueRedraw();
+        }
     }
 }

@@ -8,246 +8,344 @@ using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
+/// <summary>
+/// 角色页签（名册卡片流）与角色详情推入页：立绘头＋分段（状态 / 技能 / 日程）。
+/// 数据一律取 InkCharacterPageBuilder（与旧状态页同一口径），模型没有的东西不画。
+/// </summary>
 public partial class PortraitHubScreen
 {
-    private bool _statusAbilityOpen;
-    private int _statusAbilityFirst;
-    private int _statusAbilityTotal;
+    private int _charId = -1;
+    private int _charSeg;
+
+    private static readonly InkPage[] CharacterSegments = { InkPage.Status, InkPage.Skills, InkPage.Schedule };
+    private static readonly string[] CharacterSegmentLabels = { "状态", "技能", "日程" };
 
     private static readonly EquipSlot[] DisplayEquipSlots =
     {
-        EquipSlot.MainHand,
-        EquipSlot.OffHand,
-        EquipSlot.Head,
-        EquipSlot.Torso,
-        EquipSlot.Legs,
-        EquipSlot.Hands,
-        EquipSlot.Feet,
-        EquipSlot.Neck,
-        EquipSlot.Ring1,
-        EquipSlot.Ring2,
+        EquipSlot.MainHand, EquipSlot.OffHand, EquipSlot.Head, EquipSlot.Torso, EquipSlot.Legs,
+        EquipSlot.Hands, EquipSlot.Feet, EquipSlot.Neck, EquipSlot.Ring1, EquipSlot.Ring2,
     };
 
-    private InkPageModel StatusModel() => InkCharacterPageBuilder.Build(_vm, InkPage.Status,
-        _vm.ChatPartner() ?? _vm.Hub.State.Roster.Master,
-        abilityOpen: new[] { _statusAbilityOpen, _statusAbilityOpen, _statusAbilityOpen },
-        abilityFirst: _statusAbilityFirst)!;
+    private CharacterState Who => _vm.Hub.State.Roster.Find(_charId)!;
 
-    private void DrawStatusPage()
+    private void OpenCharacter(int id)
     {
-        var page = StatusModel();
-        DrawPageTop(page.Title);
-        DrawBack();
-        var character = _vm.ChatPartner() ?? _vm.Hub.State.Roster.Master;
+        _charId = id;
+        _charSeg = 0;
+        _push = PushPage.Character;
+        _sheet = SheetKind.None;
+        _interactionOpen = false;
+        _pan.Remove("character");
+        ResetSkillView();
+    }
 
+    private static string RoleOf(CharacterState who) => who.IsMaster ? "领主" : "同伴";
+
+    private IEnumerable<string> TraitsOf(CharacterState who) =>
+        Rimisekai.Character.Traits.Catalog.Where(d => who.Has(d.Trait)).Select(d => d.Name);
+
+    // ---------- 名册 ----------
+
+    private void DrawRoster()
+    {
+        var view = PortraitLayout.RosterView;
+        var members = _vm.Hub.State.Roster.Members;
+        var step = PortraitLayout.RosterCardHeight + PortraitLayout.RosterCardGap;
+        var total = (int)(members.Count * step);
+        var offset = Pan("roster", total, (int)view.Size.Y);
+        for (var i = 0; i < members.Count; i++)
+        {
+            var r = new Rect2(PortraitLayout.Pad, view.Position.Y + i * step - offset, PortraitLayout.FullWidth,
+                PortraitLayout.RosterCardHeight);
+            if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
+                continue;
+            DrawRosterCard(r, members[i]);
+            AddClipped(r, view, PortraitAction.RosterPick, members[i].Id, true, members[i].Name);
+        }
+        RegisterScroll("roster", view, total, (int)view.Size.Y, offset, v => _pan["roster"] = v, 1f);
+        MaskAbove(view);
+    }
+
+    private void DrawRosterCard(Rect2 r, CharacterState who)
+    {
+        PortraitFrame.Card(this, r, who.IsMaster);
+        var x = r.Position.X;
+        var y = r.Position.Y;
+        PortraitFrame.Avatar(this, new Vector2(x + 110f, y + 110f), 74f, PortraitAvatars.Resolve(who), who.Name);
+        InkDraw.Text(this, new Vector2(x + 220f, y + 62f), who.Name, PortraitLayout.FontPlace, InkStyle.Line, "lm");
+        InkDraw.Text(this, new Vector2(x + 240f + InkDraw.Measure(who.Name, PortraitLayout.FontPlace).X, y + 66f),
+            $"{RoleOf(who)} · Lv {who.Level}", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+
+        var activity = ActivityOf(who.Id);
+        var pillW = Mathf.Min(360f, InkDraw.Measure(activity, PortraitLayout.FontMeta).X + 56f);
+        var pill = new Rect2(r.End.X - 30f - pillW, y + 30f, pillW, 66f);
+        if (r.Size.X - 220f - pillW > InkDraw.Measure(who.Name, PortraitLayout.FontPlace).X + 260f)
+        {
+            PortraitFrame.RoundRect(this, pill, 33f, null, InkStyle.Dim, 3f);
+            InkDraw.TextBounded(this, pill.Grow(-16f), activity, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        }
+
+        var tx = x + 220f;
+        foreach (var trait in TraitsOf(who).Take(3))
+        {
+            if (tx + PortraitFrame.ChipWidth(trait) > r.End.X - 30f)
+                break;
+            tx += PortraitFrame.Tag(this, new Vector2(tx, y + 116f), trait, 66f) + 16f;
+        }
+
+        var c = who.Condition;
+        var bars = new (string Label, float Frac)[]
+        {
+            ("体力", c.MaxStamina > 0 ? (float)c.Stamina / c.MaxStamina : 0f),
+            ("气力", c.MaxSpirit > 0 ? (float)c.Spirit / c.MaxSpirit : 0f),
+            ("心情", who.Affect.Mood / 100f),
+        };
+        var bw = (r.End.X - 30f - (x + 220f) - 40f) / 3f;
+        for (var k = 0; k < bars.Length; k++)
+        {
+            var bx = x + 220f + k * (bw + 20f);
+            InkDraw.Text(this, new Vector2(bx, y + 228f), bars[k].Label, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            PortraitFrame.Bar(this, new Rect2(bx, y + 266f, bw, 16f), bars[k].Frac);
+        }
+    }
+
+    // ---------- 角色详情 ----------
+
+    private void DrawCharacterPage()
+    {
+        var who = Who;
+        var view = PortraitLayout.PageBody;
+        var offset = _pan.GetValueOrDefault("character");
+        var y0 = view.Position.Y - offset;
+
+        // 立绘头：覆盖铺满，下缘渐隐进黑场。
+        var head = new Rect2(0, y0, PortraitLayout.CanvasWidth, 620f);
+        var art = LoadCharacterPortrait(who);
+        if (art != null)
+        {
+            PortraitFrame.Cover(this, art, head, 0.04f);
+            PortraitFrame.Fade(this, new Rect2(0, head.Position.Y + 250f, head.Size.X, 370f), 0f, 1f);
+        }
+        else
+            PortraitFrame.Avatar(this, head.GetCenter(), 200f, PortraitAvatars.Resolve(who), who.Name);
+
+        var segAt = y0 + 640f;
+        var y = segAt + PortraitLayout.TouchMin + 48f;
+        // 内容命中块只登记在吸顶分段控件之下，免得与分段控件抢命中。
+        var contentView = new Rect2(0, view.Position.Y + PortraitLayout.TouchMin + 40f, view.Size.X,
+            view.Size.Y - PortraitLayout.TouchMin - 40f);
+        var contentEnd = _charSeg switch
+        {
+            0 => DrawStatusSegment(who, y, contentView),
+            1 => DrawSkillsSegment(who, y, contentView),
+            _ => DrawScheduleSegment(who, y, contentView),
+        };
+        var total = (int)(contentEnd + offset - view.Position.Y + 60f);
+        offset = Pan("character", total, (int)view.Size.Y);
+        RegisterScroll("character", view, total, (int)view.Size.Y, offset, v => _pan["character"] = v, 1f);
+
+        // 分段控件吸顶：滚过头时停在顶栏下方。
+        var seg = new Rect2(PortraitLayout.Pad, Mathf.Max(view.Position.Y + 20f, segAt), PortraitLayout.FullWidth, PortraitLayout.TouchMin);
+        if (seg.Position.Y <= view.Position.Y + 20f)
+            DrawRect(new Rect2(0, view.Position.Y, PortraitLayout.CanvasWidth, seg.End.Y + 20f - view.Position.Y), InkStyle.Bg);
+        PortraitFrame.Segmented(this, seg, CharacterSegmentLabels, _charSeg);
+        for (var i = 0; i < CharacterSegmentLabels.Length; i++)
+            _widgets.Add(new PortraitWidget(PortraitFrame.SegmentRect(seg, CharacterSegmentLabels.Length, i),
+                PortraitAction.CharacterSegment, i, true, CharacterSegmentLabels[i]));
+
+        // 技能段的顶栏右侧给「星盘」入口（完整的战斗技能星盘与解锁门槛详情）。
+        DrawPageTop(who.Name, $"{RoleOf(who)} · Lv {who.Level}", _charSeg == 1 ? "星盘" : "",
+            _charSeg == 1 ? PortraitAction.OpenDisc : PortraitAction.Back);
+    }
+
+    /// <summary>状态：2×2 体征卡 / 属性 3×2 / 战斗 3×2 / 特质签 / 装备双列。返回内容下沿。</summary>
+    private float DrawStatusSegment(CharacterState who, float y, Rect2 view)
+    {
+        var page = InkCharacterPageBuilder.Build(_vm, InkPage.Status, who)!;
         var vitals = new List<InkPageRow>();
         var combat = new List<InkPageRow>();
         var attributes = new List<InkPageRow>();
-        var groups = new List<List<InkPageRow>> { new(), new(), new() };
-        var group = -1;
+        var inGroups = false;
         foreach (var row in page.Rows)
         {
             if (row.IsHeading)
             {
-                group = row.Name switch { "生活" => 0, "武器" => 1, "流派" => 2, _ => -1 };
+                inGroups = true;
                 continue;
             }
+            if (inGroups)
+                continue;
             if (row.Name is "体力" or "气力" or "好感" or "心情") vitals.Add(row);
             else if (row.Name is "攻击" or "血量" or "防御" or "闪避" or "法强" or "速度") combat.Add(row);
-            else if (row.Name is "体质" or "灵巧" or "智力" or "魅力" or "感知" or "力量") attributes.Add(row);
-            else if (group >= 0) groups[group].Add(row);
+            else attributes.Add(row);
         }
 
-        DrawPortraitCard(character);
-        DrawEquipmentRack(character);
-        DrawVitalsSheet(vitals);
-        DrawCombatSheet(combat);
-        DrawAttributesSheet(attributes);
-        DrawAbilitiesSection(groups);
-    }
-
-    private void DrawPortraitCard(CharacterState? character)
-    {
-        var rect = PortraitLayout.StatusPortraitCard;
-        // 下沿是名牌带，只长上角两只角花。
-        PortraitFrame.Panel(this, rect, InkStyle.Bg, flourish: 0f);
-        PortraitFrame.TopFlourishes(this, rect, PortraitLayout.Flourish);
-
-        var tex = LoadCharacterPortrait(character);
-        if (tex != null)
+        var cw = (PortraitLayout.FullWidth - 20f) / 2f;
+        for (var i = 0; i < vitals.Count; i++)
         {
-            var inner = rect.Grow(-16f);
-            var availH = rect.Size.Y - 112f;
-            var scale = Mathf.Min(inner.Size.X / tex.GetWidth(), availH / tex.GetHeight());
-            var size = new Vector2(tex.GetWidth(), tex.GetHeight()) * scale;
-            var imgRect = new Rect2(new Vector2(inner.GetCenter().X - size.X / 2f, inner.Position.Y + 8f), size);
-            DrawTextureRect(tex, imgRect, false);
+            var row = vitals[i];
+            var r = new Rect2(PortraitLayout.Pad + i % 2 * (cw + 20f), y + i / 2 * 170f, cw, 150f);
+            PortraitFrame.Card(this, r);
+            InkDraw.Text(this, new Vector2(r.Position.X + 36f, r.Position.Y + 50f), row.Name, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            InkDraw.Text(this, new Vector2(r.End.X - 36f, r.Position.Y + 50f), row.Value, PortraitLayout.FontBody, InkStyle.Line, "rm");
+            if (row.MeterValue.HasValue && row.MeterMax > 0f)
+                PortraitFrame.Bar(this, new Rect2(r.Position.X + 36f, r.Position.Y + 102f, r.Size.X - 72f, 16f),
+                    row.MeterValue.Value / row.MeterMax);
+            else if (row.Note.Length > 0)
+                InkDraw.Text(this, new Vector2(r.Position.X + 36f, r.Position.Y + 110f), row.Note, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+        }
+        y += (vitals.Count + 1) / 2 * 170f + 40f;
+
+        y = DrawMetricGrid("属性", attributes, y, withMeter: true);
+        y = DrawMetricGrid("战斗", combat, y, withMeter: false);
+
+        var traits = TraitsOf(who).ToList();
+        if (traits.Count > 0)
+        {
+            PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "特质");
+            y += 50f;
+            float x = PortraitLayout.Pad;
+            foreach (var trait in traits)
+            {
+                if (x + PortraitFrame.ChipWidth(trait) > PortraitLayout.CanvasWidth - PortraitLayout.Pad)
+                {
+                    x = PortraitLayout.Pad;
+                    y += 96f;
+                }
+                x += PortraitFrame.Tag(this, new Vector2(x, y), trait, 80f) + 20f;
+            }
+            y += 140f;
         }
 
-        // 底部名牌区：上界渐隐线，下距内框线留足呼吸，文字在中央完全居中，绝不压边框
-        var ruleY = rect.End.Y - 84f;
-        PortraitFrame.FadingRule(this, rect.Position.X + 24f, rect.End.X - 24f, ruleY);
-
-        var charName = character?.Name ?? "（未知）";
-        var idLabel = character?.IsMaster == true ? "领主" : "同伴";
-        var textCenterY = rect.End.Y - 48f;
-        InkDraw.Text(this, new Vector2(rect.Position.X + 28f, textCenterY), charName,
-            PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.Text(this, new Vector2(rect.End.X - 28f, textCenterY), idLabel,
-            PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-    }
-
-    /// <summary>小节标题：一行字＋一条渐隐线。标题带固定 60 高，行距据此往下排。</summary>
-    private void DrawSectionHeader(float x, float y, float width, string title)
-    {
-        InkDraw.Text(this, new Vector2(x + 4f, y + 24f), title, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        PortraitFrame.FadingRule(this, x + 4f, x + width - 4f, y + 56f);
-    }
-
-    /// <summary>装备栏：双列五行，每槽上下分排「暗槽名」与「亮装备名」，不画厚重白框。</summary>
-    private void DrawEquipmentRack(CharacterState? character)
-    {
-        var sidebar = PortraitLayout.StatusSidebar;
-        DrawSectionHeader(sidebar.Position.X, sidebar.Position.Y, sidebar.Size.X, "装备");
+        PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "装备");
+        y += 50f;
         var registry = _vm.Hub.State.Equips;
         for (var i = 0; i < DisplayEquipSlots.Length; i++)
         {
             var slot = DisplayEquipSlots[i];
-            var rect = PortraitLayout.EquipSlotCell(i);
-            var equipName = character != null ? EquipmentName(character, slot, registry) : "空";
-            var empty = equipName == "空";
-
-            // 槽位名称（暗小字，靠左上）
-            InkDraw.Text(this, new Vector2(rect.Position.X + 4f, rect.Position.Y + 22f),
-                EquipSlots.Label(slot), 38, InkStyle.Dim, "lm");
-
-            // 装备名称（亮大字，靠左下；空则显示暗「空」）
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 4f, rect.Position.Y + 50f, rect.Size.X - 8f, 48f),
-                equipName, 46, 34, empty ? InkStyle.Dim : InkStyle.Line, "lm");
-
-            // 槽底极细渐隐线做横向分隔
-            PortraitFrame.FadingRule(this, rect.Position.X, rect.End.X, rect.Position.Y + 108f);
+            var r = new Rect2(PortraitLayout.Pad + i % 2 * (cw + 20f), y + i / 2 * 166f, cw, 150f);
+            var equip = EquipmentName(who, slot, registry);
+            PortraitFrame.Card(this, r);
+            InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 46f), EquipSlots.Label(slot), PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+            InkDraw.TextBounded(this, new Rect2(r.Position.X + 20f, r.Position.Y + 76f, r.Size.X - 40f, 60f), equip,
+                PortraitLayout.FontBody, PortraitLayout.FontMeta, equip == "空" ? InkStyle.WoodDark : InkStyle.Line, "cm");
         }
+        y += (DisplayEquipSlots.Length + 1) / 2 * 166f;
+        return y;
     }
 
-    private void DrawVitalsSheet(IReadOnlyList<InkPageRow> vitals)
+    private float DrawMetricGrid(string title, IReadOnlyList<InkPageRow> rows, float y, bool withMeter)
     {
-        var area = PortraitLayout.StatusVitals;
-        DrawSectionHeader(area.Position.X, area.Position.Y, area.Size.X, "状态");
-        for (var i = 0; i < vitals.Count && i < 4; i++)
+        if (rows.Count == 0)
+            return y;
+        PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, title);
+        y += 50f;
+        var w = (PortraitLayout.FullWidth - 40f) / 3f;
+        for (var i = 0; i < rows.Count; i++)
         {
-            var row = vitals[i];
-            var line = PortraitLayout.StatusVitalCell(i);
-            var centerY = line.Position.Y + line.Size.Y / 2f;
-
-            // 标签贴左（暗色，FontMeta 44px）
-            InkDraw.Text(this, new Vector2(line.Position.X + 4f, centerY - 4f),
-                row.Name, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-
-            // 数值贴右（亮色，FontBody 50px）
-            InkDraw.Text(this, new Vector2(line.End.X - 4f, centerY - 4f),
-                row.Value, PortraitLayout.FontBody, InkStyle.Line, "rm");
-
-            // 体力/气力/心情进度量表线（0.45mm 高的槽线，低于此在手机上只是一条灰影）
-            if (row.MeterValue.HasValue && row.MeterMax > 0f)
-                InkDynamicMeter.Draw(this, $"portrait_status_{row.Name}",
-                    new Rect2(line.Position.X + 4f, line.Position.Y + 66f, line.Size.X - 8f, 5f),
-                    Mathf.Clamp(row.MeterValue.Value / row.MeterMax, 0f, 1f), row.Name == "体力");
-
-            PortraitFrame.FadingRule(this, line.Position.X + 4f, line.End.X - 4f, line.Position.Y + 76f);
+            var row = rows[i];
+            var r = new Rect2(PortraitLayout.Pad + i % 3 * (w + 20f), y + i / 3 * 130f, w, 110f);
+            PortraitFrame.RoundRect(this, r, 20f, null, InkStyle.WoodDark, 3f);
+            InkDraw.Text(this, new Vector2(r.Position.X + 28f, r.GetCenter().Y - (withMeter ? 6f : 0f)), row.Name,
+                PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            InkDraw.Text(this, new Vector2(r.End.X - 28f, r.GetCenter().Y - (withMeter ? 6f : 0f)), row.Value,
+                PortraitLayout.FontPlace, InkStyle.Line, "rm");
+            if (withMeter && row.MeterMax > 0f)
+                PortraitFrame.Bar(this, new Rect2(r.Position.X + 28f, r.End.Y - 22f, r.Size.X - 56f, 8f),
+                    (row.MeterValue ?? 0f) / row.MeterMax);
         }
+        return y + (rows.Count + 2) / 3 * 130f + 40f;
     }
 
-    private void DrawCombatSheet(IReadOnlyList<InkPageRow> combat)
+    /// <summary>
+    /// 技能：生活 / 武器 / 流派三段菱形刻度行（每段的熟练等级），再是战斗技能卡（已解锁亮、未解锁暗＋锁）。
+    /// 战斗技能卡点开即进技能星盘并选中该式；顶栏右侧「星盘」直接进星盘。
+    /// </summary>
+    private float DrawSkillsSegment(CharacterState who, float y, Rect2 view)
     {
-        var area = PortraitLayout.StatusCombat;
-        DrawSectionHeader(area.Position.X, area.Position.Y, area.Size.X, "战斗");
-        for (var i = 0; i < combat.Count && i < 6; i++)
+        var page = InkCharacterPageBuilder.Build(_vm, InkPage.Status, who)!;
+        var group = "";
+        foreach (var row in page.Rows)
         {
-            var row = combat[i];
-            var line = PortraitLayout.StatusMetricCell(area, i);
-            var centerY = line.Position.Y + line.Size.Y / 2f;
-
-            // 标签贴左
-            InkDraw.Text(this, new Vector2(line.Position.X + 4f, centerY),
-                row.Name, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-
-            // 数值贴右
-            InkDraw.Text(this, new Vector2(line.End.X - 4f, centerY),
-                row.Value, PortraitLayout.FontBody, InkStyle.Line, "rm");
-
-            PortraitFrame.FadingRule(this, line.Position.X + 4f, line.End.X - 4f, line.Position.Y + 76f);
+            if (row.IsHeading)
+            {
+                group = row.Name;
+                PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, group);
+                y += 60f;
+                continue;
+            }
+            if (group.Length == 0)
+                continue;
+            var level = LevelOf(row.Value);
+            InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, y, 230f, 100f), row.Name, PortraitLayout.FontBody,
+                PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            PortraitFrame.Ticks(this, 280f, y + 50f, 10, Mathf.Min(level, 10), 30f, 22f);
+            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 10f, y + 50f),
+                row.Value.StartsWith("Lv") ? row.Value : $"Lv{row.Value}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+            InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad, y + 104f),
+                new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 104f), InkStyle.Hover, 2f);
+            y += 110f;
         }
+        y += 30f;
+
+        var disc = BuildSkillPage().Disc!;
+        var tiles = disc.Tiles.Where(t => t.Kind == InkSkillNodeKind.Skill && t.Id.Length > 0)
+            .OrderByDescending(t => t.Unlocked).ThenBy(t => t.Sector).ToArray();
+        if (tiles.Length > 0)
+        {
+            PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "战斗技能");
+            y += 50f;
+            var cw = (PortraitLayout.FullWidth - 20f) / 2f;
+            for (var i = 0; i < tiles.Length; i++)
+            {
+                var tile = tiles[i];
+                var r = new Rect2(PortraitLayout.Pad + i % 2 * (cw + 20f), y + i / 2 * 196f, cw, 176f);
+                PortraitFrame.Card(this, r, tile.Id == _skillSelectedId);
+                if (tile.Unlocked)
+                    PortraitGlyph.Swords(this, r.Position.X + 70f, r.GetCenter().Y, 30f, InkStyle.Line);
+                else
+                    PortraitGlyph.Lock(this, r.Position.X + 70f, r.GetCenter().Y, 30f, InkStyle.WoodDark);
+                InkDraw.TextBounded(this, new Rect2(r.Position.X + 124f, r.Position.Y + 30f, r.Size.X - 150f, 64f), tile.Name,
+                    PortraitLayout.FontBody, PortraitLayout.FontMeta, tile.Unlocked ? InkStyle.Line : InkStyle.Dim, "lm");
+                var sector = tile.Sector < disc.SectorLabels.Count ? disc.SectorLabels[tile.Sector] : "";
+                InkDraw.TextBounded(this, new Rect2(r.Position.X + 124f, r.Position.Y + 100f, r.Size.X - 150f, 52f), sector,
+                    PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+                AddClipped(r, view, PortraitAction.SkillCard, i, true, tile.Id);
+            }
+            y += (tiles.Length + 1) / 2 * 196f + 20f;
+        }
+
+        return y;
     }
 
-    private void DrawAttributesSheet(IReadOnlyList<InkPageRow> attributes)
+    private static int LevelOf(string value)
     {
-        var area = PortraitLayout.StatusAttributes;
-        DrawSectionHeader(area.Position.X, area.Position.Y, area.Size.X, "属性");
-        for (var i = 0; i < attributes.Count && i < 6; i++)
-        {
-            var row = attributes[i];
-            var line = PortraitLayout.StatusMetricCell(area, i);
-            var centerY = line.Position.Y + line.Size.Y / 2f;
-
-            // 标签贴左
-            InkDraw.Text(this, new Vector2(line.Position.X + 4f, centerY - 4f),
-                row.Name, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-
-            // 数值贴右
-            InkDraw.Text(this, new Vector2(line.End.X - 4f, centerY - 4f),
-                row.Value, PortraitLayout.FontBody, InkStyle.Line, "rm");
-
-            // 属性升级经验细线
-            var ratio = row.MeterMax > 0f ? Mathf.Clamp((row.MeterValue ?? 0f) / row.MeterMax, 0f, 1f) : 0f;
-            InkDynamicMeter.Draw(this, $"portrait_attribute_{row.Name}",
-                new Rect2(line.Position.X + 4f, line.Position.Y + 66f, line.Size.X - 8f, 5f), ratio, false);
-
-            PortraitFrame.FadingRule(this, line.Position.X + 4f, line.End.X - 4f, line.Position.Y + 76f);
-        }
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length == 0 ? 0 : int.Parse(digits);
     }
 
-    private void DrawAbilitiesSection(IReadOnlyList<List<InkPageRow>> groups)
+    private bool ExecuteCharacter(PortraitWidget w)
     {
-        var area = PortraitLayout.StatusAbilities;
-        DrawSectionHeader(area.Position.X, area.Position.Y, area.Size.X, "能力");
-        var rows = new List<(int Group, InkPageRow Row, bool Heading)>();
-        var labels = new[] { "生活", "武器", "流派" };
-        for (var g = 0; g < groups.Count; g++)
+        switch (w.Action)
         {
-            if (groups[g].Count == 0) continue;
-            rows.Add((g, groups[g][0], true));
-            if (_statusAbilityOpen)
-                for (var i = 1; i < groups[g].Count; i++)
-                    rows.Add((g, groups[g][i], false));
-        }
-        _statusAbilityTotal = rows.Count;
-        var visible = PortraitLayout.StatusAbilityVisibleRows;
-        _statusAbilityFirst = Math.Clamp(_statusAbilityFirst, 0, Math.Max(0, rows.Count - visible));
-        var hasScroll = rows.Count > visible;
-        for (var i = 0; i < visible && i + _statusAbilityFirst < rows.Count; i++)
-        {
-            var entry = rows[i + _statusAbilityFirst];
-            var rect = PortraitLayout.StatusAbilityRow(i, hasScroll);
-            var isHighlight = _statusAbilityOpen && entry.Heading;
-            PortraitFrame.SubtleButton(this, rect, isHighlight);
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 24f, rect.Position.Y,
-                180f, rect.Size.Y), labels[entry.Group], PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 220f, rect.Position.Y,
-                rect.Size.X - 380f, rect.Size.Y), entry.Row.Name, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            InkDraw.TextBounded(this, new Rect2(rect.End.X - 160f, rect.Position.Y,
-                136f, rect.Size.Y), entry.Row.Value, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "rm");
-            _widgets.Add(new PortraitWidget(rect, PortraitAction.StatusAbilityToggle, entry.Group, true, labels[entry.Group]));
-        }
-        if (hasScroll)
-        {
-            var track = PortraitLayout.StatusAbilityScroll;
-            InkDraw.InkLine(this, new Vector2(track.GetCenter().X, track.Position.Y),
-                new Vector2(track.GetCenter().X, track.End.Y), InkStyle.Dim, PortraitLayout.LineHair);
-            DrawRect(PortraitLayout.ListThumb(track, rows.Count,
-                visible, _statusAbilityFirst), InkStyle.Line);
-            RegisterScroll("status_abilities", area, rows.Count, visible, _statusAbilityFirst,
-                first => _statusAbilityFirst = first, PortraitLayout.StatusAbilityRowHeight, track);
+            case PortraitAction.RosterPick:
+                OpenCharacter(w.Index);
+                return true;
+            case PortraitAction.CharacterSegment:
+                _charSeg = w.Index;
+                _pan.Remove("character");
+                if (_charSeg == 2)
+                    OpenSchedule();
+                return true;
+            case PortraitAction.SkillCard:
+                _skillSelectedId = w.Label;
+                _push = PushPage.Disc;
+                return true;
+            case PortraitAction.OpenDisc:
+                _push = PushPage.Disc;
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -294,25 +392,4 @@ public partial class PortraitHubScreen
 
         return null;
     }
-
-    private bool ExecuteStatus(PortraitWidget widget)
-    {
-        if (widget.Action != PortraitAction.StatusAbilityToggle)
-            return false;
-        _statusAbilityOpen = !_statusAbilityOpen;
-        _statusAbilityFirst = 0;
-        QueueRedraw();
-        return true;
-    }
-
-    private IReadOnlyList<PortraitRegion> StatusRegions() => new[]
-    {
-        new PortraitRegion("back", PortraitLayout.OverlayBack),
-        new PortraitRegion("status_portrait", PortraitLayout.StatusPortraitCard),
-        new PortraitRegion("status_sidebar", PortraitLayout.StatusSidebar),
-        new PortraitRegion("status_vitals", PortraitLayout.StatusVitals),
-        new PortraitRegion("status_combat", PortraitLayout.StatusCombat),
-        new PortraitRegion("status_attributes", PortraitLayout.StatusAttributes),
-        new PortraitRegion("status_abilities", PortraitLayout.StatusAbilities),
-    };
 }

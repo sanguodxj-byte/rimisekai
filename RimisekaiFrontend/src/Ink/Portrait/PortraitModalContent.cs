@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
+/// <summary>
+/// 弹窗排版（2026-10-07 重设计）：整屏压暗 → 居中缺角双线框 → 标题（居中大字＋渐隐线）→ 正文 →
+/// 原生输入框（圆角框＋字数）→ 药丸钮（两钮并排，确定＝实心；多钮竖排）。
+/// 纯展示页底部一枚呼吸的实心 ▼；战后结算单独排（大字胜负 / 轮数 / 战利品菱块 / 各人经验）。
+/// </summary>
 public partial class PortraitModalLayer
 {
-    private readonly record struct ModalLine(string Label, string Value, int Size, bool Rule = false, string Icon = "");
     private Rect2 _modalPanel;
     private Rect2 _modalBody;
     private Rect2 _modalInput;
@@ -22,127 +27,157 @@ public partial class PortraitModalLayer
 
     private void DrawModalPage(InkModalPage page)
     {
-        var textWidth = PortraitLayout.ModalWidth - PortraitLayout.Pad * 2f;
-        var lines = ModalLines(page, textWidth);
-        var controls = page.Choices.Count + (page.Input == null ? 0 : 1);
-        var controlsHeight = controls * (PortraitLayout.TouchComfort + PortraitLayout.ModalGap);
-        var bodyHeight = lines.Count * PortraitLayout.ModalLineHeight;
-        _modalPanel = PortraitLayout.ModalBounds(bodyHeight, controlsHeight, page.Title.Length > 0);
-        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), new Color(InkStyle.Bg, 0.72f));
-        // 弹窗只有 800 宽：排线区铺到 300 时整块内腔都是纹理，读成方格纸。
-        // 弹窗要的是"框＋角花"，纹样留给整屏花框（TitleFrame）。
-        PortraitFrame.Panel(this, _modalPanel);
-        var top = _modalPanel.Position.Y + PortraitLayout.Pad;
+        DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), new Color(InkStyle.Bg, 0.78f));
+        if (page.Settlement is { } data)
+        {
+            DrawSettlement(page, data);
+            return;
+        }
+        var textWidth = PortraitLayout.ModalWidth - PortraitLayout.ModalPad * 2f;
+        var lines = InkDraw.WrapLines(page.Body, textWidth, PortraitLayout.FontBody).ToList();
+        if (page.Body.Length == 0)
+            lines.Clear();
+        var sideBySide = page.Choices.Count == 2;
+        var choiceRows = sideBySide ? 1 : page.Choices.Count;
+        var controls = choiceRows * (PortraitLayout.ModalButtonHeight + PortraitLayout.ModalGap)
+            + (page.Input == null ? 0f : PortraitLayout.TouchComfort + PortraitLayout.ModalGap);
+        var heading = page.Title.Length > 0 ? 170f : 0f;
+        var bodyHeight = lines.Count * PortraitLayout.ModalLineHeight + (lines.Count > 0 ? 30f : 0f);
+        var arrow = page.HasInteractiveControls ? 0f : PortraitLayout.ModalArrowBand;
+        _modalPanel = PortraitLayout.ModalBounds(PortraitLayout.ModalPad * 2f + heading + bodyHeight + controls + arrow);
+        PortraitFrame.NotchedFrame(this, _modalPanel, new Color(0.03f, 0.03f, 0.03f));
+
+        var top = _modalPanel.Position.Y + PortraitLayout.ModalPad;
         if (page.Title.Length > 0)
         {
-            var title = PortraitLayout.ModalTitle(_modalPanel);
-            InkDraw.TextBounded(this, title, page.Title, PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            PortraitFrame.FadingRule(this, title.Position.X, title.End.X, title.End.Y);
-            top += PortraitLayout.TitleBand;
+            InkDraw.TextBounded(this, new Rect2(_modalPanel.Position.X + PortraitLayout.ModalPad, top, textWidth, 80f), page.Title,
+                PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+            PortraitFrame.FadingRule(this, _modalPanel.Position.X + 160f, _modalPanel.End.X - 160f, top + 110f);
+            top += heading;
         }
-        var available = _modalPanel.End.Y - PortraitLayout.ModalArrowBand - PortraitLayout.Pad - top;
-        var shownBody = Mathf.Min(bodyHeight, Math.Max(0f, available - controlsHeight));
-        var start = top + Math.Max(0f, (available - shownBody - controlsHeight) / 2f);
-        _modalBody = new Rect2(_modalPanel.Position.X + PortraitLayout.Pad, start, textWidth, shownBody);
+        var available = _modalPanel.End.Y - PortraitLayout.ModalPad - arrow - top - controls;
+        var shownBody = Mathf.Min(bodyHeight, Mathf.Max(0f, available));
+        _modalBody = new Rect2(_modalPanel.Position.X + PortraitLayout.ModalPad, top, textWidth, shownBody);
         _modalVisible = Math.Max(0, (int)(shownBody / PortraitLayout.ModalLineHeight));
         _modalTotal = lines.Count;
         _modalFirst = Math.Clamp(_modalFirst, 0, Math.Max(0, lines.Count - _modalVisible));
         for (var i = 0; i < _modalVisible && i + _modalFirst < lines.Count; i++)
-        {
-            var line = lines[i + _modalFirst];
-            var rect = new Rect2(_modalBody.Position.X, start + i * PortraitLayout.ModalLineHeight,
-                _modalBody.Size.X, PortraitLayout.ModalLineHeight);
-            if (line.Rule)
-            {
-                PortraitFrame.FadingRule(this, rect.Position.X + 8f, rect.End.X - 8f, rect.Position.Y);
-                rect = new Rect2(rect.Position.X, rect.Position.Y + 14f, rect.Size.X, rect.Size.Y - 14f);
-            }
-            if (line.Icon.Length > 0 && InkIcon.Has(line.Icon))
-                DrawModalIcon(rect, line.Icon, line.Value, line.Size);
-            else if (line.Value.Length == 0)
-                InkDraw.TextBounded(this, rect, line.Label, line.Size, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            else
-                DrawModalValue(rect, line.Label, line.Value, line.Size);
-        }
+            InkDraw.Text(this, new Vector2(_modalBody.GetCenter().X, top + i * PortraitLayout.ModalLineHeight + PortraitLayout.ModalLineHeight / 2f),
+                lines[i + _modalFirst], PortraitLayout.FontBody, page.Choices.Count > 0 || page.Input != null ? InkStyle.Dim : InkStyle.Line, "cm");
         if (_modalTotal > _modalVisible && _modalVisible > 0)
         {
-            var track = new Rect2(_modalPanel.End.X - 36f, _modalBody.Position.Y, 12f, _modalBody.Size.Y);
-            InkDraw.InkLine(this, new Vector2(track.GetCenter().X, track.Position.Y),
-                new Vector2(track.GetCenter().X, track.End.Y), InkStyle.Dim, PortraitLayout.LineHair);
-            DrawRect(PortraitLayout.ListThumb(track, _modalTotal, _modalVisible, _modalFirst), InkStyle.Line);
+            var track = new Rect2(_modalPanel.End.X - 36f, _modalBody.Position.Y, 6f, _modalBody.Size.Y);
+            PortraitFrame.RoundRect(this, track, 3f, InkStyle.Hover);
+            var h = Mathf.Max(48f, track.Size.Y * _modalVisible / _modalTotal);
+            var y0 = track.Position.Y + (track.Size.Y - h) * _modalFirst / (_modalTotal - _modalVisible);
+            PortraitFrame.RoundRect(this, new Rect2(track.Position.X, y0, 6f, h), 3f, InkStyle.Dim);
         }
-        var y = start + shownBody;
+
+        var y = top + shownBody;
         if (page.Input != null)
         {
             _modalInput = new Rect2(_modalBody.Position.X, y, textWidth, PortraitLayout.TouchComfort);
-            PortraitFrame.Button(this, _modalInput, page.Input.Text.Length > 0 ? page.Input.Text : page.Input.Placeholder);
+            PortraitFrame.RoundRect(this, _modalInput, 22f, InkStyle.Panel, InkStyle.Line, 4f);
+            var text = page.Input.Text.Length > 0 ? page.Input.Text : page.Input.Placeholder;
+            InkDraw.TextBounded(this, new Rect2(_modalInput.Position.X + 40f, _modalInput.Position.Y, textWidth - 220f, _modalInput.Size.Y),
+                text, PortraitLayout.FontBody, PortraitLayout.FontMeta, page.Input.Text.Length > 0 ? InkStyle.Line : InkStyle.Dim, "lm");
+            InkDraw.Text(this, new Vector2(_modalInput.End.X - 40f, _modalInput.GetCenter().Y),
+                $"{page.Input.Text.Length} / {page.Input.MaxChars}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
             _hits.Add(new PortraitWidget(_modalInput, PortraitAction.ModalInput, 0, true, ""));
             y += PortraitLayout.TouchComfort + PortraitLayout.ModalGap;
         }
         for (var i = 0; i < page.Choices.Count; i++)
         {
             var choice = page.Choices[i];
-            var rect = new Rect2(_modalBody.Position.X, y, textWidth, PortraitLayout.TouchComfort);
-            PortraitFrame.Button(this, rect, choice.Label, enabled: choice.Enabled);
+            Rect2 rect;
+            if (sideBySide)
+            {
+                var w = (textWidth - PortraitLayout.ModalGap) / 2f;
+                rect = new Rect2(_modalBody.Position.X + i * (w + PortraitLayout.ModalGap), y, w, PortraitLayout.ModalButtonHeight);
+            }
+            else
+            {
+                rect = new Rect2(_modalBody.Position.X, y, textWidth, PortraitLayout.ModalButtonHeight);
+                y += PortraitLayout.ModalButtonHeight + PortraitLayout.ModalGap;
+            }
+            var primary = choice.Id == "confirm" || page.Choices.Count == 1;
+            PortraitFrame.Pill(this, rect, choice.Label, primary: primary, enabled: choice.Enabled);
             _hits.Add(new PortraitWidget(rect, PortraitAction.ModalChoice, i, choice.Enabled, choice.Id));
-            y += PortraitLayout.TouchComfort + PortraitLayout.ModalGap;
         }
+        if (!page.HasInteractiveControls)
+            DrawBreathingArrow();
+    }
+
+    private void DrawBreathingArrow()
+    {
         var alpha = 0.28f + 0.72f * (0.5f + 0.5f * Mathf.Sin(_modalTime * Mathf.Tau / 1.8f));
         DrawColoredPolygon(PortraitLayout.ModalArrow(_modalPanel), new Color(InkStyle.Line, alpha));
     }
 
-    private static List<ModalLine> ModalLines(InkModalPage page, float width)
+    private static string ItemLabel(string itemId)
     {
-        var lines = new List<ModalLine>();
-        if (page.Settlement is not { } data)
+        var thing = Rimisekai.Defs.Items.Get(itemId);
+        return thing != null && thing.Label.Length > 0 ? thing.Label : itemId;
+    }
+
+    /// <summary>战后结算：大字胜负、轮数、战利品菱块（金钱在前）、各人经验行；点任意处返回。</summary>
+    private void DrawSettlement(InkModalPage page, InkModalSettlementData data)
+    {
+        var loot = new List<(string Glyph, string Name, string Count)>();
+        if (data.Money > 0)
+            loot.Add(("金", "金钱", $"+{data.Money}G"));
+        foreach (var item in data.Items)
         {
-            foreach (var text in InkDraw.WrapLines(page.Body, width, PortraitLayout.FontBody))
-                lines.Add(new ModalLine(text, "", PortraitLayout.FontBody));
-            return lines;
+            var label = ItemLabel(item.ItemId);
+            loot.Add((label[..1], label, $"×{item.Count}"));
         }
-        lines.Add(new ModalLine($"历经 {data.Rounds} 轮战斗", "", PortraitLayout.FontBody));
+        var lootRows = (loot.Count + 3) / 4;
+        var height = 300f + (loot.Count > 0 ? 90f + lootRows * 260f : 0f) + 90f + data.Rows.Count * 150f + 220f;
+        _modalPanel = PortraitLayout.ModalBounds(height);
+        _modalBody = new Rect2();
+        _modalTotal = _modalVisible = 0;
+        PortraitFrame.NotchedFrame(this, _modalPanel, new Color(0.03f, 0.03f, 0.03f));
+        var cx = _modalPanel.GetCenter().X;
+        var y = _modalPanel.Position.Y + 120f;
+        InkDraw.TextBounded(this, new Rect2(_modalPanel.Position.X + 60f, y - 70f, _modalPanel.Size.X - 120f, 140f), page.Title,
+            PortraitLayout.FontDisplay, PortraitLayout.FontTitle, InkStyle.Line, "cm");
+        PortraitFrame.FadingRule(this, _modalPanel.Position.X + 140f, _modalPanel.End.X - 140f, y + 90f);
+        InkDraw.Text(this, new Vector2(cx, y + 150f), $"历经 {data.Rounds} 轮", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        y += 230f;
+        var left = _modalPanel.Position.X + 60f;
+        var right = _modalPanel.End.X - 60f;
+        if (loot.Count > 0)
+        {
+            PortraitFrame.SectionRule(this, left, right, y, "战利品");
+            y += 60f;
+            var cell = (right - left) / 4f;
+            for (var i = 0; i < loot.Count; i++)
+            {
+                var c = new Vector2(left + (i % 4 + 0.5f) * cell, y + i / 4 * 260f + 70f);
+                InkDraw.Jewel(this, c, 60f, InkStyle.Line);
+                InkDraw.Jewel(this, c, 55f, InkStyle.Bg);
+                InkDraw.Text(this, c, loot[i].Glyph, PortraitLayout.FontBody, InkStyle.Line, "cm");
+                InkDraw.TextBounded(this, new Rect2(c.X - cell / 2f + 8f, c.Y + 76f, cell - 16f, 52f), loot[i].Name,
+                    PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+                InkDraw.Text(this, new Vector2(c.X, c.Y + 156f), loot[i].Count, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+            }
+            y += lootRows * 260f + 30f;
+        }
+        PortraitFrame.SectionRule(this, left, right, y, "经验");
+        y += 50f;
         foreach (var row in data.Rows)
         {
-            lines.Add(new ModalLine(row.Name, $"Lv.{row.Level}", PortraitLayout.FontTitle, true));
-            lines.Add(new ModalLine("造成伤害", row.DamageDealt.ToString(), PortraitLayout.FontBody));
-            lines.Add(new ModalLine(row.WeaponName, $"Lv.{row.WeaponLevel}  +{row.WeaponExp}", PortraitLayout.FontBody,
-                Icon: row.WeaponName));
-            lines.Add(new ModalLine(row.StyleName, $"Lv.{row.StyleLevel}  +{row.StyleExp}", PortraitLayout.FontBody,
-                Icon: row.StyleName));
+            InkDraw.Text(this, new Vector2(left + 10f, y + 36f), row.Name, PortraitLayout.FontBody, InkStyle.Line, "lm");
+            InkDraw.Text(this, new Vector2(left + 30f + InkDraw.Measure(row.Name, PortraitLayout.FontBody).X, y + 38f),
+                $"Lv {row.Level}", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            InkDraw.Text(this, new Vector2(right - 10f, y + 38f), $"伤害 {row.DamageDealt}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+            InkDraw.TextBounded(this, new Rect2(left + 10f, y + 72f, right - left - 20f, 56f),
+                $"{row.WeaponName} Lv{row.WeaponLevel} +{row.WeaponExp} · {row.StyleName} Lv{row.StyleLevel} +{row.StyleExp}",
+                PortraitLayout.FontMeta, 36, InkStyle.Line, "lm");
+            y += 150f;
         }
-        if (data.Money > 0 || data.Items.Count > 0)
-            lines.Add(new ModalLine("缴获战利品", "", PortraitLayout.FontBody, true));
-        if (data.Money > 0)
-            lines.Add(new ModalLine("金钱", $"+{data.Money}G", PortraitLayout.FontBody));
-        foreach (var item in data.Items)
-            lines.Add(new ModalLine(item.ItemId, $"×{item.Count}", PortraitLayout.FontBody, Icon: item.ItemId));
-        return lines;
-    }
-
-    /// <summary>带图标的一行：实心图标替代名称文字，与数值组成一组在行内居中；图标缺失时回退文字。</summary>
-    private void DrawModalIcon(Rect2 rect, string icon, string value, int size)
-    {
-        const float iconSize = 56f;
-        const float gap = 20f;
-        var valueSize = InkDraw.FitSize(value, rect.Size.X * 0.6f, size, PortraitLayout.FontMeta);
-        var valueWidth = InkDraw.Measure(value, valueSize).X;
-        var total = iconSize + gap + valueWidth;
-        var x0 = rect.GetCenter().X - total / 2f;
-        var cy = rect.GetCenter().Y;
-        InkIcon.Draw(this, icon, new Rect2(x0, cy - iconSize / 2f, iconSize, iconSize));
-        InkDraw.Text(this, new Vector2(x0 + iconSize + gap + valueWidth, cy), value, valueSize, InkStyle.Line, "rm");
-    }
-
-    private void DrawModalValue(Rect2 rect, string label, string value, int size)
-    {
-        var labelSize = PortraitLayout.FontMeta;
-        var valueSize = InkDraw.FitSize(value, rect.Size.X * 0.55f, size, PortraitLayout.FontMeta);
-        var labelWidth = InkDraw.Measure(label, labelSize).X;
-        var valueWidth = InkDraw.Measure(value, valueSize).X;
-        var x = rect.GetCenter().X - (labelWidth + PortraitLayout.ModalGap + valueWidth) / 2f;
-        InkDraw.Text(this, new Vector2(x, rect.GetCenter().Y), label, labelSize, InkStyle.Dim, "lm");
-        InkDraw.Text(this, new Vector2(x + labelWidth + PortraitLayout.ModalGap, rect.GetCenter().Y),
-            value, valueSize, InkStyle.Line, "lm");
+        var go = new Rect2(_modalPanel.Position.X + 80f, _modalPanel.End.Y - 70f - 128f, _modalPanel.Size.X - 160f, 128f);
+        PortraitFrame.Pill(this, go, "返回领地", primary: true);
     }
 
     private bool HandleModalScroll(InputEvent input)
