@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Rimisekai.Defs;
 using Rimisekai.Housing;
+using Rimisekai.Hub;
 
 namespace Rimisekai.Ink;
 
@@ -14,8 +17,8 @@ public static class InkPageBuilder
     {
         InkPage.Stock => Stock(vm, q),
         InkPage.Trade => Trade(vm, q),
-        InkPage.Craft => Craft(vm, q),
         InkPage.Develop => Develop(vm, q),
+        InkPage.CombatLog => CombatLog(vm, q),
         _ => new InkPageModel { Page = InkPage.None, Title = "" },
     };
 
@@ -35,10 +38,10 @@ public static class InkPageBuilder
     private static bool Matches(string name, string search) =>
         search.Length == 0 || name.Contains(search, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>库存：背包物品；搜索按名称，筛选"有报价"，按名称/数量排序。</summary>
+    /// <summary>库存：背包物品；搜索按名称，筛选"可交易"，按名称/数量排序。</summary>
     private static InkPageModel Stock(InkViewModel vm, in InkPageQuery q)
     {
-        var filters = new[] { "全部", "有报价" };
+        var filters = new[] { "全部", "可交易" };
         var sorts = new[] { "名称", "数量" };
         var filter = System.Math.Clamp(q.Filter, 0, filters.Length - 1);
         var sort = System.Math.Clamp(q.Sort, 0, sorts.Length - 1);
@@ -52,7 +55,7 @@ public static class InkPageBuilder
             var name = ItemName(vm, pair.Key);
             if (!Matches(name, search))
                 continue;
-            if (filter == 1 && !HasOffer(vm, pair.Key))
+            if (filter == 1 && vm.Hub.State.Territory.Listing(pair.Key) == null)
                 continue;
             candidates.Add((new InkPageRow { Name = name, Value = $"×{pair.Value}" }, pair.Key, pair.Value));
         }
@@ -69,10 +72,54 @@ public static class InkPageBuilder
         var sel = ClampSel(q.Selected, candidates.Count);
         var title = "";
         var note = "";
-        if (sel >= 0)
+        if (sel >= 0 && sel < candidates.Count)
         {
+            var itemId = candidates[sel].Id;
+            var count = candidates[sel].Count;
             title = candidates[sel].Row.Name;
-            note = $"持有 ×{candidates[sel].Count}\n{MarketNote(vm, candidates[sel].Id)}";
+
+            var thing = Defs.Items.Get(itemId);
+            var weapon = vm.Hub.State.Territory.Weapons.Get(itemId);
+
+            var lines = new List<string>();
+            lines.Add($"×{count}");
+
+            var catName = "";
+            if (thing != null && !string.IsNullOrEmpty(thing.Category))
+            {
+                var cat = DefDatabase<ThingCategoryDef>.Get(thing.Category);
+                catName = cat != null && cat.Label.Length > 0 ? cat.Label : thing.Category;
+            }
+            else if (weapon != null)
+                catName = $"武器·{InkText.Weapon(weapon.Type)}";
+
+            if (!string.IsNullOrEmpty(catName))
+                lines.Add(catName);
+
+            if (thing != null && thing.MarketValue > 0)
+                lines.Add($"{thing.MarketValue}G");
+            else if (weapon != null && weapon.Value > 0)
+                lines.Add($"{weapon.Value}G");
+
+            if (thing != null && thing.IsFood)
+            {
+                lines.Add(InkText.FoodTier(thing.FoodTier));
+                lines.Add($"营养+{thing.Nutrition}　心情{thing.MoodBonus:+0;-0}");
+            }
+            if (weapon != null)
+            {
+                lines.Add(Defs.QualityOf.Label(weapon.Quality));
+                if (weapon.Material != null)
+                    lines.Add(weapon.Material.Label.Length > 0 ? weapon.Material.Label : weapon.Material.DefName);
+            }
+
+            if (thing != null && !string.IsNullOrEmpty(thing.Description))
+            {
+                lines.Add("");
+                lines.Add(thing.Description);
+            }
+
+            note = string.Join("\n", lines);
         }
 
         return new InkPageModel
@@ -96,102 +143,94 @@ public static class InkPageBuilder
         };
     }
 
-    /// <summary>市场对某物品的报价说明；没有登记时如实说明。</summary>
-    private static string MarketNote(InkViewModel vm, string itemId)
-    {
-        foreach (var offer in vm.Hub.State.Territory.Market)
-        {
-            if (offer.ItemId == itemId)
-                return $"市场报价：买 ${offer.BuyPrice} / 卖 ${offer.SellPrice}";
-        }
-        return "市场暂无报价。";
-    }
+    /// <summary>交易页不做自动选中：没点过就是没选中（与列表页取第一行不同）。</summary>
+    private static int Pick(int selected, int count) =>
+        selected < 0 || selected >= count ? -1 : selected;
 
-    /// <summary>交易：市场报价；搜索按名称，筛选"买得起/可卖出"，按名称/买价排序。</summary>
+    /// <summary>
+    /// 交易：三面板——左栏领地库存（玩家持有、市场肯收的），
+    /// 右栏市场库存（今日有货、市场肯卖的）。没有报价单：
+    /// 价格只由基准价 × 当日系数决定，卖出再打商人抽成，与成交结算同一口径。
+    /// 房间不是货，两栏都不会出现。
+    /// </summary>
     private static InkPageModel Trade(InkViewModel vm, in InkPageQuery q)
     {
-        var money = vm.Hub.State.Money;
-        var offers = new List<MarketOffer>(vm.Hub.State.Territory.Market);
+        var hub = vm.Hub;
+        var territory = hub.State.Territory;
 
-        var filters = new[] { "全部", "买得起", "可卖出" };
-        var sorts = new[] { "名称", "买价" };
-        var filter = System.Math.Clamp(q.Filter, 0, filters.Length - 1);
-        var sort = System.Math.Clamp(q.Sort, 0, sorts.Length - 1);
-        var search = q.Search.Trim();
-
-        var candidates = new List<(InkPageRow Row, MarketOffer Offer)>();
-        foreach (var offer in offers)
+        // 左栏：领地库存——只列玩家背包里的东西（含买回来的武器实例）。
+        // 据点里的设施一律不上交易页：它们归开发页管（建/拆/摆放），不是货。
+        var held = new List<InkTradeRow>();
+        foreach (var pair in hub.Stock())
         {
-            var name = ItemName(vm, offer.ItemId);
-            if (!Matches(name, search))
+            if (pair.Value <= 0)
                 continue;
-            var held = vm.Hub.State.Roster.Master?.Bag.Get(offer.ItemId) ?? 0;
-            if (filter == 1 && money < offer.BuyPrice)
+            var listing = territory.Listing(pair.Key);
+            if (listing == null)
                 continue;
-            if (filter == 2 && held <= 0)
+            var row = listing.Value;
+            var sell = hub.TradePrices(row, selling: true);
+            if (sell <= 0)
                 continue;
-            candidates.Add((new InkPageRow
-            {
-                Name = name,
-                Value = $"持有 {held}",
-                Note = $"买 ${offer.BuyPrice} / 卖 ${offer.SellPrice}",
-            }, offer));
+            held.Add(new InkTradeRow(row.ItemId, ItemName(vm, row.ItemId),
+                $"{pair.Value}", sell));
         }
-        candidates.Sort((a, b) => sort == 1
-            ? a.Offer.BuyPrice.CompareTo(b.Offer.BuyPrice)
-            : string.CompareOrdinal(a.Row.Name, b.Row.Name));
-        if (q.SortDesc)
-            candidates.Reverse();
+        held.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
 
-        var rows = new List<InkPageRow>();
-        foreach (var c in candidates)
-            rows.Add(c.Row);
-
-        var sel = ClampSel(q.Selected, candidates.Count);
-        var title = "";
-        var note = "";
-        var actions = new List<InkPageRow>();
-        if (sel >= 0)
+        // 右栏：市场库存——只列今日有货的。无货即不在架上，从左栏照样卖得掉。
+        var market = new List<InkTradeRow>();
+        foreach (var row in territory.Listings())
         {
-            var offer = candidates[sel].Offer;
-            var held = vm.Hub.State.Roster.Master?.Bag.Get(offer.ItemId) ?? 0;
-            title = ItemName(vm, offer.ItemId);
-            note = $"买入 ${offer.BuyPrice}\n卖出 ${offer.SellPrice}\n持有 {held}";
-            actions.Add(new InkPageRow
-            {
-                Name = "买入一份",
-                Action = InkPageAction.Buy,
-                TargetId = offer.ItemId,
-                Enabled = money >= offer.BuyPrice,
-            });
-            actions.Add(new InkPageRow
-            {
-                Name = "卖出一份",
-                Action = InkPageAction.Sell,
-                TargetId = offer.ItemId,
-                Enabled = held > 0,
-            });
+            if (row.Stock <= 0)
+                continue;
+            var buy = hub.TradePrices(row, selling: false);
+            if (buy <= 0)
+                continue;
+            market.Add(new InkTradeRow(row.ItemId, ItemName(vm, row.ItemId), "", buy));
+        }
+        market.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+
+        var selHeld = Pick(q.SelectedHeld, held.Count);
+        var selMarket = Pick(q.SelectedMarket, market.Count);
+
+        var sellName = "";
+        var sellPrice = 0L;
+        if (selHeld >= 0 && selHeld < held.Count)
+        {
+            sellName = held[selHeld].Name;
+            sellPrice = held[selHeld].Price;
+        }
+
+        var buyName = "";
+        var buyPrice = 0L;
+        if (selMarket >= 0 && selMarket < market.Count)
+        {
+            buyName = market[selMarket].Name;
+            buyPrice = market[selMarket].Price;
         }
 
         return new InkPageModel
         {
             Page = InkPage.Trade,
             Title = "交易",
-            Rows = rows,
-            SelectedRow = sel,
-            ListFirst = ClampFirst(q.PageFirst, candidates.Count),
-            DetailTitle = title,
-            DetailNote = note,
-            DetailActions = actions,
-            Search = q.Search,
-            SearchFocused = q.SearchFocused,
-            Filters = filters,
-            ActiveFilter = filter,
-            Sorts = sorts,
-            ActiveSort = sort,
-            ActiveSortDesc = q.SortDesc,
-            HasControls = true,
-            EmptyHint = search.Length > 0 || filter > 0 ? "没有匹配的报价。" : "这里没有可交易的东西。",
+            Trade = new InkTradeModel
+            {
+                Money = hub.State.Money,
+                Held = held,
+                Market = market,
+                SelectedHeld = selHeld,
+                SelectedMarket = selMarket,
+                HeldFirst = System.Math.Clamp(q.HeldFirst, 0,
+                    System.Math.Max(0, held.Count - InkLayout.TradeVisibleRows(InkLayout.TradePlayerPanel))),
+                MarketFirst = System.Math.Clamp(q.MarketFirst, 0,
+                    System.Math.Max(0, market.Count - InkLayout.TradeVisibleRows(InkLayout.TradeMarketPanel))),
+                TradeAvailable = hub.TradeAvailable,
+                SellName = sellName,
+                SellPrice = sellPrice,
+                BuyName = buyName,
+                BuyPrice = buyPrice,
+                Notice = q.Notice,
+            },
         };
     }
 
@@ -219,11 +258,12 @@ public static class InkPageBuilder
                 continue;
             if (filter == 2 && canPay)
                 continue;
+            var costNote = CostText(vm, recipe);
             candidates.Add((new InkPageRow
             {
                 Name = name,
                 Value = $"×{recipe.OutputCount}",
-                Note = CostText(vm, recipe),
+                Note = costNote,
             }, recipe));
         }
         candidates.Sort((a, b) => sort == 1
@@ -240,16 +280,38 @@ public static class InkPageBuilder
         var title = "";
         var note = "";
         var actions = new List<InkPageRow>();
-        if (sel >= 0)
+        if (sel >= 0 && sel < candidates.Count)
         {
             var recipe = candidates[sel].Recipe;
             title = $"{ItemName(vm, recipe.ItemId)} ×{recipe.OutputCount}";
-            var lines = new List<string> { "所需材料：" };
+            var lines = new List<string>();
+
+            var productThing = Defs.Items.Get(recipe.ItemId);
+            if (productThing != null && !string.IsNullOrEmpty(productThing.Category))
+            {
+                var cat = DefDatabase<ThingCategoryDef>.Get(productThing.Category);
+                var catName = cat != null && cat.Label.Length > 0 ? cat.Label : productThing.Category;
+                lines.Add(catName);
+            }
+            lines.Add(InkText.LifeSkill(recipe.Skill));
+            lines.Add(InkText.ActionKind(recipe.Station));
+
+            if (productThing != null && !string.IsNullOrEmpty(productThing.Description))
+            {
+                lines.Add("");
+                lines.Add(productThing.Description);
+            }
+
+            lines.Add("");
+            lines.Add("所需材料");
             if (recipe.Costs.Count == 0)
                 lines.Add("　无需材料");
             foreach (var cost in recipe.Costs)
-                lines.Add($"　{ItemName(vm, cost.ItemId)}×{cost.Count}（持有 {territory.CountWith(master, cost.ItemId)}）");
-            note = string.Join("\n", lines);
+            {
+                lines.Add($"　◇ {ItemName(vm, cost.ItemId)} ×{cost.Count}");
+            }
+            note = string.Join(Environment.NewLine, lines);
+
             actions.Add(new InkPageRow
             {
                 Name = "制作一份",
@@ -282,31 +344,35 @@ public static class InkPageBuilder
     }
 
     /// <summary>
-    /// 开发：对领地的编辑，全屏四区域。
-    /// 左上：房间网格（已放置房间按坐标；非空房间右上白 X 拆除房间）；
-    /// 右上：设施列表（全部设施实例，含未放置；底部为可建造设施目录，点击即建造）；
-    /// 左下：房间列表（含未放置房间）；右下：共用详情——点哪个显示哪个。
-    /// 开拓只在据点地图上进行。
+    /// 开发：对领地的编辑，全屏五区域（2026-10-01 主人定）。
+    /// 左上：领地网格——已开发房间按坐标落位；**挨着已开发地方的未开发房间**也画出来，
+    ///       点它弹确认窗（花材料和钱开拓成一间空房）；非空房间右上白 X 拆房间。
+    /// 右上：**只列当前选中房间的设施**。
+    /// 左下：**只列已建但还没安装的房间**（选中后点网格空格放上去）。
+    /// 中下：操作面板——建造设施／建造房间／拆除／安置／退出，所有操作按钮都在这里。
+    /// 右下：详情，只有文字，不画内部边框。
     /// </summary>
-    private static InkPageModel Develop(InkViewModel vm, in InkPageQuery q)
+    private static InkPageModel Develop(InkViewModel vm, InkPageQuery q)
     {
         var territory = vm.Hub.State.Territory;
+        var map = vm.Rooms();
         var openRooms = new List<Room>();
         var unplacedRooms = new List<Room>();
-        foreach (var room in vm.Rooms())
+        foreach (var room in map)
         {
             if (room.X < 0 || room.Y < 0)
                 unplacedRooms.Add(room);
             else if (room.Open)
                 openRooms.Add(room);
         }
-        var sel = ClampSel(q.Selected, openRooms.Count);
 
-        // 左上房间格：已放置的房间按坐标落位。
+        // 左上：已开发房间先落位；再把「挨着已开发地方的未开发房间」补成可点的虚线格。
         var cells = new List<InkDevRoomCell>();
-        for (var i = 0; i < openRooms.Count; i++)
+        var placed = new HashSet<(int, int)>();
+        foreach (var room in openRooms)
         {
-            var room = openRooms[i];
+            if (!placed.Add((room.X, room.Y)))
+                continue;
             var facs = territory.Facilities.FindAll(f => f.RoomId == room.Id);
             cells.Add(new InkDevRoomCell
             {
@@ -314,101 +380,196 @@ public static class InkPageBuilder
                 X = room.X,
                 Y = room.Y,
                 Name = room.Name,
+                Open = true,
+                Vacant = room.Vacant,
                 NonEmpty = facs.Count > 0,
                 Removable = vm.Hub.PlayerRoomId != room.Id,
-                Selected = i == sel,
             });
         }
-
-        // 右上：设施列表——已放置的标所在房间，未放置的标“未放置”。
-        var facilityRows = new List<InkDevRow>();
-        foreach (var f in territory.Facilities)
+        foreach (var room in map)
         {
-            facilityRows.Add(new InkDevRow
+            if (room.Open || room.X < 0 || room.Y < 0)
+                continue;
+            if (!placed.Add((room.X, room.Y)) || !territory.NearOpenRoom(room))
+                continue;
+            cells.Add(new InkDevRoomCell
             {
-                Kind = f.RoomId >= 0 ? InkDevRowKind.Facility : InkDevRowKind.FacilityUnplaced,
-                Id = f.Id,
-                Name = f.Name,
-                Note = f.RoomId >= 0 ? RoomName(vm, f.RoomId) : "未放置",
+                Id = room.Id,
+                X = room.X,
+                Y = room.Y,
+                Name = room.Name,
+                Open = false,
+                CanDevelop = vm.Hub.CanDevelopEmptyRoom(room.Id),
+                CostText = DevelopCostText(vm, room),
             });
         }
-        var facSel = ClampSel(q.SelectedFacility, facilityRows.Count);
+        // 再补「空格子」——还没有房间实体、但挨着已开发地方的那几格。
+        // 开拓它们会现场生成一间「空房」。这才是「未开拓」的主体：
+        // 起始区域 5×5 里只有 5 间房，剩下 20 格全是这种空格子。
+        for (var gx = 0; gx < InkLayout.GridCols; gx++)
+        {
+            for (var gy = 0; gy < InkLayout.GridRows; gy++)
+            {
+                if (placed.Contains((gx, gy)) || !territory.NearOpenAt(vm.Hub.RegionId, gx, gy))
+                    continue;
+                placed.Add((gx, gy));
+                cells.Add(new InkDevRoomCell
+                {
+                    Id = -1,
+                    X = gx,
+                    Y = gy,
+                    Name = "空地",
+                    Open = false,
+                    CanDevelop = vm.Hub.CanDevelopVacantCell(vm.Hub.RegionId, gx, gy),
+                    CostText = VacantCostText(vm),
+                });
+            }
+        }
+        var cellSel = ClampSel(q.Selected, cells.Count);
+        for (var i = 0; i < cells.Count; i++)
+            cells[i] = cells[i] with { Selected = i == cellSel };
+
+        var picked = cellSel >= 0 ? cells[cellSel] : null;
+        var pickedRoom = picked is { Open: true }
+            ? openRooms.Find(r => r.Id == picked.Id)
+            : null;
+
+        // 右上：**只列当前选中房间的设施**（没选房间就空着）。
+        var facilityRows = new List<InkDevRow>();
+        if (pickedRoom != null)
+        {
+            foreach (var f in territory.Facilities)
+            {
+                if (f.RoomId != pickedRoom.Id)
+                    continue;
+                facilityRows.Add(new InkDevRow
+                {
+                    Kind = InkDevRowKind.Facility,
+                    Id = f.Id,
+                    Name = f.Name,
+                });
+            }
+        }
+        var facSel = facilityRows.FindIndex(r => r.Id == q.SelectedFacility);
         for (var i = 0; i < facilityRows.Count; i++)
             facilityRows[i] = facilityRows[i] with { Selected = i == facSel };
 
-        // 左下：房间行——已开拓在前，未开拓（建好未放置）在后。
+        // 左下：**只列已建但还没安装的房间**。
         var roomRows = new List<InkDevRow>();
-        foreach (var room in openRooms)
-            roomRows.Add(new InkDevRow { Kind = InkDevRowKind.Room, Id = room.Id, Name = room.Name });
         foreach (var room in unplacedRooms)
-            roomRows.Add(new InkDevRow { Kind = InkDevRowKind.RoomUnplaced, Id = room.Id, Name = room.Name });
-        var roomSel = ClampSel(q.Selected, roomRows.Count);
+            roomRows.Add(new InkDevRow
+            {
+                Kind = InkDevRowKind.RoomUnplaced, Id = room.Id, Name = room.Name,
+            });
+        var roomSel = ClampSel(q.SelectedRoom, roomRows.Count);
         for (var i = 0; i < roomRows.Count; i++)
             roomRows[i] = roomRows[i] with { Selected = i == roomSel };
+        var pickedUnplaced = roomSel >= 0 ? roomRows[roomSel] : null;
 
-        // 右上底部：可建造设施目录（点击行即花材料建造，建成后进入未放置）。
-        var facilityCatalog = new List<InkPageRow>();
-        foreach (var def in vm.Hub.State.Catalog.Facilities.Values)
+        // 中下：操作面板——所有操作按钮都归拢到这一列里。
+        // 每行自己带 InkAction 与分派下标，界面侧照抄注册（见 InkHubModel.BuildDevPage）。
+        // 排序按「先拆后建」：拆（上下文）→ 建房间 → 建设施 → 安置。
+        // 建房间放在建设施前面，是因为没选房间时建设施整组是暗的，
+        // 首屏若被暗行占满，就找不到能点的东西了。
+        var actions = new List<InkDevActionRow>();
+        var payer = vm.Hub.State.Roster.Master;
+
+        if (pickedRoom != null && vm.Hub.PlayerRoomId != pickedRoom.Id)
+        {
+            actions.Add(new InkDevActionRow
+            {
+                Name = "拆除本房间", Prefix = "拆",
+                Action = InkAction.DevDemolishRoom, Index = pickedRoom.Id,
+            });
+        }
+        if (pickedRoom != null && facSel >= 0)
+        {
+            actions.Add(new InkDevActionRow
+            {
+                Name = facilityRows[facSel].Name, Prefix = "拆",
+                Action = InkAction.DevRemoveFacility, Index = facilityRows[facSel].Id,
+                Selected = true,
+            });
+        }
+        // 建造房间：花材料建出来，进左下「待安装的房间」。
+        foreach (var def in DefDatabase<RoomDef>.All)
         {
             if (!def.Buildable)
                 continue;
-            facilityCatalog.Add(new InkPageRow
+            actions.Add(new InkDevActionRow
             {
-                Name = def.Name,
-                Note = MaterialsText(vm, def.MaterialCost),
-                Action = InkPageAction.BuildDef,
-                TargetNumber = def.Id,
-                Enabled = territory.CanPayWith(vm.Hub.State.Roster.Master, def.MaterialCost),
+                Name = def.Name, Prefix = "房",
+                Action = InkAction.DevBuildRoom, Index = def.Id,
+                Enabled = territory.CanPayWith(payer, def.MaterialCost),
             });
         }
-
-        // 左下底部：可建造房间目录（点击行即花材料建造，建成后未放置）。
-        var roomCatalog = new List<InkPageRow>();
-        foreach (var def in vm.Hub.State.Catalog.Rooms.Values)
+        // 建造设施：直接建进当前选中的房间（没选房间就点不动）。
+        foreach (var def in DefDatabase<FacilityDef>.All)
         {
             if (!def.Buildable)
                 continue;
-            roomCatalog.Add(new InkPageRow
+            actions.Add(new InkDevActionRow
             {
-                Name = def.Name,
-                Note = MaterialsText(vm, def.MaterialCost),
-                Action = InkPageAction.BuildRoom,
-                TargetNumber = def.Id,
-                Enabled = territory.CanPayWith(vm.Hub.State.Roster.Master, def.MaterialCost),
+                Name = def.Name, Prefix = "设",
+                Action = InkAction.DevBuildFacility, Index = def.Id,
+                Enabled = pickedRoom != null && territory.CanPayWith(payer, def.MaterialCost),
+            });
+        }
+        // 建成却还没安装的设施（老存档可能留下）：选中房间后可以直接安置。
+        foreach (var f in territory.Facilities)
+        {
+            if (f.RoomId >= 0)
+                continue;
+            actions.Add(new InkDevActionRow
+            {
+                Name = f.Name, Prefix = "安",
+                Action = InkAction.DevPlaceFacility, Index = f.Id,
+                Enabled = pickedRoom != null,
             });
         }
 
-        // 右上：共用详情——选中设施时显示设施详情（拆除/放置按钮），
-        // 否则显示选中房间的说明。
-        var detailTitle = "";
-        var detailNote = "";
-        var detailActions = new List<InkPageRow>();
-        if (facSel >= 0 && facilityRows.Count > 0)
+        // 右下：详情——纯文字，不画任何内部边框，也不放按钮（按钮全在中下）。
+        var detailTitle = "详情";
+        var detailNote = "点左上网格里的房间，或右上设施列表里的一件设施。";
+        if (pickedRoom != null)
         {
-            var row = facilityRows[facSel];
-            detailTitle = row.Name;
-            if (row.Kind == InkDevRowKind.Facility)
+            var count = territory.Facilities.FindAll(f => f.RoomId == pickedRoom.Id).Count;
+            detailTitle = "";
+            detailNote = $"已开发。\n房内设施 {count} 件。";
+            if (vm.Hub.PlayerRoomId == pickedRoom.Id)
+                detailNote += "\n你正待在这儿，拆不得。";
+        }
+        else if (picked is { CanDevelop: true })
+        {
+            detailTitle = picked.Name;
+            detailNote = $"未开发，挨着已开发的地方。\n开拓花费{picked.CostText}\n开拓后是一间空房。";
+        }
+        else if (pickedUnplaced != null)
+        {
+            detailTitle = pickedUnplaced.Name;
+            detailNote = "已建好，还没安装。\n在上面网格里点一间空房把它装进去。";
+        }
+        if (facSel >= 0)
+        {
+            detailTitle = facilityRows[facSel].Name;
+            detailNote = $"在{pickedRoom?.Name ?? "屋里"}。\n拆除返还 60% 材料。\n拆除按钮在中下操作面板。";
+        }
+
+        // 开拓确认弹窗：点了邻近的未开发格（含空格子）才开。
+        // 目标用「格子线性下标」记——空格子没有房间 Id，用坐标最稳。
+        var confirmCell = -1;
+        var confirmTitle = "";
+        var confirmBody = "";
+        if (q.ConfirmCell >= 0)
+        {
+            var cx = q.ConfirmCell % InkLayout.GridCols;
+            var cy = q.ConfirmCell / InkLayout.GridCols;
+            var target = cells.Find(c => c.X == cx && c.Y == cy);
+            if (target is { CanDevelop: true })
             {
-                var roomName = RoomName(vm, GetFacilityRoom(vm, row.Id));
-                detailNote = $"已放置在{roomName}。\n拆除返还 60% 材料。";
-                detailActions.Add(new InkPageRow
-                {
-                    Name = $"拆除{row.Name}",
-                    Action = InkPageAction.RemoveFacility,
-                    TargetNumber = row.Id,
-                    Note = row.Name,
-                });
-            }
-            else
-            {
-                detailNote = "未放置。\n点击下方按钮放进选中的房间。";
-                detailActions.Add(new InkPageRow
-                {
-                    Name = $"放置{row.Name}",
-                    Action = InkPageAction.PlaceFacility,
-                    TargetNumber = row.Id,
-                    Note = row.Name,
-                });
+                confirmCell = q.ConfirmCell;
+                confirmTitle = $"开拓 · {target.Name}";
+                confirmBody = $"是否消耗材料和钱，把这里开发成一间空房间？\n\n{target.CostText}";
             }
         }
 
@@ -419,35 +580,51 @@ public static class InkPageBuilder
             Dev = new InkDevModel
             {
                 Rooms = cells,
-                RoomId = roomSel >= 0 ? roomRows[roomSel].Id : -1,
+                SelectedCell = cellSel,
+                RegionId = vm.Hub.RegionId,
+                UnlockedRegionMask = territory.UnlockedRegionMask,
+                RoomId = pickedRoom?.Id ?? -1,
+                FacilityTitle = pickedRoom != null ? $"{pickedRoom.Name} · 设施" : "设施",
                 FacilityRows = facilityRows,
-                SelectedFacility = facSel,
-                FacilityCatalog = facilityCatalog,
+                SelectedFacility = facSel >= 0 ? facilityRows[facSel].Id : -1,
                 RoomRows = roomRows,
-                SelectedRoom = roomSel,
-                RoomCatalog = roomCatalog,
+                SelectedRoomRow = roomSel,
+                ActionRows = actions,
+                ActionFirst = q.ActionFirst,
                 DetailTitle = detailTitle,
                 DetailNote = detailNote,
-                DetailActions = detailActions,
-                PlacingFacility = q.PlacingFacility,
+                ConfirmCell = confirmCell,
+                ConfirmTitle = confirmTitle,
+                ConfirmBody = confirmBody,
                 PlacingRoom = q.PlacingRoom,
             },
             EmptyHint = "当前区域没有房间。",
         };
     }
 
-    /// <summary>按设施 Id 找它所在的房间 Id。</summary>
-    private static int GetFacilityRoom(InkViewModel vm, int facilityId)
+    /// <summary>开拓一间未开发房间的花费文本：材料 ＋ 钱（都没有时给个「无花费」）。</summary>
+    private static string DevelopCostText(InkViewModel vm, Room room)
     {
-        var f = vm.Hub.State.Territory.Facilities.Find(x => x.Id == facilityId);
-        return f?.RoomId ?? -1;
+        var parts = new List<string>();
+        if (room.MaterialCost.Count > 0)
+            parts.Add($"材料 {MaterialsText(vm, room.MaterialCost)}");
+        if (room.OpenCost > 0)
+            parts.Add($"钱 {room.OpenCost}");
+        return parts.Count > 0 ? string.Join("　", parts) : "无花费";
     }
 
-    /// <summary>按房间 Id 找房间名。</summary>
-    private static string RoomName(InkViewModel vm, int roomId)
+    /// <summary>
+    /// 开拓一格「空地」（空格子）的花费文本。定价随已开发房间数递增——越开越贵，
+    /// 数值取自 <see cref="HubSession.VacantCostMoney"/> / <see cref="HubSession.VacantCostMaterial"/>。
+    /// </summary>
+    private static string VacantCostText(InkViewModel vm)
     {
-        var room = vm.Hub.State.Territory.Rooms.Find(r => r.Id == roomId);
-        return room?.Name ?? "未知房间";
+        var parts = new List<string>
+        {
+            $"材料 {MaterialsText(vm, vm.Hub.VacantCostMaterial())}",
+            $"钱 {vm.Hub.VacantCostMoney}",
+        };
+        return string.Join("　", parts);
     }
 
     /// <summary>材料清单文本：物品名×数量，空格分隔。</summary>
@@ -463,20 +640,14 @@ public static class InkPageBuilder
     }
 
     /// <summary>物品显示名。目录里没有登记时退回 Id，避免显示空白。</summary>
-    private static string ItemName(InkViewModel vm, string itemId) =>
-        vm.Hub.State.Catalog.Items.TryGetValue(itemId, out var def) && def.Name.Length > 0
-            ? def.Name
-            : itemId;
-
-    /// <summary>市场是否登记了某物品的报价。</summary>
-    private static bool HasOffer(InkViewModel vm, string itemId)
+    private static string ItemName(InkViewModel vm, string itemId)
     {
-        foreach (var offer in vm.Hub.State.Territory.Market)
-        {
-            if (offer.ItemId == itemId)
-                return true;
-        }
-        return false;
+        var info = Rimisekai.Defs.Items.Info(vm.Hub.State.Territory.Weapons, itemId);
+        if (info != null && info.Value.Label.Length > 0)
+            return info.Value.Label;
+        var facility = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.FacilityDef>.All
+            .FirstOrDefault(f => f.DefName.Equals(itemId, StringComparison.OrdinalIgnoreCase));
+        return facility != null && facility.Label.Length > 0 ? facility.Label : itemId;
     }
 
     private static string CostText(InkViewModel vm, Recipe recipe)
@@ -487,5 +658,37 @@ public static class InkPageBuilder
         foreach (var cost in recipe.Costs)
             parts.Add($"{ItemName(vm, cost.ItemId)}×{cost.Count}");
         return string.Join("　", parts);
+    }
+
+    /// <summary>战斗日志页：展示本场战斗的完整战况流水清单。</summary>
+    private static InkPageModel CombatLog(InkViewModel vm, in InkPageQuery q)
+    {
+        var battle = vm.Combat?.Battle;
+        var lines = battle != null ? InkCombatRenderer.FormatBattleEvents(battle) : new List<string>();
+
+        var rows = new List<InkPageRow>(lines.Count);
+        for (var i = 0; i < lines.Count; i++)
+        {
+            rows.Add(new InkPageRow
+            {
+                Name = lines[i],
+            });
+        }
+
+        var sel = ClampSel(q.Selected, rows.Count);
+        var detail = sel >= 0 && sel < lines.Count ? lines[sel] : "";
+
+        return new InkPageModel
+        {
+            Page = InkPage.CombatLog,
+            Title = "战斗日志",
+            Rows = rows,
+            SelectedRow = sel,
+            ListFirst = ClampFirst(q.PageFirst, rows.Count),
+            DetailTitle = "战况详情",
+            DetailNote = detail,
+            HasControls = false,
+            EmptyHint = "暂无战斗记录。",
+        };
     }
 }

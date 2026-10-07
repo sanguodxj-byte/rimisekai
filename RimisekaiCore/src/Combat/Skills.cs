@@ -6,33 +6,19 @@ using Rimisekai.Character;
 namespace Rimisekai.Combat;
 
 /// <summary>
-/// 内置两式：普通攻击与防御架势。目录里有同 Id 定义时以目录为准，
-/// 这里只是空目录时的兜底，保证任何一场战斗都打得起来。
+/// 基础两式：普通攻击与防御架势的常量标识与查询门面。
+/// 技能数据严格由 content/defs/skills.json 驱动。
 /// </summary>
 public static class BattleSkills
 {
     public const string AttackId = "attack";
     public const string GuardId = "guard";
 
-    public static SkillDef Attack { get; } = new()
-    {
-        Id = AttackId,
-        Name = "Attack",
-        Kind = SkillKind.Strike,
-        Target = SkillTarget.Enemy,
-        Power = 100,
-    };
+    public static SkillDef Attack => SkillTable.Get(AttackId)
+        ?? throw new KeyNotFoundException($"未在 skills.json 中找到基础技能 {AttackId}");
 
-    public static SkillDef Guard { get; } = new()
-    {
-        Id = GuardId,
-        Name = "Guard",
-        Kind = SkillKind.Buff,
-        Target = SkillTarget.Self,
-        Stat = StatusStat.Defence,
-        StatusPercent = BattleRules.GuardPercent,
-        StatusRounds = 1,
-    };
+    public static SkillDef Guard => SkillTable.Get(GuardId)
+        ?? throw new KeyNotFoundException($"未在 skills.json 中找到基础技能 {GuardId}");
 }
 
 /// <summary>一场战斗的结算单：结果、回合数、本方各人的收益。</summary>
@@ -52,6 +38,11 @@ public sealed class BattleResult
         public int WeaponExp { get; init; }
         public int StyleExp { get; init; }
         public int Mood { get; init; }
+        public int Level { get; init; } = 1;
+        public WeaponType Weapon { get; init; } = WeaponType.Sword;
+        public int WeaponLevel { get; init; } = 1;
+        public StyleType Style { get; init; } = StyleType.OneHand;
+        public int StyleLevel { get; init; } = 1;
     }
 }
 
@@ -98,6 +89,11 @@ public static class BattleRewards
                 WeaponExp = weaponExp,
                 StyleExp = styleExp,
                 Mood = won && m.Alive ? VictoryMood : 0,
+                Weapon = m.Weapon,
+                WeaponLevel = m.WeaponLevel,
+                Style = m.Style,
+                StyleLevel = m.StyleLevel,
+                Level = m.Level,
             });
         }
         return result;
@@ -136,7 +132,7 @@ public static class BattleRewards
 /// <summary>一方阵营的掉落汇总：金钱进账与物品清单，落袋由调用方决定。</summary>
 public sealed class LootResult
 {
-    public long Money { get; internal set; }
+    public long Money { get; set; }
     public List<(string ItemId, int Count)> Items { get; } = new();
 }
 

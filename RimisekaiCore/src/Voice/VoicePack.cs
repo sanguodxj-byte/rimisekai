@@ -36,6 +36,54 @@ public sealed class VoicePack
     }
 
     /// <summary>
+    /// 内容里的名字占位符。运行时才定名的角色（随机访客）用它把自己的名字写进台词与地文，
+    /// 因为内容包写的时候还不知道这个人叫什么。
+    /// </summary>
+    public const string NameToken = "{名}";
+
+    /// <summary>把文本里的名字占位符换成实际名字；没有占位符就原样返回。</summary>
+    public static string Personalize(string text, string name) =>
+        text.Length > 0 && text.Contains(NameToken) ? text.Replace(NameToken, name) : text;
+
+    /// <summary>
+    /// 复制一份台词库，把挂在本库说话人名下的句子改挂到 <paramref name="name"/> 上，
+    /// 并把正文里的名字占位符换成 <paramref name="name"/>。
+    /// 运行时才生成的角色（如随机访客）没有自己的内容条目，套用内容包里的模板台词时用这个：
+    /// 模板里的正文、门槛、场景维度原样保留，只换说话人与名字。
+    /// </summary>
+    public VoicePack WithSpeaker(string name)
+    {
+        var copy = new VoicePack();
+        foreach (var line in _lines)
+        {
+            var speaker = line.Speaker.Length == 0 ? name : line.Speaker;
+            var lines = new List<string>(line.Lines.Count);
+            foreach (var text in line.Lines)
+                lines.Add(Personalize(text, name));
+            copy.Register(new VoiceLine
+            {
+                Id = line.Id,
+                Speaker = speaker,
+                Kind = line.Kind,
+                Trigger = line.Trigger,
+                Lines = lines,
+                Weight = line.Weight,
+                Priority = line.Priority,
+                Exclusive = line.Exclusive,
+                Gate = line.Gate,
+                IllustrationId = line.IllustrationId,
+                Activities = line.Activities,
+                Roles = line.Roles,
+                Places = line.Places,
+                Emotion = line.Emotion,
+                CutNarration = line.CutNarration,
+                Generation = line.Generation,
+            });
+        }
+        return copy;
+    }
+
+    /// <summary>
     /// 按"谁、什么时机"挑一句能用的台词。挑不出返回 null，宿主应退回自己的默认文案。
     ///
     /// 顺序：先按说话人与时机筛，再逐句过门槛与掷骰，
@@ -46,7 +94,7 @@ public sealed class VoicePack
     /// 让同步调用方永远拿得到现成文本。
     /// </summary>
     public VoiceLine? Select(CharacterState character, VoiceTrigger trigger, VoiceContext ctx,
-        bool allowGeneration = true)
+        bool allowGeneration = true, VoiceKind? kind = null, VoicePlace? place = null)
     {
         var candidates = new List<VoiceLine>();
         var weights = new List<int>();
@@ -54,6 +102,10 @@ public sealed class VoicePack
         foreach (var line in _lines)
         {
             if (line.Trigger != trigger)
+                continue;
+            if (kind.HasValue && line.Kind != kind.Value)
+                continue;
+            if (place.HasValue && line.Places.Count > 0 && !line.Places.Contains(place.Value))
                 continue;
             // 说话人留空即通用，任何角色都能用（世界旁白）。
             if (line.Speaker.Length > 0 && line.Speaker != character.Name)

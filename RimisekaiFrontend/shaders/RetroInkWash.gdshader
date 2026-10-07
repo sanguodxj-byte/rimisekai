@@ -2,6 +2,7 @@ shader_type canvas_item;
 // 复古转场四：墨迹扩散。两频噪声作阈值，旧画面被墨渍一块块吃掉，
 // 前沿压深模拟墨晕，慢慢渗成新画面。与线稿界面的墨色同源。
 uniform sampler2D old_screen : filter_linear;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
 uniform float progress : hint_range(0.0, 1.0);
 
 float hash21(vec2 p) {
@@ -24,17 +25,16 @@ void fragment() {
 
 	float field = vnoise(uv * vec2(7.0, 5.0)) * 0.7 + vnoise(uv * vec2(26.0, 17.0)) * 0.3;
 	float th = progress * 1.5 - 0.25;
-	float edge = smoothstep(th - 0.12, th + 0.12, field);
+	// edge = 新画面占比：progress=0 全为旧画面、=1 全为新画面（墨渍吃掉的区域从无到有）。
+	float edge = 1.0 - smoothstep(th - 0.12, th + 0.12, field);
 
 	vec3 old = texture(old_screen, uv).rgb;
 	vec3 neu = texture(SCREEN_TEXTURE, uv).rgb;
 	vec3 col = mix(old, neu, edge);
 
-	// 墨晕前沿：阈值附近压深，再往外一圈轻微回弹。
+	// 墨晕前沿：边缘自然压深，无额外回弹加亮白边。
 	float front = smoothstep(0.12, 0.0, abs(field - th));
-	col = mix(col, vec3(0.0), front * 0.5);
-	float bleed = smoothstep(0.12, 0.05, abs(field - th - 0.12));
-	col += bleed * 0.06;
+	col = mix(col, vec3(0.0), front * 0.4);
 
 	COLOR = vec4(clamp(col, 0.0, 1.0), 1.0);
 }

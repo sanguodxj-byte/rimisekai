@@ -79,9 +79,16 @@ public sealed class VoiceGenerationHub
     }
 
     /// <summary>把一次生成请求拼好。世界状态与记忆由引擎自动填。</summary>
-    public VoiceRequest Build(VoiceLine line, VoiceContext ctx)
+    public VoiceRequest Build(VoiceLine line, VoiceContext ctx) =>
+        BuildFor(line.Generation!, line.Trigger, line.Kind, ctx);
+
+    /// <summary>
+    /// 直接按一份生成规格拼请求。场景里的一行没有 <see cref="VoiceLine"/> 外壳，
+    /// 但挂的生成规格是同一个类型，因此共用这一条装配路径。
+    /// </summary>
+    public VoiceRequest BuildFor(VoiceGeneration spec, VoiceTrigger trigger, VoiceKind kind,
+        VoiceContext ctx)
     {
-        var spec = line.Generation!;
         var character = ctx.Character;
         Personas.TryGetValue(character.Name, out var persona);
 
@@ -101,7 +108,8 @@ public sealed class VoiceGenerationHub
                 ? new List<string>(character.Voice.RecentDialogue)
                 : System.Array.Empty<string>(),
             Options = spec.Options,
-            Trigger = line.Trigger,
+            Trigger = trigger,
+            Kind = kind,
         };
     }
 
@@ -119,7 +127,6 @@ public sealed class VoiceGenerationHub
         sb.Append("对玩家的好感：").Append(character.Condition.Favor);
         sb.Append("（").Append(BondName(character.Condition.Bond)).Append("）");
         sb.Append("，心情：").Append(character.Affect.Mood);
-        sb.Append("，疲劳：").Append(character.Condition.Fatigue);
         sb.Append("。\n");
 
         sb.Append("此刻的状态：").Append(ActivityName(ctx.Activity));

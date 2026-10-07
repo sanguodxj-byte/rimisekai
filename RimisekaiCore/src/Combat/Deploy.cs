@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rimisekai.Catalog;
 using Rimisekai.Character;
 
@@ -28,28 +29,51 @@ public static class Deploy
             }
         }
         var strike = weapon != null ? c.ResolveStrike(weapon) : c.ResolveStrike(0);
-        return new Combatant
+
+        // 能力表：普通攻击与防御架势玩家侧角色自带（敌人没有防御动作）；
+        // 流派能力按门槛解锁（流派＋熟练，必要时还有属性／生活技能／素质／前置）——
+        // 换武器就换一套能力。
+        var skills = new List<string> { BattleSkills.AttackId, BattleSkills.GuardId };
+        foreach (var known in SkillTable.Known(c))
+            if (!skills.Contains(known.Id))
+                skills.Add(known.Id);
+
+        var isTired = c.Condition.Tired;
+        var tiredMult = isTired ? 0.5 : 1.0;
+
+        // 体力就是生命值，1:1 无比例换算：生命值高了体力一样也多
+        var curHp = Math.Clamp(c.Condition.Stamina, 1, sheet.MaxHp);
+
+        var c2 = new Combatant
         {
             Id = c.Id,
             Name = c.Name,
             Side = side,
-            Hp = sheet.MaxHp,
+            IsPlayer = c.IsMaster,
+            Hp = curHp,
             MaxHp = sheet.MaxHp,
-            Mp = c.Condition.Mana,
-            MaxMp = c.Condition.MaxMana,
-            Attack = sheet.Attack,
-            Defence = sheet.Defence,
-            Dodge = sheet.Dodge,
-            SpellPower = sheet.SpellPower,
-            Threat = sheet.Threat,
+            Attack = Math.Max(1, (int)Math.Round(sheet.Attack * tiredMult)),
+            Defence = (int)Math.Round(sheet.Defence * tiredMult),
+            Dodge = (int)Math.Round(sheet.Dodge * tiredMult),
+            SpellPower = (int)Math.Round(sheet.SpellPower * tiredMult),
             CritRate = Math.Min(
                 BattleRules.CritRateCap,
                 BattleRules.BaseCritRate + c[CoreStat.Perception] / 2),
+            Speed = Math.Max(1, c[CoreStat.Speed]),
+            ThreatTier = Math.Min(5, Math.Max(1, c.ThreatTier)),
+            QuickChant = c.QuickChant(),
+            Level = c.Level,
             Weapon = strike.Weapon,
+            WeaponLevel = Math.Max(1, c.Weapons[(int)strike.Weapon].Level),
             Style = strike.Style,
-            StrikePower = strike.Rounded,
+            StyleLevel = Math.Max(1, c.Styles[(int)strike.Style].Level),
+            StrikePower = Math.Max(1, (int)Math.Round(strike.Rounded * tiredMult)),
             BaseHit = c.EquippedHit(BattleRules.BaseHit),
         };
+        foreach (var id in skills)
+            if (!c2.Skills.Contains(id))
+                c2.Skills.Add(id);
+        return c2;
     }
 
     /// <summary>敌人按目录行直接成军，面板行数值即战斗数值。同行敌人用不同 id 区分。</summary>
@@ -60,15 +84,20 @@ public static class Deploy
             Id = id,
             Name = def.Name,
             Side = side,
+            IsPlayer = false,
             Hp = def.MaxHp,
             MaxHp = def.MaxHp,
             Attack = def.Attack,
             Defence = def.Defence,
             Dodge = def.Dodge,
             SpellPower = def.SpellPower,
-            Threat = def.Threat,
+            Speed = def.Speed,
             Armour = def.Armour,
-            Targeting = def.Targeting,
+            ThreatTier = def.ThreatTier,
+            Column = def.Column,
+            Size = def.Size,
+            ActionPoints = def.ActionPoints,
+            Portrait = def.Portrait,
             MoneyReward = def.Money,
             StrikePower = def.Attack,
         };

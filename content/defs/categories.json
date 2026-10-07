@@ -1,0 +1,89 @@
+{
+  "defType": "ThingCategoryDef",
+  "defs": [
+    {
+      "defName": "Root",
+      "label": "全部",
+      "description": "所有物品的顶层根分类。",
+      "parentCategory": ""
+    },
+    {
+      "defName": "Food",
+      "label": "食物",
+      "description": "供角色食用的餐点与干粮。",
+      "parentCategory": "Root"
+    },
+    {
+      "defName": "RawFood",
+      "label": "生食材",
+      "description": "未经烹制的食材，需加工才能上桌。",
+      "parentCategory": "Food"
+    },
+    {
+      "defName": "Meal",
+      "label": "熟食",
+      "description": "可直接食用的餐点与干粮。",
+      "parentCategory": "Food"
+    },
+    {
+      "defName": "RawMaterial",
+      "label": "原材料",
+      "description": "采掘、伐木等产出的基础用料。",
+      "parentCategory": "Root"
+    },
+    {
+      "defName": "BuildingMaterial",
+      "label": "建材",
+      "description": "木材、石材等用于建造与扩建的硬料。",
+      "parentCategory": "RawMaterial"
+    },
+    {
+      "defName": "MetalOre",
+      "label": "矿石",
+      "description": "待熔炼的金属原矿。",
+      "parentCategory": "RawMaterial"
+    },
+    {
+      "defName": "Textile",
+      "label": "纺织料",
+      "description": "纤维等可用于纺织的软料。",
+      "parentCategory": "RawMaterial"
+    },
+    {
+      "defName": "Medicine",
+      "label": "医药",
+      "description": "疗伤草药与药剂制品。",
+      "parentCategory": "Root"
+    },
+    {
+      "defName": "Manufactured",
+      "label": "加工品",
+      "description": "工作台制作产出的制品。",
+      "parentCategory": "Root"
+    },
+    {
+      "defName": "Metal",
+      "label": "金属",
+      "description": "熔炼得到的金属锭与铁胚。",
+      "parentCategory": "Manufactured"
+    },
+    {
+      "defName": "Cloth",
+      "label": "布匹",
+      "description": "纺织得到的布匹。",
+      "parentCategory": "Manufactured"
+    },
+    {
+      "defName": "Goods",
+      "label": "杂货",
+      "description": "日用小件与杂物。",
+      "parentCategory": "Manufactured"
+    },
+    {
+      "defName": "Weapon",
+      "label": "武器",
+      "description": "可用于战斗的兵器。",
+      "parentCategory": "Root"
+    }
+  ]
+}

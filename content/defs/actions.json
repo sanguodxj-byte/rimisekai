@@ -1,0 +1,234 @@
+{
+  "defType": "ActionDef",
+  "defs": [
+    {
+      "defName": "Mine",
+      "label": "挖矿",
+      "carrier": "Work",
+      "ticks": 8,
+      "workType": "Excavate",
+      "skill": "Mining",
+      "extractive": true,
+      "spiritCost": 25
+    },
+    {
+      "defName": "Fell",
+      "label": "伐木",
+      "carrier": "Work",
+      "ticks": 8,
+      "workType": "Excavate",
+      "skill": "Mining",
+      "extractive": true,
+      "spiritCost": 25
+    },
+    {
+      "defName": "Forge",
+      "label": "锻造",
+      "carrier": "Work",
+      "ticks": 24,
+      "workType": "Smithing",
+      "skill": "Smithing",
+      "extractive": false,
+      "spiritCost": 25
+    },
+    {
+      "defName": "Till",
+      "label": "耕作",
+      "carrier": "Work",
+      "ticks": 8,
+      "workType": "Farming",
+      "skill": "Farming",
+      "extractive": true,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Tend",
+      "label": "饲养",
+      "carrier": "Work",
+      "ticks": 8,
+      "workType": "Husbandry",
+      "skill": "Husbandry",
+      "extractive": true,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Perform",
+      "label": "表演",
+      "carrier": "Work",
+      "ticks": 4,
+      "workType": "Social",
+      "skill": "Social",
+      "extractive": false,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Woodwork",
+      "label": "木工",
+      "carrier": "Work",
+      "ticks": 12,
+      "workType": "Craft",
+      "skill": "Craft",
+      "extractive": false,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Sew",
+      "label": "缝纫",
+      "carrier": "Work",
+      "ticks": 12,
+      "workType": "Craft",
+      "skill": "Craft",
+      "extractive": false,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Brew",
+      "label": "炼金",
+      "carrier": "Work",
+      "ticks": 24,
+      "workType": "Research",
+      "skill": "Research",
+      "extractive": false,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Cook",
+      "label": "烹饪",
+      "carrier": "Work",
+      "ticks": 6,
+      "workType": "Cooking",
+      "skill": "Cooking",
+      "extractive": false,
+      "spiritCost": 15
+    },
+    {
+      "defName": "Meal",
+      "label": "吃饭",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Sleep",
+      "label": "睡觉",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Rest",
+      "label": "休息",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Bathe",
+      "label": "洗澡",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Drink",
+      "label": "喝一杯",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Read",
+      "label": "看书",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Pray",
+      "label": "祈祷",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Train",
+      "label": "操练",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Meditate",
+      "label": "冥想",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Watch",
+      "label": "看戏",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Stargaze",
+      "label": "看星星",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Lookout",
+      "label": "眺望",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Trade",
+      "label": "交易",
+      "carrier": "Work",
+      "ticks": 6,
+      "spiritCost": 15,
+      "workType": "Social",
+      "skill": "Social",
+      "extractive": false
+    },
+    {
+      "defName": "Store",
+      "label": "存取",
+      "carrier": "Daily",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Observe",
+      "label": "观察",
+      "carrier": "Room",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Haul",
+      "label": "搬运",
+      "carrier": "Autonomous",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "SeekChat",
+      "label": "搭话",
+      "carrier": "Autonomous",
+      "ticks": 4,
+      "spiritCost": 0
+    },
+    {
+      "defName": "Loiter",
+      "label": "闲转",
+      "carrier": "Autonomous",
+      "ticks": 4,
+      "spiritCost": 0
+    }
+  ]
+}

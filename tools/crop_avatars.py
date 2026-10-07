@@ -75,37 +75,26 @@ def process_image(src_path, dst_path):
 
 
 def main():
-    pattern = os.path.join(PROJ_DIR, "立绘_*_差分*.png")
-    files = sorted(glob.glob(pattern))
-
-    # 同时处理 3 张独立角色立绘
-    extras = [
-        ("立绘_人类圣骑士.png", "头像_人类圣骑士.png"),
-        ("立绘_鼠耳鼠尾圣女.png", "头像_鼠耳鼠尾圣女.png"),
-        ("立绘_马耳马尾武装修女_v2.png", "头像_马耳马尾武装修女.png"),
-    ]
-    for extra_src, extra_dst in extras:
-        full_src = os.path.join(PROJ_DIR, extra_src)
-        if os.path.exists(full_src):
-            files.append(full_src)
+    # 输入：assets/portraits/{identity,identity_moe,special}；输出：assets/avatars/ 同构子目录
+    src_dirs = ["identity", "identity_moe", "special"]
+    files = []
+    for sub in src_dirs:
+        src_dir = os.path.join(PROJ_DIR, "assets", "portraits", sub)
+        for f in sorted(glob.glob(os.path.join(src_dir, "*.png"))):
+            files.append((f, sub))
 
     print(f"=== 开始全量截取 1:1 头像（共 {len(files)} 张，目标 512x512）===", flush=True)
 
     count = 0
-    for f in files:
+    for f, sub in files:
         base = os.path.basename(f)
-        if base.startswith("立绘_马耳马尾武装修女_v2.png"):
-            dst_name = "头像_马耳马尾武装修女.png"
-        elif base.startswith("立绘_"):
-            dst_name = base.replace("立绘_", "头像_")
-        else:
-            dst_name = f"头像_{base}"
-
-        dst_path = os.path.join(PROJ_DIR, dst_name)
+        dst_dir = os.path.join(PROJ_DIR, "assets", "avatars", sub)
+        os.makedirs(dst_dir, exist_ok=True)
+        dst_path = os.path.join(dst_dir, "avatar_" + base)
         box = process_image(f, dst_path)
         count += 1
         if count % 10 == 0 or count == len(files):
-            print(f"[{count}/{len(files)}] 已生成: {dst_name} (原图截取选框: {box})", flush=True)
+            print(f"[{count}/{len(files)}] 已生成: avatar_{base} (原图截取选框: {box})", flush=True)
 
     print(f"=== 截取完成！共生成 {count} 张 512x512 头像 ===", flush=True)
 

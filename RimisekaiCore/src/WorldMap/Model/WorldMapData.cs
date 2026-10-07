@@ -158,6 +158,8 @@ public sealed class WorldMapData
                     Y = ly,
                     Open = true,
                 };
+                // 房间至少要有一个标签；按名字归出室外/室内，也供天气特效取室外格。
+                room.EnsureDefaultTag();
 
                 grid[lx, ly] = room;
                 rooms.Add(room);

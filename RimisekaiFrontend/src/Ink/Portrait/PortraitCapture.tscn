@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cportraitcap01"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Ink/Portrait/PortraitCapture.cs" id="1_pcap"]
+
+[node name="PortraitCapture" type="Node"]
+script = ExtResource("1_pcap")

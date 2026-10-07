@@ -59,6 +59,12 @@ public sealed class SceneRun
     /// <summary>进入下一步。返回 false 表示事件已结束。</summary>
     public bool NextStep()
     {
+        // 收束步：本步行完即收演，不顺流到下一步（分支各自收尾）。
+        if (Current is { End: true })
+        {
+            Finished = true;
+            return false;
+        }
         StepIndex++;
         LineIndex = 0;
         Waiting = false;
@@ -99,8 +105,20 @@ public sealed class SceneRun
 
 /// <summary>
 /// 场景事件里的一行。要么是角色说的话，要么是旁白。
+///
+/// 正文有两种来源：<see cref="Text"/> 是内容表里写死的静态文本；
+/// <see cref="Generation"/> 非空则表示这一行由 LLM 生成——静态文本可以留空
+/// （纯生成行，没有兜底），也可以写上作内容表的参考。
 /// </summary>
-public readonly record struct SceneText(VoiceKind Kind, string Speaker, string Text);
+public readonly record struct SceneText(
+    VoiceKind Kind,
+    string Speaker,
+    string Text,
+    VoiceGeneration? Generation = null)
+{
+    /// <summary>本行是否要靠生成才有正文。</summary>
+    public bool NeedsGeneration => Generation != null;
+}
 
 /// <summary>
 /// 一个分支选项。选中后跳到 <see cref="GotoStep"/>，并施加 <see cref="Effects"/>。
@@ -135,6 +153,12 @@ public sealed class SceneStep
 
     /// <summary>本步骤只在满足条件时才会被执行；不满足则跳过。</summary>
     public VoiceGate? Gate { get; init; }
+
+    /// <summary>
+    /// 收束步：本步的行走完就收演，不再顺流到下一步。
+    /// 分支各自收尾（接受/婉拒各一段）时用，避免落到隔壁分支的结尾。
+    /// </summary>
+    public bool End { get; init; }
 }
 
 /// <summary>
@@ -181,8 +205,6 @@ public enum SceneEffectKind
     /// <summary>气力增减。</summary>
     Spirit,
 
-    /// <summary>疲劳增减。</summary>
-    Fatigue,
 
     /// <summary>给物品。</summary>
     GiveItem,

@@ -24,7 +24,7 @@ public sealed class LoiteringState : BaseWorkerState
         var worker = ctx.Worker;
         if (worker.Path.Count > 0)
         {
-            MoveAlong(worker);
+            MoveAlong(worker, ctx);
             if (worker.Path.Count > 0)
                 return false;
         }
@@ -76,11 +76,11 @@ public sealed class LoiteringState : BaseWorkerState
                 var fac = ctx.Territory.Facilities.Find(f => f.Id == worker.FacilityId);
                 if (fac != null)
                 {
-                    return ctx.Character.Has(Trait.Maid)
+                    return ctx.Character.IsMaid()
                         ? $"{ctx.Character.Name}在{place}打扫{fac.Name}。"
                         : $"{ctx.Character.Name}在{place}收拾{fac.Name}。";
                 }
-                return ctx.Character.Has(Trait.Maid)
+                return ctx.Character.IsMaid()
                     ? $"{ctx.Character.Name}在{place}打扫卫生。"
                     : $"{ctx.Character.Name}在{place}收拾东西。";
         }

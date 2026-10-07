@@ -29,11 +29,27 @@ public sealed class GameState
     public GameClock Clock { get; } = new();
     public Roster Roster { get; } = new();
     public QuestRecord Quests { get; } = new();
+
+    /// <summary>已演过的整局一次事件 Id（Once 语义跨存档生效）。</summary>
+    public HashSet<string> FiredEvents { get; } = new();
     public Territory Territory { get; } = new();
     public GameCatalog Catalog { get; } = new();
+
+    /// <summary>
+    /// 运行时生成的武器实例。武器不是注册表里的一行——
+    /// 材料 × 类型只是基座，每件实例的强化/附魔/祝福/稀有度都是生成时定的。
+    /// 登记表挂在 Territory 上（报价要按实例字段算），这里只是同一份的别名。
+    /// </summary>
+    public Defs.WeaponRegistry Weapons => Territory.Weapons;
+
+    /// <summary>防具与饰品实例（同一份登记表的别名）。</summary>
+    public Defs.EquipRegistry Equips => Territory.Equips;
     public long Money { get; set; }
     public int Prestige { get; set; }
     public Weather Weather { get; set; } = Weather.Clear;
+
+    /// <summary>队伍此刻是否刚从战斗胜利归来（睡觉结算后重置）。苛刻剧情使用。</summary>
+    public bool ReturnedFromCombat { get; set; }
     public List<IDayEvent> DayEvents { get; } = new();
 
     /// <summary>当前大世界地图数据。</summary>
@@ -47,6 +63,8 @@ public sealed class GameState
     public GameState()
     {
         World = WorldGenerator.Generate(WorldSeed, 128, 128);
+        // 开局先掷一次首日行情，否则第一天集市全数无货。
+        Territory.RollMarketDay(new Random(WorldSeed));
     }
 
     /// <summary>
@@ -69,10 +87,27 @@ public sealed class GameState
     /// </summary>
     public Voice.VoiceDirector Voice { get; } = new();
 
+    /// <summary>
+    /// 定时场景各行生成出来的成品正文。内容表只给骨架与指令，
+    /// 正文由后台生成后落在这里，随存档走——读档后不必重烧一遍 token。
+    /// </summary>
+    public Voice.SceneTextStore SceneTexts { get; } = new();
+
     public DaySummary EndDay(Random? random = null)
     {
         var before = Clock.Season;
         Clock.SkipToNextDay();
+        return SettleDay(before, random);
+    }
+
+    /// <summary>
+    /// 结算刚结束的一天：全员恢复、任务推进、作物生长。
+    /// 天气不在此定时重掷——它随时间按小时马尔可夫演化（见 WorldEffects.Advance）。
+    /// 不动时钟——时钟自行跨过午夜时由推进方调用
+    /// （<see cref="Hub.HubSession.PassTime"/>）；显式跳天走 <see cref="EndDay"/>。
+    /// </summary>
+    public DaySummary SettleDay(Season seasonBefore, Random? random = null)
+    {
         foreach (var c in Roster.Members)
         {
             c.RestoreBase();
@@ -81,8 +116,20 @@ public sealed class GameState
                 c.EmploymentDays++;
         }
         Quests.TickDay();
-        Weather = WorldEffects.RollWeather(Clock.Season, random);
-        return new DaySummary(Clock.Season != before, Clock.Season, Weather);
+        // 作物逐日生长：当季 +1，非当季暂停不枯。
+        foreach (var f in Territory.Facilities)
+        {
+            if (!f.Built || f.CropDefName.Length == 0)
+                continue;
+            var crop = Defs.DefDatabase<Defs.CropDef>.Get(f.CropDefName);
+            if (crop != null && crop.GrowsIn(Clock.Season))
+                f.Growth++;
+        }
+        // 0 点集市重掷：今日货品与价格系数。
+        Territory.RollMarketDay(random ?? new Random());
+        // 井水每日回满：取水与移动等价，不是工作，井就是现成的水源。
+        Territory.TopUpWells();
+        return new DaySummary(Clock.Season != seasonBefore, Clock.Season, Weather);
     }
 
     public const int PlayerFaction = 1;

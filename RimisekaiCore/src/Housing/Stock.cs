@@ -10,6 +10,8 @@ public sealed class Stock
 
     public int Get(string itemId) => _items.TryGetValue(itemId, out var n) ? n : 0;
 
+    public void Clear() => _items.Clear();
+
     public void Add(string itemId, int count)
     {
         if (count == 0 || itemId.Length == 0)

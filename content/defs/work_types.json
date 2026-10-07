@@ -1,0 +1,61 @@
+{
+  "defType": "WorkTypeDef",
+  "defs": [
+    {
+      "defName": "Excavate",
+      "label": "采掘",
+      "core": "Strength",
+      "order": 0,
+      "hard": true
+    },
+    {
+      "defName": "Smithing",
+      "label": "锻造",
+      "core": "Strength",
+      "order": 2,
+      "hard": true
+    },
+    {
+      "defName": "Farming",
+      "label": "种植",
+      "core": "Perception",
+      "order": 3,
+      "hard": false
+    },
+    {
+      "defName": "Husbandry",
+      "label": "驯兽",
+      "core": "Charm",
+      "order": 4,
+      "hard": false
+    },
+    {
+      "defName": "Social",
+      "label": "社交",
+      "core": "Charm",
+      "order": 5,
+      "hard": false
+    },
+    {
+      "defName": "Craft",
+      "label": "手工",
+      "core": "Dexterity",
+      "order": 6,
+      "hard": false
+    },
+    {
+      "defName": "Research",
+      "label": "研究",
+      "core": "Intellect",
+      "order": 7,
+      "hard": false
+    },
+    {
+      "defName": "Cooking",
+      "label": "烹饪",
+      "core": "Constitution",
+      "order": 8,
+      "hard": false
+    }
+  ]
+}

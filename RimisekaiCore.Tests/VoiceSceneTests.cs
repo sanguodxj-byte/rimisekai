@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Rimisekai.Character;
 using Rimisekai.Clock;
 using Rimisekai.Housing;
+using Rimisekai.Hub;
 using Rimisekai.Save;
 using Rimisekai.Voice;
 using Xunit;
@@ -97,7 +98,7 @@ public sealed class VoiceSceneTests
         Assert.Equal(VoiceEmotion.Angry, VoiceContext.EmotionOf(who));
 
         who.Affect.Mood = 50;
-        who.Condition.Spend(0, 0, Vitals.TiredAt / 2);
+        who.Condition.Spend(0, Vitals.DefaultMax); // 气力见底，就是疲劳
         Assert.Equal(VoiceEmotion.Tired, VoiceContext.EmotionOf(who));
     }
 
@@ -703,9 +704,13 @@ public sealed class VoiceSceneTests
         }
 
         // 场景里引用的角色名必须在台词库里存在，否则永远触发不了。
+        // 例外：Spawn 场景（如访客）的名字是占位说话人，真人到点才由生成器掷出，
+        // 因此不需要台词库条目——这类场景的正文全部来自生成槽。
         var pack = characters["璐米埃尔"];
         foreach (var scene in scenes)
         {
+            if (scene.Spawn)
+                continue;
             foreach (var name in scene.Characters)
                 Assert.True(characters.ContainsKey(name), $"场景 {scene.Id} 引用了没有台词库的角色 {name}");
         }
@@ -714,11 +719,18 @@ public sealed class VoiceSceneTests
         var state = new GameState();
         state.Roster.Add("你", master: true);
         var who = state.Roster.Add("璐米埃尔");
+        who.Condition.AddFavor(150);
+        var room = new Room { Id = 1, Name = "卧室", Open = true };
+        room.AddTag("卧室");
+        state.Territory.AddRoom(room);
         var library = new SceneLibrary();
         library.RegisterRange(scenes);
         var real = new SceneRunner(library, state.Territory);
 
-        var ctx = Ctx(who);
+        var ctx = VoiceContext.For(who, VoiceTrigger.Scene, masterId: 1,
+            Season.Spring, Weather.Clear, 1, 12 * 60,
+            playerRoomId: 1, characterRoomId: 1,
+            roomTags: new[] { "卧室" });
         var run = real.Begin(who, ctx);
         Assert.NotNull(run);
         Assert.NotEmpty(run!.Lines());
@@ -754,6 +766,326 @@ public sealed class VoiceSceneTests
             if (line.Generation != null)
                 Assert.NotEmpty(line.Lines);
         }
+    }
+
+    [Fact]
+    public void Shipped_content_has_zero_parentheses_in_speech()
+    {
+        var json = System.IO.File.ReadAllText(VoiceFilePath());
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        // 1. 角色台词库中 Speech 严禁包含括号动作描写
+        var chars = root.GetProperty("characters");
+        foreach (var c in chars.EnumerateArray())
+        {
+            var name = c.GetProperty("name").GetString();
+            foreach (var l in c.GetProperty("lines").EnumerateArray())
+            {
+                var kind = l.TryGetProperty("kind", out var k) ? k.GetString() : "Speech";
+                if (kind == "Speech")
+                {
+                    foreach (var textElem in l.GetProperty("lines").EnumerateArray())
+                    {
+                        var text = textElem.GetString() ?? "";
+                        Assert.False(text.Contains('（') || text.Contains('('),
+                            $"角色 {name} 的 Speech 台词不得包含括号动作描写：{text}");
+                    }
+                }
+            }
+        }
+
+        // 2. 场景剧本中 Speech 同样严禁包含括号动作描写
+        var scenes = root.GetProperty("scenes");
+        foreach (var s in scenes.EnumerateArray())
+        {
+            var id = s.GetProperty("id").GetString();
+            foreach (var st in s.GetProperty("steps").EnumerateArray())
+            {
+                foreach (var lineElem in st.GetProperty("lines").EnumerateArray())
+                {
+                    if (lineElem.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        var text = lineElem.GetString() ?? "";
+                        Assert.False(text.Contains('（') || text.Contains('('),
+                            $"场景 {id} 的纯文本台词不得包含括号动作描写：{text}");
+                    }
+                    else if (lineElem.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        var kind = lineElem.TryGetProperty("kind", out var sk) ? sk.GetString() : "Speech";
+                        if (kind == "Speech")
+                        {
+                            var text = lineElem.GetProperty("text").GetString() ?? "";
+                            Assert.False(text.Contains('（') || text.Contains('('),
+                                $"场景 {id} 的 Speech 语句不得包含括号动作描写：{text}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void Shipped_content_all_scenes_have_steps_and_clean_text()
+    {
+        var json = System.IO.File.ReadAllText(VoiceFilePath());
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var scenes = doc.RootElement.GetProperty("scenes");
+
+        foreach (var s in scenes.EnumerateArray())
+        {
+            var id = s.GetProperty("id").GetString();
+            var count = s.GetProperty("steps").GetArrayLength();
+            Assert.True(count >= 1, $"场景 {id} 步数不能为空");
+        }
+    }
+
+    [Fact]
+    public void Shipped_content_has_state_lines_covering_core_activities()
+    {
+        var json = System.IO.File.ReadAllText(VoiceFilePath());
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var chars = doc.RootElement.GetProperty("characters");
+
+        foreach (var c in chars.EnumerateArray())
+        {
+            var name = c.GetProperty("name").GetString();
+            var stateActivities = new HashSet<string>();
+            foreach (var l in c.GetProperty("lines").EnumerateArray())
+            {
+                if (l.TryGetProperty("trigger", out var trig) && trig.GetString() == "State")
+                {
+                    Assert.Equal("Narration", l.GetProperty("kind").GetString());
+                    if (l.TryGetProperty("activities", out var acts))
+                    {
+                        foreach (var act in acts.EnumerateArray())
+                            stateActivities.Add(act.GetString() ?? "");
+                    }
+                }
+            }
+            Assert.True(stateActivities.Count >= 5, $"角色 {name} 应具备覆盖核心日常活动的状态地文");
+        }
+    }
+
+    [Fact]
+    public async Task HttpVoiceGenerator_gracefully_falls_back_when_no_network()
+    {
+        var gen = new HttpVoiceGenerator(endpoint: "http://127.0.0.1:59999/v1", apiKey: "dummy");
+        Assert.True(gen.Available);
+        var req = new VoiceRequest
+        {
+            CharacterName = "测试",
+            Instruction = "说话",
+            LineCount = 1,
+        };
+
+        // 网络不通时静默回退，返回空列表，不抛异常
+        var result = await gen.GenerateAsync(req);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void Scene_fired_events_prevent_ever_repeating()
+    {
+        var state = Setup(out var who, out var library, out var runner);
+        library.Register(new SceneEvent
+        {
+            Id = "once_scene",
+            Characters = { who.Name },
+            Rate = 1000,
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, who.Name, "只演一次。") } } },
+        });
+
+        var fired = new HashSet<string>();
+        var ctx1 = VoiceContext.For(who, VoiceTrigger.Scene, -1, Season.Spring, Weather.Clear, 1, 12 * 60, firedEvents: fired);
+        Assert.NotNull(runner.Begin(who, ctx1));
+
+        // 记入 FiredEvents 后，即使跨天冷却也不再触发
+        fired.Add("once_scene");
+        var ctx2 = VoiceContext.For(who, VoiceTrigger.Scene, -1, Season.Spring, Weather.Clear, 10, 12 * 60, firedEvents: fired);
+        Assert.Null(runner.Begin(who, ctx2));
+    }
+
+    [Fact]
+    public void Gate_level_and_all_members_max_level_check()
+    {
+        var state = Setup(out var who, out _, out _);
+        who.GainLifeExp(LifeSkill.Cooking, 0); // Level 1
+        var gate = new VoiceGate { LevelMin = 50, AllMembersMaxLevel = true };
+
+        var ctxLow = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, allMembersMaxLevel: false);
+        Assert.False(gate.Allows(ctxLow, "l1"));
+
+        // 角色未到 50 级
+        var ctxLevel1 = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, allMembersMaxLevel: true);
+        Assert.False(gate.Allows(ctxLevel1, "l1"));
+
+        // 提升等级至 100 满级
+        for (var i = 0; i < 200000; i++)
+            who.GainLifeExp(LifeSkill.Cooking, 1000);
+        Assert.True(who.Level >= 50);
+
+        // 角色达标但全队未满级
+        var ctxNotAllMax = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, allMembersMaxLevel: false);
+        Assert.False(gate.Allows(ctxNotAllMax, "l1"));
+
+        // 角色达标且全队满级
+        var ctxAllMax = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, allMembersMaxLevel: true);
+        Assert.True(gate.Allows(ctxAllMax, "l1"));
+    }
+
+    [Fact]
+    public void Gate_room_tags_matching()
+    {
+        var state = Setup(out var who, out _, out _);
+        var gate = new VoiceGate { RoomTags = { "卧室", "密室" } };
+
+        var ctxYard = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, roomTags: new[] { "室外", "工作间" });
+        Assert.False(gate.Allows(ctxYard, "l2"));
+
+        var ctxBedroom = VoiceContext.For(who, VoiceTrigger.Talk, -1, Season.Spring, Weather.Clear, 1, 12 * 60, roomTags: new[] { "室内", "卧室" });
+        Assert.True(gate.Allows(ctxBedroom, "l2"));
+    }
+
+    [Fact]
+    public void Social_talk_does_not_trigger_scene_or_collide()
+    {
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        var maid = state.Roster.Add("璐米埃尔");
+        state.Territory.AddRoom(new Room { Id = 1, Name = "客厅", Open = true });
+        // 注册一个只要人在场就 100% 触发的场景
+        state.Voice.Scenes.Register(new SceneEvent
+        {
+            Id = "ambient_scene",
+            Characters = { "璐米埃尔" },
+            Rate = 1000,
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, "璐米埃尔", "这是场景。") } } },
+        });
+
+        var hub = new HubSession(state);
+        hub.Enter(1);
+        hub.Place(maid.Id, 1);
+        hub.Select(maid.Id);
+
+        // 点击交谈：必须正常进行交谈，绝不触发场景演出，两者不撞车
+        Assert.True(hub.Social(SocialAction.Talk));
+        Assert.False(hub.ScenePlaying);
+        Assert.NotNull(hub.Overlay);
+        Assert.Equal(OverlayKind.Dialogue, hub.Overlay!.Kind);
+        Assert.False(state.FiredEvents.Contains("ambient_scene"));
+    }
+
+    [Fact]
+    public void Room_entry_does_not_trigger_scene()
+    {
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        var maid = state.Roster.Add("璐米埃尔");
+        state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
+        state.Territory.AddRoom(new Room { Id = 2, Name = "客厅", Open = true });
+        state.Territory.Link(1, 2);
+
+        state.Voice.Scenes.Register(new SceneEvent
+        {
+            Id = "ambient_scene",
+            Characters = { "璐米埃尔" },
+            Rate = 1000,
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, "璐米埃尔", "进房。") } } },
+        });
+
+        var hub = new HubSession(state);
+        hub.Place(maid.Id, 2);
+        hub.Enter(1);
+        Assert.False(hub.ScenePlaying);
+
+        // 走进有角色的房间：不触发场景演出，触发点非进房
+        Assert.True(hub.Move(2));
+        Assert.False(hub.ScenePlaying);
+    }
+
+    [Fact]
+    public void Strict_semantic_gate_triggers_only_when_all_conditions_met()
+    {
+        var state = new GameState();
+        var master = state.Roster.Add("你", master: true);
+        var maid = state.Roster.Add("璐米埃尔");
+        maid.Grant(Trait.Maid);
+        state.Territory.AddRoom(new Room { Id = 1, Name = "卧室", Open = true });
+        state.Territory.AddFacility(new Facility
+        {
+            Id = 201, Name = "双人床", RoomId = 1, Usage = FacilityUsage.Rest, Capacity = 2,
+            Built = true, Actions = { ActionKind.Sleep }
+        });
+        state.Territory.AddFacility(new Facility
+        {
+            Id = 202, Name = "躺椅", RoomId = 1, Usage = FacilityUsage.Rest, Capacity = 1,
+            Built = true, Actions = { ActionKind.Rest }
+        });
+        state.Clock.SetTime(1, 19 * 60 + 50); // 就寝门槛（20 点）前的窗口
+
+        // 注册测试用严苛门槛场景：满好感 + 全员满级 + 战斗归来状态
+        state.Voice.Scenes.Register(new SceneEvent
+        {
+            Id = "test_strict_scene",
+            Characters = { "璐米埃尔" },
+            Rate = 1000,
+            Gate = new VoiceGate
+            {
+                AllMembersMaxLevel = true,
+                ReturnedFromCombat = true,
+                FavorMin = Vitals.FavorMax,
+            },
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, "璐米埃尔", "测试台词。") } } },
+        });
+
+        var hub = new HubSession(state);
+        hub.Enter(1);
+        hub.Place(maid.Id, 1);
+        hub.Select(maid.Id);
+        hub.Social(SocialAction.Invite); // 跟随主角
+
+        // 条件不齐（未满好感、未满级、未从战斗归来）：同床不成（守候），不触发场景
+        hub.Use(201);
+        state.Clock.SetTime(1, 20 * 60); // 就寝门槛整点：尚无任何一格过去，跟随者还醒着
+        Assert.True(hub.ActAtFixture(ActionKind.Sleep));
+        Assert.False(hub.ScenePlaying);
+        Assert.Contains(hub.Log, l => l.Text.Contains("在床边守候着你"));
+
+        // 补齐所有严苛条件：满好感 + 全员100级 + 战斗胜利归来
+        maid.Condition.AddFavor(Vitals.FavorMax);
+        for (var i = 0; i < 200000; i++)
+        {
+            master.GainLifeExp(LifeSkill.Cooking, 1000);
+            maid.GainLifeExp(LifeSkill.Cooking, 1000);
+        }
+        Assert.True(master.Level >= 100 && maid.Level >= 100);
+        state.ReturnedFromCombat = true;
+        // 起身坐上躺椅：玩家离床，同床的跟随者随之醒来，重新邀请才够得着
+        Assert.True(hub.Use(202));
+        state.Clock.SetTime(1, 10 * 60);
+        Assert.True(hub.Social(SocialAction.Invite)); // 重新邀请跟随
+
+        // 满足所有严苛条件：20 点整准时就寝，精确触发测试场景
+        state.Clock.SetTime(1, 19 * 60 + 50);
+        Assert.True(hub.Use(201));
+        state.Clock.SetTime(1, 20 * 60);
+        Assert.True(hub.ActAtFixture(ActionKind.Sleep));
+        Assert.True(hub.ScenePlaying);
+        Assert.True(state.FiredEvents.Contains("test_strict_scene"));
+
+        // 推进并结束场景
+        hub.SceneContinue();
+        Assert.False(hub.ScenePlaying);
+
+        // 再次就寝：由于终身仅演一次，绝不再触发
+        state.ReturnedFromCombat = true;
+        Assert.True(hub.Use(202)); // 起身坐上躺椅
+        state.Clock.SetTime(1, 19 * 60 + 50);
+        Assert.True(hub.Use(201));
+        state.Clock.SetTime(1, 20 * 60);
+        Assert.True(hub.ActAtFixture(ActionKind.Sleep));
+        Assert.False(hub.ScenePlaying);
     }
 
     private static string VoiceFilePath()

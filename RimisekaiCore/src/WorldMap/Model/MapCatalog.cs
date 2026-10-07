@@ -88,41 +88,28 @@ public sealed class MapCatalog
     private readonly List<RoomTemplateDef> _shrines = new();
 
     public string GetTerrainName(WorldTerrainType terrain) =>
-        _terrainNames.TryGetValue(terrain, out var name) ? name : "平原";
+        _terrainNames.TryGetValue(terrain, out var name) ? name : terrain.ToString();
 
-    public RoomTemplateDef GetEntranceTemplate() =>
-        _entrances.Count > 0 ? _entrances[0] : new RoomTemplateDef { Name = "大门", Category = "Entrance", Terrain = "Road" };
+    public RoomTemplateDef GetEntranceTemplate() => _entrances[0];
 
-    public RoomTemplateDef GetExitTemplate() =>
-        _exits.Count > 0 ? _exits[0] : new RoomTemplateDef { Name = "出口", Category = "Exit", Terrain = "Road" };
+    public RoomTemplateDef GetExitTemplate() => _exits[0];
 
-    public RoomTemplateDef GetRoadTemplate() =>
-        _roads.Count > 0 ? _roads[0] : new RoomTemplateDef { Name = "道路", Category = "Thoroughfare", Terrain = "Road" };
+    public RoomTemplateDef GetRoadTemplate() => _roads[0];
 
-    public RoomTemplateDef GetTreasureTemplate() =>
-        _treasures.Count > 0 ? _treasures[0] : new RoomTemplateDef { Name = "藏宝库", Category = "Treasure", Terrain = "Plains" };
+    public RoomTemplateDef GetTreasureTemplate() => _treasures[0];
 
-    public RoomTemplateDef GetShrineTemplate() =>
-        _shrines.Count > 0 ? _shrines[0] : new RoomTemplateDef { Name = "神龛", Category = "Shrine", Terrain = "Plains" };
+    public RoomTemplateDef GetShrineTemplate() => _shrines[0];
 
     /// <summary>
     /// 根据 POI 类型获取推荐拼接规模 (blocksW, blocksH) 与各 5x5 块的分区主题列表。
+    /// 严格由 map_defs.json 驱动。
     /// </summary>
     public (int blocksW, int blocksH, IReadOnlyList<string> districts) GetPoiScale(WorldPoiType type)
     {
         if (_poiScales.TryGetValue(type, out var scale) && scale.BlocksW > 0 && scale.BlocksH > 0)
-        {
             return (scale.BlocksW, scale.BlocksH, scale.Districts);
-        }
 
-        // 默认规模降级
-        return type switch
-        {
-            WorldPoiType.Capital => (2, 2, new[] { "CapitalGateDistrict", "CapitalMarketDistrict", "CapitalCraftDistrict", "CapitalSanctuaryDistrict" }),
-            WorldPoiType.Town or WorldPoiType.Fortress => (2, 1, new[] { "TownGateDistrict", "TownMarketDistrict" }),
-            WorldPoiType.Castle => (1, 2, new[] { "CastleGateDistrict", "CastleKeepDistrict" }),
-            _ => (1, 1, new[] { "VillageDistrict" }),
-        };
+        throw new KeyNotFoundException($"未在 map_defs.json 中配置 POI 类型 {type} 的规模");
     }
 
     /// <summary>
@@ -153,7 +140,7 @@ public sealed class MapCatalog
         pool.AddRange(_openSpaces);
         pool.AddRange(_facilities);
         if (pool.Count == 0)
-            return new RoomTemplateDef { Name = "庭院", Category = "OpenSpace", Terrain = "Grassland" };
+            throw new InvalidOperationException("map_defs.json 中缺少 OpenSpace 或 Facility 房间模板");
         return pool[(int)((uint)index % (uint)pool.Count)];
     }
 
@@ -247,14 +234,24 @@ public sealed class MapCatalog
     public static MapCatalog LoadFromFile(string filePath)
     {
         if (!File.Exists(filePath))
-            return CreateDefault();
+            throw new FileNotFoundException($"地图定义文件不存在: {filePath}");
         var json = File.ReadAllText(filePath);
         return LoadFromJson(json);
     }
 
-    private static MapCatalog CreateDefault()
+    /// <summary>外部提供的地图配置读取委托（如 Godot 虚拟文件系统 res://content/map_defs.json）。</summary>
+    public static Func<string?>? CustomJsonProvider { get; set; }
+
+    public static MapCatalog CreateDefault()
     {
-        // 尝试从项目约定位置 content/map_defs.json 读取
+        if (CustomJsonProvider != null)
+        {
+            var customJson = CustomJsonProvider();
+            if (!string.IsNullOrEmpty(customJson))
+                return LoadFromJson(customJson);
+        }
+
+        // 严格从数据表 content/map_defs.json 读取，禁止硬编码备用表
         var paths = new[]
         {
             Path.Combine(Directory.GetCurrentDirectory(), "content", "map_defs.json"),
@@ -266,77 +263,10 @@ public sealed class MapCatalog
         foreach (var p in paths)
         {
             if (File.Exists(p))
-            {
-                try
-                {
-                    return LoadFromFile(p);
-                }
-                catch
-                {
-                    // 降级使用内置标准化表
-                }
-            }
+                return LoadFromFile(p);
         }
 
-        // 内置备用默认表（与 content/map_defs.json 完全一致）
-        var table = new MapDefsTable
-        {
-            Terrains =
-            {
-                new() { Type = "Road", Name = "道路" },
-                new() { Type = "Grassland", Name = "草原" },
-                new() { Type = "Plains", Name = "平原" },
-                new() { Type = "Forest", Name = "森林" },
-                new() { Type = "DenseForest", Name = "密林" },
-                new() { Type = "Jungle", Name = "树林" },
-                new() { Type = "Taiga", Name = "针叶林" },
-                new() { Type = "Mountain", Name = "山岳" },
-                new() { Type = "MountainSnow", Name = "雪峰" },
-                new() { Type = "Hills", Name = "丘陵" },
-                new() { Type = "Rocky", Name = "岩地" },
-                new() { Type = "River", Name = "河流" },
-                new() { Type = "Lake", Name = "湖泊" },
-                new() { Type = "ShallowWater", Name = "浅滩" },
-                new() { Type = "DeepWater", Name = "大海" },
-                new() { Type = "Sand", Name = "荒漠" },
-                new() { Type = "Snow", Name = "雪原" },
-                new() { Type = "Ice", Name = "冰原" },
-                new() { Type = "Swamp", Name = "沼泽" },
-                new() { Type = "Bog", Name = "泥沼" },
-                new() { Type = "Savanna", Name = "稀树草地" },
-            },
-            PoiSettlements =
-            {
-                new() { Type = "Capital", Names = { "王都", "帝国王都", "莱茵王都" } },
-                new() { Type = "Town", Names = { "边境镇", "艾尔姆镇", "港口镇", "鲁米纳镇", "商业镇", "阿斯特城" } },
-                new() { Type = "Village", Names = { "开拓村", "水车村", "弗洛拉村", "绿树村", "贝尔村", "农家村" } },
-                new() { Type = "Castle", Names = { "边境要塞", "守望砦", "关口要塞", "北岭要塞" } },
-                new() { Type = "Fortress", Names = { "边境要塞", "守望砦", "关口要塞", "北岭要塞" } },
-                new() { Type = "Ruin", Names = { "古代遗迹", "哥布林洞窟", "旧魔导遗址", "迷宫入口" } },
-                new() { Type = "Monastery", Names = { "大教会", "修道院", "祈祷之泉" } },
-            },
-            PoiRoomTemplates =
-            {
-                new() { Id = 1, Category = "Entrance", Name = "大门", Terrain = "Road" },
-                new() { Id = 2, Category = "Exit", Name = "出口", Terrain = "Road" },
-                new() { Id = 3, Category = "Thoroughfare", Name = "道路", Terrain = "Road" },
-                new() { Id = 4, Category = "OpenSpace", Name = "中央广场", Terrain = "Plains" },
-                new() { Id = 5, Category = "OpenSpace", Name = "庭院", Terrain = "Grassland" },
-                new() { Id = 6, Category = "OpenSpace", Name = "草地", Terrain = "Grassland" },
-                new() { Id = 7, Category = "Nature", Name = "树林", Terrain = "Forest" },
-                new() { Id = 8, Category = "Facility", Name = "工坊", Terrain = "Plains" },
-                new() { Id = 9, Category = "Facility", Name = "仓库", Terrain = "Plains" },
-                new() { Id = 10, Category = "Facility", Name = "酒馆", Terrain = "Plains" },
-                new() { Id = 11, Category = "Facility", Name = "旅馆", Terrain = "Plains" },
-                new() { Id = 12, Category = "Facility", Name = "教会", Terrain = "Plains" },
-                new() { Id = 13, Category = "Facility", Name = "马厩", Terrain = "Plains" },
-                new() { Id = 14, Category = "Facility", Name = "后院", Terrain = "Grassland" },
-                new() { Id = 15, Category = "Treasure", Name = "藏宝库", Terrain = "Plains" },
-                new() { Id = 16, Category = "Shrine", Name = "神龛", Terrain = "Plains" },
-            },
-        };
-
-        return BuildFromTable(table);
+        throw new FileNotFoundException("未找到地图配置文件 content/map_defs.json，禁止硬编码回退。");
     }
 
     private static MapCatalog BuildFromTable(MapDefsTable table)

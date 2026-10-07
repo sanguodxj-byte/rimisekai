@@ -1,0 +1,63 @@
+{
+  "defType": "JobDef",
+  "defs": [
+    {
+      "defName": "Sleep",
+      "label": "睡觉",
+      "legacyGoal": "Sleep",
+      "priority": 100,
+      "isVitalNeed": true,
+      "reportFormat": "{0}在{1}睡觉。"
+    },
+    {
+      "defName": "Meal",
+      "label": "吃饭",
+      "legacyGoal": "Meal",
+      "priority": 80,
+      "isVitalNeed": true,
+      "reportFormat": "{0}在{1}吃饭。"
+    },
+    {
+      "defName": "Work",
+      "label": "工作",
+      "legacyGoal": "None",
+      "priority": 50,
+      "reportFormat": "{0}在{1}。{2}"
+    },
+    {
+      "defName": "Haul",
+      "label": "搬运",
+      "legacyGoal": "Haul",
+      "priority": 60,
+      "reportFormat": "{0}正把{2}送去{1}。"
+    },
+    {
+      "defName": "Rest",
+      "label": "休息",
+      "legacyGoal": "Rest",
+      "priority": 30,
+      "reportFormat": "{0}在{1}歇着。"
+    },
+    {
+      "defName": "Play",
+      "label": "消遣",
+      "legacyGoal": "Loiter",
+      "priority": 25,
+      "reportFormat": "{0}在{1}消遣。"
+    },
+    {
+      "defName": "SeekChat",
+      "label": "搭话",
+      "legacyGoal": "SeekChat",
+      "priority": 40,
+      "reportFormat": "{0}正想找你说话。"
+    },
+    {
+      "defName": "Loiter",
+      "label": "闲转",
+      "legacyGoal": "Loiter",
+      "priority": 10,
+      "reportFormat": "{0}在{1}。{2}"
+    }
+  ]
+}

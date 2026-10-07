@@ -45,13 +45,19 @@ public static class Traits
     public static bool AcceptsInvite(this CharacterState character) =>
         PersonalityTraits.AcceptsInvite(character);
 
+    public static bool QuickChant(this CharacterState character) =>
+        character.Has(Trait.QuickChant);
+
+    public static bool IsMaid(this CharacterState character) =>
+        character.Has(Trait.Maid);
+
+    public static bool IsMage(this CharacterState character) =>
+        character.Has(Trait.Mage);
+
     // ---------- 光谱效果 ----------
 
     public static int WorkProgressPercent(this CharacterState c, ActionKind action, int hour) =>
         PersonalityTraits.WorkProgressPercent(c, action, hour);
-
-    public static int ScaledFatigue(this CharacterState c, int fatigue) =>
-        PersonalityTraits.ScaledFatigue(c, fatigue);
 
     public static int MoodGainPercent(this CharacterState c) =>
         PersonalityTraits.MoodGainPercent(c);
@@ -78,9 +84,6 @@ public static class Traits
         PersonalityTraits.SeekBudgetDelta(c);
 
     // ---------- 机制素质效果 ----------
-
-    public static int FatigueRecoveryDelta(this CharacterState c) =>
-        PersonalityTraits.FatigueRecoveryDelta(c);
 
     public static int ChatDesireBonus(this CharacterState c) =>
         PersonalityTraits.ChatDesireBonus(c);

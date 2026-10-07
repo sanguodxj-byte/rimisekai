@@ -23,3 +23,18 @@ __pycache__/
 # ===== 测试运行时导出的预览图（写到当前目录）=====
 /world_map_preview.bmp
 /poi_*.bmp
+
+# ===== 美术资产（不入库） =====
+assets/
+
+# ===== UI 对照截图（不入库） =====
+_ui_mobile/
+
+# ===== 本地工具状态与编辑器缓存 =====
+.claude/
+.workbuddy-ai/
+Godot/
+
+# ===== 一次性生图脚本（含密钥，不入库） =====
+tools/gen_*.py
+tools/fix_*.py

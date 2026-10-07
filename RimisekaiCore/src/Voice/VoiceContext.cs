@@ -39,6 +39,18 @@ public sealed class VoiceContext
     /// <summary>该角色说过什么。Once / 冷却 / RequireSaid 都查这一份。</summary>
     public VoiceMemory Memory { get; init; } = new();
 
+    /// <summary>全存档已触发过的事件与场景 Id。Once 场景终身仅演一次查这里。</summary>
+    public IReadOnlySet<string> FiredEvents { get; init; } = new HashSet<string>();
+
+    /// <summary>名册全员是否均已满级（100级）。苛刻剧情门槛使用。</summary>
+    public bool AllMembersMaxLevel { get; init; }
+
+    /// <summary>队伍此刻是否刚从战斗胜利归来（睡觉结算后重置）。</summary>
+    public bool ReturnedFromCombat { get; init; }
+
+    /// <summary>当前所在房间拥有的细分标签（如"卧室"、"室外"等）。</summary>
+    public IReadOnlyList<string> RoomTags { get; init; } = System.Array.Empty<string>();
+
     /// <summary>供门槛里做一次性掷骰。同一句话在一次挑选里只掷一次。</summary>
     public System.Random Rng { get; init; } = new();
 
@@ -82,7 +94,11 @@ public sealed class VoiceContext
         VoicePlace place = VoicePlace.Before,
         VoiceEmotion emotion = VoiceEmotion.Any,
         int characterRoomId = -1,
-        int facilityId = -1)
+        int facilityId = -1,
+        IReadOnlySet<string>? firedEvents = null,
+        bool allMembersMaxLevel = false,
+        IReadOnlyList<string>? roomTags = null,
+        bool returnedFromCombat = false)
     {
         var normalizedDay = day < 1 ? 1 : day;
         return new VoiceContext
@@ -98,6 +114,10 @@ public sealed class VoiceContext
             PlayerRoomId = playerRoomId,
             GiftItemId = giftItemId,
             Memory = character.Voice,
+            FiredEvents = firedEvents ?? new HashSet<string>(),
+            AllMembersMaxLevel = allMembersMaxLevel,
+            ReturnedFromCombat = returnedFromCombat,
+            RoomTags = roomTags ?? System.Array.Empty<string>(),
             Rng = rng ?? new System.Random(),
             Activity = activity,
             Role = role,
@@ -118,7 +138,7 @@ public sealed class VoiceContext
             return VoiceEmotion.Angry;
         if (mood <= 25)
             return VoiceEmotion.Sad;
-        if (character.Condition.Fatigue >= Vitals.TiredAt / 2)
+        if (character.Condition.Tired)
             return VoiceEmotion.Tired;
         if (character.Condition.Bond >= Bond.Lover)
             return VoiceEmotion.Excited;

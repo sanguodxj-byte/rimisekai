@@ -17,8 +17,11 @@ public sealed record GeneratedCharacter(
 
 /// <summary>
 /// 运行时随机角色生成器。按写作规范第十一节的性格光谱掷骰：
-/// 六维属性（带身份加成）+ 身份轴（称呼与职责语汇）+ 特质池 2~4 条（守槽位与互斥）
-/// + 独有层三件套（经历/口癖/来意）。传入带种子的 Random 即可复现同一批角色。
+/// 核心七维属性（角色自有，与身份无关）+ 身份轴（称呼、职责语汇与授予素质）
+/// + 特质池 2~6 条（守槽位与互斥）+ 独有层三件套（经历/口癖/来意）
+/// + 生活与战斗经验 3000（一半按逻辑决定，一半随机散发）。
+/// 威胁等级不存数据、由流派推导；武器与流派不做预设配对，另行独立掷骰。
+/// 传入带种子的 Random 即可复现同一批角色。
 /// </summary>
 public sealed class CharacterGenerator
 {
@@ -29,6 +32,19 @@ public sealed class CharacterGenerator
     /// <summary>从名册之外取名并生成，角色直接加入名册（名册负责发 Id）。</summary>
     public GeneratedCharacter Generate(Roster roster, IEnumerable<string>? extraUsedNames = null)
     {
+        var generated = Roll(roster, extraUsedNames);
+        roster.Attach(generated.State);
+        return generated;
+    }
+
+    /// <summary>
+    /// 掷一个角色但**不入名册**：全套履历照掷，Id 先向名册预约一个不冲突的。
+    /// 定时事件要提前把演员掷出来（好让后台按他的身份生成台词），
+    /// 但人到点才登场，因此这一刻不能出现在名册与队伍面板里。
+    /// 要让他入场时调 <see cref="Roster.Attach"/>。
+    /// </summary>
+    public GeneratedCharacter Roll(Roster roster, IEnumerable<string>? extraUsedNames = null)
+    {
         var used = new HashSet<string>(roster.Members.Select(m => m.Name));
         if (extraUsedNames != null)
         {
@@ -37,18 +53,17 @@ public sealed class CharacterGenerator
         }
 
         var name = RollName(used);
-        var state = roster.Add(name);
-        var identity = Identities[_rng.Next(Identities.Length)];
+        var state = new CharacterState(roster.ReserveId()) { Name = name };
+        var idList = GetIdentities();
+        var identity = idList[_rng.Next(idList.Count)];
         var traits = RollTraits();
 
         foreach (var mechanic in identity.Grants)
             state.Grant(mechanic);
+        foreach (var t in traits)
+            state.Grant(t.Trait);
 
-        // 六维属性：基础 3~8，再叠身份加成。
-        for (var i = 0; i < state.Core.Length; i++)
-            state.Core[i] = 3 + _rng.Next(6);
-        foreach (var (stat, add) in identity.CoreBonus)
-            state.Core[(int)stat] += add;
+        ApplyLife(state, identity, traits.Select(t => t.Name).ToList());
 
         // 起步好感落在 None 档（<100）内：生成即陌生，感情留给玩法。
         var favor = _rng.Next(0, 61);
@@ -63,39 +78,191 @@ public sealed class CharacterGenerator
             $"{identity.Name}·{traits[0].Name}");
     }
 
+    /// <summary>
+    /// 给已建好的角色补全生活履历（开局种子角色走这条）：掷随机身份并授予其机制素质、
+    /// 掷 2-6 条素质（多在 2-4，与 Generate 同规）授予角色、掷初始核心属性、
+    /// 按身份配武器、发 3000 经验（种子素质与掷出素质一并对口），最后满状态起步。
+    /// 名字、主仆、好感与种子素质归调用方。
+    /// </summary>
+    public void Populate(CharacterState state, IEnumerable<string> traitNames)
+    {
+        var idList = GetIdentities();
+        var identity = idList[_rng.Next(idList.Count)];
+        foreach (var mechanic in identity.Grants)
+            state.Grant(mechanic);
+        var seed = traitNames.ToList();
+        var rolled = RollTraits();
+        foreach (var t in rolled)
+            state.Grant(t.Trait);
+        ApplyLife(state, identity, seed.Concat(rolled.Select(t => t.Name)).ToList());
+    }
+
+    /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、3000 经验、满状态起步。</summary>
+    private void ApplyLife(CharacterState state, IdentityDef identity, IReadOnlyList<string> traitNames)
+    {
+        // ---------- 1. 强制分配初始核心属性点（与身份完全无关） ----------
+        // 全属性（体质、灵巧、智力、魅力、感知、力量、速度）初始底线为 6，
+        // 强制分配 21 点属性池。角色根据自身掷出的天资倾向进行分配，不受身份限制。
+        const int BaseAttribute = 6;
+        for (var i = 0; i < state.Core.Length; i++)
+            state.Core[i] = BaseAttribute;
+
+        // 随机掷出该角色的天资主副属性（每个个体拥有自己独特的天赋倾向）
+        var primaryStat = (CoreStat)_rng.Next(state.Core.Length);
+        var secondaryStat = (CoreStat)_rng.Next(state.Core.Length);
+        while (secondaryStat == primaryStat)
+            secondaryStat = (CoreStat)_rng.Next(state.Core.Length);
+
+        // 主属性注入 5 点，副属性注入 3 点
+        state.Core[(int)primaryStat] += 5;
+        state.Core[(int)secondaryStat] += 3;
+
+        // 剩余 13 点离散随机分配至全属性，保持数值丰满与个体差异
+        var remainingPool = 13;
+        while (remainingPool > 0)
+        {
+            var statIdx = _rng.Next(state.Core.Length);
+            state.Core[statIdx]++;
+            remainingPool--;
+        }
+
+        // 速度保底在 [10, 16] 竞技作战合理区间，杜绝残疾速度
+        state.Core[(int)CoreStat.Speed] = Math.Clamp(state.Core[(int)CoreStat.Speed], 10, 16);
+
+        // ---------- 2. 初始装备按身份授予（战斗类身份自带武器，非战斗类为空） ----------
+        state.Equip(identity.MainWeapon, identity.OffWeapon, identity.OffShield);
+        var equippedStyle = state.EquippedStyle;
+
+        // ---------- 3. 经验 3000：一半按逻辑，一半随机 ----------
+        // 仅核心七维是角色自有；经验是发出来的，不预设搭配。
+        // 逻辑的一半：特质对口的技能各 150。
+        // 若身份自带武器（战斗类），余量分给手持主武器与实际推导流派；
+        // 若身份无武器（非战斗类），余量注入生活技能池（模拟过往生活阅历）。
+        // 随机的一半：100 一点，在所有经验轨（生活 + 武器 + 流派）上散发。
+        const int ExpPool = 3000;
+        const int ExpPerTrait = 150;
+        const int ExpChunk = 100;
+        var skillOfTrait = new Dictionary<string, LifeSkill>
+        {
+            ["吃货"] = LifeSkill.Cooking,
+            ["工匠"] = LifeSkill.Craft,
+            ["手巧"] = LifeSkill.Craft,
+            ["炼金"] = LifeSkill.Research,
+            ["书痴"] = LifeSkill.Research,
+            ["好学"] = LifeSkill.Research,
+            ["务实"] = LifeSkill.Mining,
+            ["圆滑"] = LifeSkill.Social,
+            ["健谈"] = LifeSkill.Social,
+        };
+        var tracks = AttributeMap.LifeCount + state.Weapons.Length + state.Styles.Length;
+        void AddExp(int track, int amount)
+        {
+            if (track < AttributeMap.LifeCount)
+                state.LifeExp[track] += amount;
+            else if (track < AttributeMap.LifeCount + state.Weapons.Length)
+                state.Weapons[track - AttributeMap.LifeCount].AddExp(amount);
+            else
+                state.Styles[track - AttributeMap.LifeCount - state.Weapons.Length].AddExp(amount);
+        }
+
+        var logicLeft = ExpPool / 2;
+        foreach (var t in traitNames)
+        {
+            if (logicLeft < ExpPerTrait || !skillOfTrait.TryGetValue(t, out var skill))
+                continue;
+            state.LifeExp[(int)skill] += ExpPerTrait;
+            logicLeft -= ExpPerTrait;
+        }
+        if (logicLeft > 0)
+        {
+            if (identity.MainWeapon != null)
+            {
+                // 战斗类身份：逻辑余量分给手持主武器与实际推导流派
+                var mainShare = logicLeft / 2;
+                state.Weapons[(int)identity.MainWeapon.Value].AddExp(mainShare);
+                state.Styles[(int)equippedStyle!.Value].AddExp(logicLeft - mainShare);
+            }
+            else
+            {
+                // 非战斗类身份：无初始装备，逻辑余量注入生活技能池（过往生活历练）
+                while (logicLeft > 0)
+                {
+                    var skill = (LifeSkill)_rng.Next(AttributeMap.LifeCount);
+                    var add = Math.Min(ExpChunk, logicLeft);
+                    state.LifeExp[(int)skill] += add;
+                    logicLeft -= add;
+                }
+            }
+        }
+        var scatterLeft = ExpPool / 2;
+        while (scatterLeft > 0)
+        {
+            var add = Math.Min(ExpChunk, scatterLeft);
+            AddExp(_rng.Next(tracks), add);
+            scatterLeft -= add;
+        }
+
+        // 满状态起步：生命与体力充沛
+        state.Condition.RecoverFull();
+    }
+
     // ---------- 身份轴（规范 11.8） ----------
 
     private sealed record IdentityDef(
         string Name,
         string Catchphrase,
-        (CoreStat Stat, int Add)[] CoreBonus,
-        Trait[] Grants);
+        Trait[] Grants,
+        WeaponType? MainWeapon = null,
+        WeaponType? OffWeapon = null,
+        bool OffShield = false);
 
     private static readonly IdentityDef[] Identities =
     {
-        new("女仆", "请吩咐",
-            new[] { (CoreStat.Dexterity, 1), (CoreStat.Constitution, 1) }, new[] { Trait.Maid }),
-        new("骑士", "遵命",
-            new[] { (CoreStat.Strength, 2), (CoreStat.Constitution, 1) }, Array.Empty<Trait>()),
-        new("商人", "这笔买卖划算",
-            new[] { (CoreStat.Charm, 2) }, Array.Empty<Trait>()),
-        new("学者", "属下有一事禀报",
-            new[] { (CoreStat.Intellect, 1), (CoreStat.Perception, 1) }, Array.Empty<Trait>()),
-        new("神官", "愿 光保佑您",
-            new[] { (CoreStat.Intellect, 1), (CoreStat.Charm, 1) }, Array.Empty<Trait>()),
-        new("魔法师", "这个术式的原理是",
-            new[] { (CoreStat.Intellect, 2) }, new[] { Trait.Mage }),
+        new("女仆", "请吩咐", new[] { Trait.Maid }),
+        new("骑士", "遵命", Array.Empty<Trait>(), WeaponType.Sword, null, true),
+        new("商人", "这笔买卖划算", Array.Empty<Trait>()),
+        new("学者", "属下有一事禀报", Array.Empty<Trait>()),
+        new("神官", "愿 光保佑您", Array.Empty<Trait>()),
+        new("魔法师", "这个术式的原理是", new[] { Trait.Mage }, WeaponType.Staff),
+        // ---------- 第二批扩充（2026-09-30 主人指示补充） ----------
+        new("战士", "跟紧我", Array.Empty<Trait>(), WeaponType.Sword, WeaponType.Sword),
+        new("护卫", "这里有我", Array.Empty<Trait>(), WeaponType.Spear, null, true),
+        new("佣兵", "钱到位什么都好说", Array.Empty<Trait>(), WeaponType.Axe),
+        new("弓箭手", "风向我看过了", Array.Empty<Trait>(), WeaponType.Bow),
+        new("猎人", "这一带山路我熟", Array.Empty<Trait>(), WeaponType.Crossbow),
+        new("刺客", "别出声", Array.Empty<Trait>(), WeaponType.Dagger, WeaponType.Sword),
+        new("盗贼", "就当没来过", Array.Empty<Trait>(), WeaponType.Dagger),
+        new("吟游诗人", "听我唱一段", Array.Empty<Trait>()),
+        new("舞娘", "看清楚每一个动作", Array.Empty<Trait>()),
+        new("药师", "苦口良药", new[] { Trait.Alchemist }),
+        new("炼金术士", "配方还差一味", new[] { Trait.Alchemist }),
+        new("铁匠", "火候差一分都不行", new[] { Trait.Artisan }),
+        new("木匠", "木头有木头的脾气", new[] { Trait.Artisan }),
+        new("厨师", "先尝一口再说", Array.Empty<Trait>()),
+        new("花匠", "浇水要趁天没亮", Array.Empty<Trait>()),
+        new("信使", "顺路的都归我送", Array.Empty<Trait>()),
+        new("修女", "愿您心安", Array.Empty<Trait>()),
+        new("僧侣", "静以修身", Array.Empty<Trait>()),
+        new("德鲁伊", "万物自有其时", Array.Empty<Trait>(), WeaponType.Staff),
+        new("游侠", "路在脚下", Array.Empty<Trait>(), WeaponType.Bow),
+        new("圣骑士", "誓约所指", Array.Empty<Trait>(), WeaponType.Sword, null, true),
+        new("贵族", "注意你的身份", Array.Empty<Trait>()),
+        new("管家", "一切都已安排妥当", Array.Empty<Trait>()),
+        new("学者助手", "资料我整理好了", Array.Empty<Trait>()),
+        new("星术师", "星象不会说谎", Array.Empty<Trait>()),
     };
 
     // ---------- 特质掷骰（池与互斥在 PersonalityTraits） ----------
 
     private List<PersonalityTraits.Def> RollTraits()
     {
-        var target = _rng.Next(10) switch
+        var target = _rng.Next(9) switch
         {
-            < 3 => 2,
-            < 7 => 3,
-            _ => 4,
+            < 2 => 2,
+            < 5 => 3,
+            < 7 => 4,
+            < 8 => 5,
+            _ => 6,
         };
 
         var picked = new List<PersonalityTraits.Def>();
@@ -190,14 +357,53 @@ public sealed class CharacterGenerator
 
     // ---------- 掷骰 ----------
 
+    private IReadOnlyList<IdentityDef> GetIdentities()
+    {
+        Defs.DefLoader.EnsureInitialized();
+        var defs = Defs.DefDatabase<Defs.IdentityDef>.All;
+        if (defs.Count > 0)
+        {
+            var list = new List<IdentityDef>();
+            foreach (var d in defs)
+            {
+                var grants = new List<Trait>();
+                foreach (var g in d.Grants)
+                {
+                    if (System.Enum.TryParse<Trait>(g, ignoreCase: true, out var t))
+                        grants.Add(t);
+                }
+                WeaponType? main = null;
+                if (!string.IsNullOrEmpty(d.MainWeapon) && Enum.TryParse<WeaponType>(d.MainWeapon, ignoreCase: true, out var mw))
+                    main = mw;
+                WeaponType? off = null;
+                if (!string.IsNullOrEmpty(d.OffWeapon) && Enum.TryParse<WeaponType>(d.OffWeapon, ignoreCase: true, out var ow))
+                    off = ow;
+                list.Add(new IdentityDef(d.Label, d.Catchphrase, grants.ToArray(), main, off, d.OffShield));
+            }
+            return list;
+        }
+        return Identities;
+    }
+
+    private IReadOnlyList<string> GetOrigins() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.Origins is { Count: > 0 } l ? l : Origins;
+    private IReadOnlyList<string> GetTurns() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.Turns is { Count: > 0 } l ? l : Turns;
+    private IReadOnlyList<string> GetReasons() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.Reasons is { Count: > 0 } l ? l : Reasons;
+    private IReadOnlyList<string> GetTics() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.Tics is { Count: > 0 } l ? l : Tics;
+    private IReadOnlyList<string> GetNameStarts() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.NameStarts is { Count: > 0 } l ? l : NameStarts;
+    private IReadOnlyList<string> GetNameMids() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.NameMids is { Count: > 0 } l ? l : NameMids;
+    private IReadOnlyList<string> GetNameEnds() => Defs.DefDatabase<Defs.PersonaPartsDef>.Get("Default")?.NameEnds is { Count: > 0 } l ? l : NameEnds;
+
     private string RollName(ISet<string> used)
     {
+        var starts = GetNameStarts();
+        var mids = GetNameMids();
+        var ends = GetNameEnds();
         for (var attempt = 0; attempt < 200; attempt++)
         {
-            var name = NameStarts[_rng.Next(NameStarts.Length)];
-            if (_rng.Next(2) == 0)
-                name += NameMids[_rng.Next(NameMids.Length)];
-            name += NameEnds[_rng.Next(NameEnds.Length)];
+            var name = starts[_rng.Next(starts.Count)];
+            if (_rng.Next(2) == 0 && mids.Count > 0)
+                name += mids[_rng.Next(mids.Count)];
+            name += ends[_rng.Next(ends.Count)];
             if (name.Length >= 2 && !used.Contains(name))
                 return name;
         }
@@ -209,6 +415,11 @@ public sealed class CharacterGenerator
 
     private string BuildPersona(string name, IdentityDef identity, List<PersonalityTraits.Def> traits)
     {
+        var origins = GetOrigins();
+        var turns = GetTurns();
+        var reasons = GetReasons();
+        var tics = GetTics();
+
         var traitText = string.Join("、", traits.Select(t => $"{t.Name}（{t.Keynote}）"));
         var baseline = traits.Any(t => t.F)
             ? "F——按第六节四档（礼貌距离→决堤）写作"
@@ -222,8 +433,8 @@ public sealed class CharacterGenerator
 
         return $"{name}：{traitText}；{identity.Name}。\n" +
                $"称呼玩家为「大人」，惯用语汇「{identity.Catchphrase}」。\n" +
-               $"经历：{Origins[_rng.Next(Origins.Length)]}，{Turns[_rng.Next(Turns.Length)]}。来到领地：{Reasons[_rng.Next(Reasons.Length)]}。\n" +
-               $"口癖：{Tics[_rng.Next(Tics.Length)]}。\n" +
+               $"经历：{origins[_rng.Next(origins.Count)]}，{turns[_rng.Next(turns.Count)]}。来到领地：{reasons[_rng.Next(reasons.Count)]}。\n" +
+               $"口癖：{tics[_rng.Next(tics.Count)]}。\n" +
                $"亲密基线：{baseline}。感叹号档：{exclaim}。";
     }
 }

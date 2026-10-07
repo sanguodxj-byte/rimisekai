@@ -54,6 +54,22 @@ public sealed class SceneEvent
     /// </summary>
     public int CooldownDays { get; init; }
 
+    /// <summary>
+    /// 到点时现掷一名新角色当演员（访客这类"人从外面来"的事件）。
+    /// 掷出的角色不在名册里，内容表只需写占位说话人与 <c>{名}</c>，
+    /// 真名与身份由生成器给出。false 表示演员取自在场角色。
+    ///
+    /// Spawn 场景的 <see cref="Characters"/> 是**占位说话人**（正文里那个写法），
+    /// 不是名册里真有的人。
+    /// </summary>
+    public bool Spawn { get; init; }
+
+    /// <summary>
+    /// 选了这一项就把现掷的演员送走（移出名册）。留空表示怎么选都留人。
+    /// 只对 <see cref="Spawn"/> 场景有意义——去留写在内容表里，代码不认识"送客"这个词。
+    /// </summary>
+    public string DismissChoice { get; init; } = "";
+
     /// <summary>事件步骤。按顺序执行。</summary>
     public List<SceneStep> Steps { get; init; } = new();
 
@@ -108,6 +124,10 @@ public sealed class SceneLibrary
     /// </summary>
     public bool CanTrigger(SceneEvent scene, CharacterState character, VoiceContext ctx)
     {
+        // 所有场景演出全存档终身仅演一次：已演过绝不再触发。
+        if (ctx.FiredEvents.Contains(scene.Id))
+            return false;
+
         if (scene.Characters.Count > 0 && !scene.Characters.Contains(character.Name))
             return false;
 

@@ -33,6 +33,12 @@ public sealed class VoiceDirector
     /// <summary>场景事件表。没有事件时场景链路旁路。</summary>
     public SceneLibrary Scenes { get; } = new();
 
+    /// <summary>
+    /// 据点事件表：管"什么时候演、谁来演"，每条指向一个场景 Id。
+    /// 与场景表同一来源（台词包）；空表则整条事件链路旁路。
+    /// </summary>
+    public Hub.EventLibrary Events { get; } = new();
+
     public void Register(string characterName, VoicePack pack)
     {
         if (characterName.Length == 0)
@@ -46,8 +52,9 @@ public sealed class VoiceDirector
     public IReadOnlyCollection<string> RegisteredNames => _packs.Keys;
 
     /// <summary>某个时机该角色有没有可说的话。宿主据此决定要不要弹遮盖层。</summary>
-    public bool Has(CharacterState character, VoiceTrigger trigger, VoiceContext ctx) =>
-        Pick(character, trigger, ctx, allowGeneration: false) != null;
+    public bool Has(CharacterState character, VoiceTrigger trigger, VoiceContext ctx,
+        VoiceKind? kind = null, VoicePlace? place = null) =>
+        Pick(character, trigger, ctx, allowGeneration: false, kind, place) != null;
 
     /// <summary>
     /// 挑一句并记账。挑不出返回 null，且不改任何状态。
@@ -56,9 +63,10 @@ public sealed class VoiceDirector
     /// 只取静态台词。挂 Generation 而没有静态正文的句子会被跳过，
     /// 因为同步路径没法等模型；要那种句子请走 <see cref="SpeakAsync"/>。
     /// </summary>
-    public VoiceUtterance? Speak(CharacterState character, VoiceTrigger trigger, VoiceContext ctx)
+    public VoiceUtterance? Speak(CharacterState character, VoiceTrigger trigger, VoiceContext ctx,
+        VoiceKind? kind = null, VoicePlace? place = null)
     {
-        var line = Pick(character, trigger, ctx, allowGeneration: false);
+        var line = Pick(character, trigger, ctx, allowGeneration: false, kind, place);
         if (line == null)
             return null;
         return Utter(character, trigger, ctx, line, line.Lines);
@@ -67,14 +75,15 @@ public sealed class VoiceDirector
     /// <summary>
     /// 异步路径：允许挑到由 LLM 现场生成的句子。
     ///
-    /// 挑中的句子若带 Generation 就走生成层；生成失败则整句作废返回 null，
-    /// 宿主走默认文案。生成成功的正文会写进记忆与近期对话，
+    /// 挑中的句子若带 Generation 就走生成层；生成失败若有静态正文则回退到静态正文，
+    /// 无静态正文才返回 null。生成成功的正文会写进记忆与近期对话，
     /// 供后续生成接上话头。
     /// </summary>
     public async System.Threading.Tasks.Task<VoiceUtterance?> SpeakAsync(
-        CharacterState character, VoiceTrigger trigger, VoiceContext ctx)
+        CharacterState character, VoiceTrigger trigger, VoiceContext ctx,
+        VoiceKind? kind = null, VoicePlace? place = null)
     {
-        var line = Pick(character, trigger, ctx, allowGeneration: true);
+        var line = Pick(character, trigger, ctx, allowGeneration: true, kind, place);
         if (line == null)
             return null;
 
@@ -83,7 +92,11 @@ public sealed class VoiceDirector
 
         var produced = await Generation.ResolveAsync(line, ctx).ConfigureAwait(false);
         if (produced == null || produced.Count == 0)
+        {
+            if (line.Lines.Count > 0)
+                return Utter(character, trigger, ctx, line, line.Lines);
             return null;
+        }
 
         return Utter(character, trigger, ctx, line, produced);
     }
@@ -109,16 +122,16 @@ public sealed class VoiceDirector
     /// 保证同步路径永远拿得到正文。
     /// </summary>
     private VoiceLine? Pick(CharacterState character, VoiceTrigger trigger, VoiceContext ctx,
-        bool allowGeneration)
+        bool allowGeneration, VoiceKind? kind = null, VoicePlace? place = null)
     {
         if (!Enabled)
             return null;
 
         // 先问角色自己的台词库，再问世界通用库。角色专属优先，便于覆盖。
-        var own = PackOf(character.Name)?.Select(character, trigger, ctx, allowGeneration);
+        var own = PackOf(character.Name)?.Select(character, trigger, ctx, allowGeneration, kind, place);
         if (own != null)
             return own;
-        return World.Select(character, trigger, ctx, allowGeneration);
+        return World.Select(character, trigger, ctx, allowGeneration, kind, place);
     }
 
     /// <summary>把一句台词落成遮盖层。地文带插画 Id 时走插画层。</summary>

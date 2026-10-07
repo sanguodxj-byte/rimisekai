@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://baye70707r5hq"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Tools/InkChessCapture.cs" id="1_ccap"]
+
+[node name="InkChessCapture" type="Node"]
+script = ExtResource("1_ccap")

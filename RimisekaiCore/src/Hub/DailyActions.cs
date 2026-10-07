@@ -1,5 +1,7 @@
+using System.Linq;
 using Rimisekai.Character;
 using Rimisekai.Clock;
+using Rimisekai.Defs;
 using Rimisekai.Housing;
 
 namespace Rimisekai.Hub;
@@ -21,13 +23,55 @@ public sealed partial class HubSession
     /// <summary>设施级行动的默认耗时（格，1 格 = 5 分钟）。</summary>
     public const int FacilityActionTicks = 1;
 
+    /// <summary>
+    /// 一项设施级行动按钮上要显示的**分钟耗时**，供界面画在按钮右侧。
+    /// 与 <see cref="ActAtFixture"/> 同源：干活按该行动的格数、日常按默认一格、
+    /// 恶劣天气露天作业加倍——界面画得出来的时间就是实际扣掉的时间。
+    /// 打开存取界面这类不耗时的返回 0，界面据此不显示右侧数值。
+    /// </summary>
+    public int FacilityActionMinutes(ActionKind action)
+    {
+        if (action == ActionKind.Store)
+            return 0;
+        var minutes = ActionKindMap.IsWork(action)
+            ? ActionKindMap.Ticks(action) * TerritoryClock.StepMinutes
+            : FacilityActionTicks * TerritoryClock.StepMinutes;
+        var fixture = Fixture(UsingFixtureId ?? -1);
+        if (ActionKindMap.IsWork(action)
+            && WorldEffects.IsSevere(State.Weather)
+            && fixture != null && WorldEffects.OutdoorRoom(State.Territory, fixture.RoomId))
+            minutes *= 2;
+        return minutes;
+    }
+
     public bool Act(PlaceAction action, int minutes = 0)
     {
         if (PlayerRoomId < 0 || action != PlaceAction.Observe)
             return false;
         PassTime(CostObserve * TerritoryClock.StepMinutes);
         var room = Room(PlayerRoomId);
-        Write(room == null ? "你环顾四周。" : $"你打量着{room.Name}。");
+        if (room == null)
+        {
+            Write("你环顾四周。");
+            return true;
+        }
+        // 补充房间描述日志：描述原文接在打量后，打量着xx后面永远是逗号。
+        // 只按名字权威检索（DefName/Label），禁止按数值 Id 撞库——运行时自增 Id 会撞上无关定义。
+        var def = DefDatabase<RoomDef>.Get(room.Name)
+               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.Name || d.Label == room.Name);
+        var desc = def != null && def.Description.Length > 0 ? def.Description : "";
+
+        // 卧室夜间昼夜差分描述（20:00~6:00）：与插画 room_bedroom_night 呼应
+        if ((room.Name.Contains("卧") || room.HasTag("卧室")) && (State.Clock.Hour < 6 || State.Clock.Hour >= 20))
+        {
+            desc = "月光透过尖拱石窗斜洒在木床上，床幔半掩，粗石壁炉前留有一层静寂的灰烬。";
+        }
+
+        if (!string.IsNullOrEmpty(desc) && !desc.EndsWith("。") && !desc.EndsWith("，"))
+            desc += "。";
+        Write(string.IsNullOrEmpty(desc)
+            ? $"你打量着{room.Name}，"
+            : $"你打量着{room.Name}，{desc}");
         return true;
     }
 
@@ -45,7 +89,33 @@ public sealed partial class HubSession
         // 干活：行动就是设施用途推导出的那项工作行动，产出/扣料与 NPC 同一条实现。
         if (ActionKindMap.IsWork(action))
         {
-            PassTime(ActionKindMap.Ticks(action) * TerritoryClock.StepMinutes);
+            // 耕地先行判定：没种可播、不到季节、生长中，都不耗时，直接说明缘由。
+            if (action == ActionKind.Till)
+            {
+                var crop = State.Territory.CropOf(fixture);
+                if (crop != null)
+                {
+                    var verdict = State.Territory.PlotState(fixture, State.Clock.Season, State.Roster.Master);
+                    switch (verdict)
+                    {
+                        case Territory.FarmState.Growing:
+                            Write($"{crop.DefName}还需要{crop.GrowthDays - fixture.Growth}天成熟。");
+                            return false;
+                        case Territory.FarmState.NoSeed:
+                            Write($"需要{crop.SeedItemId}。");
+                            return false;
+                        case Territory.FarmState.OutOfSeason:
+                            Write($"现在不是种{crop.ProduceItemId}的季节。");
+                            return false;
+                    }
+                }
+            }
+            minutes = ActionKindMap.Ticks(action) * TerritoryClock.StepMinutes;
+            // 恶劣天气露天作业：同样的活耗时加倍。
+            if (WorldEffects.IsSevere(State.Weather)
+                && WorldEffects.OutdoorRoom(State.Territory, fixture.RoomId))
+                minutes *= 2;
+            PassTime(minutes);
             WorkAt(fixture, action);
             return true;
         }
@@ -59,29 +129,64 @@ public sealed partial class HubSession
             return OpenStorage(fixture.Id);
         }
 
-        // 吃饭要先确认有东西可吃——没有就不算做了这个动作，也不推进时间。
-        if (action == ActionKind.Meal && PickFood() == null)
+        // 吃饭：2小时饱腹感间隔，肚子饱时吃不下；且要有食物。
+        if (action == ActionKind.Meal)
         {
-            Write("没有可以吃的东西。");
-            return false;
+            var masterCheck = State.Roster.Master;
+            if (masterCheck != null && masterCheck.Affect.LastMealMinute >= 0
+                && State.Clock.TotalMinutes - masterCheck.Affect.LastMealMinute < 120)
+            {
+                Write("肚子还饱着呢，现在吃不下了。");
+                return false;
+            }
+            if (PickFood() == null)
+            {
+                Write("没有可以吃的东西。");
+                return false;
+            }
         }
 
-        PassTime(minutes > 0 ? minutes : FacilityActionTicks * TerritoryClock.StepMinutes);
+        // 睡觉：20 点前睡不着；一觉向第二天早上 8 点前进。
+        // 到 8 点睡不满 4 小时算晚睡，延长到睡满 8 小时后醒来。
+        var sleepMinutes = 0;
+        if (action == ActionKind.Sleep)
+        {
+            var now = State.Clock.Minutes;
+            if (now >= GameClock.WakeMinutes && now < GameClock.BedtimeMinutes)
+            {
+                Write("还不到睡觉的时候。");
+                return false;
+            }
+            var toMorning = (GameClock.WakeMinutes - now + GameClock.MinutesPerDay) % GameClock.MinutesPerDay;
+            sleepMinutes = toMorning < GameClock.ShortSleepMinutes
+                ? GameClock.FullSleepMinutes
+                : toMorning;
+        }
+
         var master = State.Roster.Master;
+        // 睡下的主人把门带上；一醒过来做别的事，门就还回去（下一次行动不再是睡）。
+        State.Territory.MasterAsleep = action == ActionKind.Sleep;
+        if (action == ActionKind.Sleep)
+            CoSleep(fixture); // 先安排同床/守候，再让一夜过去
+        PassTime(sleepMinutes > 0 ? sleepMinutes
+            : minutes > 0 ? minutes : FacilityActionTicks * TerritoryClock.StepMinutes);
         switch (action)
         {
             case ActionKind.Sleep:
-                master?.Condition.Recover(80, 80, clearFatigue: true);
-                master?.Condition.RecoverMana(50);
+                // 一觉睡到点，醒来精神饱满（NPC 同夜也按格睡满）。
+                master?.Condition.RecoverFull();
+                master?.Condition.ChangeIntoDryClothes();
+                State.ReturnedFromCombat = false;
                 Write($"你在{fixture.Name}上睡了一觉。");
                 break;
             case ActionKind.Rest:
-                master?.Condition.Recover(50, 50, clearFatigue: true);
-                master?.Condition.RecoverMana(50);
+                master?.Condition.Recover(25, 25);
                 Write($"你在{fixture.Name}上休息了一会儿。");
                 break;
             case ActionKind.Bathe:
-                master?.Condition.Recover(30, 40, clearFatigue: false);
+                master?.Condition.Recover(30, 40);
+                master?.Affect.AddMood(5);
+                master?.Condition.ChangeIntoDryClothes();
                 Write($"你在{fixture.Name}洗了澡。");
                 break;
             case ActionKind.Meal:
@@ -104,15 +209,25 @@ public sealed partial class HubSession
         var master = State.Roster.Master;
         if (master == null)
             return;
+        var spiritCost = Defs.DefDatabase<Defs.ActionDef>.Get(act.ToString())?.SpiritCost ?? 15;
         if (ActionKindMap.IsExtractive(act))
         {
+            // 耕地按播种/收获结算，不是无中生有的抽取。
+            if (State.Territory.CropOf(fixture) != null)
+            {
+                var farm = State.Territory.FarmWork(master, fixture, act, State.Clock.Season, YieldFor, out _);
+                master.Condition.Spend(0, spiritCost);
+                Write(farm is { Count: > 0 } done
+                    ? $"你在{fixture.Name}收获了{done.ItemId}×{done.Count}。"
+                    : $"你在{fixture.Name}{ActionKindMap.LabelOf(act)}。");
+                return;
+            }
             // 采集：产量按技能算，与 NPC 同口径。
             var amount = System.Math.Clamp(System.Math.Max(1, master.Life(ActionKindMap.SkillOf(act)!.Value)) / 40, 1, 4);
             if (fixture.YieldItemId.Length > 0)
                 State.Territory.Produce(master, fixture.YieldItemId, amount);
             master.GainLifeExp(ActionKindMap.SkillOf(act)!.Value, Territory.GatherExp);
-            master.Condition.Spend(0, 0, Traits.ScaledFatigue(master, 5));
-            master.Condition.Apply(master);
+            master.Condition.Spend(0, spiritCost);
             Write($"你在{fixture.Name}{ActionKindMap.LabelOf(act)}，得到{fixture.YieldItemId}×{amount}。");
             return;
         }
@@ -127,6 +242,7 @@ public sealed partial class HubSession
         State.Territory.PayWith(master, recipe.Costs);
         master.Bag.Add(recipe.ItemId, recipe.OutputCount);
         master.GainLifeExp(ActionKindMap.SkillOf(act)!.Value, Territory.CraftExp);
+        master.Condition.Spend(0, spiritCost);
         Write($"你在{fixture.Name}{ActionKindMap.LabelOf(act)}，做成{recipe.ItemId}×{recipe.OutputCount}。");
     }
 
@@ -140,10 +256,13 @@ public sealed partial class HubSession
         if (master == null)
             return;
         var food = State.Territory.ConsumeFood(master, fixture.RoomId)!;
-        master.Condition.Recover(80, 60, false);
+        master.Condition.Recover(80, 60);
+        master.Affect.LastMealMinute = State.Clock.TotalMinutes;
         // 坐在没有桌子的房间里吃，等于将就一顿。
         var table = State.Territory.Facilities.Exists(f => f.Built && f.RoomId == fixture.RoomId && f.IsTable);
-        if (!table)
+        if (table)
+            master.Affect.AddMood(3);
+        else
             master.Affect.AddMood(-3);
         Write($"你在{fixture.Name}吃了{food}。");
     }
@@ -168,7 +287,6 @@ public sealed partial class HubSession
         ActionKind.Watch => "看了会儿戏",
         ActionKind.Stargaze => "看了一会儿星星",
         ActionKind.Lookout => "眺望远方",
-        ActionKind.Trade => "摆起了摊",
         ActionKind.Store => "整理了东西",
         ActionKind.Tend => "照看了牲口",
         _ => "待了一会儿",

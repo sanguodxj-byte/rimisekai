@@ -13,4 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RimisekaiCore\RimisekaiCore.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\RimisekaiFrontend\src\Ink\InkModal.cs" Link="InkModal.cs" />
+  </ItemGroup>
 </Project>

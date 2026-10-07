@@ -25,7 +25,7 @@ public sealed class PersonalityTraitTests
     {
         // 57 条（40 光谱 + 17 机制）逐条都要有中文名与效果说明。
         var byTrait = Traits.Catalog.ToDictionary(d => d.Trait);
-        Assert.Equal(57, byTrait.Count);
+        Assert.Equal(76, byTrait.Count);
         foreach (var value in System.Enum.GetValues<Trait>())
         {
             Assert.True(byTrait.ContainsKey(value), $"{value} 缺目录条目");
@@ -44,7 +44,7 @@ public sealed class PersonalityTraitTests
         Assert.NotNull(dir);
 
         var src = System.IO.Path.Combine(dir!.FullName, "RimisekaiCore", "src");
-        var pattern = new System.Text.RegularExpressions.Regex(@"Trait\.[A-Z]");
+        var pattern = new System.Text.RegularExpressions.Regex(@"\bTrait\.[A-Z]");
         foreach (var file in System.IO.Directory.EnumerateFiles(src, "*.cs", System.IO.SearchOption.AllDirectories))
         {
             if (allowed.Contains(System.IO.Path.GetFileName(file)))
@@ -74,11 +74,8 @@ public sealed class PersonalityTraitTests
     }
 
     [Fact]
-    public void Fatigue_and_mood_scaling_respect_signs()
+    public void Mood_scaling_respects_signs()
     {
-        Assert.True(Traits.ScaledFatigue(With(Trait.Perfectionist), 10) > 10);
-        Assert.True(Traits.ScaledFatigue(With(Trait.Unflappable), 10) < 10);
-
         // 心情缩放只对正数生效，惩罚不放大。
         Assert.True(Traits.ScaledMood(With(Trait.Expressive), 5) > 5);
         Assert.Equal(-5, Traits.ScaledMood(With(Trait.Expressive), -5));
@@ -112,7 +109,7 @@ public sealed class PersonalityTraitTests
     public void Meal_and_learn_and_talk_hooks_fire()
     {
         Assert.True(Traits.MealMoodPercent(With(Trait.Foodie)) > 100);
-        Assert.True(Traits.MealSpirit(With(Trait.Worrier), 60) > 60);
+        Assert.True(Traits.MealSpirit(With(Trait.Foodie), 60) > 60);
 
         Assert.True(With(Trait.Inquisitive).LearnPercent() > With().LearnPercent());
         Assert.True(With(Trait.Nervous).TalkDifficulty() > With().TalkDifficulty());
@@ -126,10 +123,9 @@ public sealed class PersonalityTraitTests
         Assert.True(Traits.WorkProgressPercent(With(Trait.Defiant), ActionKind.Mine, 12) < 100);
         Assert.True(With(Trait.Defiant).TalkDifficulty() > With().TalkDifficulty());
 
-        // 怕痛拒重活，不觉痛疲劳 -15。
+        // 怕痛拒重活。
         Assert.False(With(Trait.FearPain).WillWork(hardLabor: true));
         Assert.True(With(Trait.FearPain).WillWork(hardLabor: false));
-        Assert.True(Traits.ScaledFatigue(With(Trait.IgnorePain), 10) < 10);
 
         // 工匠手艺 +10、炼金 +15。
         Assert.True(Traits.WorkProgressPercent(With(Trait.Artisan), ActionKind.Forge, 12) > 100);
@@ -144,12 +140,10 @@ public sealed class PersonalityTraitTests
         Assert.Equal(WorkType.Excavate, ActionKindMap.TypeOf(ActionKind.Fell));
         Assert.Equal(CoreStat.Strength, WorkTypeMap.CoreOf(WorkType.Excavate));
 
-        // 力量 - 搬运 - 取水。
-        Assert.Equal(WorkType.Haul, ActionKindMap.TypeOf(ActionKind.DrawWater));
-        Assert.Equal(CoreStat.Strength, WorkTypeMap.CoreOf(WorkType.Haul));
-
-        // 社交类行动：表演归社交（魅力）。
+        // 社交类行动：表演、交易归社交（魅力）。
         Assert.Equal(WorkType.Social, ActionKindMap.TypeOf(ActionKind.Perform));
+        Assert.Equal(WorkType.Social, ActionKindMap.TypeOf(ActionKind.Trade));
+        Assert.Equal(LifeSkill.Social, ActionKindMap.SkillOf(ActionKind.Trade));
         Assert.Equal(CoreStat.Charm, WorkTypeMap.CoreOf(WorkType.Social));
 
         // 研究类行动：炼金归研究（智力）。

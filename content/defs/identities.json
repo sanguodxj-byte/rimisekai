@@ -1,0 +1,296 @@
+{
+  "defType": "IdentityDef",
+  "defs": [
+    {
+      "defName": "女仆",
+      "label": "女仆",
+      "catchphrase": "请吩咐",
+      "grants": [
+        "Maid"
+      ],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "骑士",
+      "label": "骑士",
+      "catchphrase": "遵命",
+      "grants": [],
+      "mainWeapon": "Sword",
+      "offWeapon": null,
+      "offShield": true
+    },
+    {
+      "defName": "商人",
+      "label": "商人",
+      "catchphrase": "这笔买卖划算",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "学者",
+      "label": "学者",
+      "catchphrase": "属下有一事禀报",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "神官",
+      "label": "神官",
+      "catchphrase": "愿光芒庇护您",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "魔法师",
+      "label": "魔法师",
+      "catchphrase": "这个术式的原理是",
+      "grants": [
+        "Mage"
+      ],
+      "mainWeapon": "Staff",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "战士",
+      "label": "战士",
+      "catchphrase": "跟紧我",
+      "grants": [],
+      "mainWeapon": "Sword",
+      "offWeapon": "Sword",
+      "offShield": false
+    },
+    {
+      "defName": "护卫",
+      "label": "护卫",
+      "catchphrase": "这里有我",
+      "grants": [],
+      "mainWeapon": "Spear",
+      "offWeapon": null,
+      "offShield": true
+    },
+    {
+      "defName": "佣兵",
+      "label": "佣兵",
+      "catchphrase": "钱到位什么都好说",
+      "grants": [],
+      "mainWeapon": "Axe",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "弓箭手",
+      "label": "弓箭手",
+      "catchphrase": "风向我看过了",
+      "grants": [],
+      "mainWeapon": "Bow",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "猎人",
+      "label": "猎人",
+      "catchphrase": "这一带山路我熟",
+      "grants": [],
+      "mainWeapon": "Crossbow",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "刺客",
+      "label": "刺客",
+      "catchphrase": "别出声",
+      "grants": [],
+      "mainWeapon": "Dagger",
+      "offWeapon": "Sword",
+      "offShield": false
+    },
+    {
+      "defName": "盗贼",
+      "label": "盗贼",
+      "catchphrase": "就当没来过",
+      "grants": [],
+      "mainWeapon": "Dagger",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "吟游诗人",
+      "label": "吟游诗人",
+      "catchphrase": "听我唱一段",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "舞娘",
+      "label": "舞娘",
+      "catchphrase": "看清楚每一个动作",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "药师",
+      "label": "药师",
+      "catchphrase": "苦口良药",
+      "grants": [
+        "Alchemist"
+      ],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "炼金术士",
+      "label": "炼金术士",
+      "catchphrase": "配方还差一味",
+      "grants": [
+        "Alchemist"
+      ],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "铁匠",
+      "label": "铁匠",
+      "catchphrase": "火候差一分都不行",
+      "grants": [
+        "Artisan"
+      ],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "木匠",
+      "label": "木匠",
+      "catchphrase": "木头有木头的脾气",
+      "grants": [
+        "Artisan"
+      ],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "厨师",
+      "label": "厨师",
+      "catchphrase": "先尝一口再说",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "花匠",
+      "label": "花匠",
+      "catchphrase": "浇水要趁天没亮",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "信使",
+      "label": "信使",
+      "catchphrase": "顺路的都归我送",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "修女",
+      "label": "修女",
+      "catchphrase": "愿您心安",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "僧侣",
+      "label": "僧侣",
+      "catchphrase": "静以修身",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "德鲁伊",
+      "label": "德鲁伊",
+      "catchphrase": "万物自有其时",
+      "grants": [],
+      "mainWeapon": "Staff",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "游侠",
+      "label": "游侠",
+      "catchphrase": "路在脚下",
+      "grants": [],
+      "mainWeapon": "Bow",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "圣骑士",
+      "label": "圣骑士",
+      "catchphrase": "誓约所指",
+      "grants": [],
+      "mainWeapon": "Sword",
+      "offWeapon": null,
+      "offShield": true
+    },
+    {
+      "defName": "贵族",
+      "label": "贵族",
+      "catchphrase": "注意你的身份",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "管家",
+      "label": "管家",
+      "catchphrase": "一切都已安排妥当",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "学者助手",
+      "label": "学者助手",
+      "catchphrase": "资料我整理好了",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "星术师",
+      "label": "星术师",
+      "catchphrase": "星象不会说谎",
+      "grants": [],
+      "mainWeapon": null,
+      "offWeapon": null,
+      "offShield": false
+    }
+  ]
+}

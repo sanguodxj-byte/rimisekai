@@ -40,8 +40,43 @@ public static class VoicePackJson
         /// <summary>场景事件（多步剧情）。</summary>
         public List<SceneEntry> Scenes { get; set; } = new();
 
+        /// <summary>据点事件（什么时候演、谁来演，指向一个场景 Id）。</summary>
+        public List<EventEntry> Events { get; set; } = new();
+
         /// <summary>角色的固定设定，供 LLM 生成时当人设用。</summary>
         public Dictionary<string, string> Personas { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 一条据点事件。管"什么时候演、谁来演"；演什么由 <see cref="SceneId"/> 指向的场景决定。
+    /// </summary>
+    public sealed class EventEntry
+    {
+        public string Id { get; set; } = "";
+        public string Title { get; set; } = "";
+
+        /// <summary>触发时机：Season / Weather / Join / PersonalStory / WorldStory / Scheduled。</summary>
+        public string Trigger { get; set; } = "";
+
+        /// <summary>演出哪段场景（场景库 Id）。</summary>
+        public string SceneId { get; set; } = "";
+
+        /// <summary>能演这段的角色名；空 = 任意在场角色。</summary>
+        public List<string> Characters { get; set; } = new();
+
+        public GateEntry? Gate { get; set; }
+
+        /// <summary>整局只发生一次。</summary>
+        public bool Once { get; set; }
+
+        /// <summary>同一天多事件同时到点时的先后，小的先演。</summary>
+        public int Priority { get; set; }
+
+        /// <summary>定时事件：不早于第几天。</summary>
+        public int? Day { get; set; }
+
+        /// <summary>定时事件：不早于当天的第几小时。</summary>
+        public int? Hour { get; set; }
     }
 
     public sealed class CharacterEntry
@@ -136,6 +171,12 @@ public static class VoicePackJson
         public List<EffectEntry> Effects { get; set; } = new();
         public List<StepEntry> Steps { get; set; } = new();
         public List<string> Summary { get; set; } = new();
+
+        /// <summary>到点时现掷一名新角色当演员（访客这类"人从外面来"的事件）。</summary>
+        public bool Spawn { get; set; }
+
+        /// <summary>选了这一项就把现掷的演员送走。留空表示怎么选都留人。</summary>
+        public string DismissChoice { get; set; } = "";
     }
 
     public sealed class StepEntry
@@ -153,6 +194,9 @@ public static class VoicePackJson
         public List<ChoiceEntry> Choices { get; set; } = new();
         public List<EffectEntry> Effects { get; set; } = new();
         public GateEntry? Gate { get; set; }
+
+        /// <summary>收束步：本步行完即收演，不顺流到下一步。</summary>
+        public bool End { get; set; }
     }
 
     /// <summary>
@@ -165,6 +209,9 @@ public static class VoicePackJson
         public VoiceKind Kind { get; set; } = VoiceKind.Speech;
         public string Speaker { get; set; } = "";
         public string Text { get; set; } = "";
+
+        /// <summary>本行由 LLM 生成。给了它，text 可以留空（纯生成行）。</summary>
+        public GenerationEntry? Generation { get; set; }
     }
 
     /// <summary>
@@ -202,6 +249,9 @@ public static class VoicePackJson
                     case "text":
                         entry.Text = reader.GetString() ?? "";
                         break;
+                    case "generation":
+                        entry.Generation = JsonSerializer.Deserialize<GenerationEntry>(ref reader, options);
+                        break;
                     default:
                         reader.Skip();
                         break;
@@ -217,6 +267,11 @@ public static class VoicePackJson
             writer.WriteString("kind", value.Kind.ToString());
             writer.WriteString("speaker", value.Speaker);
             writer.WriteString("text", value.Text);
+            if (value.Generation != null)
+            {
+                writer.WritePropertyName("generation");
+                JsonSerializer.Serialize(writer, value.Generation, options);
+            }
             writer.WriteEndObject();
         }
     }
@@ -263,6 +318,11 @@ public static class VoicePackJson
         public int? DaysSinceTalkMin { get; set; }
         public int? MoodMin { get; set; }
         public int? MoodMax { get; set; }
+        public bool? Soaked { get; set; }
+        public int? LevelMin { get; set; }
+        public bool? AllMembersMaxLevel { get; set; }
+        public bool? ReturnedFromCombat { get; set; }
+        public List<string> RoomTags { get; set; } = new();
         public List<Trait> RequireTraits { get; set; } = new();
         public List<Trait> ForbidTraits { get; set; } = new();
         public int? HourMin { get; set; }
@@ -299,7 +359,7 @@ public static class VoicePackJson
         out Dictionary<string, VoicePack> characters,
         out VoicePack world,
         out string error)
-        => TryParse(json, out characters, out world, out _, out _, out error);
+        => TryParse(json, out characters, out world, out _, out _, out _, out error);
 
     /// <summary>
     /// 完整版解析。除台词库外还给出场景事件表与角色设定。
@@ -311,10 +371,24 @@ public static class VoicePackJson
         out List<SceneEvent> scenes,
         out Dictionary<string, string> personas,
         out string error)
+        => TryParse(json, out characters, out world, out scenes, out _, out personas, out error);
+
+    /// <summary>
+    /// 完整版解析。除台词库、场景表与角色设定外，还给出据点事件表。
+    /// </summary>
+    public static bool TryParse(
+        string json,
+        out Dictionary<string, VoicePack> characters,
+        out VoicePack world,
+        out List<SceneEvent> scenes,
+        out List<Hub.HubEventDef> events,
+        out Dictionary<string, string> personas,
+        out string error)
     {
         characters = new Dictionary<string, VoicePack>();
         world = new VoicePack();
         scenes = new List<SceneEvent>();
+        events = new List<Hub.HubEventDef>();
         personas = new Dictionary<string, string>();
         error = "";
         LastError = "";
@@ -355,10 +429,46 @@ public static class VoicePackJson
                 scenes.Add(scene);
         }
 
+        foreach (var entry in file.Events)
+        {
+            var def = ToEvent(entry);
+            if (def != null)
+                events.Add(def);
+        }
+
         foreach (var pair in file.Personas)
             personas[pair.Key] = pair.Value;
 
         return true;
+    }
+
+    /// <summary>把一条事件读成运行时对象。Id 或场景 Id 为空的丢弃。</summary>
+    private static Hub.HubEventDef? ToEvent(EventEntry entry)
+    {
+        if (entry.Id.Length == 0 || entry.SceneId.Length == 0)
+            return null;
+
+        var trigger = Hub.HubEventTrigger.WorldStory;
+        if (!System.Enum.TryParse<Hub.HubEventTrigger>(entry.Trigger, ignoreCase: true, out trigger))
+        {
+            // 认不出的时机名不静默变成别的时机，直接丢掉并在 LastError 留痕。
+            LastError = $"事件 {entry.Id} 的触发时机 {entry.Trigger} 不认识。";
+            return null;
+        }
+
+        return new Hub.HubEventDef
+        {
+            Id = entry.Id,
+            Title = entry.Title,
+            Trigger = trigger,
+            SceneId = entry.SceneId,
+            Characters = entry.Characters,
+            Gate = entry.Gate == null ? null : ToGate(entry.Gate),
+            Once = entry.Once,
+            Priority = entry.Priority,
+            Day = entry.Day,
+            Hour = entry.Hour,
+        };
     }
 
     /// <summary>角色包内没写说话人就补角色名；世界包留空即旁白。</summary>
@@ -411,14 +521,16 @@ public static class VoicePackJson
             var lines = new List<SceneText>();
             foreach (var text in step.Lines)
             {
-                if (text.Text.Length == 0)
+                var generation = ToGeneration(text.Generation);
+                // 没有静态正文又没有生成槽的空行才丢弃；纯生成行（text 空、有 generation）要留。
+                if (text.Text.Length == 0 && generation == null)
                     continue;
                 // 步骤里的简写文本默认按"本事件主角在说话"处理；
                 // 写旁白请在 JSON 里显式给 kind。
                 var speaker = text.Speaker;
                 if (speaker.Length == 0 && text.Kind == VoiceKind.Speech)
                     speaker = entry.Characters.Count > 0 ? entry.Characters[0] : "";
-                lines.Add(new SceneText(text.Kind, speaker, text.Text));
+                lines.Add(new SceneText(text.Kind, speaker, text.Text, generation));
             }
 
             var choices = new List<SceneChoice>();
@@ -441,6 +553,7 @@ public static class VoicePackJson
                 Choices = choices,
                 Effects = ToEffects(step.Effects),
                 Gate = step.Gate == null ? null : ToGate(step.Gate),
+                End = step.End,
             });
         }
 
@@ -456,6 +569,8 @@ public static class VoicePackJson
             RequireFlagValue = entry.RequireFlagValue,
             DoneValue = entry.DoneValue,
             CooldownDays = entry.CooldownDays,
+            Spawn = entry.Spawn,
+            DismissChoice = entry.DismissChoice,
             Effects = ToEffects(entry.Effects),
             Steps = steps,
             Summary = entry.Summary,
@@ -498,6 +613,11 @@ public static class VoicePackJson
             DaysSinceTalkMin = entry.DaysSinceTalkMin,
             MoodMin = entry.MoodMin,
             MoodMax = entry.MoodMax,
+            Soaked = entry.Soaked,
+            LevelMin = entry.LevelMin,
+            AllMembersMaxLevel = entry.AllMembersMaxLevel,
+            ReturnedFromCombat = entry.ReturnedFromCombat,
+            RoomTags = entry.RoomTags,
             RequireTraits = entry.RequireTraits,
             ForbidTraits = entry.ForbidTraits,
             HourMin = entry.HourMin,

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cmobaudit0rim"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Tools/MobileHitAudit.cs" id="1_audit"]
+
+[node name="MobileHitAudit" type="Node"]
+script = ExtResource("1_audit")

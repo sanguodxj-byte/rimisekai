@@ -1,0 +1,194 @@
+{
+  "defType": "StartingArea",
+  "defs": [
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "Facility_1003",
+      "id": 1,
+      "roomId": 1,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "躺椅",
+      "id": 2,
+      "roomId": 1,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "沙发",
+      "id": 4,
+      "roomId": 2,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "床",
+      "id": 5,
+      "roomId": 3,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "草药丛",
+      "id": 6,
+      "roomId": 4,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "林场",
+      "id": 11,
+      "roomId": 4,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "矿脉",
+      "id": 7,
+      "roomId": 5,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "箱子",
+      "id": 8,
+      "roomId": 3,
+      "contents": {
+        "木材": 10,
+        "石材": 10,
+        "干粮": 10
+      }
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "餐桌",
+      "id": 9,
+      "roomId": 2,
+      "contents": {}
+    },
+    {
+      "defType": "AreaFacilityDef",
+      "facilityDefName": "木椅",
+      "id": 10,
+      "roomId": 2,
+      "contents": {}
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "庭院",
+      "label": "",
+      "description": "青石板路的中央立着一口带木篷的水井，回廊尖拱下放着歇脚的躺椅，石墙上的铁壁灯照亮了四周。",
+      "id": 1,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 2,
+      "y": 2,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": true,
+      "buildable": false,
+      "illustration": "res://assets/room_courtyard.png",
+      "tags": [
+        "室外"
+      ],
+      "materialCost": []
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "客厅",
+      "label": "",
+      "description": "石砌壁炉里的余炭泛着微光，几张结实的橡木长桌整齐排开，空气中弥漫着麦酒与陈木的气息。",
+      "id": 2,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 2,
+      "y": 1,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": true,
+      "buildable": true,
+      "illustration": "res://assets/room_tavern.png",
+      "tags": [
+        "室内",
+        "娱乐室"
+      ],
+      "materialCost": [
+        {
+          "itemId": "木材",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "卧室",
+      "label": "",
+      "description": "尖拱石窗前放着厚重的橡木书桌，四柱木床上的被褥整理得十分平整，床尾摆着一口包铁木箱。",
+      "id": 3,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 2,
+      "y": 0,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": true,
+      "buildable": true,
+      "illustration": "res://assets/room_bedroom_day.png",
+      "tags": [
+        "室内",
+        "卧室",
+        "私人空间"
+      ],
+      "materialCost": [
+        {
+          "itemId": "木材",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "森林",
+      "label": "",
+      "description": "茂密的枝冠在头顶交叠遮蔽了天光，石径旁的湿润泥土上蔓延着青苔，草药丛在微风中轻轻摇曳。",
+      "id": 4,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 1,
+      "y": 2,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": true,
+      "buildable": false,
+      "illustration": "res://assets/terrain_dark_forest.png",
+      "tags": [
+        "室外",
+        "工作间"
+      ],
+      "materialCost": []
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "山岳",
+      "label": "",
+      "description": "裸露的风化岩壁险峻地矗立在风中，灰白岩层的断裂处隐隐能看见粗砺的矿石纹理。",
+      "id": 5,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 3,
+      "y": 2,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": true,
+      "buildable": false,
+      "illustration": "res://assets/terrain_storm_mountains.png",
+      "tags": [
+        "室外",
+        "工作间"
+      ],
+      "materialCost": []
+    }
+  ]
+}

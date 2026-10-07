@@ -19,6 +19,7 @@ public sealed class Affect
     public int LastTalkAt = -1;
     public int LastMealDay = -1;
     public int LastMealWindow = -1;
+    public int LastMealMinute = -1;
     public int LastPlayDay = -1;
     public int LastBoredDay = -1;
     public int IntimateDay = -1;

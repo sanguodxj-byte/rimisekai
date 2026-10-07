@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Catalog;
 using Rimisekai.Character;
 using Rimisekai.Clock;
@@ -28,6 +30,7 @@ public sealed class ArchitectureTests
         master.MaxBase[0] = 100;
         master.Base[0] = 10;
 
+        state.Clock.SetTime(1, 0);
         state.Clock.Advance(GameClock.MinutesPerDay - 1);
         Assert.Equal(3, state.Clock.Slot);
         state.Clock.Advance(1);
@@ -128,10 +131,8 @@ public sealed class ArchitectureTests
         var t = new Territory();
         t.AddRoom(new Room { Id = 0 });
         t.AddFacility(new Facility { Id = 1, RoomId = 0, Usage = FacilityUsage.Plain, Actions = { ActionKind.Till }, YieldItemId = "herb", Capacity = 1 });
-        t.Assign(a.Id, 0, SlotMode.Work);
-        t.SetPriority(a.Id, ActionKind.Till, 1);
-        t.Assign(b.Id, 0, SlotMode.Work);
-        t.SetPriority(b.Id, ActionKind.Till, 1);
+        t.Assign(a.Id, 0, SlotMode.Work, 1);
+        t.Assign(b.Id, 0, SlotMode.Work, 1);
 
         var logs = t.ResolveSlot(0, roster);
         Assert.Single(logs);
@@ -156,8 +157,7 @@ public sealed class ArchitectureTests
             OutputCount = 1,
             Costs = { new RecipeCost("ore", 2) },
         });
-        t.Assign(a.Id, 2, SlotMode.Work);
-        t.SetPriority(a.Id, ActionKind.Forge, 1);
+        t.Assign(a.Id, 2, SlotMode.Work, 1);
 
         Assert.Empty(t.ResolveSlot(2, roster));
         a.Bag.Add("ore", 2);
@@ -171,6 +171,7 @@ public sealed class ArchitectureTests
     public void Clock_slot_is_six_hours()
     {
         var clock = new GameClock();
+        clock.SetTime(1, 0);
         clock.Advance(6 * 60);
         Assert.Equal(1, clock.Slot);
         clock.Advance(6 * 60);
@@ -187,7 +188,6 @@ public sealed class ArchitectureTests
         c[CoreStat.Intellect] = 6;
         c[CoreStat.Perception] = 4;
         c[CoreStat.Strength] = 12;
-        c.Threat = 3;
 
         var sheet = c.Combat;
         Assert.Equal(16, sheet.Attack);
@@ -195,7 +195,6 @@ public sealed class ArchitectureTests
         Assert.Equal(16, sheet.Defence);
         Assert.Equal(10, sheet.Dodge);
         Assert.Equal(8, sheet.SpellPower);
-        Assert.Equal(3, sheet.Threat);
         Assert.Equal(CoreStat.Strength, AttributeMap.CoreOf(LifeSkill.Mining));
         Assert.Equal(CoreStat.Charm, AttributeMap.CoreOf(LifeSkill.Husbandry));
 
@@ -224,8 +223,6 @@ public sealed class ArchitectureTests
         Assert.Equal(10, c[CoreStat.Strength]);
         Assert.Equal(900, c.LevelExp);
         Assert.Equal(10, c.Level);
-        Assert.Equal(10 + 9 * 5 + 10 * 3, c.MaxMana);
-        Assert.Equal(c.MaxMana, c.Condition.MaxMana);
 
         Assert.True(c.Equip(WeaponType.Sword, WeaponType.Sword));
         Assert.Equal(StyleType.TwoHand, c.EquippedStyle);
@@ -296,7 +293,8 @@ public sealed class ArchitectureTests
         Assert.True(hub.Social(SocialAction.Gift, "花"));
         Assert.Equal(0, hub.State.Roster.Master!.Bag.Get("花"));
         Assert.True(hub.Craft("布"));
-        Assert.Equal(1, hub.State.Roster.Master!.Bag.Get("布"));
+        Assert.Equal("布", hub.State.Territory.GetTargetCraftItem(ActionKind.Sew));
+        hub.State.Roster.Master!.Bag.Add("布", 1);
         Assert.True(hub.Trade("布", 1, 15, selling: true));
         Assert.Equal(115, state.Money);
         Assert.True(hub.Develop(3));
@@ -352,8 +350,7 @@ public sealed class ArchitectureTests
         Assert.True(t.Build(5, ref money));
         Assert.Equal(0, money);
         Assert.Equal(1, t.Effect("shaft"));
-        t.Assign(a.Id, 0, SlotMode.Work);
-        t.SetPriority(a.Id, ActionKind.Mine, 1);
+        t.Assign(a.Id, 0, SlotMode.Work, 5);
 
         var day = new TerritoryClock();
         day.Track(a.Id, 1);
@@ -384,8 +381,7 @@ public sealed class ArchitectureTests
         var t = new Territory();
         t.AddRoom(new Room { Id = 1, Open = true });
         t.AddFacility(new Facility { Id = 1, RoomId = 1, Usage = FacilityUsage.Plain, Actions = { ActionKind.Mine }, Built = true, YieldItemId = "ore" });
-        t.Assign(lazy.Id, 0, SlotMode.Work);
-        t.SetPriority(lazy.Id, ActionKind.Mine, 1);
+        t.Assign(lazy.Id, 0, SlotMode.Work, 1);
         var day = new TerritoryClock();
         day.Track(lazy.Id, 1);
         day.Step(t, roster, 0);
@@ -410,20 +406,22 @@ public sealed class ArchitectureTests
     public void Vitals_tire_recover_and_bond()
     {
         var c = new CharacterState(1);
-        Assert.Equal(Vitals.DefaultMax, c.Condition.Stamina);
+        var cap = c.Condition.MaxStamina;
+        Assert.Equal(c.Combat.MaxHp, cap);
+        Assert.Equal(cap, c.Condition.Stamina);
         Assert.Equal(Bond.None, c.Condition.Bond);
 
-        c.Condition.Spend(200, 100, 5);
-        Assert.Equal(800, c.Condition.Stamina);
-        Assert.Equal(900, c.Condition.Spirit);
-        Assert.Equal(5, c.Condition.Fatigue);
+        c.Condition.Spend(cap, 100);
+        Assert.Equal(0, c.Condition.Stamina);
+        Assert.Equal(Vitals.DefaultMax - 100, c.Condition.Spirit);
         Assert.False(c.Condition.Tired);
 
-        c.Condition.Spend(0, 0, Vitals.TiredAt);
+        // 气力低于 30% 即进入疲劳；这是唯一的判定。
+        c.Condition.Spend(0, Vitals.DefaultMax);
         Assert.True(c.Condition.Tired);
 
-        c.Condition.Recover(50, 50, clearFatigue: true);
-        Assert.Equal(850, c.Condition.Stamina);
+        c.Condition.Recover(cap, Vitals.DefaultMax);
+        Assert.Equal(cap, c.Condition.Stamina);
         Assert.False(c.Condition.Tired);
 
         c.Condition.AddFavor(120);
@@ -439,12 +437,11 @@ public sealed class ArchitectureTests
     {
         var roster = new Roster();
         var worker = roster.Add("工");
-        worker.Condition.Spend(0, 0, Vitals.TiredAt);
+        worker.Condition.Spend(0, Vitals.DefaultMax);
         var t = new Territory();
         t.AddRoom(new Room { Id = 1, Open = true });
         t.AddFacility(new Facility { Id = 1, RoomId = 1, Usage = FacilityUsage.Plain, Actions = { ActionKind.Till }, Built = true, YieldItemId = "herb" });
-        t.Assign(worker.Id, 0, SlotMode.Work);
-        t.SetPriority(worker.Id, ActionKind.Till, 1);
+        t.Assign(worker.Id, 0, SlotMode.Work, 1);
         var day = new TerritoryClock();
         day.Track(worker.Id, 1);
         day.Step(t, roster, 0);
@@ -479,12 +476,12 @@ public sealed class ArchitectureTests
             YieldItemId = "ore", Built = true,
         });
         for (var slot = 0; slot < WorkSlot.Count; slot++)
-            state.Territory.Assign(worker.Id, slot, SlotMode.Work);
-        state.Territory.SetPriority(worker.Id, ActionKind.Mine, 1);
+            state.Territory.Assign(worker.Id, slot, SlotMode.Work, 1);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
 
+        state.Clock.SetTime(1, 0);
         state.Clock.Advance(6 * 60);
         var logs = hub.PassTime(6 * 60);
         // 矿脉不是仓储设施，同房也没有货架：产出退回采集者背包。
@@ -497,18 +494,23 @@ public sealed class ArchitectureTests
     public void Market_and_guests_serve_main_screen()
     {
         var state = new GameState { Money = 100 };
+        state.Clock.SetTime(1, 0);
         state.Roster.Add("你", master: true);
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
-        state.Territory.AddOffer(new MarketOffer { ItemId = "布", BuyPrice = 10, SellPrice = 6 });
+        state.Territory.MarketDay["木材"] = new Territory.MarketEntry(5, 100);
         state.Territory.AddGuest(new Guest { Id = 1, Name = "行商", RoomId = 1, Purpose = "卖货" });
         var hub = new HubSession(state);
         hub.Enter(1);
 
-        Assert.True(hub.MarketTrade("布", 2, selling: false));
-        Assert.Equal(80, state.Money);
-        Assert.Equal(2, state.Roster.Master!.Bag.Get("布"));
-        Assert.True(hub.MarketTrade("布", 1, selling: true));
-        Assert.Equal(86, state.Money);
+        // 不在交易页买卖不了，且不耗时。
+        Assert.False(hub.MarketTrade("木材", 1, selling: false));
+        Assert.Equal(0, state.Clock.Minutes);
+        // 点交易开页免费；首笔成交结算行程 6 小时，之后的成交免费。
+        hub.OpenTrade();
+        Assert.True(hub.MarketTrade("木材", 2, selling: false));
+        Assert.Equal(6 * 60, state.Clock.Minutes);
+        Assert.Equal(2, state.Roster.Master!.Bag.Get("木材"));
+        Assert.True(hub.MarketTrade("木材", 1, selling: true));
         Assert.Single(hub.GuestsHere());
     }
 
@@ -516,6 +518,7 @@ public sealed class ArchitectureTests
     public void BuildFacility_costs_money_and_station_time()
     {
         var state = new GameState { Money = 100 };
+        state.Clock.SetTime(1, 0);
         state.Roster.Add("你", master: true);
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         state.Territory.AddFacility(new Facility
@@ -536,7 +539,7 @@ public sealed class ArchitectureTests
     public void Save_roundtrip_keeps_world_and_hub()
     {
         var state = new GameState { Money = 500, Prestige = 7 };
-        state.Clock.Advance(7 * 60);
+        state.Clock.SetTime(1, 7 * 60);
         state.Weather = Weather.Rain;
         var master = state.Roster.Add("你", master: true);
         master.FactionId = GameState.PlayerFaction;
@@ -555,10 +558,14 @@ public sealed class ArchitectureTests
             Usage = FacilityUsage.Rest, Built = true, EffectId = "rest",
             Actions = { ActionKind.Rest },
         });
+        state.Territory.AddFacility(new Facility
+        {
+            Id = 8, Name = "矿", RoomId = 2, Usage = FacilityUsage.Plain, Built = true,
+            Actions = { ActionKind.Till }, YieldItemId = "herb",
+        });
         state.Roster.Master!.Bag.Add("花", 3);
-        state.Territory.Assign(friend.Id, 2, SlotMode.Work);
-        state.Territory.SetPriority(friend.Id, ActionKind.Till, 2);
-        state.Territory.AddOffer(new MarketOffer { ItemId = "布", BuyPrice = 10, SellPrice = 6 });
+        state.Territory.Assign(friend.Id, 2, SlotMode.Work, 8);
+        state.Territory.MarketDay["布"] = new Territory.MarketEntry(5, 100);
         state.Territory.AddGuest(new Guest { Id = 1, Name = "行商", RoomId = 1, Purpose = "卖货" });
         state.Quests.ClearCount[3] = 2;
         var hub = new HubSession(state);
@@ -579,9 +586,9 @@ public sealed class ArchitectureTests
         Assert.Contains(2, loaded.Territory.Rooms[0].Links);
         Assert.Equal(1, loaded.Territory.Effect("rest"));
         Assert.Equal(3, loaded.Roster.Master!.Bag.Get("花"));
-        Assert.Equal(SlotMode.Work, loaded.Territory.ScheduleOf(friend.Id).Slots[2]);
-        Assert.Equal(2, loaded.Territory.PriorityOf(friend.Id, ActionKind.Till));
-        Assert.Single(loaded.Territory.Market);
+        Assert.Equal(SlotMode.Work, loaded.Territory.ScheduleOf(friend.Id).Slots[2].Mode);
+        Assert.Equal(8, loaded.Territory.ScheduleOf(friend.Id).Slots[2].FacilityId);
+        Assert.Equal(5, loaded.Territory.MarketDay["布"].Stock);
         Assert.Single(loaded.Territory.Guests);
         Assert.Equal(2, loaded.Quests.ClearCount[3]);
 
@@ -610,11 +617,10 @@ public sealed class ArchitectureTests
         var state = new GameState();
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
-        worker.Condition.Spend(300, 200, 100);
+        worker.Condition.Spend(300, 200);
         var summary = state.EndDay(new System.Random(1));
         Assert.Equal(2, state.Clock.Day);
-        Assert.Equal(Vitals.DefaultMax, worker.Condition.Stamina);
-        Assert.Equal(0, worker.Condition.Fatigue);
+        Assert.Equal(worker.Combat.MaxHp, worker.Condition.Stamina);
         Assert.Equal(Season.Spring, summary.Season);
         Assert.False(summary.SeasonChanged);
     }
@@ -670,7 +676,7 @@ public sealed class ArchitectureTests
     [Fact]
     public void New_life_skills_map_to_core()
     {
-        Assert.Equal(9, AttributeMap.LifeCount);
+        Assert.Equal(8, AttributeMap.LifeCount);
         Assert.Equal(CoreStat.Intellect, AttributeMap.CoreOf(LifeSkill.Research));
         Assert.Equal(CoreStat.Charm, AttributeMap.CoreOf(LifeSkill.Social));
     }
@@ -730,7 +736,7 @@ public sealed class ArchitectureTests
         Assert.Equal(2, state.Clock.Day);
         Assert.Equal(summary.Weather, state.Weather);
         Assert.Contains(hub.Log, l => l.Text == "夜里有动静。");
-        Assert.Contains(hub.Log, l => l.Text.StartsWith("今日天气："));
+        Assert.Contains(hub.Log, l => l.Text.StartsWith("今日天气"));
     }
 
     [Fact]
@@ -742,55 +748,69 @@ public sealed class ArchitectureTests
         var hub = new HubSession(state);
 
         Assert.True(hub.Assign(worker.Id, 1, SlotMode.Work));
-        Assert.Equal(SlotMode.Work, state.Territory.ScheduleOf(worker.Id).Slots[1]);
+        Assert.Equal(SlotMode.Work, state.Territory.ScheduleOf(worker.Id).Slots[1].Mode);
         // 别的时段不受影响，改的只是点中的那一段。
-        Assert.Equal(SlotMode.Free, state.Territory.ScheduleOf(worker.Id).Slots[0]);
+        Assert.Equal(SlotMode.Free, state.Territory.ScheduleOf(worker.Id).Slots[0].Mode);
 
-        // 主角不排时段；越界时段与不存在的人也拒绝。
-        Assert.False(hub.Assign(master.Id, 0, SlotMode.Work));
+        // 主角也可排班；越界时段与不存在的人拒绝。
+        Assert.True(hub.Assign(master.Id, 0, SlotMode.Work));
         Assert.False(hub.Assign(worker.Id, WorkSlot.Count, SlotMode.Work));
         Assert.False(hub.Assign(worker.Id, -1, SlotMode.Work));
         Assert.False(hub.Assign(9999, 0, SlotMode.Work));
     }
 
     [Fact]
-    public void SetPriority_orders_work_and_rejects_master_and_non_productive()
+    public void Assign_carries_facility_and_rejects_unknown_facility()
     {
         var state = new GameState();
         var master = state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
         var hub = new HubSession(state);
+        state.Territory.AddRoom(new Room { Id = 1, Open = true });
+        state.Territory.AddFacility(new Facility
+        {
+            Id = 3, RoomId = 1, Usage = FacilityUsage.Plain, Built = true,
+            Actions = { ActionKind.Mine }, YieldItemId = "ore",
+        });
 
-        Assert.True(hub.SetPriority(worker.Id, ActionKind.Mine, 3));
-        Assert.Equal(3, hub.PriorityOf(worker.Id, ActionKind.Mine));
-        // 收进 1-4 档：0 与负数表示不做。
-        Assert.True(hub.SetPriority(worker.Id, ActionKind.Till, 9));
-        Assert.Equal(ActionKindMap.MaxPriority, hub.PriorityOf(worker.Id, ActionKind.Till));
-        Assert.True(hub.SetPriority(worker.Id, ActionKind.Till, 0));
-        Assert.Equal(0, hub.PriorityOf(worker.Id, ActionKind.Till));
+        // 工作 + 点名设施：存下开关与设施。
+        Assert.True(hub.Assign(worker.Id, 1, SlotMode.Work, 3));
+        var assignment = state.Territory.ScheduleOf(worker.Id).Slots[1];
+        Assert.Equal(SlotMode.Work, assignment.Mode);
+        Assert.Equal(3, assignment.FacilityId);
 
-        // 主角不设优先级；None（不干活）不是真实行动，不能进优先级表。
-        Assert.False(hub.SetPriority(master.Id, ActionKind.Mine, 1));
-        Assert.False(hub.SetPriority(worker.Id, ActionKind.None, 1));
-        Assert.False(hub.SetPriority(9999, ActionKind.Mine, 1));
+        // 空闲不点名设施。
+        Assert.True(hub.Assign(worker.Id, 1, SlotMode.Free, 3));
+        Assert.Equal(-1, state.Territory.ScheduleOf(worker.Id).Slots[1].FacilityId);
+
+        // 点名不存在的设施拒绝；主角支持排班。
+        Assert.False(hub.Assign(worker.Id, 1, SlotMode.Work, 999));
+        Assert.True(hub.Assign(master.Id, 0, SlotMode.Work));
+        Assert.False(hub.Assign(worker.Id, WorkSlot.Count, SlotMode.Work));
     }
 
     [Fact]
-    public void TasksByPriority_sorts_by_priority_then_column_order()
+    public void ResolveSlot_works_the_assigned_facility_only()
     {
-        var state = new GameState();
-        state.Roster.Add("你", master: true);
-        var worker = state.Roster.Add("工");
-        var t = state.Territory;
+        var roster = new Roster();
+        roster.Add("你", master: true);
+        var a = roster.Add("a");
+        var t = new Territory();
+        t.AddRoom(new Room { Id = 0 });
+        t.AddFacility(new Facility { Id = 1, RoomId = 0, Built = true, Actions = { ActionKind.Mine }, YieldItemId = "ore" });
+        t.AddFacility(new Facility { Id = 2, RoomId = 0, Built = true, Actions = { ActionKind.Till }, YieldItemId = "herb" });
 
-        // 锻造=1、耕作=1（同档）、采矿=2。
-        t.SetPriority(worker.Id, ActionKind.Forge, 1);
-        t.SetPriority(worker.Id, ActionKind.Till, 1);
-        t.SetPriority(worker.Id, ActionKind.Mine, 2);
+        // 排到矿上：只出矿。
+        t.Assign(a.Id, 0, SlotMode.Work, 1);
+        var logs = t.ResolveSlot(0, roster);
+        Assert.Single(logs);
+        Assert.Equal(ActionKind.Mine, logs[0].Task);
+        Assert.True(a.Bag.Get("ore") > 0);
+        Assert.Equal(0, a.Bag.Get("herb"));
 
-        var order = t.TasksByPriority(worker.Id);
-        // 同档按行动行序（Forge 在 Till 之前），档位低的排最后。
-        Assert.Equal(new[] { ActionKind.Forge, ActionKind.Till, ActionKind.Mine }, order);
+        // 没点名设施的段不出产。
+        t.Assign(a.Id, 1, SlotMode.Work);
+        Assert.Empty(t.ResolveSlot(1, roster));
     }
 
     [Fact]
@@ -828,8 +848,7 @@ public sealed class ArchitectureTests
         var stove = new Facility { Id = 1, Name = "灶", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Cook, ActionKind.Meal }, Built = true, CanStore = true };
         stove.Contents.Add("bread", 2);
         state.Territory.AddFacility(stove);
-        state.Territory.AddFood("bread");
-        state.Clock.Advance(12 * 60);
+        state.Clock.SetTime(1, 12 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -849,7 +868,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 2, Name = "寝", Open = true });
         state.Territory.Link(1, 2);
         state.Territory.AddFacility(new Facility { Id = 1, Name = "床", RoomId = 2, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Sleep, ActionKind.Rest } });
-        state.Clock.Advance(23 * 60);
+        state.Clock.SetTime(1, 23 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -942,8 +961,7 @@ public sealed class ArchitectureTests
                 YieldItemId = "ore", Built = true,
             });
             for (var slot = 0; slot < WorkSlot.Count; slot++)
-                state.Territory.Assign(worker.Id, slot, SlotMode.Work);
-            state.Territory.SetPriority(worker.Id, ActionKind.Mine, 1);
+                state.Territory.Assign(worker.Id, slot, SlotMode.Work, 1);
             state.Clock.Advance(9 * 60);
             var hub = new HubSession(state);
             hub.Enter(2);
@@ -983,9 +1001,11 @@ public sealed class ArchitectureTests
             refuseHub.Place(refuseWorker.Id, 1);
         var refuseLogs = refuseHub.PassTime(5);
         var refuseTracked = refuseHub.Day.Workers[0];
+        // 心情过低拒绝上工：没有产出，且目标不是工作行动。
+        // 不能用 Phase/FacilityId 判——闲时打扫、歇着同样会占设施，也会落 Working。
         Assert.Empty(refuseLogs);
-        Assert.NotEqual(WorkPhase.Working, refuseTracked.Phase);
-        Assert.Equal(-1, refuseTracked.FacilityId);
+        Assert.False(ActionKindMap.IsWork(refuseTracked.Goal));
+        Assert.NotEqual(ActionKind.Mine, refuseTracked.Task);
     }
 
     [Fact]
@@ -999,7 +1019,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 2, Name = "寝", Open = true });
         state.Territory.Link(1, 2);
         state.Territory.AddFacility(new Facility { Id = 1, Name = "床", RoomId = 2, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Sleep, ActionKind.Rest } });
-        state.Clock.Advance(23 * 60);
+        state.Clock.SetTime(1, 23 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(a.Id, 1);
@@ -1039,8 +1059,7 @@ public sealed class ArchitectureTests
         var stoveB = new Facility { Id = 2, Name = "灶乙", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Cook, ActionKind.Meal }, Built = true, CanStore = true };
         stoveB.Contents.Add("bread", 10);
         state.Territory.AddFacility(stoveB);
-        state.Territory.AddFood("bread");
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(3);
         hub.Place(friend.Id, 1);
@@ -1092,7 +1111,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "甲", Open = true });
         state.Territory.AddRoom(new Room { Id = 2, Name = "乙", Open = true });
         state.Territory.Link(1, 2);
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(2);
         hub.Place(npc.Id, 1);
@@ -1124,7 +1143,7 @@ public sealed class ArchitectureTests
         state.Territory.Link(1, 2);
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 2, CanStore = true, Built = true };
         state.Territory.AddFacility(shelf);
-        w.Bag.Add("矿石", 5);   // 背包里有货，库房有货架
+        w.Bag.Add("铁矿", 5);   // 背包里有货，库房有货架
 
         var hub = new HubSession(state);
         hub.Enter(1);
@@ -1133,8 +1152,8 @@ public sealed class ArchitectureTests
             hub.PassTime(5);
 
         // 角色自己把货搬进了货架，背包清空。
-        Assert.Equal(5, shelf.Contents.Get("矿石"));
-        Assert.Equal(0, w.Bag.Get("矿石"));
+        Assert.Equal(5, shelf.Contents.Get("铁矿"));
+        Assert.Equal(0, w.Bag.Get("铁矿"));
     }
 
     [Fact]
@@ -1147,17 +1166,16 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 2, Name = "工坊", Open = true });
         state.Territory.Link(1, 2);
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
-        shelf.Contents.Add("矿石", 4);   // 料在库房
+        shelf.Contents.Add("铁矿", 4);   // 料在库房
         state.Territory.AddFacility(shelf);
         state.Territory.AddFacility(new Facility { Id = 2, Name = "铁砧", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Forge }, Built = true });
         state.Territory.AddRecipe(new Recipe
         {
-            ItemId = "铁锭", Station = ActionKind.Forge, OutputCount = 1,
-            Costs = { new RecipeCost("矿石", 2) },
+            ItemId = "铁", Station = ActionKind.Forge, OutputCount = 1,
+            Costs = { new RecipeCost("铁矿", 2) },
         });
         for (var slot = 0; slot < WorkSlot.Count; slot++)
-            state.Territory.Assign(w.Id, slot, SlotMode.Work);
-        state.Territory.SetPriority(w.Id, ActionKind.Forge, 1);
+            state.Territory.Assign(w.Id, slot, SlotMode.Work, 2);
 
         var hub = new HubSession(state);
         hub.Enter(1);
@@ -1166,9 +1184,9 @@ public sealed class ArchitectureTests
             hub.PassTime(5);
 
         // 角色自己去库房把料搬到台子上，才开得了工。
-        Assert.True(w.Bag.Get("铁锭") > 0);
+        Assert.True(w.Bag.Get("铁") > 0 || shelf.Contents.Get("铁") > 0);
         // 备料按需搬（每次只搬够做一份的量），不搬空库房。
-        Assert.True(shelf.Contents.Get("矿石") < 4);
+        Assert.True(shelf.Contents.Get("铁矿") < 4);
     }
 
     [Fact]
@@ -1177,21 +1195,21 @@ public sealed class ArchitectureTests
         var state = new GameState();
         var w = state.Roster.Add("工");
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
-        shelf.StorageFilter.Add("矿石");          // 只收矿石
+        shelf.StorageFilter.Add("铁矿");          // 只收矿石
         shelf.StorageCapacity = 2;                 // 最多两件
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
         state.Territory.AddFacility(shelf);
-        w.Bag.Add("矿石", 10);
+        w.Bag.Add("铁矿", 10);
         w.Bag.Add("木材", 10);
 
         // 过滤：木材不收。
         Assert.Equal(0, state.Territory.StoreFrom(w, shelf, "木材", 5));
         // 容量：矿石最多进 2 件。
-        Assert.Equal(2, state.Territory.StoreFrom(w, shelf, "矿石", 5));
-        Assert.Equal(2, shelf.Contents.Get("矿石"));
-        Assert.Equal(8, w.Bag.Get("矿石"));
+        Assert.Equal(2, state.Territory.StoreFrom(w, shelf, "铁矿", 5));
+        Assert.Equal(2, shelf.Contents.Get("铁矿"));
+        Assert.Equal(8, w.Bag.Get("铁矿"));
         // 满了就再也进不去。
-        Assert.Equal(0, state.Territory.StoreFrom(w, shelf, "矿石", 1));
+        Assert.Equal(0, state.Territory.StoreFrom(w, shelf, "铁矿", 1));
     }
 
     [Fact]
@@ -1212,18 +1230,19 @@ public sealed class ArchitectureTests
         var shelf = new Facility { Id = 9, Name = "货架", RoomId = 1, CanStore = true, Built = true };
         state.Territory.AddFacility(shelf);
         for (var slot = 0; slot < WorkSlot.Count; slot++)
-            state.Territory.Assign(worker.Id, slot, SlotMode.Work);
-        state.Territory.SetPriority(worker.Id, ActionKind.Mine, 1);
+            state.Territory.Assign(worker.Id, slot, SlotMode.Work, 1);
 
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
         hub.PassTime(60);
 
-        // 产出先进产出者背包（不是某个“领地库存”）。
-        Assert.True(worker.Bag.Get("ore") > 0);
-        // 据点总数 = 背包 + 各设施存货，二者之外没有别处。
-        Assert.Equal(worker.Bag.Get("ore"), state.Territory.CountWith(worker, "ore"));
+        // 产出先进产出者背包（不是某个“领地库存”），随后被归集搬运进仓储也行——
+        // 断言的是物理存在于领地（背包+仓储），绝无虚空。
+        Assert.True(state.Territory.CountWith(worker, "ore") > 0);
+        // 据点总数 = 背包 + 各设施存货，二者之外没有别处；归集搬运后存量只在两者之间流转。
+        Assert.Equal(worker.Bag.Get("ore") + shelf.Contents.Get("ore"),
+            state.Territory.CountWith(worker, "ore"));
     }
 
     [Fact]
@@ -1245,7 +1264,7 @@ public sealed class ArchitectureTests
                 bed.Actions.Add(ActionKind.Sleep);
                 state.Territory.AddFacility(bed);
             }
-            state.Clock.Advance(23 * 60);   // 深夜，本该睡
+            state.Clock.SetTime(1, 23 * 60);   // 深夜，本该睡
             return state;
         }
 
@@ -1336,7 +1355,7 @@ public sealed class ArchitectureTests
         state.Territory.AddFacility(new Facility { Id = 2, Name = "长桌", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Meal }, IsTable = true, Built = true });
         state.Territory.SetFoodTier("stew", FoodTier.Feast);
         worker.Affect.Mood = 0;
-        state.Clock.Advance(12 * 60);
+        state.Clock.SetTime(1, 12 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -1359,7 +1378,7 @@ public sealed class ArchitectureTests
         state.Territory.AddFacility(stove);
         state.Territory.SetFoodTier("stew", FoodTier.Feast);
         worker.Affect.Mood = 50;
-        state.Clock.Advance(12 * 60);
+        state.Clock.SetTime(1, 12 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -1419,7 +1438,7 @@ public sealed class ArchitectureTests
         state.Roster.Add("你", master: true);
         var npc = state.Roster.Add("友");
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(npc.Id, 1);
@@ -1492,7 +1511,7 @@ public sealed class ArchitectureTests
         npc.Condition.AddFavor(-350);
         Assert.Equal(Bond.Hostile, npc.Condition.Bond);
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(npc.Id, 1);
@@ -1533,20 +1552,11 @@ public sealed class ArchitectureTests
         Assert.Equal(11, c[CoreStat.Strength]);
         Assert.Equal(5, c[CoreStat.Intellect]);
         Assert.Equal(11, c[CoreStat.Constitution]);
-        Assert.Equal(10 + 5 * 5 + 2 * 3, c.MaxMana);
-        Assert.Equal(c.MaxMana, c.Condition.MaxMana);
         Assert.Equal(20 + 11 * 10 + 2 * 5, c.Combat.MaxHp);
 
         c.GainLifeExp(LifeSkill.Craft, 100000);
         Assert.Equal(100, c.Level);
         Assert.Equal(10 + 99, c[CoreStat.Strength]);
-
-        c.Condition.RecoverFull();
-        var full = c.Condition.Mana;
-        c.Condition.SpendMana(full + 10);
-        Assert.Equal(0, c.Condition.Mana);
-        c.Condition.RecoverMana(7);
-        Assert.Equal(7, c.Condition.Mana);
     }
 
     [Fact]
@@ -1563,11 +1573,11 @@ public sealed class ArchitectureTests
             Id = 9, Name = "灶", RoomId = 1, Usage = FacilityUsage.Plain, Actions = { ActionKind.Cook, ActionKind.Meal },
             Capacity = 2, Description = "炒菜",
         };
-        state.Catalog.Rooms[roomDef.Id] = roomDef;
-        state.Catalog.Facilities[facilityDef.Id] = facilityDef;
+        DefDatabase<RoomDef>.Register(roomDef);
+        DefDatabase<FacilityDef>.Register(facilityDef);
         Assert.True(state.Territory.AddRoom(roomDef.ToRuntime()));
         Assert.True(state.Territory.AddFacility(facilityDef.ToRuntime()));
-        Assert.Equal("做饭", state.Catalog.Rooms[1].Description);
+        Assert.Equal("做饭", DefDatabase<RoomDef>.GetById(1)!.Description);
         Assert.Equal(2, state.Territory.Facilities[0].Capacity);
         Assert.Equal(LifeSkill.Cooking, ActionKindMap.SkillOf(ActionKind.Cook));
     }
@@ -1585,8 +1595,7 @@ public sealed class ArchitectureTests
         forge.Contents.Add("bread", 1);
         state.Territory.AddFacility(forge);
         forge.Actions.Add(ActionKind.Meal);
-        state.Territory.AddFood("bread");
-        state.Clock.Advance(12 * 60);
+        state.Clock.SetTime(1, 12 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -1608,7 +1617,7 @@ public sealed class ArchitectureTests
         stage.Actions.Add(ActionKind.Watch);
         state.Territory.AddFacility(stage);
         
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -1716,6 +1725,7 @@ public sealed class ArchitectureTests
         w.FacilityId = 1;
         w.Phase = WorkPhase.Working;
         w.Task = ActionKind.Mine;
+        state.Clock.SetTime(1, 22 * 60); // 夜里干活的人跟着被搬走的床走
         Assert.True(hub.MoveFacility(1, 1));
         Assert.Equal(1, state.Territory.Facilities[0].RoomId);
         Assert.Equal(ActionKind.None, w.Task);
@@ -1760,6 +1770,8 @@ public sealed class ArchitectureTests
         var state = new GameState { Money = 100 };
         state.Roster.Add("你", master: true);
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
+        var vacant = new Room { Id = 2, Name = "空房", X = 3, Y = 3, Open = true, Vacant = true };
+        state.Territory.AddRoom(vacant);
         var roomDef = new RoomDef { Id = 101, Name = "菜园", Buildable = true };
         roomDef.MaterialCost.Add(new RecipeCost("木材", 3));
         var facilityDef = new FacilityDef
@@ -1768,19 +1780,23 @@ public sealed class ArchitectureTests
             Capacity = 2, YieldItemId = "小麦", Buildable = true,
         };
         facilityDef.MaterialCost.Add(new RecipeCost("木材", 1));
-        state.Catalog.Rooms[101] = roomDef;
-        state.Catalog.Facilities[1001] = facilityDef;
+        DefDatabase<RoomDef>.Register(roomDef);
+        DefDatabase<FacilityDef>.Register(facilityDef);
         state.Roster.Master!.Bag.Add("木材", 4);
         var hub = new HubSession(state);
         hub.Enter(1);
 
-        Assert.False(hub.BuildRoomDef(999, 3, 3));
-        Assert.True(hub.BuildRoomDef(101, 3, 3));
+        // 房间只能装进空房：不是空房、或空房不存在，都放不进去，且不该白扣材料。
+        Assert.False(hub.BuildRoomDef(101, 1));
+        Assert.False(hub.BuildRoomDef(999, vacant.Id));
+        Assert.Equal(4, state.Roster.Master!.Bag.Get("木材"));
+        Assert.True(hub.BuildRoomDef(101, vacant.Id));
         Assert.Equal(1, state.Roster.Master!.Bag.Get("木材"));
         var added = state.Territory.RoomAt(3, 3);
         Assert.NotNull(added);
         Assert.True(added.Open);
         Assert.True(added.Buildable);
+        Assert.Null(state.Territory.Room(vacant.Id)); // 空房被顶替掉
 
         Assert.True(hub.BuildFacilityDef(1001, added.Id));
         Assert.Equal(0, state.Roster.Master!.Bag.Get("木材"));
@@ -1790,9 +1806,155 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void Develop_vacant_cell_creates_vacant_room_and_scales_cost()
+    {
+        var state = new GameState { Money = 100000 };
+        state.Roster.Add("你", master: true);
+        state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", X = 2, Y = 2, Open = true });
+        state.Roster.Master!.Bag.Add("木材", 200);
+        state.Roster.Master!.Bag.Add("石材", 200);
+        var hub = new HubSession(state);
+        hub.Enter(1);
+
+        // 起步价：钱 1000 ＋ 木材 5；还没到第 3 个，所以不要石材。
+        Assert.Equal(1000, hub.VacantCostMoney);
+        Assert.Equal(5, hub.VacantCostWood);
+        Assert.Equal(0, hub.VacantCostStone);
+
+        // 不挨着已开发地方的空格：开不了。
+        Assert.False(hub.CanDevelopVacantCell(0, 0, 0));
+        Assert.False(hub.DevelopVacantCell(0, 0, 0));
+
+        // 挨着的空格：能开，开出来是一间「空房」。
+        Assert.True(hub.CanDevelopVacantCell(0, 2, 3));
+        Assert.True(hub.DevelopVacantCell(0, 2, 3));
+        var vacant = state.Territory.RoomAt(0, 2, 3);
+        Assert.NotNull(vacant);
+        Assert.True(vacant.Vacant);
+        Assert.True(vacant.Open);
+        Assert.Equal("空房", vacant.Name);
+
+        // 每开一格贵 20%：第 2 个 1200/6，第 3 个 1440/7 且开始要石材 7。
+        Assert.Equal(1, state.Territory.VacantDevelopCount);
+        Assert.Equal(1200, hub.VacantCostMoney);
+        Assert.Equal(6, hub.VacantCostWood);
+        Assert.Equal(0, hub.VacantCostStone);
+
+        Assert.True(hub.DevelopVacantCell(0, 1, 2));
+        Assert.Equal(2, state.Territory.VacantDevelopCount);
+        Assert.Equal(1440, hub.VacantCostMoney);
+        Assert.Equal(7, hub.VacantCostWood);
+        Assert.Equal(7, hub.VacantCostStone);
+
+        // 已经有房间的格子不能再开拓。
+        Assert.False(hub.DevelopVacantCell(0, 2, 2));
+    }
+
+    [Fact]
+    public void Region_unlocks_in_two_rings_when_filled()
+    {
+        var t = new Territory();
+        Assert.True(t.IsRegionUnlocked(0));
+        Assert.False(t.IsRegionUnlocked(1));
+        Assert.False(t.IsRegionUnlocked(5));
+
+        // 中心区还没铺满 → 什么都不开。
+        t.AddRoom(new Room { Id = 1, RegionId = 0, X = 0, Y = 0 });
+        Assert.Empty(t.TryUnlockByFill());
+        Assert.False(t.IsRegionUnlocked(1));
+
+        // 铺满中心 25 格 → 开四正（1/2/3/4），四角仍关着。
+        var id = 1;
+        for (var x = 0; x < Territory.RegionSize; x++)
+        {
+            for (var y = 0; y < Territory.RegionSize; y++)
+            {
+                if (t.RoomAt(0, x, y) != null)
+                    continue;
+                t.AddRoom(new Room { Id = ++id, RegionId = 0, X = x, Y = y });
+            }
+        }
+        Assert.True(t.IsRegionFull(0));
+        var ring1 = t.TryUnlockByFill();
+        Assert.Equal(4, ring1.Count);
+        Assert.True(t.IsRegionUnlocked(1));
+        Assert.True(t.IsRegionUnlocked(4));
+        Assert.False(t.IsRegionUnlocked(5));
+
+        // 四正里任意一块铺满 → 开四角。
+        for (var x = 0; x < Territory.RegionSize; x++)
+        {
+            for (var y = 0; y < Territory.RegionSize; y++)
+                t.AddRoom(new Room { Id = ++id, RegionId = 2, X = x, Y = y });
+        }
+        var ring2 = t.TryUnlockByFill();
+        Assert.Equal(4, ring2.Count);
+        Assert.True(t.IsRegionUnlocked(5));
+        Assert.True(t.IsRegionUnlocked(8));
+    }
+
+    [Fact]
+    public void Region_gates_face_each_other()
+    {
+        // 中心区的北邻是北区，北区的南邻回到中心区——连接点是互指的。
+        Assert.Equal(1, Territory.RegionNeighbor(0, Territory.RegionDir.North));
+        Assert.Equal(0, Territory.RegionNeighbor(1, Territory.RegionDir.South));
+        Assert.Equal(2, Territory.RegionNeighbor(0, Territory.RegionDir.East));
+        Assert.Equal(4, Territory.RegionNeighbor(0, Territory.RegionDir.West));
+
+        var (nx, ny) = Territory.RegionGate(Territory.RegionDir.North);
+        Assert.Equal(2, nx);
+        Assert.Equal(0, ny);
+        var (sx, sy) = Territory.RegionGate(Territory.RegionDir.South);
+        Assert.Equal(2, sx);
+        Assert.Equal(4, sy);
+
+        Assert.Equal(Territory.RegionDir.South, Territory.Opposite(Territory.RegionDir.North));
+        Assert.Equal(Territory.RegionDir.West, Territory.Opposite(Territory.RegionDir.East));
+
+        // 四角没有正方向邻居。
+        Assert.Equal(-1, Territory.RegionNeighbor(5, Territory.RegionDir.North));
+    }
+
+    [Fact]
+    public void Cross_region_needs_rooms_on_both_gates()
+    {
+        var state = new GameState();
+        var hub = new HubSession(state);
+        var t = state.Territory;
+
+        // 东区解锁，中心区东连接点与东区西连接点各放一间房——两边各有房才通。
+        t.SetUnlockedRegionMask(t.UnlockedRegionMask | (1 << 2));
+        var (ex, ey) = Territory.RegionGate(Territory.RegionDir.East);
+        var (wx, wy) = Territory.RegionGate(Territory.RegionDir.West);
+        t.AddRoom(new Room { Id = 1, Name = "东门", RegionId = 0, X = ex, Y = ey, Open = true });
+        t.AddRoom(new Room { Id = 2, Name = "西门", RegionId = 2, X = wx, Y = wy, Open = true });
+
+        hub.Enter(1);
+        Assert.Equal(2, hub.CrossTargetRegion(hub.PlayerRoomId));
+        Assert.True(hub.CrossTo(2));
+        Assert.Equal(2, hub.RegionId);
+        Assert.Equal(2, hub.PlayerRoomId);
+
+        // 北区虽然解锁了，但北区那一侧的连接点上没有房 → 过不去。
+        t.SetUnlockedRegionMask(t.UnlockedRegionMask | (1 << 1));
+        var (nx, ny) = Territory.RegionGate(Territory.RegionDir.North);
+        t.AddRoom(new Room { Id = 3, Name = "北门", RegionId = 0, X = nx, Y = ny, Open = true });
+        hub.Enter(3);
+        Assert.Equal(-1, hub.CrossTargetRegion(hub.PlayerRoomId));
+        Assert.False(hub.CrossTo(1));
+
+        // 站在中间的空房里（不在任何连接点上）也不通。
+        t.AddRoom(new Room { Id = 4, Name = "中庭", RegionId = 0, X = 2, Y = 2, Open = true });
+        hub.Enter(4);
+        Assert.Equal(-1, hub.CrossTargetRegion(hub.PlayerRoomId));
+    }
+
+    [Fact]
     public void Selection_and_rest_bind_character_and_fixture()
     {
         var state = new GameState();
+        state.Clock.SetTime(1, 22 * 60);
         var master = state.Roster.Add("你", master: true);
         var friend = state.Roster.Add("友");
         var stranger = state.Roster.Add("客");
@@ -1804,12 +1966,10 @@ public sealed class ArchitectureTests
         state.Territory.AddFacility(new Facility { Id = 3, Name = "矿镐", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Mine }, Built = true });
         for (var slot = 0; slot < WorkSlot.Count; slot++)
         {
-            state.Territory.Assign(friend.Id, slot, SlotMode.Work);
-            state.Territory.Assign(stranger.Id, slot, SlotMode.Work);
+            state.Territory.Assign(friend.Id, slot, SlotMode.Work, 2);
+            state.Territory.Assign(stranger.Id, slot, SlotMode.Work, 3);
         }
-        state.Territory.SetPriority(friend.Id, ActionKind.Mine, 1);
-        state.Territory.SetPriority(stranger.Id, ActionKind.Mine, 1);
-        state.Clock.Advance(14 * 60);
+        state.Clock.SetTime(1, 14 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(friend.Id, 1);
@@ -1829,6 +1989,7 @@ public sealed class ArchitectureTests
         Assert.False(hub.ActAtFixture(ActionKind.Sleep));
         Assert.True(hub.Use(1));
         // 1 号是“床”（Rest），支持睡觉；不支持吃饭。
+        state.Clock.SetTime(1, 22 * 60);
         Assert.True(hub.ActAtFixture(ActionKind.Sleep));
         Assert.False(hub.ActAtFixture(ActionKind.Meal));
 
@@ -1855,7 +2016,7 @@ public sealed class ArchitectureTests
         bed.Actions.Add(ActionKind.Sleep);
         state.Territory.AddFacility(bed);
 
-        state.Clock.Advance(23 * 60);
+        state.Clock.SetTime(1, 23 * 60);
         var hub = new HubSession(state);
         hub.Enter(1);
         hub.Place(worker.Id, 1);
@@ -1965,7 +2126,8 @@ public sealed class ArchitectureTests
         Assert.True(food.IsInCategory("Food"));
         Assert.False(food.IsInCategory("RawMaterial"));
 
-        var wood = DefDatabase<ThingDef>.Get("木材");
+        // 木材现在住材料表（MaterialDef 继承 ThingDef，本身就是物品）。
+        var wood = Items.Get("木材");
         Assert.NotNull(wood);
         Assert.False(wood.IsFood);
         Assert.Equal("RawMaterial", wood.Category);
@@ -2087,14 +2249,13 @@ public sealed class ArchitectureTests
     [Fact]
     public void Building_defs_register_in_DefDatabase_and_instantiate_consistently()
     {
-        // 验证 RoomDef 与 FacilityDef 作为统一 Def 注册进 DefDatabase，且具备标签与设施解耦引用
+        // 验证 RoomDef 与 FacilityDef 作为统一 Def 注册进 DefDatabase，且房间与设施互不引用
         var roomDef = new RoomDef
         {
             DefName = "Room_Bakery",
             Id = 143,
             Label = "面包房",
             Tags = new List<string> { "室内", "工作间" },
-            FacilityDefs = new List<string> { "Facility_Oven_1043" },
             Buildable = true,
         };
         roomDef.MaterialCost.Add(new RecipeCost("木材", 6));
@@ -2126,6 +2287,455 @@ public sealed class ArchitectureTests
         Assert.Equal("烤炉", runtimeFac.Name);
         Assert.True(runtimeFac.CanStore);
         Assert.True(runtimeFac.Supports(ActionKind.Cook));
+    }
+
+    [Fact]
+    public void Cook_fetches_ingredients_from_storage_cooks_delivers_to_table_and_eats()
+    {
+        DefLoader.Reset();
+        DefaultDefs.EnsureInitialized();
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        var cook = state.Roster.Add("厨师");
+        var eater = state.Roster.Add("食客");
+        cook[CoreStat.Constitution] = 80;
+
+        // 连通四个房间：库房(1) <-> 庭院(2) <-> 厨房(3) <-> 餐厅(4)
+        state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
+        state.Territory.AddRoom(new Room { Id = 2, Name = "庭院", Open = true });
+        state.Territory.AddRoom(new Room { Id = 3, Name = "厨房", Open = true });
+        state.Territory.AddRoom(new Room { Id = 4, Name = "餐厅", Open = true });
+        state.Territory.Link(1, 2);
+        state.Territory.Link(2, 3);
+        state.Territory.Link(3, 4);
+
+        // 库房摆货架存料：小麦 2 份，水 2 份
+        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
+        shelf.Contents.Add("小麦", 2);
+        shelf.Contents.Add("水", 2);
+        state.Territory.AddFacility(shelf);
+
+        // 厨房摆烹饪灶台（支持 Cook）
+        var stove = new Facility { Id = 2, Name = "灶台", RoomId = 3, Capacity = 2, Built = true, Actions = { ActionKind.Cook } };
+        state.Territory.AddFacility(stove);
+
+        // 餐厅摆餐桌（存熟食，isTable = true）与餐椅（支持 Meal）
+        var table = new Facility
+        {
+            Id = 3, Name = "餐桌", RoomId = 4, Capacity = 4, Built = true,
+            IsTable = true, CanStore = true, StorageCapacity = 12, StorageFilter = { "Meal" }
+        };
+        var chair = new Facility
+        {
+            Id = 4, Name = "餐椅", RoomId = 4, Capacity = 2, Built = true,
+            Actions = { ActionKind.Meal }
+        };
+        state.Territory.AddFacility(table);
+        state.Territory.AddFacility(chair);
+
+        // 领地指定烹饪料理目标：炖菜 (stew)
+        state.Territory.TargetCookItem = "stew";
+
+        // 排班：厨师在工作时段专心烹饪
+        for (var s = 0; s < WorkSlot.Count; s++)
+            state.Territory.Assign(cook.Id, s, SlotMode.Work, 2);
+
+        // 开局厨师在厨房(3)，食客在餐厅(4)
+        var hub = new HubSession(state);
+        hub.Enter(3);
+        hub.Place(cook.Id, 3);
+        hub.Place(eater.Id, 4);
+
+        // 1. 推进时间：厨师发现灶台缺料，物理走去库房取料（禁止瞬移！途经庭院2，尚未抵达库房1，货架存料完好！）
+        hub.PassTime(5);
+        var worker = hub.Day.Workers.First(w => w.CharacterId == cook.Id);
+        Assert.Equal(ActionKind.Haul, worker.Goal);
+        Assert.Equal(HaulPhase.Fetching, worker.HaulPhase);
+        Assert.Equal(shelf.Id, worker.HaulSourceId);
+        Assert.Equal(stove.Id, worker.HaulTargetId);
+        Assert.Equal(2, worker.RoomId); // 此时刚走到中途庭院(2)
+        Assert.Equal(2, shelf.Contents.Get("小麦")); // 尚未抵达库房，货架原料绝无隔空被扣！
+
+        // 推进到厨师走回厨房、完成炖菜烹饪并端到餐厅餐桌
+        for (var i = 0; i < 40; i++)
+        {
+            hub.PassTime(5);
+            if (table.Contents.Get("stew") > 0)
+                break;
+        }
+
+        // 炖菜已被成功端到餐桌上储存，库房材料被消耗，整个过程物理流转无瞬移！
+        Assert.True(table.Contents.Get("stew") > 0);
+        Assert.True(shelf.Contents.Get("小麦") < 2);
+
+        // 2. 推进到午餐时间（12:00 = 720 分钟），食客坐在餐桌旁优雅享用炖菜
+        state.Clock.Advance(12 * 60 - state.Clock.Minutes);
+        eater.Affect.Mood = 50;
+        hub.PassTime(15);
+
+        // 食客从餐桌成功取食炖菜并吃下，获得丰盛料理心情加成（Feast +4），有桌不扣心情
+        Assert.True(eater.Affect.LastMealWindow >= 0);
+        Assert.Equal(54, eater.Affect.Mood);
+    }
+
+    [Fact]
+    public void Weapons_are_runtime_instances_forged_from_material_times_type()
+    {
+        DefaultDefs.EnsureInitialized();
+
+        // 全项目只有一张材料表：10 种，其中 7 种能缝甲。
+        Assert.Equal(10, DefDatabase<MaterialDef>.All.Count);
+        Assert.Equal(8, DefDatabase<MaterialDef>.All.Count(m => m.WeaponUsable));
+        Assert.Equal(7, DefDatabase<MaterialDef>.All.Count(m => m.ArmorUsable));
+        Assert.Equal(7, DefDatabase<WeaponTypeDef>.All.Count);
+        // 轴表只是基座：8 材料 × 7 类型 = 56 个配方，不是 56 件货。
+        Assert.Equal(56, Weapons.BaseCount());
+        Assert.NotEmpty(DefDatabase<EnchantDef>.All);
+
+        // 材料按 Tier 由劣到优：木材 → 珊瑚 → 青铜 → 铁 → … → 以太。
+        var tiers = Weapons.Materials.Select(m => m.Label).ToArray();
+        Assert.Equal(new[] { "木材", "珊瑚", "青铜", "铁", "钢", "秘银", "精金", "以太" }, tiers);
+        // 珊瑚夹在木材与铁之间，青铜在铁之下。
+        Assert.True(TierOf("珊瑚") > TierOf("木材"));
+        Assert.True(TierOf("珊瑚") < TierOf("青铜"));
+        Assert.True(TierOf("青铜") < TierOf("铁"));
+        Assert.True(TierOf("铁") < TierOf("钢"));
+        // 黑曜石已移除；石制武器没有。
+        Assert.Null(DefDatabase<MaterialDef>.Get("黑曜石"));
+        Assert.Null(DefDatabase<MaterialDef>.Get("石材"));
+
+        int TierOf(string defName) => DefDatabase<MaterialDef>.Get(defName)!.Tier;
+
+        var state = new GameState();
+        var registry = state.Territory.Weapons;
+
+        // 同一基座锻两件，品质差得远。
+        var plain = WeaponForge.Forge("木材", WeaponType.Sword,
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        var grand = WeaponForge.Forge("精金", WeaponType.Sword,
+            quality: Quality.Legendary, enchant: "Blazing", blessed: true, enhance: 5);
+        registry.Add(plain);
+        registry.Add(grand);
+
+        Assert.NotEqual(plain.Id, grand.Id);
+        Assert.Equal(Quality.Common, plain.Quality);
+        Assert.Equal(Quality.Legendary, grand.Quality);
+        Assert.Equal(0, plain.Enhance);
+        Assert.Equal(5, grand.Enhance);
+        Assert.Empty(plain.Enchant);
+        Assert.Equal("Blazing", grand.Enchant);
+        Assert.False(plain.Blessed);
+        Assert.True(grand.Blessed);
+
+        // 名字只带祝福与附魔；品质/强化不进名字，进详情。
+        Assert.Equal("木材剑", plain.Name);
+        Assert.Equal("受祝福的炽热的精金剑", grand.Name);
+
+        // 品质是面板乘数：同基座同强化，传说远强于寻常。
+        var commonSword = WeaponForge.Forge("铁", WeaponType.Sword, quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        var legendSword = WeaponForge.Forge("铁", WeaponType.Sword, quality: Quality.Legendary, enchant: "", blessed: false, enhance: 0);
+        Assert.True(legendSword.Panel > commonSword.Panel * 2, "品质应显著抬面板");
+        var crudeSword = WeaponForge.Forge("铁", WeaponType.Sword, quality: Quality.Crude, enchant: "", blessed: false, enhance: 0);
+        Assert.True(crudeSword.Panel < commonSword.Panel, "粗劣应弱于寻常");
+
+        // 材料等级也进面板与价值。
+        // 材料比较必须钉死品质——否则粗劣以太撞上传说木剑，材料差会被品质差盖过去。
+        Assert.True(WeaponForge.Forge("以太", WeaponType.Sword, quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Panel
+                    > WeaponForge.Forge("木材", WeaponType.Sword, quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Panel);
+        Assert.True(WeaponForge.Forge("以太", WeaponType.Sword, quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Value
+                    > WeaponForge.Forge("木材", WeaponType.Sword, quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Value);
+
+        // 详情列明其余字段（品质/材料/类型/强化/附魔/祝福），不与名字重复。
+        var details = grand.DescribeDetails();
+        Assert.Contains("品质　传说", details);
+        Assert.Contains("材料　精金", details);
+        Assert.Contains("类型　剑", details);
+        Assert.Contains("强化　+5", details);
+        Assert.Contains("附魔　炽热的（力道炽盛）", details);
+        Assert.Contains("祝福　受祝福", details);
+
+        // 随机生成确实在变。
+        var rng = new Random(11);
+        var names = Enumerable.Range(0, 40)
+            .Select(_ => WeaponForge.Forge("铁", WeaponType.Axe, rng: rng).Name)
+            .Distinct().Count();
+        Assert.True(names > 3, "同基座应能衍生出多件不同实例");
+        var qualities = Enumerable.Range(0, 300)
+            .Select(_ => WeaponForge.Forge("木材", WeaponType.Bow, rng: rng).Quality)
+            .Distinct().Count();
+        Assert.True(qualities >= 4, "应能掷出多档品质");
+
+        // 独特品质不能随机生成——它固定名与属性，须逐件登记。
+        Assert.Throws<ArgumentException>(() =>
+            WeaponForge.Forge("木材", WeaponType.Sword, quality: Quality.Unique));
+
+        // 子类型轴已预留（剑→刺剑/太刀 后续扩展）。
+        var subtyped = WeaponForge.Forge("钢", WeaponType.Sword, subtype: "太刀",
+            quality: Quality.Fine, enchant: "", blessed: false, enhance: 0);
+        Assert.Equal("太刀", subtyped.Subtype);
+        Assert.Equal("钢太刀", subtyped.Name);
+        Assert.Contains("类型　剑·太刀", subtyped.DescribeDetails());
+
+        // 实例进背包，按 Id 记 1 件。
+        var master = state.Roster.Add("你", master: true);
+        master.Bag.Add(grand.Id, 1);
+        Assert.Equal(1, master.Bag.Get(grand.Id));
+
+        // 解析器认实例：名字、品类、价值都按实例来。
+        var info = Items.Info(registry, grand.Id);
+        Assert.NotNull(info);
+        Assert.True(info!.Value.IsWeaponInstance);
+        Assert.Equal(grand.Name, info.Value.Label);
+        Assert.Equal("Weapon", info.Value.Category);
+        Assert.Equal(grand.Value, info.Value.MarketValue);
+        Assert.NotNull(Items.Info(registry, "木材"));   // 普通物品仍走原路
+
+        // 行情按实例字段算：同基座两实例价不同。
+        Assert.NotNull(state.Territory.Listing(grand.Id));
+        Assert.NotEqual(state.Territory.Listing(plain.Id)!.Value.SellPrice,
+                        state.Territory.Listing(grand.Id)!.Value.SellPrice);
+
+        // 存档往返不丢字段。
+        var loaded = SaveSystem.Load(SaveSystem.Save(state));
+        var w = loaded.Territory.Weapons.Get(grand.Id);
+        Assert.NotNull(w);
+        Assert.Equal(Quality.Legendary, w!.Quality);
+        Assert.Equal(5, w.Enhance);
+        Assert.Equal("Blazing", w.Enchant);
+        Assert.True(w.Blessed);
+        Assert.Equal(grand.Name, w.Name);
+        Assert.Equal(grand.Value, w.Value);
+        Assert.Equal(grand.Panel, w.Panel);
+        Assert.Equal(1, loaded.Roster.Master!.Bag.Get(grand.Id));
+    }
+
+    [Fact]
+    public void Weapon_instances_land_in_weapon_storage_by_category()
+    {
+        DefaultDefs.EnsureInitialized();
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
+
+        var rack = new Facility { Id = 1, Name = "武器架", RoomId = 1, Capacity = 10, CanStore = true, Built = true };
+        rack.StorageFilter.Add("Weapon");
+        state.Territory.AddFacility(rack);
+
+        var weapon = WeaponForge.Forge("秘银", WeaponType.Spear, enchant: "", blessed: false, enhance: 0);
+        state.Territory.Weapons.Add(weapon);
+
+        // 实例归属武器大类，按品类收；材料不是兵器，仍被拒。
+        Assert.True(rack.FilterAccepts(weapon.Id, state.Territory.Weapons));
+        Assert.False(rack.FilterAccepts("木材", state.Territory.Weapons));
+    }
+
+    [Fact]
+    public void Stamina_is_combat_hp_spirit_is_spent_by_work_and_tired_gets_half_stats_debuff()
+    {
+        DefaultDefs.EnsureInitialized();
+        var state = new GameState();
+        var c = state.Roster.Add("战士");
+        c[CoreStat.Strength] = 20;
+        c[CoreStat.Constitution] = 20;
+        c[CoreStat.Dexterity] = 20;
+        c[CoreStat.Intellect] = 20;
+        c[CoreStat.Perception] = 20;
+
+        // 1. 体力就是生命值，不是比例换算：生命值高了体力一样也多
+        var initialMaxHp = c.Combat.MaxHp;
+        Assert.Equal(initialMaxHp, c.Condition.MaxStamina);
+        Assert.Equal(initialMaxHp, c.Condition.Stamina);
+
+        // 进战斗生命值直接等于体力（1:1 无比例换算）
+        var fullDeploy = Deploy.FromCharacter(c, CombatSide.Attacker);
+        Assert.Equal(initialMaxHp, fullDeploy.Hp);
+        Assert.Equal(initialMaxHp, fullDeploy.MaxHp);
+
+        // 体力受损掉 25 点体力（剩余 200 点体力），进战斗直接就是 200 点血，绝无比例换算
+        c.Condition.Spend(25, 0);
+        Assert.Equal(initialMaxHp - 25, c.Condition.Stamina);
+        var hurtDeploy = Deploy.FromCharacter(c, CombatSide.Attacker);
+        Assert.Equal(initialMaxHp - 25, hurtDeploy.Hp);
+        Assert.Equal(initialMaxHp, hurtDeploy.MaxHp);
+
+        // 生命值高了体力一样也多：体质提升 10 点，生命值涨 100，体力上限随之一同涨 100
+        c.Condition.Recover(25, 0);
+        c[CoreStat.Constitution] += 10;
+        Assert.Equal(initialMaxHp + 100, c.Combat.MaxHp);
+        Assert.Equal(initialMaxHp + 100, c.Condition.MaxStamina);
+        Assert.Equal(initialMaxHp, c.Condition.Stamina);
+
+        // 2. 气力是被工作消耗的，两者没有强关联：工作消耗气力，体力（生命值）完全不掉
+        Assert.Equal(1000, c.Condition.Spirit);
+        var staminaBeforeWork = c.Condition.Stamina;
+
+        // 采矿消耗气力（采掘重活消耗25点气力）
+        state.Territory.AddRoom(new Room { Id = 1, Name = "矿场", Open = true });
+        var mine = new Facility { Id = 1, Name = "矿脉", RoomId = 1, YieldItemId = "铁矿", Built = true, Actions = { ActionKind.Mine } };
+        state.Territory.AddFacility(mine);
+        state.Territory.Assign(c.Id, 0, SlotMode.Work, 1);
+
+        var hub = new HubSession(state);
+        hub.Enter(1);
+        hub.Place(c.Id, 1);
+        state.Clock.SetTime(1, 0);
+
+        // 干活推进，气力下降，体力（血量）依旧完好
+        for (var i = 0; i < 20; i++)
+            hub.PassTime(5);
+        Assert.True(c.Condition.Spirit < 1000);
+        Assert.Equal(staminaBeforeWork, c.Condition.Stamina); // 体力完全不受工作影响！
+
+        // 3. 气力低于 30% 会进入疲劳状态
+        c.Condition.Spend(0, 800);   // 气力降至 200 以下（< 30%）
+        Assert.True(c.Condition.Spirit < c.Condition.MaxSpirit * 3 / 10);
+        Assert.True(c.Condition.Tired);
+
+        // 4. 疲劳的角色在战斗时受到全属性 -50% 的 debuff
+        var normalCombat = c.Combat;
+        var tiredDeploy = Deploy.FromCharacter(c, CombatSide.Attacker);
+        Assert.Equal(normalCombat.Attack / 2, tiredDeploy.Attack);
+        Assert.Equal(normalCombat.Defence / 2, tiredDeploy.Defence);
+        Assert.Equal(normalCombat.Dodge / 2, tiredDeploy.Dodge);
+        Assert.Equal(normalCombat.SpellPower / 2, tiredDeploy.SpellPower);
+
+        // 5. 恢复气力回升到 30% 以上后疲劳解除，战斗全属性恢复正常
+        c.Condition.Recover(0, 500);
+        Assert.False(c.Condition.Tired);
+        var recoveredDeploy = Deploy.FromCharacter(c, CombatSide.Attacker);
+        Assert.Equal(normalCombat.Attack, recoveredDeploy.Attack);
+        Assert.Equal(normalCombat.Defence, recoveredDeploy.Defence);
+    }
+
+    [Fact]
+    public void Equip_slots_cover_weapons_armor_and_accessories()
+    {
+        DefaultDefs.EnsureInitialized();
+
+        // 十槽：主副手 / 五件甲 / 两戒指一项链。
+        Assert.Equal(10, EquipSlots.Count);
+        Assert.True(EquipSlots.Accepts(EquipSlot.MainHand, EquipKind.Weapon));
+        Assert.True(EquipSlots.Accepts(EquipSlot.OffHand, EquipKind.Weapon));
+        Assert.False(EquipSlots.Accepts(EquipSlot.Head, EquipKind.Weapon));
+        foreach (var slot in new[] { EquipSlot.Head, EquipSlot.Torso, EquipSlot.Legs, EquipSlot.Hands, EquipSlot.Feet })
+            Assert.True(EquipSlots.Accepts(slot, EquipKind.Armor));
+        Assert.False(EquipSlots.Accepts(EquipSlot.Neck, EquipKind.Armor));
+        foreach (var slot in new[] { EquipSlot.Ring1, EquipSlot.Ring2, EquipSlot.Neck })
+            Assert.True(EquipSlots.Accepts(slot, EquipKind.Accessory));
+        Assert.False(EquipSlots.Accepts(EquipSlot.Torso, EquipKind.Accessory));
+
+        // 防具：槽位定基座，材料与品质缩放。7 种能缝甲的材料 × 5 槽 = 35 基座。
+        Assert.Equal(35, EquipForge.ArmorBaseCount());
+        var steelTorso = EquipForge.ForgeArmor(EquipSlot.Torso, "钢",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        var steelHead = EquipForge.ForgeArmor(EquipSlot.Head, "钢",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        Assert.True(steelTorso.Defence > steelHead.Defence, "上装应厚于帽子");
+        Assert.True(EquipForge.ForgeArmor(EquipSlot.Torso, "以太", quality: Quality.Common, enchant: "").Defence
+                    > steelTorso.Defence, "材料应抬防御");
+        Assert.True(EquipForge.ForgeArmor(EquipSlot.Torso, "钢", quality: Quality.Legendary, enchant: "").Defence
+                    > steelTorso.Defence, "品质应抬防御");
+
+        // 饰品：类型决定加哪项战斗属性。
+        var ruby = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "秘银",
+            quality: Quality.Fine, enchant: "", blessed: false, enhance: 0);
+        var gale = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Dexterity", "秘银",
+            quality: Quality.Fine, enchant: "", blessed: false, enhance: 0);
+        var sage = EquipForge.ForgeAccessory(EquipSlot.Neck, "Intellect", "以太",
+            quality: Quality.Epic, enchant: "", blessed: false, enhance: 0);
+        Assert.Equal(CoreStat.Strength, ruby.BonusStat);
+        Assert.Equal(CoreStat.Dexterity, gale.BonusStat);
+        Assert.Equal(CoreStat.Intellect, sage.BonusStat);
+        Assert.NotEqual(ruby.BonusStat, gale.BonusStat);
+        Assert.True(EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "以太",
+            quality: Quality.Common, enchant: "").BonusAmount > ruby.BonusAmount);
+
+        // 名字只带祝福与附魔，其余进详情。
+        // 防具用物品名词（甲/腿/靴），不是槽位标签（上装/下装/鞋子）。
+        var plain = EquipForge.ForgeArmor(EquipSlot.Torso, "铁",
+            quality: Quality.Legendary, enchant: "", blessed: false, enhance: 5);
+        Assert.Equal("铁甲", plain.Name);
+        Assert.Contains("强化　+5", plain.DescribeDetails());
+        Assert.Equal("钢腿", EquipForge.ForgeArmor(EquipSlot.Legs, "钢",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Equal("秘银靴", EquipForge.ForgeArmor(EquipSlot.Feet, "秘银",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        // 铁以下只有布甲皮甲：木头缝不了甲。
+        Assert.Equal("布帽", EquipForge.ForgeArmor(EquipSlot.Head, "布",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Throws<ArgumentException>(() =>
+            EquipForge.ForgeArmor(EquipSlot.Head, "木材", quality: Quality.Common, enchant: ""));
+        var blessedNeck = EquipForge.ForgeAccessory(EquipSlot.Neck, "Strength", "精金",
+            quality: Quality.Common, enchant: "", blessed: true, enhance: 0);
+        Assert.Equal("受祝福的精金项链", blessedNeck.Name);
+        var keenRing = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Perception", "钢",
+            quality: Quality.Common, enchant: "Keen", blessed: false, enhance: 0);
+        Assert.Equal("锐利的钢戒指", keenRing.Name);
+        Assert.Contains("加成　感知 +15", keenRing.DescribeDetails());
+
+        // 饰品名 = 材料 + 戒指/项链；加什么属性是类型的事，写在详情里。
+        Assert.Equal("秘银戒指", EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "秘银",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Equal("精金戒指", EquipForge.ForgeAccessory(EquipSlot.Ring2, "Dexterity", "精金",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Equal("以太项链", EquipForge.ForgeAccessory(EquipSlot.Neck, "Constitution", "以太",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Equal("铁项链", EquipForge.ForgeAccessory(EquipSlot.Neck, "Intellect", "铁",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
+        Assert.Equal("戒指", EquipSlots.AccessoryNoun(EquipSlot.Ring1));
+        Assert.Equal("戒指", EquipSlots.AccessoryNoun(EquipSlot.Ring2));
+        Assert.Equal("项链", EquipSlots.AccessoryNoun(EquipSlot.Neck));
+    }
+
+    [Fact]
+    public void Equipping_gear_aggregates_defence_and_stat_bonuses()
+    {
+        DefaultDefs.EnsureInitialized();
+        var state = new GameState();
+        var registry = state.Territory.Equips;
+        var hero = state.Roster.Add("勇者");
+
+        var helmet = EquipForge.ForgeArmor(EquipSlot.Head, "钢",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        var torso = EquipForge.ForgeArmor(EquipSlot.Torso, "钢",
+            quality: Quality.Common, enchant: "", blessed: false, enhance: 0);
+        var ringA = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "秘银",
+            quality: Quality.Fine, enchant: "", blessed: false, enhance: 0);
+        var ringB = EquipForge.ForgeAccessory(EquipSlot.Ring2, "Strength", "精金",
+            quality: Quality.Epic, enchant: "", blessed: false, enhance: 0);
+        foreach (var g in new[] { helmet, torso, ringA, ringB })
+            registry.Add(g);
+
+        Assert.Equal(0, hero.TotalDefence(registry));
+        Assert.True(hero.EquipGear(helmet));
+        Assert.True(hero.EquipGear(torso));
+        Assert.True(hero.EquipGear(ringA));
+        Assert.True(hero.EquipGear(ringB));
+
+        // 防御 = 各甲之和；两枚戒指的同属性加成累加。
+        Assert.Equal(helmet.Defence + torso.Defence, hero.TotalDefence(registry));
+        Assert.Equal(ringA.BonusAmount + ringB.BonusAmount,
+            hero.StatBonus(registry, CoreStat.Strength));
+        Assert.Equal(0, hero.StatBonus(registry, CoreStat.Dexterity));
+
+        // 槽位占用与错配都被拒。
+        Assert.False(hero.EquipGear(EquipForge.ForgeArmor(EquipSlot.Head, "铁",
+            quality: Quality.Common, enchant: "")));
+        Assert.Throws<ArgumentException>(() =>
+            EquipForge.ForgeArmor(EquipSlot.Neck, "铁", quality: Quality.Common, enchant: ""));
+
+        // 卸下后防御下降，腾出的槽可再装。
+        Assert.Equal(helmet.Id, hero.UnequipGear(EquipSlot.Head));
+        Assert.Equal(torso.Defence, hero.TotalDefence(registry));
+        Assert.True(hero.EquipGear(EquipForge.ForgeArmor(EquipSlot.Head, "铁",
+            quality: Quality.Common, enchant: "")));
+
+        // 存档往返：实例与槽位都不丢。
+        var loaded = SaveSystem.Load(SaveSystem.Save(state));
+        var h2 = loaded.Roster.Find(hero.Id)!;
+        Assert.Equal(hero.TotalDefence(registry), h2.TotalDefence(loaded.Territory.Equips));
+        Assert.Equal(hero.StatBonus(registry, CoreStat.Strength),
+            h2.StatBonus(loaded.Territory.Equips, CoreStat.Strength));
     }
 
     private sealed class FixedDayEvent : IDayEvent

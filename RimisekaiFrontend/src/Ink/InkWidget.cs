@@ -23,6 +23,12 @@ public enum InkAction
     /// <summary>设施行动。Index 是 InkViewModel.FixtureActions() 的下标。</summary>
     FixtureAction,
 
+    /// <summary>卧室类房间里拧门锁。Index 不用。</summary>
+    RoomLock,
+
+    /// <summary>过界去隔壁区域。Index 是目标区域 Id（3×3 拼图里的扁平编号）。</summary>
+    CrossRegion,
+
     /// <summary>存储页：把一份物品放进设施。Index 是存储行下标。</summary>
     StorageStore,
 
@@ -31,6 +37,9 @@ public enum InkAction
 
     /// <summary>存储页：切换该物品是否允许收进设施。Index 是存储行下标。</summary>
     StorageFilterToggle,
+
+    /// <summary>存储页：切换整个品类是否允许收进设施。Index 是品类行下标。</summary>
+    StorageCategoryToggle,
 
     /// <summary>存储页：关掉设施交互页。</summary>
     StorageClose,
@@ -41,17 +50,74 @@ public enum InkAction
     /// <summary>角色栏翻页。</summary>
     PageNext,
 
+    /// <summary>角色栏翻页（向回）。</summary>
+    PagePrev,
+
+    /// <summary>交流面板的起始类别。Index 是 SocialCategories 下标。</summary>
+    SocialCategory,
+
+    /// <summary>右栏日志开关：收起/还原设施段。</summary>
+    LogToggle,
+
     /// <summary>遮盖层的分支选项。Index 是选项下标。</summary>
     OverlayChoice,
 
     /// <summary>点遮盖层空白处推进一句。</summary>
     OverlayAdvance,
 
+    /// <summary>战斗：选定敌方目标。Index 是敌方单位 Id。</summary>
+    CombatTarget,
+
+    /// <summary>战斗：选定目标列。Index 是列号 1-4。</summary>
+    CombatColumn,
+
+    /// <summary>战斗：行动面板类别选择（0=攻击, 1=技能, 2=道具, 3=防御）。</summary>
+    CombatCategory,
+
+    /// <summary>战斗：释放技能。Index 是 battle.Menu() 中的下标。</summary>
+    CombatSkill,
+
+    /// <summary>战斗：使用道具。Index 是可用道具下标。</summary>
+    CombatItem,
+
     /// <summary>聊天层右上角的入口（状态/技能/日程）。Index 是入口下标。</summary>
     ChatEntry,
 
     /// <summary>子页面列表：选中一行。Index 是行下标。</summary>
     PageSelect,
+
+    /// <summary>技能页：点开一项技能。Index 是行下标。</summary>
+    SkillPick,
+
+    /// <summary>技能页：点击扇区标签或扇区聚焦放大。Index 是扇区序号（0..5）。</summary>
+    SkillSectorPick,
+
+    /// <summary>技能页：重置扇区聚焦，视角平滑缩小返回全盘全景。</summary>
+    SkillSectorReset,
+
+    /// <summary>技能页：星盘右上角按钮（左上实心三角），切换至左侧/上一瓦片技能。</summary>
+    SkillTilePrev,
+
+    /// <summary>技能页：星盘右上角按钮（右下实心三角），切换至右侧/下一瓦片技能。</summary>
+    SkillTileNext,
+
+    /// <summary>技能页：切换至上一扇区。</summary>
+    SkillSectorPrev,
+
+    /// <summary>技能页：切换至下一扇区。</summary>
+    SkillSectorNext,
+
+    /// <summary>日程页：选中一个时段。Index 是时段下标。</summary>
+    ScheduleSlot,
+
+    /// <summary>日程页：选中房间网格里的一间房。Index 是房间 Id。</summary>
+    ScheduleRoom,
+
+    /// <summary>日程页：把当前时段排到这件设施上。Index 是设施 Id。</summary>
+    ScheduleFacility,
+
+    /// <summary>日程页：取消该时段的工作安排（时段卡右上角的取消按钮）。Index 是时段下标。</summary>
+    CancelTask,
 
     /// <summary>子页面搜索框。点击聚焦，键盘输入过滤列表。</summary>
     PageSearchBox,
@@ -68,11 +134,14 @@ public enum InkAction
     /// <summary>子页面页签：切到另一个全屏页。Index 是 InkPageTabs.All 的下标。</summary>
     PageTab,
 
+    /// <summary>列表滑条：点轨道把滑块跳到该处（点击坐标由屏幕层取）。</summary>
+    ScrollJump,
+
+    /// <summary>列表滑条：按住滑块拖动。Index 是列表代号（见 HubScreen 的分派）。</summary>
+    ScrollThumb,
+
     /// <summary>子页面列表翻页。Index 0 上一页、1 下一页。</summary>
     PageScroll,
-
-    /// <summary>工作页：点矩阵里的一个格子。Index 打包行列（行*1000+列）。</summary>
-    WorkCell,
 
     /// <summary>主界面底部的世界/领地层切换。</summary>
     HubWorld,
@@ -83,8 +152,20 @@ public enum InkAction
     /// <summary>主界面底部的系统入口（设置/存读档）。</summary>
     HubSystem,
 
+    /// <summary>角色面板右上角的状态页入口按钮。</summary>
+    CharStatus,
+
+    /// <summary>角色面板右上角的技能页入口按钮。</summary>
+    CharSkills,
+
+    /// <summary>日程页左侧列表切换选中的成员。Index 是 CharacterId。</summary>
+    ScheduleMember,
+
     /// <summary>主界面的工作入口（角色面板与行动面板之间的空位）。</summary>
     HubWork,
+
+    /// <summary>观察四周：点击行动面板直接退出观察态。</summary>
+    ObserveExit,
 
     /// <summary>关闭子页面。</summary>
     PageClose,
@@ -106,6 +187,21 @@ public enum InkAction
 
     /// <summary>开发页：详情框里的动作按钮（拆除/放置等）。Index 是动作下标。</summary>
     DevDetailAction,
+
+    /// <summary>开发页：中下操作面板的一行按钮。Index 是操作行下标（含 InkAction 与分派下标）。</summary>
+    DevAction,
+
+    /// <summary>开发页：点左下「待安装的房间」里的一行，选中它并进入网格选位。Index 是行下标。</summary>
+    DevPickRoomRow,
+
+    /// <summary>开发页：点邻近的未开发房间格，弹开拓确认窗。Index 是房间格下标。</summary>
+    DevOpenConfirm,
+
+    /// <summary>开发页：开拓确认窗——开拓。</summary>
+    DevConfirmAccept,
+
+    /// <summary>开发页：开拓确认窗——取消。</summary>
+    DevConfirmCancel,
 
     /// <summary>开发页：拆除非空房间（房间格右上角的 X）。Index 是房间格下标。</summary>
     DevDemolishRoom,
@@ -130,12 +226,57 @@ public enum InkAction
 
     /// <summary>改名弹窗：取消。</summary>
     RenameCancel,
+
+    /// <summary>交易页：选中左栏一行（领地库存，卖出的对象）。Index 是行下标。</summary>
+    TradePickHeld,
+
+    /// <summary>交易页：选中右栏一行（市场库存，买入的对象）。Index 是行下标。</summary>
+    TradePickMarket,
+
+    /// <summary>
+    /// 交易页：唯一一枚交易键。选中右栏（市场库存）即买入，
+    /// 选中左栏（领地库存）即卖出——方向由选中栏决定，不设两个键。
+    /// </summary>
+    TradeRun,
+
+    /// <summary>
+    /// 遮盖的遮挡矩形：吃掉落在其上的点击、不做任何事。
+    /// 命中纯几何，被盖住的控件点不到是因为这块先接走了点击——
+    /// 不是按层禁用，也不是跨容器拦截。
+    /// </summary>
+    BlockClick,
+
+    /// <summary>通用居中弹窗：纯展示/无阻塞控件时点击画面任何部分推进下一个弹窗或结束。</summary>
+    ModalAdvance,
+
+    /// <summary>通用居中弹窗：选项按钮。Index 是选项下标。</summary>
+    ModalChoice,
+
+    /// <summary>通用居中弹窗：输入框点击聚焦。</summary>
+    ModalInputFocus,
+
+    /// <summary>
+    /// 状态页：点能力列的标题，在「只报最高一项」与「列全」之间切换。
+    /// 三列呼应（点任一列都切换整块），所以 Index 不用。
+    /// </summary>
+    StatusAbilityToggle,
 }
 
 /// <summary>
 /// 一个可交互元素。绘制与命中判定共用同一份列表，
 /// 因此“画成灰色却还能点”这类不一致在结构上不可能出现：
 /// Enabled 同时决定外观与是否可点。
+///
+/// Rect 是包围盒（悬停高亮与整体落位用）；
+/// Polygon 非空时命中判定改用它——三角瓦片这类非矩形热区靠它精确命中，
+/// 否则相邻瓦片的外接矩形会互相抢点击。
+/// </summary>
+/// <summary>
+/// 一个可交互元素。绘制与命中判定共用同一份列表，
+/// 因此“画成灰色却还能点”这类不一致在结构上不可能出现：
+/// Enabled 同时决定外观与是否可点。
+/// <see cref="Value"/> 是按钮右侧要显示的数值（消耗时间 / 预计伤害等），
+/// 渲染器据此把按钮分成左右两区；空串即不分区、按老样子画。
 /// </summary>
 public readonly record struct InkWidget(
     Rect2 Rect,
@@ -143,23 +284,40 @@ public readonly record struct InkWidget(
     int Index,
     bool Enabled,
     string Label,
-    InkLayer Layer = InkLayer.Base);
+    Vector2[]? Polygon = null,
+    string Value = "")
+{
+    /// <summary>点是否落在本元素上。有 Polygon 走多边形内判定，否则走矩形。</summary>
+    public bool Contains(Vector2 point)
+    {
+        if (Polygon == null || Polygon.Length < 3)
+            return Rect.HasPoint(point);
+        return InPolygon(point, Polygon);
+    }
+
+    /// <summary>多边形内判定：射线穿越计数（奇内偶外），凹多边形也适用。</summary>
+    private static bool InPolygon(Vector2 p, Vector2[] poly)
+    {
+        var inside = false;
+        for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+        {
+            var a = poly[i];
+            var b = poly[j];
+            if (a.Y > p.Y != b.Y > p.Y
+                && p.X < (b.X - a.X) * (p.Y - a.Y) / (b.Y - a.Y) + a.X)
+                inside = !inside;
+        }
+        return inside;
+    }
+}
 
 /// <summary>
-/// 界面分层。元素表始终包含各层的全部元素（渲染器靠它取标签），
-/// 但命中判定只认当前最上层，因此下层不会被误点。
+/// 界面分层。
 /// </summary>
 public enum InkLayer
 {
-    /// <summary>主界面：地图、日志、角色、行动。</summary>
     Base = 0,
-
-    /// <summary>子页面（库存/交易/制作/开发）。</summary>
     Page = 1,
-
-    /// <summary>地图遮盖层（对话/剧情/插画）。</summary>
     Overlay = 2,
-
-    /// <summary>改名弹窗，最高层。</summary>
     Modal = 3,
 }

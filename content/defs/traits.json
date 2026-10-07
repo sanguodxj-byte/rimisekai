@@ -1,0 +1,689 @@
+{
+  "defType": "TraitDef",
+  "defs": [
+    {
+      "defName": "Talkative",
+      "label": "健谈",
+      "group": "外向",
+      "keynote": "主动开场，话密",
+      "exclaim": 2,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Quiet",
+      "label": "寡言",
+      "group": "外向",
+      "keynote": "答比问短",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "SlowWarmer",
+      "label": "慢热",
+      "group": "外向",
+      "keynote": "初见少语，熟后放开",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "SocialChameleon",
+      "label": "圆滑",
+      "group": "待人",
+      "keynote": "见人说人话，处事周全",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Nervous",
+      "label": "易紧张",
+      "group": "情绪",
+      "keynote": "结巴、改口、自问自答",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Expressive",
+      "label": "情绪外露",
+      "group": "情绪",
+      "keynote": "喜怒都在语气里",
+      "exclaim": 2,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "StillWaters",
+      "label": "内敛",
+      "group": "情绪",
+      "keynote": "情绪深藏不露，全在细微动作里",
+      "exclaim": 0,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "Optimist",
+      "label": "乐观",
+      "group": "情绪",
+      "keynote": "往好处说，爱打气",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Melancholy",
+      "label": "忧郁",
+      "group": "情绪",
+      "keynote": "凡事先想难处",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "HotTempered",
+      "label": "急躁",
+      "group": "情绪",
+      "keynote": "性子急，抢话快语",
+      "exclaim": 2,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Unflappable",
+      "label": "沉稳",
+      "group": "情绪",
+      "keynote": "天塌下来语速不变，临危不乱",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Attentive",
+      "label": "体贴",
+      "group": "待人",
+      "keynote": "心思细腻，处处为人着想",
+      "exclaim": 0,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "SharpTongued",
+      "label": "毒舌",
+      "group": "待人",
+      "keynote": "夸奖藏在损话里",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Worrier",
+      "label": "多虑",
+      "group": "情绪",
+      "keynote": "凡事先往坏处想，多思善虑",
+      "exclaim": 1,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "PeoplePleaser",
+      "label": "迎合",
+      "group": "待人",
+      "keynote": "先看脸色再开口，习惯道歉迁就",
+      "exclaim": 0,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "Arrogant",
+      "label": "傲慢",
+      "group": "待人",
+      "keynote": "评价式口吻，夸奖稀缺",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Forthright",
+      "label": "直率",
+      "group": "待人",
+      "keynote": "有话直说，不会绕",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Protective",
+      "label": "护短",
+      "group": "待人",
+      "keynote": "对外强硬对内柔软",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Dutiful",
+      "label": "尽责",
+      "group": "做事",
+      "keynote": "报进度，守诺语汇",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Perfectionist",
+      "label": "严谨",
+      "group": "做事",
+      "keynote": "一板一眼，容不得差不多",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Procrastinator",
+      "label": "拖沓",
+      "group": "做事",
+      "keynote": "自嘲式『我老是这样』",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Methodical",
+      "label": "有条理",
+      "group": "做事",
+      "keynote": "凡事先列一二三，有章有法",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "FreeSpirit",
+      "label": "随性",
+      "group": "做事",
+      "keynote": "话随情绪断",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Inquisitive",
+      "label": "好学",
+      "group": "认知",
+      "keynote": "新词多，爱问为什么",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Bookish",
+      "label": "书痴",
+      "group": "认知",
+      "keynote": "书不离手，言谈爱引经据典",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "DownToEarth",
+      "label": "务实",
+      "group": "认知",
+      "keynote": "抽象话题拉回现实",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Dreamer",
+      "label": "空想家",
+      "group": "认知",
+      "keynote": "脑中天马行空，爱遐想",
+      "exclaim": 1,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "Meticulous",
+      "label": "较真",
+      "group": "认知",
+      "keynote": "对数字与事实纠错",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Superstitious",
+      "label": "迷信",
+      "group": "认知",
+      "keynote": "吉凶宜忌挂嘴边",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Foodie",
+      "label": "吃货",
+      "group": "独特",
+      "keynote": "话题绕到吃的",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "NightFearful",
+      "label": "畏暗",
+      "group": "独特",
+      "keynote": "天一黑就发怵，不敢走夜路",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "GrouchyMornings",
+      "label": "起床气",
+      "group": "独特",
+      "keynote": "清早没睡醒，口气冲",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Frugal",
+      "label": "吝啬",
+      "group": "独特",
+      "keynote": "分文必争，心疼物件花销",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Generous",
+      "label": "大方",
+      "group": "独特",
+      "keynote": "出手阔绰，爱分享",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "DeftHands",
+      "label": "手巧",
+      "group": "独特",
+      "keynote": "以物传情",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Directionless",
+      "label": "路痴",
+      "group": "独特",
+      "keynote": "外出认不得路",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "NeatFreak",
+      "label": "洁癖",
+      "group": "独特",
+      "keynote": "容不得脏乱，看哪都想收拾",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Sentimental",
+      "label": "念旧",
+      "group": "独特",
+      "keynote": "念旧，舍不得扔",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "NightOwl",
+      "label": "夜猫子",
+      "group": "独特",
+      "keynote": "深夜精神，白天蔫",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "VerbalTic",
+      "label": "口头禅",
+      "group": "独特",
+      "keynote": "常挂在嘴边的口头表达",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Lazy",
+      "label": "懒散",
+      "group": "做事",
+      "keynote": "能躺着绝不坐着",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Artisan",
+      "label": "工匠",
+      "group": "做事",
+      "keynote": "三句话不离手艺",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Curious",
+      "label": "好奇",
+      "group": "认知",
+      "keynote": "这也要看、那也要摸",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Cold",
+      "label": "冷淡",
+      "group": "待人",
+      "keynote": "话少热度低",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Defiant",
+      "label": "叛逆",
+      "group": "待人",
+      "keynote": "不服管束，爱较劲顶嘴",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "FastLearner",
+      "label": "聪慧",
+      "group": "认知",
+      "keynote": "一点就透",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "SlowLearner",
+      "label": "迟钝",
+      "group": "认知",
+      "keynote": "学得慢但踏实",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "FearPain",
+      "label": "怕痛",
+      "group": "独特",
+      "keynote": "疼得直咧嘴",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "IgnorePain",
+      "label": "耐痛",
+      "group": "独特",
+      "keynote": "疼痛忍耐力极强",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "QuickRecovery",
+      "label": "强韧",
+      "group": "独特",
+      "keynote": "体质皮实，睡一觉就能缓过来",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "SlowRecovery",
+      "label": "体弱",
+      "group": "独特",
+      "keynote": "体弱多病，累一回缓好几天",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Alchemist",
+      "label": "炼金",
+      "group": "独特",
+      "keynote": "配方张口就来",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Maid",
+      "label": "女仆",
+      "group": "身份",
+      "keynote": "大人，请尽管吩咐",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
+      "defName": "Mage",
+      "label": "魔法师",
+      "group": "身份",
+      "keynote": "术式的原理是如此玄奥",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
+      "defName": "QuickChant",
+      "label": "速咏",
+      "group": "独特",
+      "keynote": "咏唱回合 -1（下限 1）",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Timid",
+      "label": "胆小",
+      "group": "已并入",
+      "keynote": "并入易紧张",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
+      "defName": "Honest",
+      "label": "诚实",
+      "group": "已并入",
+      "keynote": "并入直率",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
+      "defName": "Prideful",
+      "label": "自负",
+      "group": "已并入",
+      "keynote": "并入傲慢",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
+      "defName": "Vigilant",
+      "label": "警觉",
+      "group": "认知",
+      "keynote": "对动静敏感，总先人一步",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Intuitive",
+      "label": "直觉",
+      "group": "认知",
+      "keynote": "凭第一感下判断",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Analytical",
+      "label": "理性",
+      "group": "认知",
+      "keynote": "遇事先拆利弊",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Stoic",
+      "label": "淡漠",
+      "group": "情绪",
+      "keynote": "喜哀不形于色",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Sensitive",
+      "label": "敏感",
+      "group": "情绪",
+      "keynote": "一句重话搁在心里",
+      "exclaim": 1,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "Thickskinned",
+      "label": "钝感",
+      "group": "情绪",
+      "keynote": "风言风语过耳就忘",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Gregarious",
+      "label": "合群",
+      "group": "外向",
+      "keynote": "到哪儿都能搭上话",
+      "exclaim": 2,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "LoneWolf",
+      "label": "独狼",
+      "group": "外向",
+      "keynote": "能一个人办成的事不叫人",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Compassionate",
+      "label": "慈悲",
+      "group": "待人",
+      "keynote": "见不得旁人受苦",
+      "exclaim": 0,
+      "intimateBaseline": true,
+      "notInPool": false
+    },
+    {
+      "defName": "Vengeful",
+      "label": "记仇",
+      "group": "待人",
+      "keynote": "得罪过的都记着小账",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Loyal",
+      "label": "忠心",
+      "group": "待人",
+      "keynote": "认准的人不轻易背弃",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Decisive",
+      "label": "果决",
+      "group": "做事",
+      "keynote": "定了就做，不反复",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Hesitant",
+      "label": "犹豫",
+      "group": "做事",
+      "keynote": "凡事要再想想",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Persistent",
+      "label": "执着",
+      "group": "做事",
+      "keynote": "认准的事不撒手",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Dependable",
+      "label": "靠得住",
+      "group": "做事",
+      "keynote": "应下的事有下文",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Adventurous",
+      "label": "爱冒险",
+      "group": "独特",
+      "keynote": "越未知越来劲",
+      "exclaim": 2,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Ascetic",
+      "label": "苦行",
+      "group": "独特",
+      "keynote": "清简自持，不重享受",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": false
+    },
+    {
+      "defName": "Restless",
+      "label": "好动",
+      "group": "独特",
+      "keynote": "坐着不如走着",
+      "exclaim": 1,
+      "intimateBaseline": false,
+      "notInPool": false
+    }
+  ]
+}

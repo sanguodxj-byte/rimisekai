@@ -19,6 +19,7 @@ public sealed class BattleSession : Session
     private const int CmdSkillBase = 100;
 
     public Battle Battle { get; }
+    public Rimisekai.Quest.QuestRun? QuestRun { get; set; }
 
     public override SessionKind Kind => SessionKind.Combat;
 

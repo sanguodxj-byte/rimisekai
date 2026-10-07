@@ -180,33 +180,22 @@ def main():
     print(f"=== [SAM3] 正在初始化本地离线 SAM3 视觉模型 (device={dev}) ===", flush=True)
     seg = SAM3ImageSegmenter(device=dev, model_path=str(CKPT))
 
-    pattern = str(PROJ_DIR / "立绘_*_差分*.png")
-    files = sorted(glob.glob(pattern))
-
-    extras = [
-        ("立绘_人类圣骑士.png", "头像_人类圣骑士.png"),
-        ("立绘_鼠耳鼠尾圣女.png", "头像_鼠耳鼠尾圣女.png"),
-        ("立绘_马耳马尾武装修女.png", "头像_马耳马尾武装修女.png"),
-    ]
-    for extra_src, extra_dst in extras:
-        full_src = PROJ_DIR / extra_src
-        if full_src.exists():
-            files.append(str(full_src))
+    # 输入：assets/portraits/{identity,identity_moe,special}；输出：assets/avatars/ 同构子目录
+    files = []
+    for sub in ["identity", "identity_moe", "special"]:
+        src_dir = PROJ_DIR / "assets" / "portraits" / sub
+        for f in sorted(src_dir.glob("*.png")):
+            files.append((str(f), sub))
 
     print(f"=== [SAM3] 待处理全量立绘清单：共 {len(files)} 张 ===", flush=True)
 
     records = {}
     success_count = 0
-    for idx, f in enumerate(files, start=1):
+    for idx, (f, sub) in enumerate(files, start=1):
         base = os.path.basename(f)
-        if "差分" in base:
-            dst_name = base.replace("立绘_", "头像_")
-        elif base == "立绘_马耳马尾武装修女.png":
-            dst_name = "头像_马耳马尾武装修女.png"
-        else:
-            dst_name = base.replace("立绘_", "头像_")
-
-        dst_path = PROJ_DIR / dst_name
+        dst_dir = PROJ_DIR / "assets" / "avatars" / sub
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        dst_path = dst_dir / ("avatar_" + base)
 
         im = Image.open(f).convert("RGB")
         w, h = im.size
@@ -256,8 +245,8 @@ def main():
             resized = cropped.resize((TARGET_SIZE, TARGET_SIZE), Image.Resampling.LANCZOS)
             resized.save(dst_path)
 
-            records[dst_name] = {
-                "source": base,
+            records[str(dst_path.relative_to(PROJ_DIR))] = {
+                "source": str(pathlib.Path(f).relative_to(PROJ_DIR)),
                 "score": round(score, 3),
                 "face_box": [round(fx1), round(fy1), round(fx2), round(fy2)],
                 "avatar_box": [x1, y1, x2, y2],
@@ -265,12 +254,14 @@ def main():
             }
             success_count += 1
             dt = time.time() - t_img
-            print(f"[{idx:02d}/{len(files)}] {dt:4.1f}s | {dst_name:22s} -> 脸=[{fx1:3.0f},{fy1:3.0f},{fx2:3.0f},{fy2:3.0f}] 选框=[{x1:3d},{y1:3d},{x2:3d},{y2:3d}] (边长={bs})", flush=True)
+            print(f"[{idx:02d}/{len(files)}] {dt:4.1f}s | avatar_{base:26s} -> 脸=[{fx1:3.0f},{fy1:3.0f},{fx2:3.0f},{fy2:3.0f}] 选框=[{x1:3d},{y1:3d},{x2:3d},{y2:3d}] (边长={bs})", flush=True)
         else:
             print(f"[{idx:02d}/{len(files)}] 警告：未检测到面部: {base}", flush=True)
 
     # 导出全量审计 JSON
-    audit_file = PROJ_DIR / "sam3_avatar_calibration.json"
+    audit_dir = PROJ_DIR / "assets" / "avatars"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    audit_file = audit_dir / "sam3_avatar_calibration.json"
     audit_file.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"=== [SAM3] 全量处理圆满完成！成功截取 {success_count}/{len(files)} 张绝对居中 1:1 头像 ===", flush=True)
 

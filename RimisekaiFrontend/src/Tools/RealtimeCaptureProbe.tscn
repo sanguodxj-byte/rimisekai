@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://de4fa4dyk3887"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Tools/RealtimeCaptureProbe.cs" id="1_rcp"]
+
+[node name="RealtimeCaptureProbe" type="Node"]
+script = ExtResource("1_rcp")

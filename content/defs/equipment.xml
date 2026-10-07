@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    装备四张轴表：防具槽位、武器类型、饰品类型、附魔。
+    材料轴单独一张（materials.xml），全项目只此一份。
+  -->
+
+  <!-- 防具槽位：基础防御与物品名词（布甲/皮甲的“甲”，铁帽的“帽”）。 -->
+  <ArmorSlotDef>
+    <defName>Head</defName>
+    <label>帽</label>
+    <description>护持头部的防具，从软帽、轻皮盔到坚甲钢盔皆属此列。</description>
+    <baseDefence>3</baseDefence>
+    <noun>帽</noun>
+  </ArmorSlotDef>
+
+  <ArmorSlotDef>
+    <defName>Torso</defName>
+    <label>甲</label>
+    <description>护持躯干要害的主体甲胄，布衣、硬皮甲与铁锁重铠皆属此列。</description>
+    <baseDefence>8</baseDefence>
+    <noun>甲</noun>
+  </ArmorSlotDef>
+
+  <ArmorSlotDef>
+    <defName>Legs</defName>
+    <label>腿</label>
+    <description>护持下肢与膝腿的轻重护胫，兼顾防护与行步活动。</description>
+    <baseDefence>5</baseDefence>
+    <noun>腿</noun>
+  </ArmorSlotDef>
+
+  <ArmorSlotDef>
+    <defName>Hands</defName>
+    <label>手</label>
+    <description>裹护腕掌的手甲与皮腕带，防滑减震，护持持械手腕。</description>
+    <baseDefence>2</baseDefence>
+    <noun>手</noun>
+  </ArmorSlotDef>
+
+  <ArmorSlotDef>
+    <defName>Feet</defName>
+    <label>靴</label>
+    <description>耐磨坚实的行路软长靴或铁踏重靴，保暖防护并适于跋涉。</description>
+    <baseDefence>2</baseDefence>
+    <noun>靴</noun>
+  </ArmorSlotDef>
+
+  <!-- 武器类型：共享一份熟练度；子类型（刺剑/太刀/戟/镰刀）后续扩展。 -->
+  <WeaponTypeDef>
+    <defName>Sword</defName>
+    <label>剑</label>
+    <description>形制典雅的双刃单手铁剑，挥砍与穿刺兼备，攻守均衡。</description>
+    <type>Sword</type>
+    <style>OneHand</style>
+    <core>Dexterity</core>
+    <basePanel>18</basePanel>
+    <baseValue>10</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Axe</defName>
+    <label>斧</label>
+    <description>开山破阵的重锋双手战斧，刃阔势沉，兼具伐木与重劈之威。</description>
+    <type>Axe</type>
+    <style>TwoHand</style>
+    <core>Strength</core>
+    <basePanel>22</basePanel>
+    <baseValue>11</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Spear</defName>
+    <label>长枪</label>
+    <description>长达丈余的双手点钢长枪，破空直进，以距离占得先机。</description>
+    <type>Spear</type>
+    <style>TwoHand</style>
+    <core>Strength</core>
+    <basePanel>21</basePanel>
+    <baseValue>12</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Bow</defName>
+    <label>弓</label>
+    <description>选坚木与兽角复合鞣制的猎战长弓，张弦劲利，发矢破空。</description>
+    <type>Bow</type>
+    <style>Ranged</style>
+    <core>Perception</core>
+    <basePanel>17</basePanel>
+    <baseValue>13</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Staff</defName>
+    <label>法杖</label>
+    <description>铭刻引流灵脉纹理的精修法杖，导引精神，凝聚魔素。</description>
+    <type>Staff</type>
+    <style>Spell</style>
+    <core>Intellect</core>
+    <basePanel>12</basePanel>
+    <baseValue>14</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Dagger</defName>
+    <label>匕首</label>
+    <description>贴身反握的淬火精钢双刃短匕，锋刃隐蔽，出招迅捷狠辣。</description>
+    <type>Dagger</type>
+    <style>OneHand</style>
+    <core>Dexterity</core>
+    <basePanel>14</basePanel>
+    <baseValue>8</baseValue>
+  </WeaponTypeDef>
+
+  <WeaponTypeDef>
+    <defName>Crossbow</defName>
+    <label>弩</label>
+    <description>搭载坚固绞盘与铜制悬刀的重机弩，蓄力沉猛，破甲穿坚。</description>
+    <type>Crossbow</type>
+    <style>Ranged</style>
+    <core>Perception</core>
+    <basePanel>20</basePanel>
+    <baseValue>18</baseValue>
+  </WeaponTypeDef>
+
+  <!-- 饰品类型：一类对应一项战斗属性。名字只由材料加戒指/项链构成。 -->
+  <AccessoryDef>
+    <defName>Strength</defName>
+    <label>力量</label>
+    <core>Strength</core>
+    <baseBonus>3</baseBonus>
+    <weight>20</weight>
+  </AccessoryDef>
+
+  <AccessoryDef>
+    <defName>Dexterity</defName>
+    <label>敏捷</label>
+    <core>Dexterity</core>
+    <baseBonus>3</baseBonus>
+    <weight>20</weight>
+  </AccessoryDef>
+
+  <AccessoryDef>
+    <defName>Constitution</defName>
+    <label>体质</label>
+    <core>Constitution</core>
+    <baseBonus>3</baseBonus>
+    <weight>20</weight>
+  </AccessoryDef>
+
+  <AccessoryDef>
+    <defName>Perception</defName>
+    <label>感知</label>
+    <core>Perception</core>
+    <baseBonus>3</baseBonus>
+    <weight>20</weight>
+  </AccessoryDef>
+
+  <AccessoryDef>
+    <defName>Intellect</defName>
+    <label>智力</label>
+    <core>Intellect</core>
+    <baseBonus>4</baseBonus>
+    <weight>15</weight>
+  </AccessoryDef>
+
+  <!-- 附魔：前缀词与属性修正。 -->
+  <EnchantDef>
+    <defName>Blazing</defName>
+    <label>炽热的</label>
+    <prefix>炽热的</prefix>
+    <core>Strength</core>
+    <coreBonus>3</coreBonus>
+    <effect>力道炽盛</effect>
+    <weight>10</weight>
+  </EnchantDef>
+
+  <EnchantDef>
+    <defName>Frigid</defName>
+    <label>冰冷的</label>
+    <prefix>冰冷的</prefix>
+    <core>Dexterity</core>
+    <coreBonus>3</coreBonus>
+    <effect>触之生寒</effect>
+    <weight>10</weight>
+  </EnchantDef>
+
+  <EnchantDef>
+    <defName>Keen</defName>
+    <label>锐利的</label>
+    <prefix>锐利的</prefix>
+    <core>Perception</core>
+    <coreBonus>3</coreBonus>
+    <effect>锋刃更利</effect>
+    <weight>12</weight>
+  </EnchantDef>
+
+  <EnchantDef>
+    <defName>Arcane</defName>
+    <label>秘法的</label>
+    <prefix>秘法的</prefix>
+    <core>Intellect</core>
+    <coreBonus>4</coreBonus>
+    <effect>蕴有法力</effect>
+    <weight>6</weight>
+  </EnchantDef>
+
+  <EnchantDef>
+    <defName>Sturdy</defName>
+    <label>坚实的</label>
+    <prefix>坚实的</prefix>
+    <core>Constitution</core>
+    <coreBonus>3</coreBonus>
+    <effect>不易折断</effect>
+    <weight>10</weight>
+  </EnchantDef>
+</Defs>

@@ -21,7 +21,6 @@ public sealed class CombatTests
         c[CoreStat.Intellect] = 6;
         c.GainWeaponExp(WeaponType.Sword, 50);
         c.Equip(WeaponType.Sword);
-        c.SyncMana();
         return c;
     }
 
@@ -31,14 +30,12 @@ public sealed class CombatTests
         var catalog = new GameCatalog();
         catalog.Weapons["sword"] = new WeaponDef { Id = "sword", Name = "剑", Type = WeaponType.Sword, Panel = 20 };
         var c = SwordUser();
-        c.Condition.RecoverMana(c.Condition.MaxMana);
 
         var unit = Deploy.FromCharacter(c, CombatSide.Attacker, catalog);
 
         Assert.Equal(7, unit.Id);
         Assert.Equal(c.Combat.MaxHp, unit.MaxHp);
         Assert.Equal(c.Combat.MaxHp, unit.Hp);
-        Assert.Equal(c.Condition.MaxMana, unit.Mp);
         // 武器经验顺带升了 3 级，六项各 +3：面板 20 + 5×熟练1 + 2×灵巧11 + 力量15 = 62，
         // 乘数 1 + 0.55 + 0.2 + 1 = 2.75 → 170
         Assert.Equal(170, unit.StrikePower);
@@ -86,10 +83,10 @@ public sealed class CombatTests
         var catalog = new GameCatalog();
         catalog.Skills["spark"] = new SkillDef
         {
-            Id = "spark", Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100, MpCost = 3,
+            Id = "spark", Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100,
         };
         var battle = new Battle(catalog, d100: () => 99);
-        var caster = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9, SpellPower = 10, Mp = 10, MaxMp = 10 };
+        var caster = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9, SpellPower = 10 };
         caster.Skills.Add("spark");
         battle.Add(caster);
         battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, Defence = 8 });
@@ -99,7 +96,6 @@ public sealed class CombatTests
         // 法强 10 × 100% × 3 = 30；防御 8 折 16% 减伤，法术只吃一半 8%：30 × 92/100 = 27
         // 法术必中不看骰，骰 99 也不落空
         Assert.Equal(27, hit.Amount);
-        Assert.Equal(7, battle.Find(1)!.Mp);
     }
 
     [Fact]
@@ -128,7 +124,9 @@ public sealed class CombatTests
     public void Guard_raises_defence_until_round_end()
     {
         var battle = new Battle(d100: () => 0);
-        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, Dodge = 9, Defence = 10, StrikePower = 20 });
+        var hero = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, Dodge = 9, Defence = 10, StrikePower = 20 };
+        hero.Skills.Add(BattleSkills.GuardId);   // 防御架势是玩家侧动作，部署时带上
+        battle.Add(hero);
         battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, StrikePower = 20 });
 
         Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = BattleSkills.GuardId }));
@@ -138,8 +136,8 @@ public sealed class CombatTests
         var onGuard = battle.Events.Last(e => e.Kind == CombatEventKind.Hit && e.TargetId == 1);
         Assert.Equal(14, onGuard.Amount);
 
-        // 下一回合架势卸掉，恢复原防御
-        Assert.Equal(1, battle.PendingActor!.Id);
+        // 推进一轮：架势到期卸掉，恢复原防御
+        battle.AdvanceRound();
         Assert.Equal(10, battle.Find(1)!.EffDefence);
     }
 
@@ -150,7 +148,8 @@ public sealed class CombatTests
         catalog.Skills["weaken"] = new SkillDef
         {
             Id = "weaken", Kind = SkillKind.Buff, Target = SkillTarget.Enemy,
-            Stat = StatusStat.Attack, StatusPercent = -30, StatusRounds = 2,
+            Status = StatusKind.StatMod, StatusStat = StatusStat.Attack,
+            StatusPercent = -30, StatusRounds = 2,
         };
         var battle = new Battle(catalog, d100: () => 0);
         var caster = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9, StrikePower = 4 };
@@ -159,20 +158,24 @@ public sealed class CombatTests
         battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, Attack = 10, StrikePower = 10 });
 
         Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = "weaken", TargetId = 2 }));
-        Assert.Equal(7, battle.Find(2)!.EffAttack);
+        Assert.Equal(7, battle.Find(2)!.EffStrikePower);
 
-        // 走满三回合：敌方的还手依次是 7 / 7 / 10，第二回合结束状态到期
-        for (var round = 0; round < 3; round++)
-        {
-            Assert.Equal(1, battle.PendingActor!.Id);
-            Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 2 }));
-        }
+        // 敌人还手 7（弱化中），再推一轮到弱化到期，还手 10。
+        Assert.Equal(1, battle.PendingActor!.Id);
+        Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 2 }));
+        Assert.Equal(7, battle.Find(2)!.EffStrikePower);
+        battle.AdvanceRound();
+        battle.AdvanceRound();   // 弱化到期
+        Assert.Equal(10, battle.Find(2)!.EffStrikePower);
+        Assert.Equal(1, battle.PendingActor!.Id);
+        Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 2 }));
+
         var amounts = battle.Events
             .Where(e => e.Kind == CombatEventKind.Hit && e.ActorId == 2)
             .Select(e => e.Amount)
             .ToList();
-        Assert.Equal(new[] { 7, 7, 10 }, amounts);
-        Assert.Equal(10, battle.Find(2)!.EffAttack);
+        Assert.Equal(new[] { 7, 10 }, amounts);
+        Assert.Equal(10, battle.Find(2)!.EffStrikePower);
     }
 
     [Fact]
@@ -181,8 +184,8 @@ public sealed class CombatTests
         var def = new EnemyDef
         {
             Id = "slime", Name = "软泥", MaxHp = 40, Attack = 8,
-            Defence = 3, Dodge = 2, SpellPower = 0, Threat = 2,
-            Armour = 5, Targeting = TargetMode.HuntWeak, Money = 12,
+            Defence = 3, Dodge = 2, SpellPower = 0,
+            Armour = 5, Money = 12,
             Skills = { "acid" },
         };
         var unit = Deploy.FromEnemy(def, 11, CombatSide.Defender);
@@ -192,9 +195,7 @@ public sealed class CombatTests
         Assert.Equal(8, unit.StrikePower);
         Assert.Equal(3, unit.Defence);
         Assert.Equal(2, unit.EffDodge);
-        Assert.Equal(2, unit.Threat);
         Assert.Equal(5, unit.Armour);
-        Assert.Equal(TargetMode.HuntWeak, unit.Targeting);
         Assert.Equal(12, unit.MoneyReward);
         Assert.Equal(0, unit.CritRate);
         Assert.Contains("acid", unit.Skills);
@@ -202,62 +203,24 @@ public sealed class CombatTests
     }
 
     [Fact]
-    public void Mp_and_cooldown_gate_skills()
-    {
-        var catalog = new GameCatalog();
-        catalog.Skills["flame"] = new SkillDef
-        {
-            Id = "flame", Kind = SkillKind.Spell, Target = SkillTarget.Enemy,
-            Power = 100, MpCost = 10, Cooldown = 2,
-        };
-        var battle = new Battle(catalog, d100: () => 0);
-        var caster = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, Dodge = 9, SpellPower = 10, Mp = 10, MaxMp = 10 };
-        caster.Skills.Add("flame");
-        battle.Add(caster);
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 80, MaxHp = 80 });
-
-        // 第 1 回合：吟唱成功，进冷却
-        Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = "flame", TargetId = 2 }));
-        Assert.Equal(0, battle.Find(1)!.Mp);
-        Assert.NotNull(battle.PendingActor);
-        Assert.Equal(1, battle.Find(1)!.Cooldowns["flame"]);
-
-        // 第 2 回合：冷却未走完，菜单里也没有它
-        Assert.False(battle.Act(new CombatAction { ActorId = 1, SkillId = "flame", TargetId = 2 }));
-        Assert.DoesNotContain(battle.Menu(), s => s.Id == "flame");
-        Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 2 }));
-        Assert.NotNull(battle.PendingActor);
-        Assert.False(battle.Find(1)!.Cooldowns.ContainsKey("flame"));
-
-        // 第 3 回合：冷却已清，但蓝没了
-        Assert.False(battle.Act(new CombatAction { ActorId = 1, SkillId = "flame", TargetId = 2 }));
-    }
-
-    [Fact]
-    public void Ai_answers_for_uncontrolled_side_and_guards_when_hurt()
+    public void Ai_answers_for_uncontrolled_side()
     {
         var battle = new Battle(d100: () => 0);
         battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30 });
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 30, MaxHp = 30, Dodge = 9, StrikePower = 5 });
+        battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 30, MaxHp = 30, Dodge = 9, StrikePower = 5, Speed = 20 });
 
-        // 守方躲闪更高，一读当前行动者就轮到它，AI 立即代打
+        // 敌方速度快先手，一读当前行动者它已代打完毕：照常进攻，没有防御动作
         Assert.Equal(1, battle.PendingActor!.Id);
         var answer = battle.Events.First(e => e.Kind == CombatEventKind.Hit && e.ActorId == 2);
         Assert.Equal(1, answer.TargetId);
         Assert.Equal(5, answer.Amount);
-
-        battle = new Battle(d100: () => 0);
-        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, StrikePower = 5 });
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 5, MaxHp = 40, Dodge = 9, StrikePower = 5 });
-        // 敌人残血，AI 先架势保命而不是还手
-        Assert.Equal(1, battle.PendingActor!.Id);
-        Assert.Equal(CombatEventKind.Status, battle.Events.Last(e => e.ActorId == 2).Kind);
+        Assert.DoesNotContain(BattleSkills.GuardId, battle.Find(2)!.Skills);
     }
 
     [Fact]
     public void Flee_rolls_chance_and_consumes_turn_on_fail()
     {
-        var rolls = new Queue<int>(new[] { 99, 0, 0, 0 });
+        var rolls = new Queue<int>(new[] { 99, 0, 0, 0, 0, 0 });
         var battle = new Battle(d100: () => rolls.Dequeue());
         battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9 });
         battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 30, MaxHp = 30, StrikePower = 5 });
@@ -284,8 +247,7 @@ public sealed class CombatTests
         var steps = 0;
         while (battle.PendingActor != null)
         {
-            Assert.True(++steps < 200);
-            Assert.True(battle.Act(new CombatAction { ActorId = battle.PendingActor.Id, TargetId = 2 }));
+            battle.AdvanceRound();
         }
         Assert.Equal(CombatOutcome.Draw, battle.Outcome);
         Assert.Equal(BattleRules.RoundLimit + 1, battle.Round);
@@ -332,14 +294,14 @@ public sealed class CombatTests
         var catalog = new GameCatalog();
         catalog.Skills["spark"] = new SkillDef
         {
-            Id = "spark", Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100, MpCost = 3,
+            Id = "spark", Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100,
         };
         var roster = new Roster();
         var battle = new Battle(catalog, d100: () => 0);
         var hero = new Combatant
         {
             Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40,
-            Dodge = 9, StrikePower = 12, SpellPower = 10, Mp = 10, MaxMp = 10,
+            Dodge = 9, StrikePower = 12, SpellPower = 10
         };
         hero.Skills.Add("spark");
         battle.Add(hero);
@@ -396,7 +358,7 @@ public sealed class CombatTests
         battle.Add(new Combatant
         {
             Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40,
-            Dodge = 9, StrikePower = 10, SpellPower = 10, Mp = 10, MaxMp = 10, CritRate = 100,
+            Dodge = 9, StrikePower = 10, SpellPower = 10, CritRate = 100,
         });
         battle.Find(1)!.Skills.Add("spark");
         battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 90, MaxHp = 90 });
@@ -412,108 +374,12 @@ public sealed class CombatTests
     }
 
     [Fact]
-    public void Shield_blocks_strikes_but_spells_pierce()
-    {
-        var catalog = new GameCatalog();
-        catalog.Skills["ward"] = new SkillDef
-        {
-            Id = "ward", Kind = SkillKind.Buff, Target = SkillTarget.Self, ShieldPoints = 8,
-        };
-        catalog.Skills["pierce"] = new SkillDef
-        {
-            Id = "pierce", Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100, MpCost = 3,
-        };
-
-        // 物理先被护盾吃：10 点伤害漏 2 点
-        var battle = new Battle(catalog, d100: () => 0);
-        var hero = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, Dodge = 9, StrikePower = 5 };
-        hero.Skills.Add("ward");
-        battle.Add(hero);
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, StrikePower = 10 });
-        Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = "ward" }));
-        Assert.Equal(8, battle.Find(1)!.Shield);
-        Assert.NotNull(battle.PendingActor);
-        Assert.Equal(2, battle.Events.Last(e => e.Kind == CombatEventKind.Hit && e.TargetId == 1).Amount);
-        Assert.Equal(0, battle.Find(1)!.Shield);
-        Assert.Equal(38, battle.Find(1)!.Hp);
-
-        // 法术穿透护盾：盾原封不动，血直接掉（施法者躲闪更高，先手代打）
-        battle = new Battle(catalog, d100: () => 0);
-        hero = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, Shield = 8 };
-        battle.Add(hero);
-        var caster = new Combatant
-        {
-            Id = 2, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, Dodge = 9,
-            StrikePower = 10, SpellPower = 10, Mp = 10, MaxMp = 10,
-        };
-        caster.Skills.Add("pierce");
-        battle.Add(caster);
-        Assert.NotNull(battle.PendingActor);
-        Assert.Equal(10, battle.Find(1)!.Hp);
-        Assert.Equal(8, battle.Find(1)!.Shield);
-    }
-
-    [Fact]
-    public void Targeting_modes_redirect_enemy_ai()
-    {
-        Combatant Hunter(TargetMode mode) => new()
-        {
-            Id = 9, Side = CombatSide.Defender, Hp = 40, MaxHp = 40,
-            Dodge = 9, StrikePower = 5, Targeting = mode,
-        };
-
-        // 噬弱：咬住残血的那个
-        var battle = new Battle(d100: () => 0);
-        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30 });
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Attacker, Hp = 10, MaxHp = 30 });
-        battle.Add(Hunter(TargetMode.HuntWeak));
-        Assert.Equal(1, battle.PendingActor!.Id);
-        Assert.Equal(2, battle.Events.Last(e => e.ActorId == 9).TargetId);
-
-        // 猎强：优先打攻击最高的那个
-        battle = new Battle(d100: () => 0);
-        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Attack = 5 });
-        battle.Add(new Combatant { Id = 2, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Attack = 15 });
-        battle.Add(Hunter(TargetMode.HuntStrong));
-        Assert.Equal(1, battle.PendingActor!.Id);
-        Assert.Equal(2, battle.Events.Last(e => e.ActorId == 9).TargetId);
-    }
-
-    [Fact]
-    public void Balanced_targeting_rolls_threat_weights()
-    {
-        // 敌视 3:1 → 总权重 4；骰 0 落在重的一方，骰 99 落在轻的一方
-        Battle Make(int[] rolls)
-        {
-            var queue = new Queue<int>(rolls);
-            var battle = new Battle(d100: () => queue.Dequeue());
-            battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Threat = 3 });
-            battle.Add(new Combatant { Id = 2, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Threat = 1 });
-            battle.Add(new Combatant { Id = 9, Side = CombatSide.Defender, Hp = 60, MaxHp = 60, Dodge = 9, StrikePower = 5 });
-            return battle;
-        }
-
-        var heavy = Make(new[] { 0, 0 });
-        Assert.Equal(1, heavy.PendingActor!.Id);
-        Assert.Equal(1, heavy.Events.Last(e => e.ActorId == 9).TargetId);
-
-        var light = Make(new[] { 99, 0 });
-        Assert.Equal(1, light.PendingActor!.Id);
-        Assert.Equal(2, light.Events.Last(e => e.ActorId == 9).TargetId);
-
-        // 挑衅类状态直接放大敌视权重：3 × (100+300)% = 12
-        var taunted = new Combatant { Threat = 3 };
-        taunted.Statuses.Add(new BattleStatus { Token = "t", Stat = StatusStat.Threat, Percent = 300, RoundsLeft = 2 });
-        Assert.Equal(12, taunted.EffThreat);
-    }
-
-    [Fact]
     public void Loot_rolls_only_from_the_fallen()
     {
         var def = new EnemyDef
         {
             Id = "slime", Name = "软泥", MaxHp = 10, Money = 30,
-            Loot = { new EnemyLoot { ItemId = "凝胶", Min = 2, Max = 4, RatePercent = 60 } },
+            Loot = { new EnemyLoot { ItemId = "炼金尘", Min = 2, Max = 4, RatePercent = 60 } },
         };
         var battle = new Battle(d100: () => 0);
         battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9, StrikePower = 10 });
@@ -527,7 +393,7 @@ public sealed class CombatTests
         var loot = BattleLoot.Roll(battle, CombatSide.Defender, () => rolls.Dequeue());
         Assert.Equal(30, loot.Money);
         var (itemId, count) = Assert.Single(loot.Items);
-        Assert.Equal("凝胶", itemId);
+        Assert.Equal("炼金尘", itemId);
         Assert.Equal(2, count);
 
         // 骰 60 不小于 60：不掉
@@ -535,5 +401,106 @@ public sealed class CombatTests
         loot = BattleLoot.Roll(battle, CombatSide.Defender, () => rolls.Dequeue());
         Assert.Equal(30, loot.Money);
         Assert.Empty(loot.Items);
+    }
+
+    [Fact]
+    public void Ally_and_enemy_get_independent_turns_on_timeline()
+    {
+        var battle = new Battle(d100: () => 0);
+        // 玩家 (速度 15，先动)
+        battle.Add(new Combatant { Id = 1, Name = "玩家", Side = CombatSide.Attacker, IsPlayer = true, Hp = 50, MaxHp = 50, StrikePower = 10, Speed = 15 });
+        // 队友 (速度 12，次动)：同属控制方，同样等玩家下指令
+        battle.Add(new Combatant { Id = 2, Name = "队友", Side = CombatSide.Attacker, IsPlayer = false, Hp = 50, MaxHp = 50, StrikePower = 10, Speed = 12 });
+        // 敌人 (速度 10，三动)
+        battle.Add(new Combatant { Id = 3, Name = "哥布林", Side = CombatSide.Defender, IsPlayer = false, Hp = 100, MaxHp = 100, StrikePower = 8, Speed = 10 });
+
+        battle.StartBattle();
+
+        // 1. 玩家回合：StepTurn 返回 false 等待玩家决策，玩家直接攻击敌人 3
+        var step1 = battle.StepTurn(out var actor1);
+        Assert.False(step1);
+        Assert.NotNull(actor1);
+        Assert.Equal(1, actor1.Id);
+        Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 3 }));
+        Assert.Contains(battle.Events, e => e.Kind == CombatEventKind.Hit && e.ActorId == 1 && e.TargetId == 3);
+
+        // 2. 队友回合：控制方未开自动战斗，同样暂停等玩家下指令，由玩家代队友出手。
+        var step2 = battle.StepTurn(out var actor2);
+        Assert.False(step2);
+        Assert.NotNull(actor2);
+        Assert.Equal(2, actor2.Id);
+        Assert.True(battle.Act(new CombatAction { ActorId = 2, TargetId = 3 }));
+        Assert.Contains(battle.Events, e => e.Kind == CombatEventKind.Hit && e.ActorId == 2 && e.TargetId == 3);
+
+        // 3. 敌人回合：非控制方始终由 AI 自动出招（StepTurn 返回 true）。
+        var step3 = battle.StepTurn(out var actor3);
+        Assert.True(step3);
+        Assert.NotNull(actor3);
+        Assert.Equal(3, actor3.Id);
+        Assert.Contains(battle.Events, e => e.Kind == CombatEventKind.Hit && e.ActorId == 3);
+    }
+
+    [Fact]
+    public void AutoBattle_lets_ai_drive_the_controlled_side()
+    {
+        var battle = new Battle(d100: () => 0) { AutoBattle = true };
+        battle.Add(new Combatant { Id = 1, Name = "玩家", Side = CombatSide.Attacker, IsPlayer = true, Hp = 50, MaxHp = 50, StrikePower = 10, Speed = 15 });
+        battle.Add(new Combatant { Id = 3, Name = "哥布林", Side = CombatSide.Defender, IsPlayer = false, Hp = 100, MaxHp = 100, StrikePower = 8, Speed = 10 });
+
+        battle.StartBattle();
+
+        // 开启自动战斗后，我方回合不再暂停，直接由 AI 代打。
+        var step = battle.StepTurn(out var actor);
+        Assert.True(step);
+        Assert.NotNull(actor);
+        Assert.Equal(1, actor.Id);
+        Assert.Contains(battle.Events, e => e.Kind == CombatEventKind.Hit && e.ActorId == 1);
+    }
+
+    [Fact]
+    public void Continuous_combat_turns_cycle_without_stalling()
+    {
+        var catalog = new GameCatalog();
+        catalog.Skills["frost_bind"] = new SkillDef
+        {
+            Id = "frost_bind", Kind = SkillKind.Spell, Target = SkillTarget.Enemy,
+            Power = 150, ChantRounds = 1, Range = SkillRange.Ranged
+        };
+
+        var battle = new Battle(catalog, d100: () => 0);
+        var hero = new Combatant { Id = 1, Name = "玩家", Side = CombatSide.Attacker, IsPlayer = true, Hp = 200, MaxHp = 200, StrikePower = 10, Speed = 15 };
+        var mage = new Combatant { Id = 2, Name = "法师", Side = CombatSide.Attacker, IsPlayer = false, Hp = 150, MaxHp = 150, SpellPower = 20, Speed = 12 };
+        mage.Skills.Add("frost_bind");
+        var foe = new Combatant { Id = 3, Name = "哥布林", Side = CombatSide.Defender, IsPlayer = false, Hp = 1000, MaxHp = 1000, StrikePower = 8, Speed = 10 };
+
+        battle.Add(hero);
+        battle.Add(mage);
+        battle.Add(foe);
+        battle.StartBattle();
+
+        var turnsExecuted = 0;
+        var lastTime = -1L;
+
+        for (var step = 0; step < 25 && battle.Outcome == CombatOutcome.Ongoing; step++)
+        {
+            if (battle.StepTurn(out var actor))
+            {
+                // 敌方出手或咏唱释放
+                turnsExecuted++;
+            }
+            else if (actor != null && actor.Side == CombatSide.Attacker)
+            {
+                // 我方回合：玩家下达攻击指令
+                var skill = (actor.Id == 2 && actor.Skills.Contains("frost_bind") && actor.Chanting == null)
+                    ? "frost_bind"
+                    : BattleSkills.AttackId;
+                Assert.True(battle.Act(new CombatAction { ActorId = actor.Id, SkillId = skill, TargetId = 3 }));
+                turnsExecuted++;
+            }
+            Assert.True(battle.Time >= lastTime);
+            lastTime = battle.Time;
+        }
+
+        Assert.True(turnsExecuted >= 15);
     }
 }

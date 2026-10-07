@@ -15,6 +15,28 @@ public static class InkMapRenderer
             return;
         }
 
+        // 场景演出进行中：插画直接遮住网格。只遮领地层——世界层的兴趣点还得看得见。
+        // 平时（没在演出）网格常驻，插画不能常驻盖死。
+        // 闸门链（任一环成立即插画盖网格，纹理在盘上为末环）：
+        // 长链——场景演出进行中且 Core 链全过；
+        // 最短链——玩家在本房间点了观察四周（优先取房间声明插画，缺省退占位）。
+        Texture2D? illustration = null;
+        if (model.SceneIllustrationCover)
+            illustration = InkIllustration.Get();
+        else if (model.ObservingRoom)
+        {
+            var path = model.ObservingRoomIllustrationPath;
+            if (path.Length > 0)
+                illustration = InkIllustration.LoadTexture(path);
+            illustration ??= InkIllustration.ForRoom(model.ObservedRoomName, model.Hour);
+        }
+
+        if (illustration != null)
+        {
+            DrawIllustration(ci, model, illustration);
+            return;
+        }
+
         for (var row = 0; row < InkLayout.GridRows; row++)
         {
             for (var col = 0; col < InkLayout.GridCols; col++)
@@ -30,20 +52,42 @@ public static class InkMapRenderer
     }
 
     /// <summary>
+    /// 场景插画：等比放大到铺满整块面板，居中裁掉出界的部分，
+    /// 再把框线压回插画上——画与框体同大，不留衬边。
+    /// 不拉伸——直接填会变形。
+    /// 演出中的对话走聊天层（InkOverlayRenderer），半透明叠在这层插画上。
+    /// </summary>
+    private static void DrawIllustration(CanvasItem ci, InkHubModel model, Texture2D texture)
+    {
+        var target = InkLayout.MapPanel;
+        var size = texture.GetSize();
+
+        var scale = Mathf.Max(target.Size.X / size.X, target.Size.Y / size.Y);
+        var srcW = target.Size.X / scale;
+        var srcH = target.Size.Y / scale;
+        var src = new Rect2((size.X - srcW) / 2f, (size.Y - srcH) / 2f, srcW, srcH);
+
+        ci.DrawTextureRectRegion(texture, target, src);
+        InkFrame.PanelFrame(ci, target, corner: 24f);
+    }
+
+    /// <summary>
     /// 房间按格子坐标查。地图数据随模型一起传入，
     /// 不再回头去读 Hub，避免绘制期状态漂移。
     /// </summary>
     private static Room? FindRoom(InkHubModel model, int col, int row) =>
         model.MapAt(col, row);
 
+    /// <summary>
+    /// 还没开拓的空格子：只留一圈虚线，**不写任何字**。
+    /// 主人定（2026-10-01）：开拓入口一律在开发页，主地图不出现「未开拓」字样、也不报开拓价。
+    /// </summary>
     private static void DrawUndeveloped(CanvasItem ci, Rect2 rect)
     {
         InkDraw.Dashed(ci, rect.Position, new Vector2(rect.End.X, rect.Position.Y), InkStyle.Dim);
         InkDraw.Dashed(ci, new Vector2(rect.End.X, rect.Position.Y), rect.End, InkStyle.Dim);
         InkDraw.Dashed(ci, rect.End, new Vector2(rect.Position.X, rect.End.Y), InkStyle.Dim);
         InkDraw.Dashed(ci, new Vector2(rect.Position.X, rect.End.Y), rect.Position, InkStyle.Dim);
-
-        InkDraw.Text(ci, rect.GetCenter(), "未开拓", 18, InkStyle.Dim, "cm");
     }
 
     /// <summary>
@@ -79,10 +123,10 @@ public static class InkMapRenderer
         }
         else
         {
-            // 未开拓的格子带上开拓价，名字长了就缩字号，有下限。
-            var label = room.Open ? $"[{room.Name}]" : $"[{room.Name}] ${room.OpenCost:N0}";
+            // 未开放的房间只报房名（压暗），**不报开拓价**——开拓入口在开发页。
+            // 名字长了就缩字号，有下限。
             InkDraw.TextFitted(ci, new Vector2(rect.GetCenter().X, nameY),
-                label, rect.Size.X - 12f,
+                $"[{room.Name}]", rect.Size.X - 12f,
                 room.Open ? 20 : 18, 12,
                 room.Open ? InkStyle.Line : InkStyle.Dim, "cm");
         }
@@ -91,9 +135,8 @@ public static class InkMapRenderer
     }
 
     /// <summary>
-    /// 房间里的角色标识：房名下方一排线稿小人。
-    /// 玩家额上多一颗实心菱珠，与 NPC 区分；人数超出上限时在右下角标出余数，
-    /// 不静默丢弃（与“此处”列表的溢出提示同一套做法）。
+    /// 房间里的角色标识：房名下方一排国际象棋棋子。
+    /// 玩家为国王，NPC 依好感分王后/中阶/小兵；人数超出上限时在右下角标出余数。
     /// </summary>
     private static void DrawOccupants(CanvasItem ci,
         System.Collections.Generic.IReadOnlyList<CharacterCard> who, Rect2 rect)
@@ -101,21 +144,20 @@ public static class InkMapRenderer
         if (who.Count == 0)
             return;
 
-        const int maxShown = 8;
-        var shown = System.Math.Min(who.Count, maxShown);
-        var h = 28f;
+        var shown = System.Math.Min(who.Count, InkLayout.OccupantMaxShown);
+        var h = InkLayout.OccupantFigureHeight;
         var footY = rect.End.Y - 10f;
 
-        var step = System.Math.Min(22f, (rect.Size.X - 24f) / shown);
+        // 宽度不够时收缩间距，但标识本身尺寸不变（地图与设施等大）。
+        var step = System.Math.Min(InkLayout.OccupantStep, (rect.Size.X - 24f) / shown);
         var startX = rect.GetCenter().X - step * (shown - 1) / 2f;
 
         for (var i = 0; i < shown; i++)
         {
             var cx = startX + step * i;
             var card = who[i];
-            InkDraw.Figure(ci, cx, footY, h, InkStyle.Line, 7 + card.Id);
-            if (card.IsPlayer)
-                InkDraw.Jewel(ci, new Vector2(cx, footY - h * 1.24f), 2.6f, InkStyle.Line);
+            var piece = InkDraw.PieceFor(card);
+            InkDraw.Chess(ci, new Vector2(cx, footY), h, piece, isLimitCap: false);
         }
 
         if (who.Count > shown)
@@ -163,10 +205,10 @@ public static class InkMapRenderer
         InkFrame.Panel(ci, InkLayout.FixturePanel, fill: InkStyle.Panel);
         InkFrame.TitleFitted(ci, InkLayout.FixturePanel, model.StorageTitle,
             InkLayout.FixturePanel.Size.X - (InkFrame.Pad + 50f) * 2f, 26, 18);
+
         DrawClose(ci, InkLayout.FixtureClose);
 
-        InkFrame.HeaderRule(ci, InkLayout.FixtureContent.Position.Y - 14f,
-            InkLayout.FixtureContent.Position.X, InkLayout.FixtureContent.End.X);
+        DrawCategoryBand(ci, model);
 
         if (model.StorageRows.Count == 0)
         {
@@ -174,9 +216,11 @@ public static class InkMapRenderer
             return;
         }
 
-        for (var i = 0; i < model.StorageRows.Count; i++)
+        var visible = InkLayout.FixtureVisibleRows;
+        var first = Mathf.Clamp(model.StorageFirst, 0, Mathf.Max(0, model.StorageRows.Count - visible));
+        for (var i = 0; i < visible && first + i < model.StorageRows.Count; i++)
         {
-            var entry = model.StorageRows[i];
+            var entry = model.StorageRows[first + i];
             var row = InkLayout.StorageRow(i);
 
             ci.DrawRect(row, InkStyle.Inset);
@@ -185,9 +229,13 @@ public static class InkMapRenderer
             var filterText = entry.Excluded ? "【禁止存入】" : "【允许存入】";
             var filterColor = entry.Excluded ? InkStyle.Dim : InkStyle.Line;
             var textY = row.GetCenter().Y;
-            InkDraw.Text(ci, new Vector2(row.Position.X + 12f, textY), entry.ItemId, 20, InkStyle.Line, "lm");
-            InkDraw.Text(ci, new Vector2(row.Position.X + 160f, textY), $"设施内: {entry.InStorage}", 18, InkStyle.Line, "lm");
-            InkDraw.Text(ci, new Vector2(row.Position.X + 310f, textY), $"背包: {entry.InBag}", 18, InkStyle.Line, "lm");
+            var label = string.IsNullOrEmpty(entry.CategoryLabel)
+                ? entry.ItemId
+                : $"{entry.ItemId}·{entry.CategoryLabel}";
+            InkDraw.TextFitted(ci, new Vector2(row.Position.X + 12f, textY), label, 150f, 18, 13, InkStyle.Line, "lm");
+            // 标签与数值分两段画（暗标签 + 亮数值），不用冒号分隔。
+            DrawCountPair(ci, row.Position.X + 172f, textY, "设施内", $"{entry.InStorage}");
+            DrawCountPair(ci, row.Position.X + 310f, textY, "背包", $"{entry.InBag}");
             InkDraw.Text(ci, new Vector2(row.Position.X + 460f, textY), filterText, 18, filterColor, "lm");
 
             var btn0 = InkLayout.StorageRowButton(row, 0);
@@ -197,6 +245,32 @@ public static class InkMapRenderer
             InkFrame.Button(ci, btn0, "放入", selected: false, enabled: entry.InBag > 0, fontSize: 18, centered: true);
             InkFrame.Button(ci, btn1, "取出", selected: false, enabled: entry.InStorage > 0, fontSize: 18, centered: true);
             InkFrame.Button(ci, btn2, entry.Excluded ? "允许" : "禁止", selected: false, enabled: true, fontSize: 18, centered: true);
+        }
+
+        InkPageRenderer.DrawScrollbars(ci, model.Widgets);
+    }
+
+    /// <summary>存储行里的一处「标签 数值」：暗色标签后紧跟亮色数值，无冒号。</summary>
+    private static void DrawCountPair(CanvasItem ci, float x, float y, string label, string value)
+    {
+        const float gap = 8f;
+        const int size = 18;
+        var width = InkDraw.Measure(label, size).X;
+        InkDraw.Text(ci, new Vector2(x, y), label, size, InkStyle.Dim, "lm");
+        InkDraw.Text(ci, new Vector2(x + width + gap, y), value, size, InkStyle.Line, "lm");
+    }
+
+    /// <summary>品类开关带：顶部一排按钮，按大类一键收放整个品类。</summary>
+    private static void DrawCategoryBand(CanvasItem ci, InkHubModel model)
+    {
+        for (var i = 0; i < model.StorageCategories.Count; i++)
+        {
+            var cat = model.StorageCategories[i];
+            var rect = InkLayout.StorageCategoryRow(i);
+            var widget = model.Find(InkAction.StorageCategoryToggle, i);
+            var enabled = widget?.Enabled ?? true;
+            InkFrame.Button(ci, rect, widget?.Label ?? cat.Label,
+                selected: cat.Accepted, enabled: enabled, fontSize: 17, centered: true);
         }
     }
 

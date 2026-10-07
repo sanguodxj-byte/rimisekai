@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Clock;
 using Rimisekai.Housing;
 using Rimisekai.Save;
@@ -22,19 +23,63 @@ public sealed partial class HubSession
             Voice = this,
         };
         var ticks = minutes / TerritoryClock.StepMinutes;
+        var seasonBefore = State.Clock.Season;
+        var weatherBefore = State.Weather;
+        var hour = State.Clock.Minutes / 60;
         for (var i = 0; i < ticks; i++)
         {
+            var dayBefore = State.Clock.Day;
             State.Clock.Advance(TerritoryClock.StepMinutes);
+            // 跨过午夜：结算刚结束的一天（恢复、任务、作物生长）。
+            if (State.Clock.Day != dayBefore)
+                State.SettleDay(seasonBefore, Day.Rng);
+            // 每跨过一个整点：天气按马尔可夫演化一步；变天写一行日志。
+            if (State.Clock.Minutes / 60 != hour)
+            {
+                hour = State.Clock.Minutes / 60;
+                var before = State.Weather;
+                State.Weather = WorldEffects.Advance(before, State.Clock.Season, Day.Rng);
+                if (State.Weather != before)
+                    WriteEnvironment($"天气转为{WeatherName(State.Weather)}。");
+            }
             ctx.Day = State.Clock.Day;
             ctx.NowTotal = (State.Clock.Day - 1) * GameClock.MinutesPerDay + State.Clock.Minutes;
+            ctx.Weather = State.Weather;
+            ctx.Season = State.Clock.Season;
             logs.AddRange(Day.Step(State.Territory, State.Roster, State.Clock.Slot, YieldFor, ctx));
+            // 主角的衣着干湿与 NPC 同口径：按此刻所在房间结算一格。
+            if (master != null)
+                WorldEffects.SettleWetness(master, State.Territory, PlayerRoomId, State.Weather);
         }
         foreach (var w in Day.Workers)
             _presence[w.CharacterId] = w.RoomId;
+        if (master != null)
+        {
+            Worker? masterWorker = null;
+            foreach (var w in Day.Workers)
+            {
+                if (w.CharacterId == master.Id)
+                {
+                    masterWorker = w;
+                    break;
+                }
+            }
+            if (masterWorker != null && masterWorker.RoomId >= 0 && masterWorker.Goal != ActionKind.None)
+            {
+                PlayerRoomId = masterWorker.RoomId;
+                UsingFixtureId = masterWorker.FacilityId >= 0 ? masterWorker.FacilityId : null;
+            }
+        }
+        // 跟随的持续资格随时间复查：好感跌出“好感”档就不再跟着。
+        SweepBrokenFollows();
         // 选中的角色走开了就取消选中：右下角随之从“交流”退回“行动”，
         // 而不是留着一个够不着的人在“交流 · XX（不在场）”。
         DropSelectionIfGone();
         FlushActivities(ctx);
+        // 换季/变天/剧情到点的重大事件进队；随后逐段演出——
+        // 演出期间插画盖网格、右下锁成继续与选项，走完才交还据点。
+        CollectEvents(seasonBefore != State.Clock.Season, weatherBefore != State.Weather, false);
+        PlayNextEvent();
         return logs;
     }
 
@@ -52,6 +97,15 @@ public sealed partial class HubSession
         {
             if (character.IsMaster)
                 continue;
+            // 铁律：日志显示是以房间为单元的，该房间看不到的信息禁止显示在日志！
+            // 只有与玩家同处当前房间（PlayerRoomId）的角色活动才允许写入日志。
+            // 唯一例外：角色在门外找玩家搭话（SeekWaiting），声音能被门内的主角听见。
+            var isHere = _presence.GetValueOrDefault(character.Id, -1) == PlayerRoomId;
+            var worker = Day.Track(character.Id, PlayerRoomId);
+            var isSeekingAtDoor = worker != null && (worker.SeekWaiting || worker.ChatRoom == PlayerRoomId);
+            if (!isHere && !isSeekingAtDoor)
+                continue;
+
             if (ctx.Activity.TryGetValue(character.Id, out var text))
                 WriteActivity(character.Id, text);
         }
@@ -63,52 +117,35 @@ public sealed partial class HubSession
     public Schedule ScheduleOf(int characterId) => State.Territory.ScheduleOf(characterId);
 
     /// <summary>
-    /// 设某个角色某一段的开关（空闲 / 工作 / 不干活）。主角与越界时段都拒绝——
-    /// 时段是给据点里的人安排的，玩家自己的时段没有意义。
+    /// 设某个角色某一段的安排（空闲 / 工作 / 娱乐，后两者要点名一件设施）。
+    /// 玩家自身也可排班，在有工作安排的日程时间内执行自动工作。
     /// </summary>
-    public bool Assign(int characterId, int slot, SlotMode mode)
+    public bool Assign(int characterId, int slot, SlotMode mode, int facilityId = -1)
     {
         var character = State.Roster.Find(characterId);
-        if (character == null || character.IsMaster)
+        if (character == null)
             return false;
         if (slot < 0 || slot >= WorkSlot.Count)
             return false;
-        State.Territory.Assign(characterId, slot, mode);
-        return true;
+        return State.Territory.Assign(characterId, slot, mode, facilityId);
     }
 
-    /// <summary>
-    /// 设某个角色对某类工作的优先级（0 = 不做，1-4 = 档位，1 最高）。
-    /// 与时段开关是两件事：时段决定"这会儿上不上工"，优先级决定"上工时先干哪样"。
-    /// </summary>
-    public bool SetPriority(int characterId, ActionKind task, int priority)
-    {
-        var character = State.Roster.Find(characterId);
-        if (character == null || character.IsMaster)
-            return false;
-        // None 是"不干活"的哨兵，不是可派行动，进不了优先级表。
-        if (!ActionKindMap.IsWork(task))
-            return false;
-        State.Territory.SetPriority(characterId, task, priority);
-        return true;
-    }
-
-    /// <summary>读某角色对某类工作的优先级。0 = 不做。</summary>
-    public int PriorityOf(int characterId, ActionKind task) =>
-        State.Territory.PriorityOf(characterId, task);
+    /// <summary>某角色某段的安排（开关 + 点名的设施）。</summary>
+    public SlotAssignment AssignmentOf(int characterId, int slot) =>
+        State.Territory.AssignmentOf(characterId, slot);
 
     /// <summary>日终：结算、天气与季节写入日志，再跑注册的日终事件。</summary>
     public DaySummary CloseDay(System.Random? random = null)
     {
         var summary = State.EndDay(random);
         if (summary.SeasonChanged)
-            Write($"季节变为{SeasonName(summary.Season)}。");
-        Write($"今日天气：{WeatherName(summary.Weather)}。");
+            WriteEnvironment($"季节变为{SeasonName(summary.Season)}。");
+        WriteEnvironment($"今日天气{WeatherName(summary.Weather)}。");
         foreach (var dayEvent in State.DayEvents)
         {
             var line = dayEvent.Run(State, summary);
             if (!string.IsNullOrEmpty(line))
-                Write(line);
+                WriteEnvironment(line);
         }
         return summary;
     }

@@ -22,7 +22,7 @@ public sealed class DiningState : BaseWorkerState
 
     public override bool Tick(WorkerContext ctx)
     {
-        if (MoveAlong(ctx.Worker))
+        if (MoveAlong(ctx.Worker, ctx))
             return false;
 
         if (ctx.Worker.FacilityId >= 0 && ctx.Worker.Phase != WorkPhase.Working)
@@ -44,7 +44,7 @@ public sealed class DiningState : BaseWorkerState
         var character = ctx.Character;
         character.Condition.Recover(
             Character.Traits.MealStamina(character, 80),
-            Character.Traits.MealSpirit(character, 60), false);
+            Character.Traits.MealSpirit(character, 60));
 
         var tier = ctx.Territory.FoodTierOf(food);
         var bonus = tier switch

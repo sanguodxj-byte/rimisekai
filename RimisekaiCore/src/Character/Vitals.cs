@@ -1,3 +1,5 @@
+using System;
+
 namespace Rimisekai.Character;
 
 public enum Bond
@@ -11,13 +13,24 @@ public enum Bond
     Lover,
 }
 
-/// <summary>体力、气力、疲劳、对玩家的好感。数值有上限，疲劳到顶就停工。</summary>
+/// <summary>
+/// 体力、气力、对玩家的好感。上限由角色数据即时推导（体力=生命值，气力暂为常量），
+/// 本类不存上限；当前值落存储，读取时夹进上限。
+/// </summary>
 public sealed class Vitals
 {
+    private readonly Func<int> _maxStamina;
+    private readonly Func<int> _maxSpirit;
+
+    public Vitals(Func<int> maxStamina, Func<int> maxSpirit)
+    {
+        _maxStamina = maxStamina;
+        _maxSpirit = maxSpirit;
+    }
+
     public const int StaminaId = 0;
     public const int SpiritId = 1;
     public const int DefaultMax = 1000;
-    public const int TiredAt = 150;
     public const int FondAt = 100;
     public const int CloseAt = 300;
     public const int LoverAt = 600;
@@ -27,16 +40,24 @@ public sealed class Vitals
     public const int FavorMin = -1000;
     public const int FavorMax = 1000;
 
-    public int Stamina { get; private set; } = DefaultMax;
-    public int MaxStamina { get; private set; } = DefaultMax;
-    public int Spirit { get; private set; } = DefaultMax;
-    public int MaxSpirit { get; private set; } = DefaultMax;
-    public int Fatigue { get; private set; }
-    public int Favor { get; private set; }
-    public int Mana { get; private set; }
-    public int MaxMana { get; private set; } = 10;
+    /// <summary>衣服湿度上限，也是"湿透"的判定线。</summary>
+    public const int WetMax = 100;
 
-    public bool Tired => Fatigue >= TiredAt;
+    private int _stamina = DefaultMax;
+    private int _spirit = DefaultMax;
+
+    public int Stamina => Clamp(_stamina, 0, MaxStamina);
+    public int Spirit => Clamp(_spirit, 0, MaxSpirit);
+    public int MaxStamina => _maxStamina();
+    public int MaxSpirit => _maxSpirit();
+    public int Favor { get; private set; }
+
+    /// <summary>衣服湿度。只在露天淋雨时上涨，湿透只作为口上/地文的状态条件，不另扣数值。</summary>
+    public int Wetness { get; private set; }
+
+    public bool Soaked => Wetness >= WetMax;
+
+    public bool Tired => Spirit < MaxSpirit * 3 / 10;
     public Bond Bond => Favor >= LoverAt ? Bond.Lover
         : Favor >= CloseAt ? Bond.Close
         : Favor >= FondAt ? Bond.Fond
@@ -45,78 +66,58 @@ public sealed class Vitals
         : Favor > HatredAt ? Bond.Hostile
         : Bond.Hatred;
 
-    public void Spend(int stamina, int spirit, int fatigue)
+    public void Spend(int stamina, int spirit)
     {
-        Stamina = Clamp(Stamina - stamina, 0, MaxStamina);
-        Spirit = Clamp(Spirit - spirit, 0, MaxSpirit);
-        Fatigue = Clamp(Fatigue + fatigue, 0, TiredAt);
+        _stamina = Clamp(Stamina - stamina, 0, MaxStamina);
+        _spirit = Clamp(Spirit - spirit, 0, MaxSpirit);
     }
 
-    public void Recover(int stamina, int spirit, bool clearFatigue)
+    public void Recover(int stamina, int spirit)
     {
-        Stamina = Clamp(Stamina + stamina, 0, MaxStamina);
-        Spirit = Clamp(Spirit + spirit, 0, MaxSpirit);
-        if (clearFatigue)
-            Fatigue = 0;
+        _stamina = Clamp(Stamina + stamina, 0, MaxStamina);
+        _spirit = Clamp(Spirit + spirit, 0, MaxSpirit);
     }
 
     public void RestTick()
     {
-        Stamina = Clamp(Stamina + 5, 0, MaxStamina);
-        Spirit = Clamp(Spirit + 5, 0, MaxSpirit);
-        Mana = Clamp(Mana + 5, 0, MaxMana);
-        Fatigue = Clamp(Fatigue - 3, 0, TiredAt);
+        _stamina = Clamp(Stamina + 5, 0, MaxStamina);
+        _spirit = Clamp(Spirit + 5, 0, MaxSpirit);
     }
 
     public void SleepTick()
     {
-        Stamina = Clamp(Stamina + 20, 0, MaxStamina);
-        Spirit = Clamp(Spirit + 20, 0, MaxSpirit);
-        Mana = Clamp(Mana + 20, 0, MaxMana);
-        Fatigue = Clamp(Fatigue - 8, 0, TiredAt);
+        _stamina = Clamp(Stamina + 20, 0, MaxStamina);
+        _spirit = Clamp(Spirit + 20, 0, MaxSpirit);
     }
 
     public void RecoverFull()
     {
-        Stamina = MaxStamina;
-        Spirit = MaxSpirit;
-        Mana = MaxMana;
-        Fatigue = 0;
+        _stamina = MaxStamina;
+        _spirit = MaxSpirit;
     }
 
-    public void SetMaxMana(int max)
+    /// <summary>淋雨积湿。增速由调用方按天气给出。</summary>
+    public void Soak(int amount) => Wetness = Clamp(Wetness + amount, 0, WetMax);
+
+    /// <summary>晾干。不淋雨的每个时间格调用一次。</summary>
+    public void Dry(int amount) => Wetness = Clamp(Wetness - amount, 0, WetMax);
+
+    /// <summary>换了干衣服（入睡时调用）。</summary>
+    public void ChangeIntoDryClothes() => Wetness = 0;
+
+    /// <summary>读档回填湿度。</summary>
+    public void RestoreWetness(int wetness) => Wetness = Clamp(wetness, 0, WetMax);
+
+    public void Restore(int stamina, int spirit, int favor)
     {
-        MaxMana = max < 0 ? 0 : max;
-        if (Mana > MaxMana)
-            Mana = MaxMana;
-    }
-
-    public void SpendMana(int amount) => Mana = Clamp(Mana - amount, 0, MaxMana);
-
-    public void RecoverMana(int amount) => Mana = Clamp(Mana + amount, 0, MaxMana);
-
-    public void Restore(int stamina, int maxStamina, int spirit, int maxSpirit, int fatigue, int favor, int mana, int maxMana)
-    {
-        MaxStamina = maxStamina <= 0 ? DefaultMax : maxStamina;
-        MaxSpirit = maxSpirit <= 0 ? DefaultMax : maxSpirit;
-        Stamina = Clamp(stamina, 0, MaxStamina);
-        Spirit = Clamp(spirit, 0, MaxSpirit);
-        Fatigue = Clamp(fatigue, 0, TiredAt);
+        _stamina = Clamp(stamina, 0, MaxStamina);
+        _spirit = Clamp(spirit, 0, MaxSpirit);
         Favor = Clamp(favor, FavorMin, FavorMax);
-        MaxMana = maxMana < 0 ? 0 : maxMana;
-        Mana = Clamp(mana, 0, MaxMana);
     }
 
     public void AddFavor(int amount, int bonusPercent = 0)
     {
         Favor = Clamp(Favor + amount * (100 + bonusPercent) / 100, FavorMin, FavorMax);
-    }
-
-    public void Apply(CharacterState character)
-    {
-        var delta = Traits.FatigueRecoveryDelta(character);
-        if (delta != 0)
-            Fatigue = Clamp(Fatigue + delta, 0, TiredAt);
     }
 
     private static int Clamp(int value, int min, int max) => value < min ? min : value > max ? max : value;

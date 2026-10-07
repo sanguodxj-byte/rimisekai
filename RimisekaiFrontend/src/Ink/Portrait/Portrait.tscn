@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cportraitroot01"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Ink/Portrait/PortraitRoot.cs" id="1_proot"]
+
+[node name="PortraitRoot" type="Control"]
+script = ExtResource("1_proot")

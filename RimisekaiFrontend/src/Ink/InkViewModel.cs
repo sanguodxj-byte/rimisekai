@@ -5,6 +5,7 @@ using Rimisekai.Clock;
 using Rimisekai.Housing;
 using Rimisekai.Hub;
 using Rimisekai.Save;
+using Rimisekai.Session;
 
 namespace Rimisekai.Ink;
 
@@ -20,6 +21,12 @@ public sealed class InkViewModel
     private readonly Dictionary<string, string> _portraits;
 
     public HubSession Hub => _hub;
+
+    /// <summary>战斗形态：非空时据点切入战斗版式（地图与日志退出，下三面板下沉）。</summary>
+    public BattleSession? Combat { get; set; }
+
+    /// <summary>战斗形态淡入进度 0..1，驱动面板下沉与边框消融。</summary>
+    public float CombatT { get; set; }
 
     public InkViewModel(HubSession hub, ContentPack? pack = null)
     {
@@ -37,10 +44,10 @@ public sealed class InkViewModel
 
     public string PlaceTitle => $"「{Hub.MapTitle()}」";
 
-    /// <summary>左上角标题：领地内写“领地”，世界写“世界”，任务/POI 写地点名。</summary>
+    /// <summary>地区名称：世界地图下的地区、地城、POI、任务地点与领地同级。</summary>
     public string MapTitle() => Hub.MapTitle();
 
-    /// <summary>当前位置标准名，形如“中央·庭院”。</summary>
+    /// <summary>当前房间名，不带任何子一级地区概念。</summary>
     public string PlaceName() => Hub.PlaceName();
 
     /// <summary>领地是否已可改名（仅限领地层级且等级达标）。</summary>
@@ -65,35 +72,12 @@ public sealed class InkViewModel
     /// <summary>按 Id 找角色。关系表存的是 Id，界面要显示名字。</summary>
     public CharacterState? FindById(int id) => Hub.State.Roster.Find(id);
 
-    /// <summary>
-    /// 工作页矩阵的列：参与排班的角色（不含主角），顺序即名册顺序。
-    /// 构建器与点击处理共用它，保证列下标两边一致。
-    /// </summary>
-    public IReadOnlyList<InkWorkColumn> WorkColumns()
-    {
-        var list = new List<InkWorkColumn>();
-        foreach (var character in Hub.State.Roster.Members)
-        {
-            if (character.IsMaster)
-                continue;
-            list.Add(new InkWorkColumn(character.Id, character.Name));
-        }
-        return list;
-    }
-
     /// <summary>角色的显示名；名册里没有（已被移除）时退回 Id，避免显示空白。</summary>
     public string NameOf(int id) => FindById(id)?.Name ?? $"#{id}";
 
     /// <summary>
-    /// 是否显示工作入口。只有一个可派角色时不显示——矩阵只有一列，
-    /// 派活等同于"让这人干活"，没有优先级可言。
-    /// </summary>
-    public bool HasWorkPage => WorkColumns().Count >= 2;
-
-    /// <summary>
     /// 角色立绘资源路径。内容包里显式配了就用它；
     /// 没配则按约定取 res://content/portraits/&lt;名字&gt;.png。
-    /// 两条都指不到文件时由渲染器退回线稿人形。
     /// </summary>
     public string PortraitPath(string name)
     {
@@ -105,7 +89,9 @@ public sealed class InkViewModel
     }
 
     /// <summary>
-    /// 当前对话对象：优先取遮盖层的说话人，其次取角色栏选中的角色。
+    /// 当前对话对象：优先取遮盖层的说话人，其次取场景演出的说话人，
+    /// 都没有再取角色栏选中的角色，最后退回名册里第一名同伴
+    /// （据点里的工作安排入口没有对话对象，落在这条上）。
     /// 状态/技能/日程三页都针对它。
     /// </summary>
     public CharacterState? ChatPartner()
@@ -117,14 +103,47 @@ public sealed class InkViewModel
             if (speaker != null)
                 return speaker;
         }
-        return Hub.State.Roster.Find(Hub.SelectedCharacterId);
+        if (Hub.ScenePlaying && Hub.SceneLines.Count > 0)
+        {
+            var actor = FindByName(Hub.SceneLines[^1].Speaker);
+            if (actor != null)
+                return actor;
+        }
+        var selected = Hub.State.Roster.Find(Hub.SelectedCharacterId);
+        if (selected != null)
+            return selected;
+        foreach (var character in Hub.State.Roster.Members)
+        {
+            if (!character.IsMaster)
+                return character;
+        }
+        return null;
     }
 
-    public string HeaderRight()
+    /// <summary>
+    /// 顶栏右侧的一个状态项：标签（暗）与数值（亮）分开画，项与项之间位置固定。
+    /// 文案一律不用冒号（AGENTS.md 铁律）。
+    /// </summary>
+    public readonly record struct InkHeaderItem(string Label, string Value);
+
+    /// <summary>
+    /// 顶栏右侧的状态项。主人 2026-10-01 定：**只删「季节」二字，保留它的值**
+    /// （天气/时刻同样只留数值、不带标签）。顺序即绘制顺序。
+    /// </summary>
+    public IReadOnlyList<InkHeaderItem> HeaderItems()
     {
         var h = Hub.Header();
-        return $"季节：{SeasonName(h.Season)}　天气：{WeatherName(h.Weather)}　" +
-               $"时刻 {h.Hour}:{h.Minute:00}　金钱 ${h.Money:N0}";
+        return new[]
+        {
+            // 季节：删「季节」二字，保留「春季/夏季/…」这个值。
+            new InkHeaderItem("", SeasonName(h.Season)),
+            // 天气：同样只留数值。
+            new InkHeaderItem("", WeatherName(h.Weather)),
+            // 时刻不用冒号，写成「0时00分」。
+            new InkHeaderItem("", $"{h.Hour}时{h.Minute:00}分"),
+            // 金钱单位 G，空格千分位分隔（如 10 000G）。
+            new InkHeaderItem("", InkText.Money(h.Money)),
+        };
     }
 
     public IReadOnlyList<string> LogLines()
@@ -142,6 +161,18 @@ public sealed class InkViewModel
 
     /// <summary>左下角头像：只有同房的其他角色，主角不在内。</summary>
     public IReadOnlyList<CharacterCard> CardsHere() => Hub.CardsHere();
+
+    /// <summary>左下角色栏：主角常显，其余只列与主角同房的角色。</summary>
+    public IReadOnlyList<CharacterCard> Avatars()
+    {
+        var list = new List<CharacterCard>();
+        foreach (var card in Hub.Party())
+        {
+            if (card.IsPlayer || card.RoomId == Hub.PlayerRoomId)
+                list.Add(card);
+        }
+        return list;
+    }
 
     /// <summary>当前所在地的标准名，形如“中央·庭院”。POI 头与日志都用它。</summary>
     public string HereName() => Hub.PlaceName();
@@ -166,8 +197,6 @@ public sealed class InkViewModel
 
     public bool IsOpen(Room room) => room.Open;
 
-    public bool CanDevelop(Room room) => Hub.State.Territory.CanOpen(room, Hub.State.Money);
-
     public bool IsNeighbor(Room room)
     {
         var here = Hub.State.Territory.Rooms.Find(r => r.Id == Hub.PlayerRoomId);
@@ -177,6 +206,8 @@ public sealed class InkViewModel
     /// <summary>“此处”条目右侧的槽位：返回 (已占用, 容量)。</summary>
     public (int Used, int Capacity) Seats(FixtureView fixture) =>
         (fixture.Occupants, fixture.Occupants + fixture.SeatsLeft);
+
+    public IReadOnlyList<CharacterCard> WorkersAtFixture(int fixtureId) => Hub.WorkersAtFixture(fixtureId);
 
     public CharacterCard? Selected()
     {
@@ -247,6 +278,9 @@ public sealed class InkViewModel
     /// <summary>存储页的一览（设施内 + 背包里的物品）。</summary>
     public IReadOnlyList<StorageRow> StorageRows() => Hub.StorageRows();
 
+    /// <summary>存储配置页的品类行（按大类一键收放）。</summary>
+    public IReadOnlyList<StorageCategoryRow> StorageCategoryRows() => Hub.StorageCategoryRows();
+
     /// <summary>当前设施的容量说明，如“12 / 20”或“12 / 不限”。</summary>
     public string StorageCapacityText()
     {
@@ -258,13 +292,21 @@ public sealed class InkViewModel
             : $"{facility.StoredCount()} / {facility.StorageCapacity}";
     }
 
-    /// <summary>该物品是否被当前设施的过滤器允许。</summary>
+    /// <summary>该物品是否被当前设施的过滤器允许（含品类命中）。</summary>
     public bool StorageAccepts(string itemId)
     {
         var facility = Hub.OpenStorageFacility;
-        if (facility == null)
-            return false;
-        return facility.StorageFilter.Count == 0 || facility.StorageFilter.Contains(itemId);
+        return facility != null && facility.FilterAccepts(itemId);
+    }
+
+    /// <summary>该物品的品类名（用于在存储行上标注归属）。没有定义则空串。</summary>
+    public string ItemCategoryLabel(string itemId)
+    {
+        var info = Rimisekai.Defs.Items.Info(Hub.State.Territory.Weapons, itemId);
+        if (info == null || string.IsNullOrEmpty(info.Value.Category))
+            return "";
+        var cat = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.ThingCategoryDef>.Get(info.Value.Category);
+        return cat?.Label ?? "";
     }
 
     public static readonly (SocialAction Action, string Label)[] SocialActions =
@@ -280,30 +322,60 @@ public sealed class InkViewModel
         (SocialAction.Invite, "邀请"),
     };
 
-    /// <summary>左下角的页面入口。顺序即按钮顺序。</summary>
+    /// <summary>“邀请／分开”在 SocialActions 主表里的下标。</summary>
+    public const int InviteActionIndex = 8;
+
+    /// <summary>选中角色是否正跟着你。</summary>
+    public bool SelectedFollowing => Hub.IsFollowing(Hub.SelectedCharacterId);
+
+    /// <summary>交谈子项里“邀请”位：跟随中显示为“分开”，否则是“邀请”。</summary>
+    public (SocialAction Action, string Label) InviteEntry() =>
+        SelectedFollowing ? (SocialAction.Part, "分开") : (SocialAction.Invite, "邀请");
+
+    /// <summary>
+    /// 交流面板的嵌套结构：左列四个起始钮；带子表的类别点开后在右侧列子项。
+    /// 子项存 SocialActions 主表下标与自己的显示名（交谈的子项叫“聊天”），
+    /// 分发复用既有通路；null 子表表示点了直接执行（观察执行 Observe，离开取消选中）。
+    /// </summary>
+    public static readonly (string Label, (int Index, string Label)[]? Children)[] SocialCategories =
+    {
+        ("交谈", new[] { (0, "聊天"), (8, "邀请"), (2, "赠礼") }),
+        ("接触", new[] { (4, "摸头"), (5, "身体接触"), (6, "拥抱"), (7, "亲吻") }),
+        ("观察", null),
+        ("离开", null),
+    };
+
+    /// <summary>中下操作面板的页面入口：库存、交易、任务（原制作位置）、开发。</summary>
     public static readonly InkPage[] PageEntries =
     {
         InkPage.Stock,
         InkPage.Trade,
-        InkPage.Craft,
+        InkPage.Quest,
         InkPage.Develop,
     };
 
+
+    /// <summary>季节值：春季 / 夏季 / 秋季 / 冬季。</summary>
     private static string SeasonName(Season season) => season switch
     {
-        Season.Spring => "春",
-        Season.Summer => "夏",
-        Season.Autumn => "秋",
-        Season.Winter => "冬",
+        Season.Spring => "春季",
+        Season.Summer => "夏季",
+        Season.Autumn => "秋季",
+        Season.Winter => "冬季",
         _ => "-",
     };
 
     private static string WeatherName(Weather weather) => weather switch
     {
-        Weather.Clear => "晴",
-        Weather.Cloud => "阴",
-        Weather.Rain => "雨",
-        Weather.Snow => "雪",
+        Weather.Clear => "晴天",
+        Weather.Cloud => "阴天",
+        Weather.Rain => "雨天",
+        Weather.Snow => "雪天",
+        Weather.HeavyRain => "暴雨",
+        Weather.Thunder => "雷雨",
+        Weather.Wind => "大风",
+        Weather.HeavySnow => "大雪",
+        Weather.Blizzard => "暴雪",
         _ => "-",
     };
 }

@@ -30,6 +30,20 @@ public sealed class SceneRunner
     /// 一旦开演就立刻记冷却，避免同一天里反复触发同一段；
     /// 状态机标志留到跑完再置，这样中途中断的事件下次还能接着讲。
     /// </summary>
+    /// <summary>
+    /// 指名开演：事件板等调用方直接指定要演哪段，
+    /// 不走库挑选。效果与冷却口径与 Begin 完全一致。
+    /// </summary>
+    public SceneRun? BeginEvent(SceneEvent scene, CharacterState character, VoiceContext ctx)
+    {
+        Apply(character, scene.Effects, ctx);
+        character.Voice.SceneLastDay[scene.Id] = ctx.Day;
+
+        var run = new SceneRun { Event = scene, Character = character };
+        Apply(character, run.Current?.Effects, ctx);
+        return run;
+    }
+
     public SceneRun? Begin(CharacterState character, VoiceContext ctx)
     {
         var scene = _library.Pick(character, ctx);
@@ -126,21 +140,15 @@ public sealed class SceneRunner
                     break;
                 case SceneEffectKind.Stamina:
                     if (effect.Amount >= 0)
-                        character.Condition.Recover(effect.Amount, 0, clearFatigue: false);
+                        character.Condition.Recover(effect.Amount, 0);
                     else
-                        character.Condition.Spend(-effect.Amount, 0, 0);
+                        character.Condition.Spend(-effect.Amount, 0);
                     break;
                 case SceneEffectKind.Spirit:
                     if (effect.Amount >= 0)
-                        character.Condition.Recover(0, effect.Amount, clearFatigue: false);
+                        character.Condition.Recover(0, effect.Amount);
                     else
-                        character.Condition.Spend(0, -effect.Amount, 0);
-                    break;
-                case SceneEffectKind.Fatigue:
-                    if (effect.Amount >= 0)
-                        character.Condition.Spend(0, 0, effect.Amount);
-                    else
-                        character.Condition.RestTick();
+                        character.Condition.Spend(0, -effect.Amount);
                     break;
                 case SceneEffectKind.GiveItem:
                     if (effect.ItemId.Length > 0)

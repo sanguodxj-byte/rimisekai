@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Character;
+using Rimisekai.Clock;
 using Rimisekai.Voice;
 
 namespace Rimisekai.Housing;
@@ -22,6 +24,12 @@ public sealed class StepContext
     public int MasterFactionId { get; set; } = -1;
     public int Day { get; set; } = 1;
     public int NowTotal { get; set; }
+
+    /// <summary>当前天气。露天劳作、赶路与衣着干湿都看它。</summary>
+    public Weather Weather { get; set; } = Weather.Clear;
+
+    /// <summary>当前季节。耕地播种与作物生长看它。</summary>
+    public Season Season { get; set; } = Season.Spring;
 
     /// <summary>
     /// 每个角色此刻在做什么，一行一个角色。键是角色 Id。
@@ -77,6 +85,13 @@ public sealed class Worker
     public Dictionary<int, int> Together { get; } = new();
 
     /// <summary>
+    /// 是否在跟随玩家。邀请同意后置起，再邀一次解除；
+    /// 跟随期间日程与自主节律全部让位，人始终跟着玩家走。
+    /// 随 Worker 存续，不进存档——位置本来就是会话状态。
+    /// </summary>
+    public bool FollowsPlayer { get; set; }
+
+    /// <summary>
     /// 当前闲时活动做的是哪件事（坐下歇脚 / 在房里忙活 / 串门）。
     /// 用来写日志，也用来决定要坐哪件设施。
     /// </summary>
@@ -102,6 +117,12 @@ public sealed class Worker
     /// <summary>这一趟要把东西送到哪件仓储（目标设施 Id）。</summary>
     public int HaulTargetId { get; set; } = -1;
 
+    /// <summary>这一趟取料的源设施 Id（-1 表示货已在身上，直接走送货阶段）。</summary>
+    public int HaulSourceId { get; set; } = -1;
+
+    /// <summary>搬运阶段：前往取料（Fetching）或送往目标（Delivering）。</summary>
+    public HaulPhase HaulPhase { get; set; } = HaulPhase.Delivering;
+
     /// <summary>角色行为状态机，管理当前执行的 Job 及其生命周期与快照描述。</summary>
     public StateMachine.WorkerStateMachine StateMachine { get; } = new();
 
@@ -116,6 +137,8 @@ public sealed class Worker
         ActionKind.SeekChat => VoiceActivity.Seeking,
         ActionKind.Loiter => VoiceActivity.Playing,
         ActionKind.Rest => VoiceActivity.Resting,
+        // 跟随没有专门的口上活动，按闲时算——她此刻就是闲着陪在人身边。
+        ActionKind.Follow => VoiceActivity.Idle,
         _ => worker.Phase == WorkPhase.Moving ? VoiceActivity.Moving : ActionActivity(worker.Task),
     };
 
@@ -124,7 +147,7 @@ public sealed class Worker
         ActionKind.Cook => VoiceActivity.Cooking,
         ActionKind.Mine or ActionKind.Fell => VoiceActivity.Mining,
         ActionKind.Till or ActionKind.Tend => VoiceActivity.Farming,
-        ActionKind.Tinker or ActionKind.Sew => VoiceActivity.Crafting,
+        ActionKind.Sew => VoiceActivity.Crafting,
         ActionKind.Woodwork or ActionKind.Forge or ActionKind.Brew => VoiceActivity.Working,
         ActionKind.Train => VoiceActivity.Training,
         _ => VoiceActivity.Idle,
@@ -186,13 +209,31 @@ public sealed class TerritoryClock
         var used = Seats();
         foreach (var character in roster.Members)
         {
+            var assignment = territory.ScheduleOf(character.Id).Slots[slot];
             if (character.IsMaster)
-                continue;
-            var worker = Track(character.Id, workerRoom(character.Id));
-            var mode = territory.ScheduleOf(character.Id).Slots[slot];
+            {
+                // 玩家在非工作时段（空闲或娱乐）不走自动工作，保持手动自由控制
+                if (assignment.Mode != SlotMode.Work)
+                {
+                    var existingMasterWorker = _workers.Find(w => w.CharacterId == character.Id);
+                    if (existingMasterWorker != null && ActionKindMap.IsWork(existingMasterWorker.Goal))
+                    {
+                        EndRoutine(existingMasterWorker);
+                        Release(existingMasterWorker, used);
+                    }
+                    continue;
+                }
+            }
+
+            var currentRoom = workerRoom(character.Id);
+            if (currentRoom < 0 && character.IsMaster && ctx != null)
+                currentRoom = ctx.PlayerRoomId;
+            var worker = Track(character.Id, currentRoom);
             if (ctx != null)
             {
-                UpdateRoutine(character, worker, territory, roster, mode, ctx, used);
+                // 衣着干湿按这一格开始时所在的房间算——过去 5 分钟人一直待在这里。
+                WorldEffects.SettleWetness(character, territory, worker.RoomId, ctx.Weather);
+                UpdateRoutine(character, worker, territory, roster, assignment, ctx, used);
                 // 只有起居/自主行为进 ProcessRoutine；工作行动在主循环内联结算（见下方 tick）。
                 if (worker.Goal != ActionKind.None && !ActionKindMap.IsWork(worker.Goal))
                 {
@@ -211,8 +252,8 @@ public sealed class TerritoryClock
             }
             else
             {
-                // 无上下文（旧路径 / 测试）：直接按优先级挑活，累了或不肯干就歇着。
-                var task = mode == SlotMode.Work ? PickWork(character, worker, territory, used) : ActionKind.None;
+                // 无上下文（旧路径 / 测试）：直接按这一段的安排挑活，累了或不肯干就歇着。
+                var task = PickWork(character, territory, assignment);
                 if (task == ActionKind.None || character.Condition.Tired)
                 {
                     Release(worker, used);
@@ -228,6 +269,8 @@ public sealed class TerritoryClock
             if (worker.Phase == WorkPhase.Moving && worker.Path.Count > 0)
             {
                 worker.RoomId = worker.Path.Dequeue();
+                if (ctx != null)
+                    WorldEffects.SpendMoveStamina(character, territory, worker.RoomId, ctx.Weather);
                 if (worker.Path.Count == 0)
                     Sit(territory, worker, used);
             }
@@ -247,14 +290,22 @@ public sealed class TerritoryClock
                 tick = System.Math.Max(1, tick * Traits.WorkProgressPercent(character, worker.Task, ctx == null ? 12 : ctx.NowTotal / 60 % 24) / 100);
                 // 技能决定手快慢：同一个人干对口的活更快，干不对口的更慢。
                 tick = System.Math.Max(1, tick * ActionKindMap.SpeedPercent(character, worker.Task) / 100);
+                // 恶劣天气露天作业：耗时加倍，效率减半（产量不变）。
+                if (ctx != null && WorldEffects.IsSevere(ctx.Weather)
+                    && WorldEffects.OutdoorRoom(territory, facility.RoomId))
+                    tick = System.Math.Max(1, tick / 2);
                 worker.Progress += tick;
-                if (character.Condition.Fatigue >= 100)
-                    character.Affect.AddMood(-1);
                 if (worker.Progress >= Territory.FinishAt)
                 {
-                    var log = Finish(territory, character, worker, facility, yieldFor);
+                    var log = Finish(territory, character, worker, facility, yieldFor, ctx?.Season ?? Season.Spring);
                     if (log != null)
                         logs.Add(log);
+                    else if (!ActionKindMap.IsExtractive(worker.Task) && worker.Task != ActionKind.Perform && worker.Task != ActionKind.Trade)
+                    {
+                        // 制作中途原料耗尽（未能产出）：自然退出工作，回退决策
+                        EndRoutine(worker);
+                        Release(worker, used);
+                    }
                     worker.Progress = 0;
                 }
             }
@@ -286,108 +337,107 @@ public sealed class TerritoryClock
             StepContext = ctx,
         };
 
-        if (worker.StateMachine.CurrentState != null)
-        {
-            var text = worker.StateMachine.Describe(workerCtx);
-            if (!string.IsNullOrEmpty(text))
-                return text;
-        }
-
-        var room = territory.Rooms.Find(r => r.Id == worker.RoomId);
-        var place = room == null ? "" : room.Name;
-
-        // 在路上：写明正去哪儿。
-        if (worker.Phase == WorkPhase.Moving && worker.Path.Count > 0)
-        {
-            var next = territory.Rooms.Find(r => r.Id == worker.Path.Peek());
-            return next == null
-                ? $"{character.Name}在路上。"
-                : $"{character.Name}正往{next.Name}去。";
-        }
-
-        switch (worker.Goal)
-        {
-            case ActionKind.Sleep:
-                var bed = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return bed == null
-                    ? $"{character.Name}在{place}睡觉。"
-                    : $"{character.Name}在{place}的{bed.Name}上睡觉。";
-            case ActionKind.Meal:
-                var chair = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return chair == null
-                    ? $"{character.Name}在{place}吃饭。"
-                    : $"{character.Name}在{place}的{chair.Name}上吃饭。";
-            case ActionKind.Rest:
-                var restSeat = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return restSeat == null
-                    ? $"{character.Name}在{place}歇着。"
-                    : $"{character.Name}在{place}的{restSeat.Name}上歇着。";
-            case ActionKind.SeekChat:
-                // 已经走到你面前、对话框弹出时，日志不再重复一遍——
-                // 那句由对话框承担；只有进不去、在原地等时才写进日志。
-                if (worker.WantsChat)
-                    return "";
-                return worker.SeekWaiting
-                    ? $"{character.Name}似乎想对你说什么。"
-                    : $"{character.Name}正想找你说话。";
-            case ActionKind.Loiter:
-                return DescribeLoiter(character, worker, territory, place);
-            case ActionKind.Haul:
-                var target = territory.Facilities.Find(f => f.Id == worker.HaulTargetId);
-                return target == null
-                    ? $"{character.Name}正把{worker.HaulItemId}送去{place}。"
-                    : $"{character.Name}正把{worker.HaulItemId}送去{place}的{target.Name}。";
-            case ActionKind.None:
-                var station = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return station == null
-                    ? $"{character.Name}在{place}干活。"
-                    : $"{character.Name}在{place}的{station.Name}干活。";
-            default:
-                return $"{character.Name}在{place}发呆。";
-        }
-    }
-
-    /// <summary>闲时活动的一句话描述。女仆在房里没坐上设施时写成打扫卫生，其余人写"待着"。</summary>
-    private static string DescribeLoiter(CharacterState character, Worker worker,
-        Territory territory, string place)
-    {
-        switch (worker.Loiter)
-        {
-            case LoiterKind.Sitting:
-                var seat = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return seat == null
-                    ? $"{character.Name}在{place}找了个地方歇着。"
-                    : $"{character.Name}在{place}的{seat.Name}上歇着。";
-            case LoiterKind.Wandering:
-                return $"{character.Name}在{place}转悠。";
-            default:
-                // 闲时做零活是女仆的自觉；其余人闲下来只是待着，不替她们编活儿。
-                if (!character.Has(Trait.Maid))
-                    return $"{character.Name}在{place}待着。";
-                var fac = territory.Facilities.Find(f => f.Id == worker.FacilityId);
-                return fac == null
-                    ? $"{character.Name}在{place}打扫卫生。"
-                    : $"{character.Name}在{place}打扫{fac.Name}。";
-        }
+        // 日常行为的叙述归状态自己（每个状态知道自己此刻在做什么）。
+        // 没有状态就是没在做事——不替角色编造一句“发呆”。
+        return worker.StateMachine.CurrentState?.Describe(workerCtx) ?? "";
     }
 
     /// <summary>
-    /// 工作时段挑一件活干：按优先级档位从高到低（1 最优先），
-    /// 同一档内按工作类型行序；挑第一件"有设施、有空位、这个人也肯干"的。
-    /// 挑不出返回 Free，交给后续的娱乐/休息/搬运/闲时。
+    /// 寻找该工作台当前可做的配方：
+    /// 1. 优先找工作台台面与身上原料已满足的配方（可直接开工）；
+    /// 2. 其次找全领地（含仓储）原料充足、可执行备料的配方。
+    /// 找不到说明全领地原料匮乏，返回 null。
     /// </summary>
-    private static ActionKind PickWork(CharacterState character, Worker worker, Territory territory, Dictionary<int, int> used)
+    public static Recipe? FindAvailableRecipe(Territory territory, Facility bench, CharacterState character, ActionKind task)
     {
-        foreach (var task in territory.TasksByPriority(character.Id))
+        var candidates = territory.Recipes.Where(r => r.Station == task);
+        var target = territory.GetTargetCraftItem(task);
+        if (!string.IsNullOrEmpty(target))
+            candidates = candidates.Where(r => r.ItemId == target);
+
+        Recipe? fetchable = null;
+        foreach (var r in candidates)
         {
-            if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(task)!.Value)) || !character.Affect.AcceptsWork())
-                continue;
-            // 自己正占着的那件设施不算“被占”——否则从第二格起就看不见自己的活了。
-            var facility = Pick(territory, task, used, worker.FacilityId);
-            if (facility != null)
-                return task;
+            if (territory.CanPayAt(bench, character, r.Costs))
+                return r;
+
+            if (fetchable == null && CanFetchAllCosts(territory, bench, character, r.Costs))
+                fetchable = r;
         }
+        return fetchable;
+    }
+
+    /// <summary>全据点是否有足够材料为该配方完成备料（各仓储 + 角色身上 + 台面存量满足需求）。</summary>
+    private static bool CanFetchAllCosts(Territory territory, Facility bench, CharacterState character, IReadOnlyList<RecipeCost> costs)
+    {
+        if (costs.Count == 0)
+            return true;
+        foreach (var cost in costs)
+        {
+            var onBench = bench.Contents.Get(cost.ItemId);
+            var inBag = character.Bag.Get(cost.ItemId);
+            var inStorages = 0;
+            foreach (var s in territory.Storages)
+                inStorages += s.Contents.Get(cost.ItemId);
+
+            if (onBench + inBag + inStorages < cost.Count)
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// 按这一段的安排挑活：工作时段到点名的那件设施干活。没点名就不出活。
+    /// </summary>
+    private static ActionKind PickWork(CharacterState character, Territory territory,
+        SlotAssignment assignment, Season season = Season.Spring)
+    {
+        if (assignment.Mode != SlotMode.Work)
+            return ActionKind.None;
+
+        if (assignment.FacilityId >= 0)
+        {
+            var facility = territory.Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
+            if (facility == null)
+                return ActionKind.None;
+
+            foreach (var task in ActionKindMap.WorkOrdered)
+            {
+                if (!facility.Supports(task))
+                    continue;
+                if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(task)!.Value))
+                    || !character.Affect.AcceptsWork())
+                    return ActionKind.None;
+                if (task == ActionKind.Till
+                    && territory.PlotState(facility, season, character)
+                        is Territory.FarmState.Growing
+                        or Territory.FarmState.OutOfSeason
+                        or Territory.FarmState.NoSeed)
+                    continue;
+
+                // 制作类（锻造、烹饪、木工、缝纫、炼金）：全领地缺料则无法工作，跳过
+                if (!ActionKindMap.IsExtractive(task) && task != ActionKind.Perform && task != ActionKind.Trade)
+                {
+                    if (FindAvailableRecipe(territory, facility, character, task) == null)
+                        continue;
+                }
+
+                return task;
+            }
+            return ActionKind.None;
+        }
+
         return ActionKind.None;
+    }
+
+
+    /// <summary>这一段点名的那件设施支不支持这件工作行动。厨师备餐的门槛用它。</summary>
+    private static bool AssignedTo(Territory territory, SlotAssignment assignment, ActionKind task)
+    {
+        if (assignment.Mode != SlotMode.Work || assignment.FacilityId < 0)
+            return false;
+        var facility = territory.Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
+        return facility != null && facility.Supports(task);
     }
 
     private void Retarget(Territory territory, Worker worker, ActionKind task, Dictionary<int, int> used)
@@ -426,28 +476,60 @@ public sealed class TerritoryClock
         worker.RoomId = facility.RoomId;
     }
 
-    private static WorkLog? Finish(Territory territory, CharacterState character, Worker worker, Facility facility, Func<ActionKind, int>? yieldFor)
+    private static WorkLog? Finish(Territory territory, CharacterState character, Worker worker,
+        Facility facility, Func<ActionKind, int>? yieldFor, Season season)
     {
         if (ActionKindMap.IsExtractive(worker.Task))
         {
+            // 耕地按播种/收获结算，不是无中生有的抽取；生长中这一格空过（无产出也不清地）。
+            var farm = territory.FarmWork(character, facility, worker.Task, season, yieldFor, out var handled);
+            if (handled)
+            {
+                character.Condition.Spend(0, GetSpiritCost(worker.Task));
+                // 耕完这一下若地里已无事可做（刚播种/没种/非季），放下锄头回决策层重挑。
+                if (territory.PlotState(facility, season, character)
+                    is Territory.FarmState.Growing
+                    or Territory.FarmState.OutOfSeason
+                    or Territory.FarmState.NoSeed)
+                {
+                    worker.Goal = ActionKind.None;
+                    worker.Task = ActionKind.None;
+                    worker.Phase = WorkPhase.Idle;
+                }
+                return farm;
+            }
             var amount = System.Math.Clamp(System.Math.Max(1, character.Life(ActionKindMap.SkillOf(worker.Task)!.Value)) / 40, 1, 4);
             if (yieldFor != null)
                 amount = System.Math.Max(1, amount * yieldFor(worker.Task) / 100);
             if (facility.YieldItemId.Length > 0)
                 territory.Produce(character, facility.YieldItemId, amount);
             character.GainLifeExp(ActionKindMap.SkillOf(worker.Task)!.Value, Territory.GatherExp);
-            character.Condition.Spend(0, 0, Traits.ScaledFatigue(character, 5));
-            character.Condition.Apply(character);
+            character.Condition.Spend(0, GetSpiritCost(worker.Task));
             return Log(worker, facility.YieldItemId, amount, ActionKindMap.SkillOf(worker.Task)!.Value);
         }
         // 工作台只用“这个人背包 + 这台子自己的存货”付料：
-        // 材料得有人搬过来，不能隔空从别的货架取（RimWorld 的备料口径）。
-        var recipe = territory.Recipes.Find(r => r.Station == worker.Task && territory.CanPayAt(facility, character, r.Costs));
+        // 材料得有人搬过来，不能隔空从别的货架取。
+        var targetCraft = territory.GetTargetCraftItem(worker.Task);
+        var recipe = (!string.IsNullOrEmpty(targetCraft))
+            ? territory.Recipes.Find(r => r.Station == worker.Task && r.ItemId == targetCraft && territory.CanPayAt(facility, character, r.Costs))
+            : territory.Recipes.Find(r => r.Station == worker.Task && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
         territory.Produce(character, recipe.ItemId, recipe.OutputCount);
         character.GainLifeExp(recipe.Skill, Territory.CraftExp);
+        character.Condition.Spend(0, GetSpiritCost(worker.Task));
+        worker.Phase = WorkPhase.Idle;
+        worker.Goal = ActionKind.None;
+        worker.Progress = 0;
         return Log(worker, recipe.ItemId, recipe.OutputCount, recipe.Skill);
+    }
+
+    private static int GetSpiritCost(ActionKind task)
+    {
+        var def = Defs.DefDatabase<Defs.ActionDef>.Get(task.ToString());
+        if (def != null && def.SpiritCost > 0)
+            return def.SpiritCost;
+        return ActionKindMap.TypeOf(task) is WorkType.Excavate or WorkType.Smithing ? 25 : 15;
     }
 
     private static WorkLog Log(Worker worker, string itemId, int count, LifeSkill skill) => new()
@@ -487,44 +569,10 @@ public sealed class TerritoryClock
         territory.Facilities.Find(f => f.Built && f.Supports(task)
             && (f.Id == owned || used.GetValueOrDefault(f.Id) < f.Capacity));
 
-    private static List<int> Route(Territory territory, int fromRoom, int toRoom, Func<Room, bool>? passable = null)
-    {
-        var rooms = territory.Rooms;
-        var queue = new Queue<int>();
-        var prev = new Dictionary<int, int> { [fromRoom] = -1 };
-        queue.Enqueue(fromRoom);
-        while (queue.Count > 0)
-        {
-            var id = queue.Dequeue();
-            if (id == toRoom)
-                break;
-            var room = rooms.Find(r => r.Id == id);
-            if (room == null)
-                continue;
-            foreach (var next in room.Links)
-            {
-                if (prev.ContainsKey(next))
-                    continue;
-                var node = rooms.Find(r => r.Id == next);
-                if (node == null || !node.Open)
-                    continue;
-                if (next != toRoom && passable != null && !passable(node))
-                    continue;
-                prev[next] = id;
-                queue.Enqueue(next);
-            }
-        }
-        var path = new List<int>();
-        if (!prev.ContainsKey(toRoom))
-            return path;
-        for (var id = toRoom; id != fromRoom; id = prev[id])
-            path.Add(id);
-        path.Reverse();
-        return path;
-    }
+    private static List<int> Route(Territory territory, int fromRoom, int toRoom, Func<Room, bool>? passable = null) =>
+        territory.Route(fromRoom, toRoom, passable);
 
-    /// <summary>节律决策。睡眠打断一切；工作时段按优先级挑活；闲时按三餐>找人>娱乐>休息选。</summary>
-    private void UpdateRoutine(CharacterState character, Worker worker, Territory territory, Roster roster, SlotMode mode, StepContext ctx, Dictionary<int, int> used)
+    private void UpdateRoutine(CharacterState character, Worker worker, Territory territory, Roster roster, SlotAssignment assignment, StepContext ctx, Dictionary<int, int> used)
     {
         DriftMood(character, worker, ctx);
         GrowDesire(character, ctx);
@@ -537,11 +585,21 @@ public sealed class TerritoryClock
         var minutes = ctx.NowTotal % 1440;
         var night = IsNight(minutes, character);
 
+        // 检查三餐是否超过饭点 2 小时未吃：逾期扣除心情
+        CheckMissedMeals(character, ctx, minutes);
+
+        // 跟随者的一切日程让位：先结算睡眠，其余时候跟着玩家走。
+        if (worker.FollowsPlayer)
+        {
+            FollowTick(character, worker, territory, roster, ctx, used, night);
+            return;
+        }
+
         if (worker.Goal == ActionKind.Sleep)
         {
             if (!night && !character.Condition.Tired)
             {
-                WakeUp(character, worker);
+                WakeUp(character, worker, roster, ctx);
                 EndRoutine(worker);
             }
             return;
@@ -556,27 +614,61 @@ public sealed class TerritoryClock
                 return;
         }
 
-        // 正在进行的活动（三餐途中 / 歇脚 / 找人 / 娱乐 / 搬运）不重做决策，
-        // 由 ProcessRoutine 自己推进；但三餐与找人这类需求可以打断闲时活动与搬运。
-        var interruptible = worker.Goal is ActionKind.Loiter or ActionKind.Haul;
-        if (worker.Goal != ActionKind.None && worker.Goal != ActionKind.None && !interruptible)
+        // 采集者的归集环节：包里攒了产出，先送回仓储再继续手头的活——
+        // 只认采集劳作本身（备料/搬运途中不打断），排班与闲时节律都会经过这里。
+        if (worker.Goal is ActionKind.Fell or ActionKind.Mine or ActionKind.Till or ActionKind.Tend
+            && character.Bag.Items.Count > 0
+            && StartHaul(character, worker, territory, ctx, used))
             return;
 
-        var window = MealWindow(minutes);
-        if (window >= 0 && (character.Affect.LastMealDay != ctx.Day || character.Affect.LastMealWindow != window))
-        {
-            StartMeal(character, worker, territory, roster, ctx, window, used);
+        // 正在进行的活动不重做决策，由 ProcessRoutine 自己推进；
+        // 但三餐与找人这类生理/社交需求可以打断闲时活动与搬运。
+        // 工作行动不在此列——它由主循环内联结算（见 Step）。
+        var interruptible = worker.Goal is ActionKind.Loiter or ActionKind.Haul;
+        if (worker.Goal != ActionKind.None && !interruptible)
             return;
+
+        // 食客（包括厨师本人）在开饭前半小时至饭后两小时内赶往存放有熟食的餐桌；无熟食不盲动；饭后两小时内有熟食仍补餐
+        var diningWindow = DiningWindow(minutes);
+        if (diningWindow >= 0 && (character.Affect.LastMealDay != ctx.Day || character.Affect.LastMealWindow != diningWindow))
+        {
+            if (HasAvailableMeal(character, territory, worker.RoomId))
+            {
+                if (StartMeal(character, worker, territory, roster, ctx, diningWindow, used))
+                    return;
+            }
         }
         if (character.Affect.ChatDesire >= SeekThreshold(character))
         {
             StartSeek(character, worker, used);
             return;
         }
-        if (interruptible)
-            return;
 
-        var work = mode == SlotMode.Work ? PickWork(character, worker, territory, used) : ActionKind.None;
+        // 刚做好的热饭热菜优先送到餐桌储存，供全领地享用
+        if (HasDeliverableMeal(character, territory))
+        {
+            if (StartHaul(character, worker, territory, ctx, used))
+                return;
+        }
+
+        // 厨师在开饭前两小时进入做饭状态（开始去库房寻找食材、回厨房做饭并送到餐桌）。
+        // 门槛是「这一段被排到做饭设施上」，不再有优先级表；领地必须有食材才触发备餐。
+        var prepWindow = CookPrepWindow(minutes);
+        if (prepWindow >= 0 && AssignedTo(territory, assignment, ActionKind.Cook) && !HasTableWithMeal(territory))
+        {
+            var stove = territory.Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
+            if (stove != null && FindAvailableRecipe(territory, stove, character, ActionKind.Cook) != null)
+            {
+                if (StartFetchForBench(character, worker, territory, ctx, ActionKind.Cook))
+                    return;
+                if (worker.Task != ActionKind.Cook)
+                    Retarget(territory, worker, ActionKind.Cook, used);
+                worker.Goal = ActionKind.Cook;
+                return;
+            }
+        }
+
+        var work = PickWork(character, territory, assignment, ctx.Season);
         if (work != ActionKind.None)
         {
             // 工作台缺料就先去搬料，搬齐了再开工（RimWorld 的备料）。
@@ -589,22 +681,38 @@ public sealed class TerritoryClock
             worker.Goal = work;
             return;
         }
-        if (worker.Goal == ActionKind.None)
-            Release(worker, used);
-        if (ctx.Day - character.Affect.LastPlayDay >= 1)
+
+        // 无工作可做（无委派，或委派设施缺料/停摆）：自然退出工作并释放设施占用
+        if (worker.Goal != ActionKind.None && !interruptible)
+        {
+            EndRoutine(worker);
+        }
+        Release(worker, used);
+
+        // 正在进行的搬运或闲时活动（在无工可开时）继续推进，不反复重做决策
+        if (interruptible)
+            return;
+
+        // 背包里有东西、据点又有能收的仓储：先把货送过去（RimWorld 的 haul）。
+        // 搬运优先于娱乐——否则「每日一娱」无限重入，劳动产出永远躺在背包里。
+        if (StartHaul(character, worker, territory, ctx, used))
+            return;
+        // 娱乐时段：到点名的那件消遣设施去消遣。
+        if (assignment.Mode == SlotMode.Entertainment)
+        {
+            if (StartPlayAt(character, worker, territory, assignment.FacilityId, ctx, used))
+                return;
+        }
+        else if (ctx.Day - character.Affect.LastPlayDay >= 1)
         {
             if (StartPlay(character, worker, territory, roster, ctx, used))
                 return;
         }
-        if (mode == SlotMode.Rest || character.Condition.Spirit < character.Condition.MaxSpirit * 3 / 10)
+        if (character.Condition.Spirit < character.Condition.MaxSpirit * 3 / 10)
         {
-            StartRest(character, worker, territory, ctx, used);
-            return;
+            if (StartRest(character, worker, territory, ctx, used))
+                return;
         }
-        // 背包里有东西、据点又有能收的仓储：先把货送过去（RimWorld 的 haul）。
-        // 排在闲时活动之前，免得背着满包东西到处逛。
-        if (StartHaul(character, worker, territory, ctx, used))
-            return;
         // 无事可做：过自己的日子（坐下歇着 / 在房里忙活 / 串门），不原地发呆。
         StartLoiter(character, worker, territory, roster, ctx, used);
     }
@@ -620,8 +728,12 @@ public sealed class TerritoryClock
         if (bench == null)
             return false;
 
-        var recipe = territory.Recipes.Find(r => r.Station == task);
+        var recipe = FindAvailableRecipe(territory, bench, character, task);
         if (recipe == null)
+            return false;
+
+        // 台面上原料充足，无需备料，可直接开工
+        if (territory.CanPayAt(bench, character, recipe.Costs))
             return false;
 
         foreach (var cost in recipe.Costs)
@@ -635,18 +747,32 @@ public sealed class TerritoryClock
                 continue;
 
             var need = cost.Count - onBench;
-            var moved = territory.TakeFrom(character, source, cost.ItemId, need);
-            if (moved <= 0)
-                continue;
-
             worker.Goal = ActionKind.Haul;
             worker.Task = ActionKind.None;
             worker.Progress = 0;
             worker.HaulItemId = cost.ItemId;
-            worker.HaulCount = moved;
+            worker.HaulCount = need;
+            worker.HaulSourceId = source.Id;
             worker.HaulTargetId = bench.Id;
             worker.FacilityId = -1;
-            GotoRoom(worker, territory, bench.RoomId, r => Enterable(r, character, ctx));
+
+            if (source.RoomId == worker.RoomId)
+            {
+                // 人已经在源设施所在的房间：当面取货，进入送往工作台阶段
+                var moved = territory.TakeFrom(character, source, cost.ItemId, need);
+                if (moved <= 0)
+                    continue;
+                worker.HaulCount = moved;
+                worker.HaulPhase = HaulPhase.Delivering;
+                GotoRoom(worker, territory, bench.RoomId, r => Enterable(r, character, ctx));
+            }
+            else
+            {
+                // 物理走去源设施所在房间取料，全局禁止隔空取物
+                worker.HaulPhase = HaulPhase.Fetching;
+                GotoRoom(worker, territory, source.RoomId, r => Enterable(r, character, ctx));
+            }
+
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
             {
@@ -656,6 +782,20 @@ public sealed class TerritoryClock
                 StepContext = ctx,
             });
             return true;
+        }
+        return false;
+    }
+
+    private static bool HasDeliverableMeal(CharacterState character, Territory territory)
+    {
+        foreach (var pair in character.Bag.Items)
+        {
+            if (pair.Value > 0 && territory.IsFood(pair.Key))
+            {
+                var storage = territory.FindStorageFor(pair.Key);
+                if (storage != null)
+                    return true;
+            }
         }
         return false;
     }
@@ -680,6 +820,8 @@ public sealed class TerritoryClock
             worker.Progress = 0;
             worker.HaulItemId = pair.Key;
             worker.HaulCount = pair.Value;
+            worker.HaulSourceId = -1;
+            worker.HaulPhase = HaulPhase.Delivering;
             worker.HaulTargetId = storage.Id;
             worker.FacilityId = -1;
             GotoRoom(worker, territory, storage.RoomId, r => Enterable(r, character, ctx));
@@ -697,34 +839,6 @@ public sealed class TerritoryClock
     }
 
     /// <summary>
-    /// 搬运一步：走到目标跟前就把货放下。目标是仓储就走容量/过滤检查；
-    /// 目标是工作台则直接卸在台面上（台面放自己的料，不受仓储规则限制）。
-    /// </summary>
-    private static void ProcessHaul(CharacterState character, Worker worker, Territory territory, StepContext ctx)
-    {
-        if (worker.Path.Count > 0)
-        {
-            MoveAlong(worker);
-            if (worker.Path.Count > 0)
-                return;
-        }
-
-        var target = territory.Facilities.Find(f => f.Id == worker.HaulTargetId && f.Built);
-        if (target == null)
-        {
-            EndHaul(worker);
-            return;
-        }
-
-        var moved = target.CanStore
-            ? territory.StoreFrom(character, target, worker.HaulItemId, worker.HaulCount)
-            : Deposit(character, target, worker.HaulItemId, worker.HaulCount);
-
-        if (moved > 0)
-            ctx.Narrate(character, $"{character.Name}把{worker.HaulItemId}放到了{target.Name}。");
-        EndHaul(worker);
-    }
-
     /// <summary>把背包里的东西直接卸到设施台面（工作台备料用，不受仓储容量限制）。</summary>
     private static int Deposit(CharacterState who, Facility target, string itemId, int count)
     {
@@ -744,6 +858,8 @@ public sealed class TerritoryClock
         worker.HaulItemId = "";
         worker.HaulCount = 0;
         worker.HaulTargetId = -1;
+        worker.HaulSourceId = -1;
+        worker.HaulPhase = HaulPhase.Delivering;
         EndRoutine(worker);
     }
 
@@ -779,7 +895,6 @@ public sealed class TerritoryClock
         var sitWeight = 45;
         sitWeight += Traits.SitWeightDelta(character);
         if (character.Condition.Spirit < character.Condition.MaxSpirit / 2) sitWeight += 15;
-        if (character.Condition.Fatigue > 0) sitWeight += 10;
         sitWeight = System.Math.Clamp(sitWeight, 5, 80);
 
         var wanderWeight = rooms.Count > 0 ? Traits.WanderChance(character) : 0;
@@ -866,138 +981,26 @@ public sealed class TerritoryClock
     }
 
     /// <summary>
-    /// 闲时活动一步：先在路上走，到地方了再歇/忙活，时长耗尽后回决策重挑。
-    /// 每一步都刷新“此刻在做什么”，因此日志里的这一行始终是当前行为。
+    /// 推进角色的自主行为一格。所有日常行为的生命周期（进入/推进/结束/快照）
+    /// 都在 <see cref="StateMachine.WorkerStateMachine"/> 里，本方法只负责驱动一步：
+    /// 状态做完了就回决策层（Goal 归 None），否则保留当前状态。
     /// </summary>
-    private void ProcessLoiter(CharacterState character, Worker worker, Territory territory, StepContext ctx)
-    {
-        // 还没到地方就先赶路（日志写“正往哪儿去”）。到不了（路被堵）则就地忙活。
-        if (worker.Path.Count > 0)
-        {
-            MoveAlong(worker);
-            if (worker.Path.Count > 0)
-                return;
-        }
-
-        if (worker.LoiterTicks > 0)
-            worker.LoiterTicks--;
-
-        if (worker.LoiterTicks <= 0)
-        {
-            worker.Loiter = LoiterKind.None;
-            EndRoutine(worker);
-        }
-    }
-
     private void ProcessRoutine(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx)
     {
-        if (worker.StateMachine.CurrentState != null)
-        {
-            var workerCtx = new StateMachine.WorkerContext
-            {
-                Territory = territory,
-                Character = character,
-                Worker = worker,
-                StepContext = ctx,
-                UsedFacilities = new HashSet<int>(Seats().Keys),
-                Rng = Rng,
-            };
-            var finished = worker.StateMachine.Step(workerCtx);
-            if (finished)
-            {
-                EndRoutine(worker);
-                return;
-            }
-        }
+        if (worker.StateMachine.CurrentState == null)
+            return;
 
-        switch (worker.Goal)
+        var workerCtx = new StateMachine.WorkerContext
         {
-            case ActionKind.Meal:
-                if (MoveAlong(worker))
-                    return;
-                Eat(character, worker, territory, ctx);
-                EndRoutine(worker);
-                break;
-            case ActionKind.Sleep:
-                if (MoveAlong(worker))
-                    return;
-                character.Condition.SleepTick();
-                break;
-            case ActionKind.Rest:
-                character.Condition.RestTick();
-                character.Condition.Recover(0, Traits.RestSpiritBonus(character), false);
-                if (character.Condition.Fatigue == 0)
-                    EndRoutine(worker);
-                break;
-            case ActionKind.Watch:
-                if (MoveAlong(worker))
-                    return;
-                // 到了地方先记“今天玩过了”，再待够时长才回决策（StartPlay 已置时长）。
-                character.Affect.LastPlayDay = ctx.Day;
-                if (worker.PlayTicks > 0)
-                    worker.PlayTicks--;
-                if (worker.PlayTicks <= 0)
-                    EndRoutine(worker);
-                break;
-            case ActionKind.SeekChat:
-                ProcessSeek(character, worker, territory, roster, ctx);
-                break;
-            case ActionKind.Loiter:
-                ProcessLoiter(character, worker, territory, ctx);
-                break;
-            case ActionKind.Haul:
-                ProcessHaul(character, worker, territory, ctx);
-                break;
-        }
-    }
-
-    private void ProcessSeek(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx)
-    {
-        if (worker.WaitTicks <= 0)
-        {
-            character.Affect.AddMood(-5);
-            character.Affect.ChatDesire = 50;
+            Territory = territory,
+            Character = character,
+            Worker = worker,
+            StepContext = ctx,
+            UsedFacilities = new HashSet<int>(Seats().Keys),
+            Rng = Rng,
+        };
+        if (worker.StateMachine.Step(workerCtx))
             EndRoutine(worker);
-            return;
-        }
-        worker.WaitTicks--;
-        if (worker.WantsChat)
-        {
-            if (worker.RoomId == ctx.PlayerRoomId)
-            {
-                ShareSeat(worker, territory, ctx);
-                return;
-            }
-            worker.WantsChat = false;
-        }
-        var target = territory.Rooms.Find(r => r.Id == ctx.PlayerRoomId);
-        if (!Enterable(target, character, ctx) || !GotoRoom(worker, territory, target!.Id, r => Enterable(r, character, ctx)))
-        {
-            worker.SeekWaiting = true;
-            return;
-        }
-        MoveAlong(worker);
-        if (worker.RoomId == ctx.PlayerRoomId && worker.Path.Count == 0)
-        {
-            worker.WantsChat = true;
-            worker.Phase = WorkPhase.Idle;
-            if (worker.ChatRoom != worker.RoomId)
-            {
-                worker.ChatRoom = worker.RoomId;
-                // 她走到了你面前：这是角色主动找玩家对话，台词弹对话框。
-                ctx.SeekDialogue(character, $"{character.Name}似乎想对你说什么。");
-            }
-            ShareSeat(worker, territory, ctx);
-        }
-    }
-
-    private static void ShareSeat(Worker worker, Territory territory, StepContext ctx)
-    {
-        if (worker.FacilityId >= 0 || ctx.PlayerFixtureId < 0)
-            return;
-        var fixture = territory.Facilities.Find(f => f.Id == ctx.PlayerFixtureId);
-        if (fixture != null && fixture.Capacity > 1)
-            worker.FacilityId = fixture.Id;
     }
 
     private static void EndRoutine(Worker worker)
@@ -1019,19 +1022,88 @@ public sealed class TerritoryClock
         worker.HaulItemId = "";
         worker.HaulCount = 0;
         worker.HaulTargetId = -1;
+        worker.HaulSourceId = -1;
+        worker.HaulPhase = HaulPhase.Delivering;
     }
 
-    /// <summary>起床结算：和人挤一间扣心情；没床再扣。独睡不回。</summary>
-    private void WakeUp(CharacterState character, Worker worker)
+    /// <summary>让某人的当前活动立刻收尾回决策层（解除跟随时用）。不动跟随标记本身。</summary>
+    public void EndRoutineOf(int characterId)
     {
+        var worker = _workers.Find(w => w.CharacterId == characterId);
+        if (worker != null)
+            EndRoutine(worker);
+    }
+
+    /// <summary>
+    /// 跟随者的一步。睡在玩家床上时玩家不起就不醒；
+    /// 夜里或累了先去自己的床睡（跟随标记保留，醒来接着跟）；
+    /// 其余时候交给人跟着玩家走。
+    /// </summary>
+    private void FollowTick(CharacterState character, Worker worker, Territory territory,
+        Roster roster, StepContext ctx, Dictionary<int, int> used, bool night)
+    {
+        if (worker.Goal == ActionKind.Sleep)
+        {
+            // 还陪在玩家睡的那张床上：玩家不起，就不醒。
+            if (ctx.PlayerFixtureId >= 0 && worker.FacilityId == ctx.PlayerFixtureId)
+                return;
+            if (!night && !character.Condition.Tired)
+            {
+                WakeUp(character, worker, roster, ctx);
+                EndRoutine(worker);
+            }
+            return;
+        }
+        if (character.Condition.Tired || night)
+        {
+            if (StartSleep(character, worker, territory, roster, ctx, used))
+                return;
+        }
+        if (worker.Goal != ActionKind.Follow)
+        {
+            Release(worker, used);
+            worker.Goal = ActionKind.Follow;
+            worker.Task = ActionKind.None;
+            worker.Progress = 0;
+            worker.StateMachine.TransitionTo(new StateMachine.States.FollowingState(),
+                new StateMachine.WorkerContext
+                {
+                    Territory = territory,
+                    Character = character,
+                    Worker = worker,
+                    StepContext = ctx,
+                    UsedFacilities = new HashSet<int>(used.Keys),
+                    Rng = Rng,
+                });
+        }
+    }
+
+    /// <summary>起床结算：与心仪同伴同室同寝醒来温馨安宁（加心情）；与外人挤房扣心情；没床再扣。起床即换了干衣服。</summary>
+    private void WakeUp(CharacterState character, Worker worker, Roster roster, StepContext ctx)
+    {
+        character.Condition.ChangeIntoDryClothes();
         var roommates = 0;
+        var loverWithMe = false;
         foreach (var other in _workers)
         {
             if (other.CharacterId != worker.CharacterId && other.RoomId == worker.RoomId)
+            {
                 roommates++;
+                var otherChar = roster.Find(other.CharacterId);
+                if (otherChar != null && (character.Relations.Has(other.CharacterId, RelationFlag.Sworn) || otherChar.Condition.Bond == Bond.Lover))
+                    loverWithMe = true;
+            }
         }
-        if (roommates > 0)
+        if (ctx.PlayerRoomId == worker.RoomId && (character.Relations.Has(ctx.MasterId, RelationFlag.Sworn) || character.Condition.Bond == Bond.Lover))
+        {
+            loverWithMe = true;
+        }
+
+        if (loverWithMe && roommates <= 1)
+            character.Affect.AddMood(8);
+        else if (roommates > 0)
             character.Affect.AddMood(-15);
+
         if (worker.FacilityId < 0)
             character.Affect.AddMood(-5);
     }
@@ -1076,6 +1148,43 @@ public sealed class TerritoryClock
     /// 开始睡觉。睡觉必须到床上：找不到带 Sleep 行动的设施就不睡，
     /// 返回 false 让调用方改做别的事（禁止在房间里凭空睡）。
     /// </summary>
+    /// <summary>
+    /// 休息：找一把能坐的椅子/沙发，坐下歇着（RestingState 负责回复与结束）。
+    /// 找不到座位就返回假——上层会退回闲转。
+    /// </summary>
+    private static bool StartRest(CharacterState character, Worker worker, Territory territory,
+        StepContext ctx, Dictionary<int, int> used)
+    {
+        var room = NearestRoomWith(territory, worker.RoomId, character, ctx,
+            r => HasAction(territory, r.Id, ActionKind.Rest));
+        if (room < 0)
+            return false;
+
+        var seat = FindFree(territory, room, ActionKind.Rest, used);
+        if (seat == null)
+            return false;
+
+        Release(worker, used);
+        worker.Goal = ActionKind.Rest;
+        worker.Task = ActionKind.None;
+        worker.Progress = 0;
+        worker.Path.Clear();
+        worker.FacilityId = seat.Id;
+        GotoRoom(worker, territory, room, r => Enterable(r, character, ctx));
+        worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+        if (worker.Path.Count == 0)
+            Sit(territory, worker, used);
+        worker.StateMachine.TransitionTo(new StateMachine.States.RestingState(), new StateMachine.WorkerContext
+        {
+            Territory = territory,
+            Character = character,
+            Worker = worker,
+            StepContext = ctx,
+            UsedFacilities = new HashSet<int>(used.Keys),
+        });
+        return true;
+    }
+
     private static bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
     {
         var bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
@@ -1109,22 +1218,16 @@ public sealed class TerritoryClock
         return true;
     }
 
-    private static void StartMeal(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, int window, Dictionary<int, int> used)
+    private static bool StartMeal(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, int window, Dictionary<int, int> used)
     {
+        var seat = PickMealSeat(territory, worker.RoomId, character, ctx, used);
+        if (seat == null)
+            return false;
+
         Release(worker, used);
-        // 记下这一餐已尝试过，免得没吃的时每格都重新算一遍。
         character.Affect.LastMealDay = ctx.Day;
         character.Affect.LastMealWindow = window;
 
-        // 吃到的东西必须在够得着的地方：自己背包里，或某个设施里。
-        // 因此要先找到“有食物可取的地方”，再去那儿坐下吃。
-        var seat = PickMealSeat(territory, worker.RoomId, character, ctx, used);
-        if (seat == null)
-        {
-            // 背包里有干粮就在原地找座吃；连背包都空、也没设施存货，本餐作废。
-            worker.Goal = ActionKind.None;
-            return;
-        }
         worker.Goal = ActionKind.Meal;
         worker.Task = ActionKind.None;
         worker.Progress = 0;
@@ -1133,7 +1236,7 @@ public sealed class TerritoryClock
         {
             character.Affect.AddMood(-8);
             worker.Goal = ActionKind.None;
-            return;
+            return false;
         }
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
@@ -1146,16 +1249,26 @@ public sealed class TerritoryClock
             StepContext = ctx,
             UsedFacilities = new HashSet<int>(used.Keys),
         });
+        return true;
     }
 
     /// <summary>
-    /// 挑一处能坐下吃饭的座位：优先与桌子同房且有空位的，其次任意可坐设施。
+    /// 挑一处能坐下吃饭的座位：优先直接赶往存放有熟食的餐桌，其次与餐桌同房有空位的餐座，最后任意可坐设施。
     /// 座位所在房间必须有食物可取（背包里有，或该房设施里存着）——
     /// 没有食物的房间不算，免得白跑一趟坐着却没得吃。
     /// </summary>
     private static Facility? PickMealSeat(Territory territory, int fromRoom,
         CharacterState character, StepContext ctx, Dictionary<int, int> used)
     {
+        // 优先 1：直接赶往存放有熟食且支持就座的餐桌
+        var tableWithMeal = territory.Facilities.Find(f => f.Built && f.IsTable && f.CanStore
+            && f.Contents.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key))
+            && f.Supports(ActionKind.Meal)
+            && used.GetValueOrDefault(f.Id) < f.Capacity);
+        if (tableWithMeal != null)
+            return tableWithMeal;
+
+        // 优先 2：与餐桌同房且该房有食物的餐座
         Facility? fallback = null;
         foreach (var roomId in ReachableRoomsOrdered(territory, fromRoom, character, ctx))
         {
@@ -1237,6 +1350,39 @@ public sealed class TerritoryClock
         return true;
     }
 
+    /// <summary>
+    /// 娱乐时段：到点名的那件消遣设施去消遣。设施没了或没空位就返回假，
+    /// 上层退回自选的闲时活动。
+    /// </summary>
+    private static bool StartPlayAt(CharacterState character, Worker worker, Territory territory,
+        int facilityId, StepContext ctx, Dictionary<int, int> used)
+    {
+        if (facilityId < 0)
+            return false;
+        var playFacility = territory.Facilities.Find(f => f.Id == facilityId && f.Built);
+        if (playFacility == null || used.GetValueOrDefault(playFacility.Id) >= playFacility.Capacity)
+            return false;
+
+        Release(worker, used);
+        worker.Goal = ActionKind.Loiter;
+        worker.Task = ActionKind.None;
+        worker.Progress = 0;
+        worker.FacilityId = playFacility.Id;
+        worker.PlayTicks = Traits.LoiterTicksFor(character);
+        GotoRoom(worker, territory, playFacility.RoomId, r => Enterable(r, character, ctx));
+        worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+        if (worker.Path.Count == 0)
+            Sit(territory, worker, used);
+        worker.StateMachine.TransitionTo(new StateMachine.States.PlayState(), new StateMachine.WorkerContext
+        {
+            Territory = territory,
+            Character = character,
+            Worker = worker,
+            UsedFacilities = new HashSet<int>(used.Keys),
+        });
+        return true;
+    }
+
     private static bool HasAction(Territory territory, int roomId, ActionKind action) =>
         territory.Facilities.Exists(f => f.Built && f.RoomId == roomId && f.Supports(action));
 
@@ -1258,45 +1404,6 @@ public sealed class TerritoryClock
             Worker = worker,
             UsedFacilities = new HashSet<int>(used.Keys),
         });
-    }
-
-    private static void Eat(CharacterState character, Worker worker, Territory territory, StepContext ctx)
-    {
-        // 从够得着的地方取一份食物（背包优先，其次所在房间设施的存货）。
-        // 取不到就不算吃过了，这一餐作废——不允许凭空吃。
-        var food = territory.ConsumeFood(character, worker.RoomId);
-        if (food == null)
-            return;
-
-        character.Condition.Recover(
-            Traits.MealStamina(character, 80),
-            Traits.MealSpirit(character, 60), false);
-        character.Affect.AddMood(Traits.ScaledMood(character,
-            territory.FoodTierOf(food) switch
-            {
-                FoodTier.Delicate => 2,
-                FoodTier.Feast => 4,
-                FoodTier.Exquisite => 8,
-                _ => 0,
-            }) * Traits.MealMoodPercent(character) / 100);
-        // 坐在没有桌子的房间里吃，等于将就一顿，扣心情。
-        if (!HasTable(territory, worker.RoomId))
-            character.Affect.AddMood(-3);
-    }
-
-    private static bool MoveAlong(Worker worker)
-    {
-        if (worker.Path.Count == 0)
-        {
-            if (worker.FacilityId >= 0)
-                worker.Phase = WorkPhase.Working;
-            return false;
-        }
-        worker.Phase = WorkPhase.Moving;
-        worker.RoomId = worker.Path.Dequeue();
-        if (worker.Path.Count == 0 && worker.FacilityId >= 0)
-            worker.Phase = WorkPhase.Working;
-        return worker.Path.Count > 0;
     }
 
     private static bool GotoRoom(Worker worker, Territory territory, int roomId, Func<Room, bool>? passable = null)
@@ -1351,14 +1458,85 @@ public sealed class TerritoryClock
         return hour >= bed || hour < wake;
     }
 
-    private static int MealWindow(int minutes)
+    /// <summary>三餐标准时刻：早 7:00 (420)、午 12:00 (720)、晚 18:00 (1080)。</summary>
+    public static readonly int[] MealTimes = { 420, 720, 1080 };
+
+    /// <summary>备餐窗口：开饭前 2 小时内，厨师开始寻找食材进入做饭状态。</summary>
+    public static int CookPrepWindow(int minutes)
     {
-        if (minutes >= 360 && minutes < 540)
-            return 0;
-        if (minutes >= 660 && minutes < 840)
-            return 1;
-        if (minutes >= 1020 && minutes < 1200)
-            return 2;
+        for (var i = 0; i < MealTimes.Length; i++)
+        {
+            var mealTime = MealTimes[i];
+            if (minutes >= mealTime - 120 && minutes < mealTime)
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>就餐窗口：开饭前半小时起至饭点后 2 小时以内。</summary>
+    public static int DiningWindow(int minutes)
+    {
+        for (var i = 0; i < MealTimes.Length; i++)
+        {
+            var mealTime = MealTimes[i];
+            if (minutes >= mealTime - 30 && minutes < mealTime + 120)
+                return i;
+        }
+        return -1;
+    }
+
+    private static int MealWindow(int minutes) => DiningWindow(minutes);
+
+    /// <summary>领地内是否存在存放有熟食（Meal）的餐桌。</summary>
+    public static bool HasTableWithMeal(Territory territory) =>
+        territory.Facilities.Exists(f =>
+            f.Built && f.IsTable && f.CanStore &&
+            f.Contents.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)));
+
+    /// <summary>
+    /// 食客就餐检查：食客在开饭前半小时起往存放有熟食的餐桌或存有食物的餐室赶，若完全不存在食物则不盲目寻找。
+    /// </summary>
+    public static bool HasAvailableMeal(CharacterState character, Territory territory, int roomId)
+    {
+        if (HasTableWithMeal(territory))
+            return true;
+        if (character.Bag.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)))
+            return true;
+        return territory.Facilities.Exists(f => f.Built && f.CanStore &&
+            f.Contents.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)));
+    }
+
+    /// <summary>超过饭点 2 小时未就餐扣除心情。仅在领地正常运转期间刚刚跨过 2 小时宽限期该时间步时结算一次。</summary>
+    private static void CheckMissedMeals(CharacterState character, StepContext ctx, int minutes)
+    {
+        // 初始新加入或初次参与节律的角色，同步此前已完全结束的旧饭点，不追溯惩罚此前未经历的餐点
+        if (character.Affect.LastMealDay < 0)
+        {
+            character.Affect.LastMealDay = ctx.Day;
+            character.Affect.LastMealWindow = LastPassedMealIndex(minutes);
+            return;
+        }
+
+        for (var i = 0; i < MealTimes.Length; i++)
+        {
+            var deadline = MealTimes[i] + 120;
+            if (minutes >= deadline && minutes <= deadline + TerritoryClock.StepMinutes
+                && (character.Affect.LastMealDay != ctx.Day || character.Affect.LastMealWindow < i))
+            {
+                character.Affect.LastMealDay = ctx.Day;
+                character.Affect.LastMealWindow = i;
+                character.Affect.AddMood(-8);
+            }
+        }
+    }
+
+    private static int LastPassedMealIndex(int minutes)
+    {
+        for (var i = MealTimes.Length - 1; i >= 0; i--)
+        {
+            if (minutes >= MealTimes[i] + 120)
+                return i;
+        }
         return -1;
     }
 

@@ -4,7 +4,7 @@ using Rimisekai.Character;
 namespace Rimisekai.Housing.StateMachine.States;
 
 /// <summary>
-/// 睡眠状态：前往有床的房间，在床上安歇，随时间恢复体能并解除疲劳，直到清晨苏醒。
+/// 睡眠状态：前往有床的房间，在床上安歇，随时间恢复体能，直到清晨苏醒。
 /// </summary>
 public sealed class SleepingState : BaseWorkerState
 {
@@ -23,7 +23,7 @@ public sealed class SleepingState : BaseWorkerState
 
     public override bool Tick(WorkerContext ctx)
     {
-        if (MoveAlong(ctx.Worker))
+        if (MoveAlong(ctx.Worker, ctx))
             return false;
 
         if (ctx.Worker.FacilityId >= 0 && ctx.Worker.Phase != WorkPhase.Working)

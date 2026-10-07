@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Character;
+using Rimisekai.Clock;
+using Rimisekai.Defs;
 
 namespace Rimisekai.Housing;
 
@@ -9,6 +12,17 @@ public enum RoomPermission
     Public = 0,
     MasterOnly = 1,
     Faction = 2,
+}
+
+/// <summary>
+/// 房门的锁。只有「私人空间」房间（卧室类）用得上：
+/// 自动 = 主人不在屋内或正在睡时锁；另两档是玩家手动拧的，压过自动规则。
+/// </summary>
+public enum RoomLock
+{
+    Auto = 0,
+    Locked = 1,
+    Unlocked = 2,
 }
 
 public sealed class Room
@@ -21,9 +35,26 @@ public sealed class Room
     public bool Open { get; set; }
     public int OpenCost { get; init; }
     public RoomPermission Permission { get; set; } = RoomPermission.Public;
+
+    /// <summary>
+    /// 门锁。只有打了「私人空间」标签的房间（卧室类）这个字段才有意义。
+    /// 自动 = 主人不在屋内或正在睡时锁上；手动锁/手动解锁压过自动规则。
+    /// 锁只挡别人——主人是这间房的主人，随时进得去。
+    /// </summary>
+    public RoomLock Lock { get; set; } = RoomLock.Auto;
+
     public List<int> Links { get; } = new();
     public List<RecipeCost> MaterialCost { get; } = new();
     public bool Buildable { get; set; }
+
+    /// <summary>房间插画资源路径（res:// 开头）。观察四周时显示。</summary>
+    public string Illustration { get; set; } = "";
+
+    /// <summary>
+    /// 是不是一间「空房」——花钱开拓空地开出来的、还没装任何房间类型的毛坯。
+    /// 已建好的房间（菜园、林场……）只能安装进空房；装进去时空房本体被顶替掉。
+    /// </summary>
+    public bool Vacant { get; set; }
 
     /// <summary>
     /// 房间细分标签（如“室内”、“室外”、“工作间”、“娱乐室”、“卧室”等）。
@@ -74,7 +105,190 @@ public sealed class Territory
     public const int GatherExp = 3;
     public const int CraftExp = 3;
 
+    // ---------- 3×3 区域拼图（2026-10-01 主人定） ----------
+    // 领地由最多 3×3 个 5×5 区块拼成。RegionId 是扁平编号，在拼图里的位置固定：
+    //
+    //     5  1  6          西北  北  东北
+    //     4  0  2     ＝     西  中心  东
+    //     7  3  8          西南  南  东南
+    //
+    // 解锁两段式：中心铺满 → 开四正（1/2/3/4）；四正里任意一块铺满 → 开四角（5/6/7/8）。
+    // 「铺满」＝该区 25 格都有房间。
+
+    /// <summary>每个区域固定 5×5 格。</summary>
+    public const int RegionSize = 5;
+
+    /// <summary>领地最多 3×3 个区域。</summary>
+    public const int MaxTerritoryRegions = 9;
+
+    /// <summary>起始区（正中心）。</summary>
+    public const int CenterRegion = 0;
+
+    /// <summary>四正（北/东/南/西）。</summary>
+    public const int OrthogonalMask = (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4);
+
+    /// <summary>四角（西北/东北/西南/东南）。</summary>
+    public const int DiagonalMask = (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8);
+
+    private const int RingNone = 0;
+    private const int RingOrthogonal = 1;
+    private const int RingDiagonal = 2;
+
+    /// <summary>RegionId → 在 3×3 拼图里的格子坐标。</summary>
+    private static readonly (int X, int Y)[] RegionCells =
+    {
+        (1, 1), // 0 中心
+        (1, 0), // 1 北
+        (2, 1), // 2 东
+        (1, 2), // 3 南
+        (0, 1), // 4 西
+        (0, 0), // 5 西北
+        (2, 0), // 6 东北
+        (0, 2), // 7 西南
+        (2, 2), // 8 东南
+    };
+
+    /// <summary>区域在 3×3 拼图里的格子坐标；越界返回 (-1, -1)。</summary>
+    public static (int X, int Y) RegionCellOf(int regionId) =>
+        regionId >= 0 && regionId < RegionCells.Length ? RegionCells[regionId] : (-1, -1);
+
+    /// <summary>四正方向。</summary>
+    public enum RegionDir
+    {
+        North = 0,
+        East = 1,
+        South = 2,
+        West = 3,
+    }
+
+    /// <summary>区域某个方向上的邻居区域 Id；没有则 -1。</summary>
+    public static int RegionNeighbor(int regionId, RegionDir dir)
+    {
+        var (x, y) = RegionCellOf(regionId);
+        if (x < 0)
+            return -1;
+        var (nx, ny) = dir switch
+        {
+            RegionDir.North => (x, y - 1),
+            RegionDir.East => (x + 1, y),
+            RegionDir.South => (x, y + 1),
+            _ => (x - 1, y),
+        };
+        for (var i = 0; i < RegionCells.Length; i++)
+        {
+            if (RegionCells[i] == (nx, ny))
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// 区域朝某个方向的「连接点」格（该边正中的那一格）。
+    /// 对面的互连点是它自己朝反方向的那个连接点——两边各要有一间房才谈得上过界。
+    /// </summary>
+    public static (int X, int Y) RegionGate(RegionDir dir) => dir switch
+    {
+        RegionDir.North => (2, 0),
+        RegionDir.East => (4, 2),
+        RegionDir.South => (2, 4),
+        _ => (0, 2),
+    };
+
+    /// <summary>反方向。</summary>
+    public static RegionDir Opposite(RegionDir dir) =>
+        (RegionDir)(((int)dir + 2) % 4);
+
+    /// <summary>区域名（给「去往XX」这类文案用）。</summary>
+    public static string RegionName(int regionId) => regionId switch
+    {
+        1 => "北区",
+        2 => "东区",
+        3 => "南区",
+        4 => "西区",
+        5 => "西北区",
+        6 => "东北区",
+        7 => "西南区",
+        8 => "东南区",
+        _ => "中心区",
+    };
+
+    private int _unlockedMask = 1 << CenterRegion;
+
+    /// <summary>已经开拓过几格空地。开拓定价按它每级涨 20%。随存档走。</summary>
+    public int VacantDevelopCount { get; set; }
+
+    /// <summary>已解锁区域的位掩码。</summary>
+    public int UnlockedRegionMask => _unlockedMask;
+
+    public void SetUnlockedRegionMask(int mask) =>
+        _unlockedMask = mask & ((1 << MaxTerritoryRegions) - 1);
+
+    /// <summary>这个区域解锁了没有。领地内区域（0..8）看掩码，POI 区域（≥9）看计数。</summary>
+    public bool IsRegionUnlocked(int regionId)
+    {
+        if (regionId < 0)
+            return false;
+        if (regionId < MaxTerritoryRegions)
+            return (_unlockedMask & (1 << regionId)) != 0;
+        return regionId < UnlockedRegions;
+    }
+
+    private bool HasRing(int ring)
+    {
+        var mask = ring == RingOrthogonal ? OrthogonalMask : DiagonalMask;
+        return (_unlockedMask & mask) == mask;
+    }
+
+    /// <summary>这个区域是不是「铺满」了——25 格都有房间。</summary>
+    public bool IsRegionFull(int regionId)
+    {
+        if (regionId < 0 || regionId >= MaxTerritoryRegions)
+            return false;
+        var count = 0;
+        foreach (var room in Rooms)
+        {
+            if (room.RegionId == regionId && room.X >= 0 && room.Y >= 0)
+                count++;
+        }
+        return count >= RegionSize * RegionSize;
+    }
+
+    /// <summary>
+    /// 按「铺满」推进解锁：中心铺满开四正；四正任一铺满开四角。
+    /// 返回这次新开了哪些区域（没开就返回空表）。
+    /// </summary>
+    public List<int> TryUnlockByFill()
+    {
+        var opened = new List<int>();
+        if (!HasRing(RingOrthogonal) && IsRegionFull(CenterRegion))
+        {
+            _unlockedMask |= OrthogonalMask;
+            for (var i = 1; i <= 4; i++)
+                opened.Add(i);
+            return opened;
+        }
+        if (!HasRing(RingDiagonal))
+        {
+            for (var i = 1; i <= 4; i++)
+            {
+                if (IsRegionFull(i))
+                {
+                    _unlockedMask |= DiagonalMask;
+                    for (var j = 5; j <= 8; j++)
+                        opened.Add(j);
+                    break;
+                }
+            }
+        }
+        return opened;
+    }
+
     public string Name { get; set; } = "";
+
+    /// <summary>
+    /// 区域解锁的高水位线（含 POI 区域）。领地内的 0..8 看 <see cref="IsRegionUnlocked"/> 的掩码，
+    /// POI 区域从 <see cref="MaxTerritoryRegions"/> 起顺延，靠这个计数把关。
+    /// </summary>
     public int UnlockedRegions { get; private set; } = 1;
 
     /// <summary>可以给领地自定义取名的等级门槛。</summary>
@@ -93,12 +307,55 @@ public sealed class Territory
     public void SetLevel(int level) => Level = Math.Max(1, level);
 
     public List<Room> Rooms { get; } = new();
+    public Room? Room(int id) => Rooms.Find(r => r.Id == id);
     public List<Facility> Facilities { get; } = new();
-    public List<Recipe> Recipes { get; } = new();
+
+    private readonly List<Recipe> _recipes = new();
+    public List<Recipe> Recipes
+    {
+        get
+        {
+            if (_recipes.Count == 0)
+            {
+                Defs.DefLoader.EnsureInitialized();
+                foreach (var def in Defs.DefDatabase<Defs.RecipeDef>.All)
+                    _recipes.Add(def.ToRuntime());
+            }
+            return _recipes;
+        }
+    }
+
+    /// <summary>各工种当前指定的生产目标产物（工种 Station => 目标 ItemId）。为空表示不限。</summary>
+    public Dictionary<ActionKind, string> TargetCraftItems { get; } = new();
+
+    public string GetTargetCraftItem(ActionKind station) =>
+        TargetCraftItems.TryGetValue(station, out var item) ? item : "";
+
+    public void SetTargetCraftItem(ActionKind station, string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            TargetCraftItems.Remove(station);
+        else
+            TargetCraftItems[station] = itemId;
+    }
+
+    /// <summary>领地当前指定的烹饪目标料理（为空表示不限）。</summary>
+    public string TargetCookItem
+    {
+        get => GetTargetCraftItem(ActionKind.Cook);
+        set => SetTargetCraftItem(ActionKind.Cook, value);
+    }
+
     public List<Guest> Guests { get; } = new();
-    public List<MarketOffer> Market { get; } = new();
-    public HashSet<string> Foods { get; } = new();
-    public Dictionary<string, FoodTier> FoodTiers { get; } = new();
+
+    /// <summary>
+    /// 运行时武器实例登记表。由 GameState 装配时挂上——
+    /// 武器实例是跨背包/仓储/交易的同一份事实，报价要按实例自己的字段算。
+    /// </summary>
+    public Defs.WeaponRegistry Weapons { get; } = new();
+
+    /// <summary>防具与饰品的运行时实例登记表。</summary>
+    public Defs.EquipRegistry Equips { get; } = new();
     public Dictionary<int, Schedule> Schedules { get; } = new();
     public Dictionary<string, int> RoomEffects { get; } = new();
 
@@ -261,6 +518,136 @@ public sealed class Territory
             who.Bag.Add(itemId, count);
     }
 
+    // ---------- 耕地 ----------
+
+    /// <summary>耕地状态判定，供玩家操作前置检查与 NPC 选活过滤共用。</summary>
+    public enum FarmState
+    {
+        /// <summary>不是耕地，走普通采集。</summary>
+        NotPlot,
+
+        /// <summary>空地、应季、有种可播。</summary>
+        ReadySow,
+
+        /// <summary>作物长满，可收获。</summary>
+        ReadyHarvest,
+
+        /// <summary>作物生长中，无事可做。</summary>
+        Growing,
+
+        /// <summary>空地但不是这种作物能种的季节。</summary>
+        OutOfSeason,
+
+        /// <summary>空地、应季，但到处都没有种子。</summary>
+        NoSeed,
+    }
+
+    /// <summary>耕地设施的作物定义。设施的 YieldItemId 命中某作物产物即为耕地。</summary>
+    public CropDef? CropOf(Facility facility)
+    {
+        if (facility.YieldItemId.Length == 0)
+            return null;
+        DefLoader.EnsureInitialized();
+        return DefDatabase<CropDef>.All.FirstOrDefault(c =>
+            string.Equals(c.ProduceItemId, facility.YieldItemId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>这块地此刻的耕作状态。</summary>
+    public FarmState PlotState(Facility facility, Season season, CharacterState? who)
+    {
+        var crop = CropOf(facility);
+        if (crop == null)
+            return FarmState.NotPlot;
+        if (facility.CropDefName.Length == 0)
+        {
+            if (!crop.GrowsIn(season))
+                return FarmState.OutOfSeason;
+            return HasSeed(who, crop.SeedItemId, facility.RoomId)
+                ? FarmState.ReadySow
+                : FarmState.NoSeed;
+        }
+        return facility.Growth >= crop.GrowthDays
+            ? FarmState.ReadyHarvest
+            : FarmState.Growing;
+    }
+
+    /// <summary>
+    /// 耕地上完成一次耕作（一格活干完）。空地播种，成熟收获，生长中空过。
+    /// 收获产量沿用采集公式并套用产出系数；返回本次的产出日志（播种为无产出行）。
+    /// handled 标记是不是耕地：false 时调用方走原采集路径。
+    /// </summary>
+    public WorkLog? FarmWork(CharacterState who, Facility facility, ActionKind task,
+        Season season, Func<ActionKind, int>? yieldFor, out bool handled)
+    {
+        var crop = CropOf(facility);
+        if (crop == null)
+        {
+            handled = false;
+            return null;
+        }
+        handled = true;
+
+        if (facility.CropDefName.Length == 0)
+        {
+            if (!crop.GrowsIn(season) || TakeSeed(who, crop.SeedItemId, facility.RoomId) <= 0)
+                return null;
+            facility.CropDefName = crop.DefName;
+            facility.Growth = 0;
+            who.GainLifeExp(ActionKindMap.SkillOf(task)!.Value, GatherExp);
+            return new WorkLog
+            {
+                CharacterId = who.Id,
+                Task = task,
+                ItemId = crop.ProduceItemId,
+                Count = 0,
+                Skill = ActionKindMap.SkillOf(task)!.Value,
+                Exp = GatherExp,
+            };
+        }
+
+        if (facility.Growth < crop.GrowthDays)
+            return null;
+
+        var amount = Math.Clamp(Math.Max(1, who.Life(ActionKindMap.SkillOf(task)!.Value)) / 40, 1, 4);
+        if (yieldFor != null)
+            amount = Math.Max(1, amount * yieldFor(task) / 100);
+        Produce(who, crop.ProduceItemId, amount);
+        who.GainLifeExp(ActionKindMap.SkillOf(task)!.Value, GatherExp);
+        facility.CropDefName = "";
+        facility.Growth = 0;
+        return new WorkLog
+        {
+            CharacterId = who.Id,
+            Task = task,
+            ItemId = crop.ProduceItemId,
+            Count = amount,
+            Skill = ActionKindMap.SkillOf(task)!.Value,
+            Exp = GatherExp,
+        };
+    }
+
+    /// <summary>取一份种子：背包优先，其次本房仓储，再次任意仓储。</summary>
+    private int TakeSeed(CharacterState who, string seedItemId, int roomId)
+    {
+        if (who.Bag.Get(seedItemId) > 0)
+        {
+            who.Bag.Add(seedItemId, -1);
+            return 1;
+        }
+        var storage = FindStockOf(seedItemId, roomId);
+        if (storage != null && storage.Contents.Get(seedItemId) > 0)
+        {
+            storage.Contents.Add(seedItemId, -1);
+            return 1;
+        }
+        return 0;
+    }
+
+    /// <summary>种子是否 anywhere 可得（某人背包或任何仓储）。who 为 null 时只查仓储。</summary>
+    private bool HasSeed(CharacterState? who, string seedItemId, int roomId) =>
+        (who != null && who.Bag.Get(seedItemId) > 0)
+        || FindStockOf(seedItemId, roomId) != null;
+
     // ---------- 存取与搬运 ----------
 
     /// <summary>
@@ -269,7 +656,7 @@ public sealed class Territory
     /// </summary>
     public int StoreFrom(CharacterState who, Facility storage, string itemId, int count)
     {
-        if (!storage.Accepts(itemId) || count <= 0)
+        if (!storage.Accepts(itemId, Weapons) || count <= 0)
             return 0;
         var moved = System.Math.Min(count, System.Math.Min(who.Bag.Get(itemId), storage.FreeSpace()));
         if (moved <= 0)
@@ -295,18 +682,25 @@ public sealed class Territory
     }
 
     /// <summary>
-    /// 找一处能收下该物品的仓储设施：优先本房，其次据点内任意。
+    /// 找一处能收下该物品的仓储设施：熟食料理优先送往餐桌，其余物品优先本房，其次据点内任意。
     /// 找不到返回 null（没地方放）。
     /// </summary>
     public Facility? FindStorageFor(string itemId, int preferRoomId = -1)
     {
+        if (IsFood(itemId))
+        {
+            var table = Facilities.Find(f => f.Built && f.IsTable && f.CanStore && f.Accepts(itemId, Weapons));
+            if (table != null)
+                return table;
+        }
+
         if (preferRoomId >= 0)
         {
-            var here = Facilities.Find(f => f.Built && f.RoomId == preferRoomId && f.Accepts(itemId));
+            var here = Facilities.Find(f => f.Built && f.RoomId == preferRoomId && f.Accepts(itemId, Weapons));
             if (here != null)
                 return here;
         }
-        return Facilities.Find(f => f.Built && f.Accepts(itemId));
+        return Facilities.Find(f => f.Built && f.Accepts(itemId, Weapons));
     }
 
     /// <summary>
@@ -331,17 +725,55 @@ public sealed class Territory
     public int Haul(CharacterState who, Facility storage, string itemId, int count) =>
         StoreFrom(who, storage, itemId, count);
 
+    /// <summary>每口井存水的上限。</summary>
+    public const int WellWaterCap = 20;
+
+    /// <summary>
+    /// 井水回满。取水不是工作——有气力消耗的才是工作，取水与移动等价：
+    /// 井就是现成的水源，水放在井的存货里，做饭缺水时由搬运行为从井里搬，
+    /// 玩家下厨也直接从这里扣。产出井（yieldItemId 为水）每日回满。
+    /// </summary>
+    public void TopUpWells()
+    {
+        foreach (var facility in Facilities)
+        {
+            if (!facility.Built || facility.YieldItemId != "水")
+                continue;
+            var shortOf = WellWaterCap - facility.Contents.Get("水");
+            if (shortOf > 0)
+                facility.Contents.Add("水", shortOf);
+        }
+    }
+
+    /// <summary>新落的井自带一井水（之后每日回满，见 <see cref="TopUpWells"/>）。</summary>
+    private static void SeedWellWater(Facility facility)
+    {
+        if (facility.YieldItemId == "水" && facility.Contents.Get("水") <= 0)
+            facility.Contents.Add("水", WellWaterCap);
+    }
+
     public bool UnlockRegion()
     {
-        if (UnlockedRegions >= MaxRegions)
-            return false;
-        UnlockedRegions++;
-        return true;
+        // 两段式解锁（2026-10-01 主人定）：
+        //   中心铺满 → 开四正（北/东/南/西）；四正任一铺满 → 开四角。
+        // 这个手动入口只负责「推进到下一档」，实际解锁由铺满触发（见 TryUnlockByFill）。
+        if (!HasRing(RingOrthogonal))
+        {
+            _unlockedMask |= OrthogonalMask;
+            return true;
+        }
+        if (!HasRing(RingDiagonal))
+        {
+            _unlockedMask |= DiagonalMask;
+            return true;
+        }
+        return false;
     }
 
     public void SetUnlockedRegions(int count)
     {
-        UnlockedRegions = System.Math.Clamp(count, 1, MaxRegions);
+        // 不再夹到 MaxRegions——POI 区域从 MaxTerritoryRegions 起顺延，可能远超 3。
+        UnlockedRegions = System.Math.Max(1, count);
     }
 
     public bool AddGuest(Guest guest)
@@ -354,53 +786,263 @@ public sealed class Territory
 
     public bool RemoveGuest(int guestId) => Guests.RemoveAll(g => g.Id == guestId) > 0;
 
-    public void AddFood(string itemId)
-    {
-        if (itemId.Length > 0)
-            Foods.Add(itemId);
-    }
-
-    public void SetFoodTier(string itemId, FoodTier tier)
-    {
-        if (itemId.Length > 0)
-        {
-            Foods.Add(itemId);
-            FoodTiers[itemId] = tier;
-        }
-    }
-
+    /// <summary>
+    /// 是不是能吃的东西。唯一判据是 ThingDef.IsFood——
+    /// 食物是物品定义自带的属性，不再由领地另记一份名单。
+    /// </summary>
     public bool IsFood(string itemId)
     {
         Defs.DefaultDefs.EnsureInitialized();
-        var def = Defs.DefDatabase<Defs.ThingDef>.Get(itemId);
-        if (def != null && def.IsFood)
-            return true;
-        return Foods.Contains(itemId);
+        var def = Defs.Items.Get(itemId);
+        return def != null && def.IsFood;
     }
 
+    private readonly Dictionary<string, FoodTier> _foodTiers = new();
+
+    public void SetFoodTier(string itemId, FoodTier tier) => _foodTiers[itemId] = tier;
+
+    /// <summary>食物品级。优先显式设置，其次取物品定义，没有定义的物品按普通算。</summary>
     public FoodTier FoodTierOf(string itemId)
     {
-        if (FoodTiers.TryGetValue(itemId, out var tier))
-            return tier;
+        if (_foodTiers.TryGetValue(itemId, out var explicitTier))
+            return explicitTier;
         Defs.DefaultDefs.EnsureInitialized();
-        var def = Defs.DefDatabase<Defs.ThingDef>.Get(itemId);
-        if (def != null && def.IsFood)
-            return def.FoodTier;
-        return FoodTier.Plain;
+        var def = Defs.Items.Get(itemId);
+        return def != null && def.IsFood ? def.FoodTier : FoodTier.Plain;
     }
 
-    public void AddOffer(MarketOffer offer)
+    /// <summary>卖出价相对基准价的折抵（商人抽成）。</summary>
+    public const int SellRatioPercent = 60;
+
+    /// <summary>今日集市行情：物品 → 存货与价格系数。每日 0 点重掷（RollMarketDay）。</summary>
+    public Dictionary<string, MarketEntry> MarketDay { get; } = new();
+
+    /// <summary>一件物品当天的集市行情。</summary>
+    public sealed record MarketEntry(int Stock, int PricePercent);
+
+    /// <summary>今日集市在售的武器（每日随机锻，买走即下架，玩家卖掉的会上架）。</summary>
+    public List<MarketWeaponListing> MarketWeapons { get; } = new();
+
+    /// <summary>集市在售武器的一行：武器实例 Id 与其当日价格系数。</summary>
+    public sealed record MarketWeaponListing(string WeaponId, int PricePercent);
+
+    /// <summary>今日武器行情系数（70-130）：集市售武与收购玩家武器同用一档。</summary>
+    public int WeaponPricePercent { get; private set; } = 100;
+
+    /// <summary>
+    /// 重掷今日行情：存货按价值分档（便宜货常备，贵重看运气），价格系数 70-130。
+    /// 存货 0 = 今日无货，买不了但仍可卖。
+    /// 武器每日随机锻 3-6 件：材料/品质只取最便宜的三种，附魔低概率，不强化不祝福。
+    /// 上架范围是全部物品定义——材料表本身也是物品，铁与布一样能买卖。
+    /// </summary>
+    public void RollMarketDay(Random random)
     {
-        var index = Market.FindIndex(o => o.ItemId == offer.ItemId);
-        if (index < 0)
-            Market.Add(offer);
-        else
-            Market[index] = offer;
+        DefLoader.EnsureInitialized();
+        MarketDay.Clear();
+        foreach (var def in Defs.Items.All())
+        {
+            var stock = def.MarketValue switch
+            {
+                <= 5 => 4 + random.Next(9),
+                <= 20 => 2 + random.Next(5),
+                <= 60 => random.Next(5),
+                _ => random.Next(3),
+            };
+            MarketDay[def.DefName] = new MarketEntry(stock, 70 + random.Next(61));
+        }
+
+        WeaponPricePercent = 70 + random.Next(61);
+        MarketWeapons.Clear();
+        // 上架武器只取最便宜的三种材料，要能打兵器——布与皮不在其列。
+        var cheapMaterials = Defs.WeaponForge.WeaponMaterials().Take(3).ToList();
+        // 类型只从锻造表真实存在的基座里抽——枚举里的 Unarmed 没有基座，抽到必炸。
+        var types = DefDatabase<WeaponTypeDef>.All.Select(t => t.Type).ToArray();
+        var qualities = new[] { Quality.Crude, Quality.Common, Quality.Fine };
+        var enchantCount = DefDatabase<EnchantDef>.All.Count;
+        // 武器每日随机上架 3-6 件：材料/品质只取前三种，附魔低概率，不强化不祝福。
+        var weapons = 3 + random.Next(4);
+        for (var i = 0; i < weapons; i++)
+        {
+            var material = cheapMaterials[random.Next(cheapMaterials.Count)];
+            var type = types[random.Next(types.Length)];
+            var quality = qualities[random.Next(qualities.Length)];
+            var enchant = random.Next(100) < 10 && enchantCount > 0
+                ? DefDatabase<EnchantDef>.All[random.Next(enchantCount)].DefName
+                : "";
+            var weapon = WeaponForge.Forge(material.DefName, type,
+                quality: quality, enchant: enchant, blessed: false, enhance: 0);
+            Weapons.Add(weapon);
+            MarketWeapons.Add(new MarketWeaponListing(weapon.Id, WeaponPricePercent));
+        }
+    }
+
+    /// <summary>读档回填集市行情：存货与价格系数（不重掷，读档即回到当天）。</summary>
+    public void RestoreMarketDay(Dictionary<string, MarketEntry> saved)
+    {
+        foreach (var pair in saved)
+            MarketDay[pair.Key] = pair.Value;
+    }
+
+    /// <summary>玩家把武器卖给集市：上架，可被买回。</summary>
+    public void MarketListWeapon(string weaponId)
+    {
+        if (MarketWeapons.Find(l => l.WeaponId == weaponId) == null)
+            MarketWeapons.Add(new MarketWeaponListing(weaponId, WeaponPricePercent));
+    }
+
+    /// <summary>集市在售武器被买走：下架。</summary>
+    public void MarketDelistWeapon(string weaponId) =>
+        MarketWeapons.RemoveAll(l => l.WeaponId == weaponId);
+
+    /// <summary>读档回填武器行情：系数与在售清单（武器实例本身已随 Weapons 恢复）。</summary>
+    public void RestoreWeaponMarket(int weaponPricePercent, Dictionary<string, int> listings)
+    {
+        WeaponPricePercent = weaponPricePercent;
+        MarketWeapons.Clear();
+        foreach (var pair in listings)
+            MarketWeapons.Add(new MarketWeaponListing(pair.Key, pair.Value));
+    }
+
+    /// <summary>买入压库存，卖出抬库存——库存即价格。</summary>
+    public void MarketBought(string itemId, int count)
+    {
+        var entry = MarketDay.GetValueOrDefault(itemId);
+        if (entry == null)
+            return;
+        MarketDay[itemId] = entry with { Stock = Math.Max(0, entry.Stock - count) };
+    }
+
+    public void MarketSold(string itemId, int count)
+    {
+        var entry = MarketDay.GetValueOrDefault(itemId);
+        if (entry == null)
+            return;
+        MarketDay[itemId] = entry with { Stock = entry.Stock + count };
+    }
+
+    /// <summary>
+    /// 集市里的一件可交易对象：它此刻有多少货、买一份多少钱、卖一份收多少钱。
+    /// 没有报价单——交易是**我的库存**与**市场库存**之间的互易，价格只由
+    /// 基准价 × 当日系数（%）、卖出再打商人抽成决定。
+    /// 库存 -1 = 市场永不出售（玩家的武器与设施），只能卖。
+    /// </summary>
+    public readonly record struct MarketListing(
+        string ItemId, string Label, int Stock, int BuyPrice, int SellPrice)
+    {
+        /// <summary>市场此刻不肯卖（无货或根本不卖）。</summary>
+        public bool SoldOut => Stock == 0;
+
+        /// <summary>市场根本不收购（售价为 0）。</summary>
+        public bool NoBuy => SellPrice <= 0;
+    }
+
+    /// <summary>
+    /// 读一件物品此刻的市场行情。不再有显式报价单：
+    /// 物品取集市当日库存与价格系数；武器按实例价值与当日武器系数；
+    /// 设施只卖不买（ Stock = -1 ）。
+    /// 不在表上的 Id 返回 null（不可交易）。
+    /// </summary>
+    public MarketListing? Listing(string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            return null;
+
+        Defs.DefLoader.EnsureInitialized();
+        var thing = Defs.Items.Get(itemId);
+        if (thing != null)
+        {
+            var entry = MarketDay.GetValueOrDefault(itemId) ?? new MarketEntry(0, 100);
+            var name = thing.Label.Length > 0 ? thing.Label : itemId;
+            return ListingOf(itemId, name, thing.MarketValue, entry.Stock, entry.PricePercent);
+        }
+
+        // 运行时武器实例：集市在售的按当日武器系数买卖；玩家自己的只收不卖。
+        var weapon = Weapons.Get(itemId);
+        if (weapon != null)
+        {
+            var listing = MarketWeapons.Find(l => l.WeaponId == itemId);
+            if (listing != null)
+            {
+                var buy = Math.Max(1, ScaleBy(weapon.Value, listing.PricePercent, 96));
+                var sell = Math.Max(1, ScaleBy(weapon.Value, SellRatioPercent, listing.PricePercent));
+                return new MarketListing(weapon.Id, weapon.Name, 1, buy, sell);
+            }
+            var sellOnly = Math.Max(1,
+                ScaleBy(weapon.Value, SellRatioPercent, WeaponPricePercent));
+            return new MarketListing(weapon.Id, weapon.Name, -1, 0, sellOnly);
+        }
+
+        var facility = Defs.DefDatabase<Defs.FacilityDef>.All
+            .FirstOrDefault(f => f.DefName.Equals(itemId, StringComparison.OrdinalIgnoreCase));
+        if (facility == null)
+            return null;
+
+        // 设施只卖不买：Stock = -1（市场无货可卖），收购价为 0（买方不收）。
+        var facName = facility.Name.Length > 0 ? facility.Name : facility.DefName;
+        var facValue = facility.Value();
+        return new MarketListing(facility.DefName, facName, -1, 0,
+            facValue > 0 ? Math.Max(1, facValue * SellRatioPercent / 100) : 0);
+    }
+
+    /// <summary>
+    /// 两个百分比连乘只截断一次：价 × a% × b% 一路整数算到底再除，
+    /// 分两步取整会把价格越压越低。
+    /// </summary>
+    private static int ScaleBy(int value, int percentA, int percentB) =>
+        value * percentA * percentB / 10000;
+
+    private static MarketListing ListingOf(string itemId, string label, int value,
+        int stock, int pricePercent)
+    {
+        var base_ = value < 0 ? 0 : value;
+
+        // 集市行情：当日价格系数之外，存货压价——卖 -5%/件（下限七成），买 -4%/件（下限六成）。
+        var sellFactor = Math.Max(70, 100 - stock * 5);
+        var buyFactor = Math.Max(60, 100 - stock * 4);
+        var sell = base_ > 0
+            ? Math.Max(1, base_ * SellRatioPercent / 100 * pricePercent / 100 * sellFactor / 100)
+            : 0;
+        var buy = base_ > 0
+            ? Math.Max(1, base_ * pricePercent / 100 * buyFactor / 100)
+            : 0;
+        return new MarketListing(itemId, label, stock, buy, sell);
+    }
+
+    /// <summary>
+    /// 今日集市在售的全部：物品定义（材料也是物品）+ 集市在售武器 + 可拆卖设施。
+    /// 房间（RoomDef）不在此列。库存 0 也列出——标注“今日无货”，仍可卖。
+    /// </summary>
+    public IReadOnlyList<MarketListing> Listings()
+    {
+        var list = new List<MarketListing>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var def in Defs.Items.All())
+        {
+            var row = Listing(def.DefName);
+            if (row != null && seen.Add(row.Value.ItemId))
+                list.Add(row.Value);
+        }
+        foreach (var weapon in Weapons.All)
+        {
+            var row = Listing(weapon.Id);
+            if (row != null && seen.Add(row.Value.ItemId))
+                list.Add(row.Value);
+        }
+        foreach (var def in Defs.DefDatabase<Defs.FacilityDef>.All)
+        {
+            var row = Listing(def.DefName);
+            if (row != null && seen.Add(row.Value.ItemId))
+                list.Add(row.Value);
+        }
+
+        list.Sort((a, b) => string.CompareOrdinal(a.ItemId, b.ItemId));
+        return list;
     }
 
     public bool AddRoom(Room room)
     {
-        if (Rooms.Count >= MaxRooms || room.RegionId < 0 || room.RegionId >= UnlockedRegions)
+        if (Rooms.Count >= MaxRooms || !IsRegionUnlocked(room.RegionId))
             return false;
         if (Rooms.Exists(r => r.Id == room.Id))
             return false;
@@ -409,7 +1051,82 @@ public sealed class Territory
         return true;
     }
 
+    /// <summary>
+    /// 按坐标找房间。**生产路径一律带区域**——不同区域的 5×5 坐标是重叠的，
+    /// 不带区域找会跨区串台。
+    /// </summary>
+    public Room? RoomAt(int regionId, int x, int y) =>
+        Rooms.Find(r => r.RegionId == regionId && r.X == x && r.Y == y);
+
+    /// <summary>
+    /// 不带区域的旧签名：全表找第一间。只给「不关心区域」的核对/测试用，
+    /// 生产代码别用。
+    /// </summary>
     public Room? RoomAt(int x, int y) => Rooms.Find(r => r.X == x && r.Y == y);
+
+    /// <summary>私人空间的标签名。卧室类房间带这个标签，锁才对它有意义。</summary>
+    public const string PrivateTag = "私人空间";
+
+    /// <summary>主人此刻在哪间房（-1 = 不在领地里）。自动上锁按它判。</summary>
+    public int MasterRoomId { get; set; } = -1;
+
+    /// <summary>主人是不是正在睡。睡着的私室别人进不来。</summary>
+    public bool MasterAsleep { get; set; }
+
+    /// <summary>这间房此刻锁不锁。手动锁/手动解锁压过自动规则；没打标签的房间永不锁。</summary>
+    public bool IsLocked(Room room)
+    {
+        if (room == null || !room.HasTag(PrivateTag))
+            return false;
+        return room.Lock switch
+        {
+            RoomLock.Locked => true,
+            RoomLock.Unlocked => false,
+            // 自动：主人不在屋内，或者主人在睡。
+            _ => MasterRoomId != room.Id || MasterAsleep,
+        };
+    }
+
+    /// <summary>
+    /// 房间间的最短通路（BFS）。找不到返回空表。
+    /// passable 用于"这个角色能不能进这间房"的额外判定；目标房间本身不查。
+    /// 锁着的私人空间走不通：角色不会规划一条穿门上锁的私室的路。
+    /// </summary>
+    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null)
+    {
+        var queue = new Queue<int>();
+        var prev = new Dictionary<int, int> { [fromRoom] = -1 };
+        queue.Enqueue(fromRoom);
+        while (queue.Count > 0)
+        {
+            var id = queue.Dequeue();
+            if (id == toRoom)
+                break;
+            var room = Rooms.Find(r => r.Id == id);
+            if (room == null)
+                continue;
+            foreach (var next in room.Links)
+            {
+                if (prev.ContainsKey(next))
+                    continue;
+                var node = Rooms.Find(r => r.Id == next);
+                if (node == null || !node.Open || IsLocked(node))
+                    continue;
+                if (next != toRoom && passable != null && !passable(node))
+                    continue;
+                prev[next] = id;
+                queue.Enqueue(next);
+            }
+        }
+        var path = new List<int>();
+        if (!prev.ContainsKey(toRoom))
+            return path;
+        for (var id = toRoom; id != fromRoom; id = prev[id])
+            path.Add(id);
+        path.Reverse();
+        return path;
+    }
+
 
     public bool Link(int fromId, int toId)
     {
@@ -436,7 +1153,58 @@ public sealed class Territory
     }
 
     public bool CanOpen(Room room, long money) =>
-        !room.Open && room.RegionId < UnlockedRegions && money >= room.OpenCost;
+        !room.Open && IsRegionUnlocked(room.RegionId) && money >= room.OpenCost;
+
+    /// <summary>
+    /// 这间未开发的房间是不是「挨着已开发的地方」——判定只看两件事：
+    /// 网格四邻（同一块内全局坐标差 1）或已有通路连到某间已开发的房间。
+    /// 开发页据此决定哪几格可以点（点了才谈得上开拓）。
+    /// </summary>
+    public bool NearOpenRoom(Room room)
+    {
+        foreach (var other in Rooms)
+        {
+            if (!other.Open || other.Id == room.Id || other.RegionId != room.RegionId)
+                continue;
+            if (room.Links.Contains(other.Id))
+                return true;
+            if (other.X >= 0 && other.Y >= 0
+                && System.Math.Abs(other.X - room.X) + System.Math.Abs(other.Y - room.Y) == 1)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 这个格子是不是「挨着已开发的地方」——只看**同一区域内**网格四邻有没有已开发的房间。
+    /// 空格子（还没有房间实体）用它判定能不能开拓；已有房间实体的走 <see cref="NearOpenRoom"/>。
+    /// </summary>
+    public bool NearOpenAt(int regionId, int x, int y)
+    {
+        foreach (var other in Rooms)
+        {
+            if (!other.Open || other.X < 0 || other.Y < 0 || other.RegionId != regionId)
+                continue;
+            if (System.Math.Abs(other.X - x) + System.Math.Abs(other.Y - y) == 1)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>已开发（Open）的房间数。开拓定价按它递增——越开越贵。</summary>
+    public int OpenRoomCount
+    {
+        get
+        {
+            var n = 0;
+            foreach (var room in Rooms)
+            {
+                if (room.Open)
+                    n++;
+            }
+            return n;
+        }
+    }
 
     public bool OpenRoom(int roomId, ref long money)
     {
@@ -454,6 +1222,7 @@ public sealed class Territory
             return false;
         if (Facilities.Exists(f => f.Id == facility.Id))
             return false;
+        SeedWellWater(facility);
         Facilities.Add(facility);
         if (facility.Built && facility.EffectId.Length > 0)
             RoomEffects[facility.EffectId] = RoomEffects.GetValueOrDefault(facility.EffectId) + 1;
@@ -505,6 +1274,7 @@ public sealed class Territory
             return false;
         if (Facilities.Exists(f => f.Id == facility.Id))
             return false;
+        SeedWellWater(facility);
         Facilities.Add(facility);
         return true;
     }
@@ -523,7 +1293,7 @@ public sealed class Territory
     /// <summary>开发：把未放置的房间放到网格空位上。</summary>
     public bool PlaceRoom(int x, int y, Room room)
     {
-        if (room.X >= 0 || x < 0 || y < 0 || RoomAt(x, y) != null)
+        if (room.X >= 0 || x < 0 || y < 0 || RoomAt(room.RegionId, x, y) != null)
             return false;
         room.X = x;
         room.Y = y;
@@ -558,13 +1328,14 @@ public sealed class Territory
     /// 房间能支撑的行动：房内每件设施按自己的行动集取并集，
     /// 再并上房间本身承载的行动（观察——设施就是房间本身）。
     /// 界面"此处能干什么"直接读这个。
+    /// 容量为零的设施进不去也没有互动，其行动不对外提供。
     /// </summary>
     public List<ActionKind> RoomActions(int roomId)
     {
         var actions = new List<ActionKind> { ActionKind.Observe };
         foreach (var facility in Facilities)
         {
-            if (!facility.Built || facility.RoomId != roomId)
+            if (!facility.Built || facility.RoomId != roomId || facility.Capacity <= 0)
                 continue;
             foreach (var action in facility.Actions)
             {
@@ -587,71 +1358,41 @@ public sealed class Territory
         return schedule;
     }
 
-    /// <summary>设某角色某段的开关（空闲 / 工作 / 不干活）。</summary>
-    public void Assign(int characterId, int slot, SlotMode mode)
+    /// <summary>
+    /// 设某角色某段的安排：开关，以及工作/娱乐时点名的那件设施。
+    /// 空闲时设施自动清空；点名一件不存在的设施则拒绝。
+    /// </summary>
+    public bool Assign(int characterId, int slot, SlotMode mode, int facilityId = -1)
     {
         if (slot < 0 || slot >= WorkSlot.Count)
             throw new ArgumentOutOfRangeException(nameof(slot));
-        ScheduleOf(characterId).Slots[slot] = mode;
-    }
-
-    // ---------- 工作优先级 ----------
-
-    /// <summary>
-    /// 每个角色对每类工作的优先级：0 = 不做，1-4 = 档位（1 最高）。
-    /// 工作时段里干什么由它决定，与时段开关是两件事（对应 RimWorld 的 Work 页与 Schedule 页）。
-    /// </summary>
-    public Dictionary<int, Dictionary<ActionKind, int>> Priorities { get; } = new();
-
-    /// <summary>某角色对某类工作的优先级。没设过返回 0（不做）。</summary>
-    public int PriorityOf(int characterId, ActionKind task) =>
-        Priorities.TryGetValue(characterId, out var map) && map.TryGetValue(task, out var value)
-            ? value
-            : 0;
-
-    /// <summary>设某角色对某类工作的优先级。0 或负数 = 不做。</summary>
-    public void SetPriority(int characterId, ActionKind task, int priority)
-    {
-
-        if (!Priorities.TryGetValue(characterId, out var map))
+        if (mode != SlotMode.Free && facilityId >= 0)
         {
-            map = new Dictionary<ActionKind, int>();
-            Priorities[characterId] = map;
+            var fac = Facilities.Find(f => f.Id == facilityId);
+            if (fac == null)
+                return false;
+            // 工作模式下必须是工作设施（支持至少一项工作行动）
+            if (mode == SlotMode.Work && TaskOf(fac) == ActionKind.None)
+                return false;
         }
-        var value = ActionKindMap.ClampPriority(priority);
-        if (value <= 0)
-            map.Remove(task);
-        else
-            map[task] = value;
+        ScheduleOf(characterId).Slots[slot] = new SlotAssignment
+        {
+            Mode = mode,
+            FacilityId = mode == SlotMode.Free ? -1 : facilityId,
+        };
+        return true;
     }
 
-    /// <summary>
-    /// 该角色能干的工作，按"档位升序、同档按工作类型行序"排好。
-    /// 只列出优先级 &gt; 0 的；空表表示这人什么活都没派。
-    /// </summary>
-    public List<ActionKind> TasksByPriority(int characterId)
-    {
-        var list = new List<ActionKind>();
-        foreach (var task in ActionKindMap.WorkOrdered)
-        {
-            if (PriorityOf(characterId, task) > 0)
-                list.Add(task);
-        }
-        list.Sort((a, b) =>
-        {
-            var byPriority = PriorityOf(characterId, a).CompareTo(PriorityOf(characterId, b));
-            return byPriority != 0
-                ? byPriority
-                : Array.IndexOf(ActionKindMap.WorkOrdered, a).CompareTo(Array.IndexOf(ActionKindMap.WorkOrdered, b));
-        });
-        return list;
-    }
+    /// <summary>某角色某段的安排。</summary>
+    public SlotAssignment AssignmentOf(int characterId, int slot) =>
+        ScheduleOf(characterId).Slots[slot];
 
     /// <summary>
-    /// 结算一个 6 小时委派块。同一设施按 Capacity 先到先得。
-    /// 工作时段按优先级表挑活；空闲与不干活不出产。
+    /// 结算一个 6 小时段（测试钩子）：工作时段到点名的那件设施干活，
+    /// 同一件设施按 Capacity 先到先得；空闲与娱乐不出产。
+    /// 真实时间不走这里——那在 <see cref="TerritoryClock.Step"/>。
     /// </summary>
-    public List<WorkLog> ResolveSlot(int slot, Roster roster, Func<int, int>? roll = null)
+    public List<WorkLog> ResolveSlot(int slot, Roster roster, Func<int, int>? roll = null, Season season = Season.Spring)
     {
         var logs = new List<WorkLog>();
         var used = new Dictionary<int, int>();
@@ -659,43 +1400,54 @@ public sealed class Territory
         {
             if (character.IsMaster)
                 continue;
-            var mode = ScheduleOf(character.Id).Slots[slot];
-            if (mode != SlotMode.Work)
+            var assignment = ScheduleOf(character.Id).Slots[slot];
+            if (assignment.Mode != SlotMode.Work || assignment.FacilityId < 0)
                 continue;
-            var log = ResolveOne(slot, character, used, roll);
+            var facility = Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
+            if (facility == null || used.GetValueOrDefault(facility.Id) >= facility.Capacity)
+                continue;
+            if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(TaskOf(facility))!.Value))
+                || !character.Affect.AcceptsWork())
+                continue;
+            used[facility.Id] = used.GetValueOrDefault(facility.Id) + 1;
+            var task = TaskOf(facility);
+            var log = ActionKindMap.IsExtractive(task)
+                ? Gather(slot, character, facility, task, roll, season)
+                : Craft(slot, character, facility, task);
             if (log != null)
                 logs.Add(log);
         }
         return logs;
     }
 
-    private WorkLog? ResolveOne(
-        int slot, CharacterState character, Dictionary<int, int> used, Func<int, int>? roll)
+    /// <summary>设施支持的第一件工作行动；没有返回 None。</summary>
+    private static ActionKind TaskOf(Facility facility)
     {
-        foreach (var task in TasksByPriority(character.Id))
+        foreach (var task in ActionKindMap.WorkOrdered)
         {
-            if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(task)!.Value)) || !character.Affect.AcceptsWork())
-                return null;
-            var facility = Claim(task, used);
-            if (facility == null)
-                continue;
-            used[facility.Id] = used.GetValueOrDefault(facility.Id) + 1;
-            return ActionKindMap.IsExtractive(task)
-                ? Gather(slot, character, facility, task, false, roll)
-                : Craft(slot, character, facility, task, false);
+            if (facility.Supports(task))
+                return task;
         }
-        return null;
+        return ActionKind.None;
     }
 
-    private Facility? Claim(ActionKind task, Dictionary<int, int> used) =>
-        Facilities.Find(f => f.Supports(task) && HasSeat(f, used));
-
-    private static bool HasSeat(Facility facility, Dictionary<int, int> used) =>
-        used.GetValueOrDefault(facility.Id) < facility.Capacity;
-
     private WorkLog Gather(
-        int slot, CharacterState character, Facility facility, ActionKind task, bool fallback, Func<int, int>? roll)
+        int slot, CharacterState character, Facility facility, ActionKind task,
+        Func<int, int>? roll, Season season)
     {
+        // 耕地按播种/收获结算；生长中或没种可播时这一格空过（无产出）。
+        var farm = FarmWork(character, facility, task, season, null, out var handled);
+        if (handled)
+        {
+            return farm ?? new WorkLog
+            {
+                CharacterId = character.Id,
+                Slot = slot,
+                Task = task,
+                ItemId = facility.YieldItemId,
+                Skill = ActionKindMap.SkillOf(task)!.Value,
+            };
+        }
         var stat = Math.Max(1, character.Life(ActionKindMap.SkillOf(task)!.Value));
         var amount = Math.Clamp(stat / 40, 1, 4);
         if (roll != null)
@@ -712,14 +1464,13 @@ public sealed class Territory
             Count = amount,
             Skill = ActionKindMap.SkillOf(task)!.Value,
             Exp = GatherExp,
-            Fallback = fallback,
         };
     }
 
     private WorkLog? Craft(
-        int slot, CharacterState character, Facility facility, ActionKind task, bool fallback)
+        int slot, CharacterState character, Facility facility, ActionKind task)
     {
-        var recipe = PickRecipe(character, task, "");
+        var recipe = Recipes.Find(r => r.Station == task && CanPayWith(character, r.Costs));
         if (recipe == null || !PayWith(character, recipe.Costs))
             return null;
         // 成品优先进同房仓储，没有仓储就进制作者背包。
@@ -734,18 +1485,6 @@ public sealed class Territory
             Count = recipe.OutputCount,
             Skill = recipe.Skill,
             Exp = CraftExp,
-            Fallback = fallback,
         };
-    }
-
-    private Recipe? PickRecipe(CharacterState character, ActionKind station, string orderItemId)
-    {
-        if (orderItemId.Length > 0)
-        {
-            var ordered = Recipes.Find(r => r.Station == station && r.ItemId == orderItemId);
-            if (ordered != null && CanPayWith(character, ordered.Costs))
-                return ordered;
-        }
-        return Recipes.Find(r => r.Station == station && CanPayWith(character, r.Costs));
     }
 }

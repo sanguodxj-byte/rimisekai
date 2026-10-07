@@ -1,4 +1,5 @@
 using Rimisekai.Character;
+using Rimisekai.Defs;
 
 namespace Rimisekai.Housing;
 
@@ -25,20 +26,20 @@ public enum ActionKind
     /// <summary>伐木。采掘。</summary>
     Fell = 1,
 
-    /// <summary>取水。搬运。</summary>
-    DrawWater = 2,
-
     /// <summary>锻造。锻造。</summary>
-    Forge = 3,
+    Forge = 2,
 
     /// <summary>耕作。种植。</summary>
-    Till = 4,
+    Till = 3,
 
     /// <summary>饲养。驯兽。</summary>
-    Tend = 5,
+    Tend = 4,
 
     /// <summary>表演。社交。</summary>
-    Perform = 6,
+    Perform = 5,
+
+    /// <summary>交易。社交。在摊位上做买卖。</summary>
+    Trade = 6,
 
     /// <summary>木工。手工。</summary>
     Woodwork = 7,
@@ -46,14 +47,11 @@ public enum ActionKind
     /// <summary>缝纫。手工。</summary>
     Sew = 8,
 
-    /// <summary>工艺。手工。</summary>
-    Tinker = 9,
-
     /// <summary>炼金。研究。</summary>
-    Brew = 10,
+    Brew = 9,
 
     /// <summary>烹饪。烹饪。</summary>
-    Cook = 11,
+    Cook = 10,
 
     // ---------- 日常行动（在设施上起居） ----------
 
@@ -93,9 +91,6 @@ public enum ActionKind
     /// <summary>眺望远方。</summary>
     Lookout = 31,
 
-    /// <summary>摆摊。</summary>
-    Trade = 32,
-
     /// <summary>存取东西。</summary>
     Store = 33,
 
@@ -115,11 +110,15 @@ public enum ActionKind
 
     /// <summary>闲转：无委派时的默认行为，歇脚或逛逛。</summary>
     Loiter = 52,
+
+    /// <summary>跟随：接受邀请后跟着玩家走，玩家干什么就在旁边。</summary>
+    Follow = 53,
 }
 
 /// <summary>行动的分类与派生属性。</summary>
 public static class ActionKindMap
 {
+
     /// <summary>是不是工作行动（归工种、有产出、可委派）。</summary>
     public static bool IsWork(ActionKind action) => action is >= ActionKind.Mine and <= ActionKind.Cook;
 
@@ -134,41 +133,59 @@ public static class ActionKindMap
         action is ActionKind.Haul or ActionKind.SeekChat or ActionKind.Loiter;
 
     /// <summary>工作行动归入哪个工种。非工作行动返回 null。</summary>
-    public static WorkType? TypeOf(ActionKind action) => action switch
+    public static WorkType? TypeOf(ActionKind action)
     {
-        ActionKind.Mine => WorkType.Excavate,
-        ActionKind.Fell => WorkType.Excavate,
-        ActionKind.DrawWater => WorkType.Haul,
-        ActionKind.Forge => WorkType.Smithing,
-        ActionKind.Till => WorkType.Farming,
-        ActionKind.Tend => WorkType.Husbandry,
-        ActionKind.Perform => WorkType.Social,
-        ActionKind.Woodwork => WorkType.Craft,
-        ActionKind.Sew => WorkType.Craft,
-        ActionKind.Tinker => WorkType.Craft,
-        ActionKind.Brew => WorkType.Research,
-        ActionKind.Cook => WorkType.Cooking,
-        _ => null,
-    };
+        var def = DefDatabase<ActionDef>.Get(action.ToString());
+        if (def != null && !string.IsNullOrEmpty(def.WorkType))
+        {
+            if (System.Enum.TryParse<WorkType>(def.WorkType, ignoreCase: true, out var wt))
+                return wt;
+        }
+
+        return action switch
+        {
+            ActionKind.Mine => WorkType.Excavate,
+            ActionKind.Fell => WorkType.Excavate,
+            ActionKind.Forge => WorkType.Smithing,
+            ActionKind.Till => WorkType.Farming,
+            ActionKind.Tend => WorkType.Husbandry,
+            ActionKind.Perform => WorkType.Social,
+            ActionKind.Trade => WorkType.Social,
+            ActionKind.Woodwork => WorkType.Craft,
+            ActionKind.Sew => WorkType.Craft,
+            ActionKind.Brew => WorkType.Research,
+            ActionKind.Cook => WorkType.Cooking,
+            _ => null,
+        };
+    }
 
     /// <summary>工作行动对应的生活技能。非工作行动返回 null。</summary>
-    public static LifeSkill? SkillOf(ActionKind action) => action switch
+    public static LifeSkill? SkillOf(ActionKind action)
     {
-        ActionKind.Mine or ActionKind.Fell => LifeSkill.Mining,
-        ActionKind.DrawWater => LifeSkill.Haul,
-        ActionKind.Forge => LifeSkill.Smithing,
-        ActionKind.Till => LifeSkill.Farming,
-        ActionKind.Tend => LifeSkill.Husbandry,
-        ActionKind.Perform => LifeSkill.Social,
-        ActionKind.Woodwork or ActionKind.Sew or ActionKind.Tinker => LifeSkill.Craft,
-        ActionKind.Brew => LifeSkill.Research,
-        ActionKind.Cook => LifeSkill.Cooking,
-        _ => null,
-    };
+        var def = DefDatabase<ActionDef>.Get(action.ToString());
+        if (def != null && !string.IsNullOrEmpty(def.Skill))
+        {
+            if (System.Enum.TryParse<LifeSkill>(def.Skill, ignoreCase: true, out var ls))
+                return ls;
+        }
+
+        return action switch
+        {
+            ActionKind.Mine or ActionKind.Fell => LifeSkill.Mining,
+            ActionKind.Forge => LifeSkill.Smithing,
+            ActionKind.Till => LifeSkill.Farming,
+            ActionKind.Tend => LifeSkill.Husbandry,
+            ActionKind.Perform or ActionKind.Trade => LifeSkill.Social,
+            ActionKind.Woodwork or ActionKind.Sew => LifeSkill.Craft,
+            ActionKind.Brew => LifeSkill.Research,
+            ActionKind.Cook => LifeSkill.Cooking,
+            _ => null,
+        };
+    }
 
     /// <summary>采集类工作行动：产量按技能算，受季节天气影响。</summary>
     public static bool IsExtractive(ActionKind action) =>
-        action is ActionKind.Mine or ActionKind.Fell or ActionKind.DrawWater
+        action is ActionKind.Mine or ActionKind.Fell
             or ActionKind.Till or ActionKind.Tend;
 
     /// <summary>可委派的工作行动，按工作页行序。</summary>
@@ -176,25 +193,16 @@ public static class ActionKindMap
     {
         ActionKind.Mine,
         ActionKind.Fell,
-        ActionKind.DrawWater,
         ActionKind.Forge,
         ActionKind.Till,
         ActionKind.Tend,
         ActionKind.Perform,
+        ActionKind.Trade,
         ActionKind.Woodwork,
         ActionKind.Sew,
-        ActionKind.Tinker,
         ActionKind.Brew,
         ActionKind.Cook,
     };
-
-    /// <summary>优先级档位：1 最高、4 最低；0 表示不做。</summary>
-    public const int MaxPriority = 4;
-    public const int MinPriority = 1;
-
-    /// <summary>把优先级收进合法范围：0（不做）或 1-4。</summary>
-    public static int ClampPriority(int value) =>
-        value <= 0 ? 0 : System.Math.Min(value, MaxPriority);
 
     /// <summary>技能基准点：这一档技能值对应 100% 速度。</summary>
     public const int SkillBaseline = 40;
@@ -217,50 +225,63 @@ public static class ActionKindMap
         return System.Math.Clamp(100 + (value - SkillBaseline), SpeedMinPercent, SpeedMaxPercent);
     }
 
-    /// <summary>行动名。工作页行名、日志文案都取这里。</summary>
-    public static string LabelOf(ActionKind action) => action switch
+    /// <summary>行动名。工作页行名、日志文案优先取数据表。</summary>
+    public static string LabelOf(ActionKind action)
     {
-        ActionKind.Mine => "挖矿",
-        ActionKind.Fell => "伐木",
-        ActionKind.DrawWater => "取水",
-        ActionKind.Forge => "锻造",
-        ActionKind.Till => "耕作",
-        ActionKind.Tend => "饲养",
-        ActionKind.Perform => "表演",
-        ActionKind.Woodwork => "木工",
-        ActionKind.Sew => "缝纫",
-        ActionKind.Tinker => "工艺",
-        ActionKind.Brew => "炼金",
-        ActionKind.Cook => "烹饪",
-        ActionKind.Meal => "吃饭",
-        ActionKind.Sleep => "睡觉",
-        ActionKind.Rest => "休息",
-        ActionKind.Bathe => "洗澡",
-        ActionKind.Drink => "喝一杯",
-        ActionKind.Read => "看书",
-        ActionKind.Pray => "祈祷",
-        ActionKind.Train => "操练",
-        ActionKind.Meditate => "冥想",
-        ActionKind.Watch => "看戏",
-        ActionKind.Stargaze => "看星星",
-        ActionKind.Lookout => "眺望",
-        ActionKind.Trade => "摆摊",
-        ActionKind.Store => "存取",
-        ActionKind.Observe => "观察",
-        ActionKind.Haul => "搬运",
-        ActionKind.SeekChat => "搭话",
-        ActionKind.Loiter => "闲转",
-        _ => "?",
-    };
+        var def = DefDatabase<ActionDef>.Get(action.ToString());
+        if (def != null && !string.IsNullOrEmpty(def.Label))
+            return def.Label;
 
-    /// <summary>行动的耗时（格，1 格=5 分钟）。</summary>
-    public static int Ticks(ActionKind action) => action switch
+        return action switch
+        {
+            ActionKind.Mine => "挖矿",
+            ActionKind.Fell => "伐木",
+            ActionKind.Forge => "锻造",
+            ActionKind.Till => "耕作",
+            ActionKind.Tend => "饲养",
+            ActionKind.Perform => "表演",
+            ActionKind.Trade => "交易",
+            ActionKind.Woodwork => "木工",
+            ActionKind.Sew => "缝纫",
+            ActionKind.Brew => "炼金",
+            ActionKind.Cook => "烹饪",
+            ActionKind.Meal => "吃饭",
+            ActionKind.Sleep => "睡觉",
+            ActionKind.Rest => "休息",
+            ActionKind.Bathe => "洗澡",
+            ActionKind.Drink => "喝一杯",
+            ActionKind.Read => "看书",
+            ActionKind.Pray => "祈祷",
+            ActionKind.Train => "操练",
+            ActionKind.Meditate => "冥想",
+            ActionKind.Watch => "看戏",
+            ActionKind.Stargaze => "看星星",
+            ActionKind.Lookout => "眺望",
+            ActionKind.Store => "存取",
+            ActionKind.Observe => "观察",
+            ActionKind.Haul => "搬运",
+            ActionKind.SeekChat => "搭话",
+            ActionKind.Loiter => "闲转",
+            ActionKind.Follow => "跟随",
+            _ => "?",
+        };
+    }
+
+    /// <summary>行动的耗时（格，1 格=5 分钟）。优先取数据表配置。</summary>
+    public static int Ticks(ActionKind action)
     {
-        ActionKind.Cook or ActionKind.Tinker => 6,
-        ActionKind.Woodwork or ActionKind.Sew => 12,
-        ActionKind.Forge or ActionKind.Brew => 24,
-        ActionKind.Mine or ActionKind.Fell or ActionKind.DrawWater
-            or ActionKind.Till or ActionKind.Tend => 8,
-        _ => 4,
-    };
+        var def = DefDatabase<ActionDef>.Get(action.ToString());
+        if (def != null && def.Ticks > 0)
+            return def.Ticks;
+
+        return action switch
+        {
+            ActionKind.Cook or ActionKind.Trade => 6,
+            ActionKind.Woodwork or ActionKind.Sew => 12,
+            ActionKind.Forge or ActionKind.Brew => 24,
+            ActionKind.Mine or ActionKind.Fell
+                or ActionKind.Till or ActionKind.Tend => 8,
+            _ => 4,
+        };
+    }
 }

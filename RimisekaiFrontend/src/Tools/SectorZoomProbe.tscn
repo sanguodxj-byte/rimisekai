@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://badhat4aojcxi"]
+
+[ext_resource type="Script" uid="uid://drhntk1ybsuud" path="res://RimisekaiFrontend/src/Tools/SectorZoomProbe.cs" id="1_szp"]
+
+[node name="SectorZoomProbe" type="Node"]
+script = ExtResource("1_szp")

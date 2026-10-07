@@ -1,0 +1,19 @@
+{
+  "defType": "WorldSeedDef",
+  "defs": [
+    {
+      "defName": "World_Standard",
+      "label": "标准世界设定",
+      "territoryName": "领地",
+      "foods": [
+        "干粮",
+        "bread",
+        "stew",
+        "果实",
+        "鸡蛋",
+        "蜂蜜",
+        "鱼"
+      ]
+    }
+  ]
+}

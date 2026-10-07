@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Rimisekai.Character;
 using Rimisekai.Clock;
@@ -7,6 +8,9 @@ namespace Rimisekai.Hub;
 
 /// <summary>存储页的一行：某件物品在设施里/背包里各有多少。</summary>
 public readonly record struct StorageRow(string ItemId, int InStorage, int InBag);
+
+/// <summary>存储配置页的品类行：整个品类收或不收。</summary>
+public readonly record struct StorageCategoryRow(string DefName, string Label, bool Accepted);
 
 /// <summary>
 /// 玩家对设施的存取与存储配置。与 NPC 搬运共用 Territory 的底层（StoreFrom/TakeFrom），
@@ -91,29 +95,58 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 切换当前设施对某物品的收放：在“只收这些”与“不收这个”之间切换。
-    /// 过滤器为空时表示来者不拒；一旦开始排除，就变成白名单。
+    /// 切换当前设施对某条目（物品 Id 或品类 DefName）的收放。
+    /// 过滤器为空表示来者不拒；一旦开始排除，就变成白名单。
+    /// 从“全收”切到“只收某条”时，把其余可见条目先加进白名单，保持“只此一项”的语义。
     /// </summary>
-    public bool ToggleStorageFilter(string itemId)
+    public bool ToggleStorageFilter(string entry)
     {
         var facility = OpenStorageFacility;
-        if (facility == null || itemId.Length == 0)
+        if (facility == null || entry.Length == 0)
             return false;
         if (facility.StorageFilter.Count == 0)
         {
-            // 原本全部允许；要禁止这件，先把其他既有物品加进白名单。
             foreach (var row in StorageRows())
             {
-                if (row.ItemId != itemId)
+                if (row.ItemId != entry)
                     facility.StorageFilter.Add(row.ItemId);
+            }
+            var itemDef = Defs.Items.Get(entry);
+            foreach (var cat in StorageCategoryRows())
+            {
+                if (cat.DefName != entry && (itemDef == null || !itemDef.IsInCategory(cat.DefName)))
+                    facility.StorageFilter.Add(cat.DefName);
             }
             return true;
         }
-        if (facility.StorageFilter.Contains(itemId))
-            facility.StorageFilter.Remove(itemId);
+        if (facility.StorageFilter.Contains(entry))
+            facility.StorageFilter.Remove(entry);
         else
-            facility.StorageFilter.Add(itemId);
+            facility.StorageFilter.Add(entry);
         return true;
+    }
+
+    /// <summary>
+    /// 存储配置页的品类行：内容包里注册的全部品类（不含根），
+    /// 标注当前设施收不收整个品类。按品类开关比逐物品勾选省事。
+    /// </summary>
+    public IReadOnlyList<StorageCategoryRow> StorageCategoryRows()
+    {
+        var facility = OpenStorageFacility;
+        if (facility == null)
+            return new List<StorageCategoryRow>();
+
+        var list = new List<StorageCategoryRow>();
+        foreach (var cat in Defs.DefDatabase<Defs.ThingCategoryDef>.All)
+        {
+            if (cat.DefName.Equals("Root", StringComparison.OrdinalIgnoreCase))
+                continue;
+            list.Add(new StorageCategoryRow(
+                cat.DefName,
+                cat.Label,
+                facility.StorageFilter.Count == 0 || facility.StorageFilter.Contains(cat.DefName)));
+        }
+        return list;
     }
 
     /// <summary>调整当前设施的容量（0 = 不限）。</summary>

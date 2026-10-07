@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Character;
 using Rimisekai.Clock;
 
@@ -37,6 +38,21 @@ public sealed class VoiceGate
 
     public int? MoodMin { get; set; }
     public int? MoodMax { get; set; }
+
+    /// <summary>说话人是否湿透。true=只对湿透的人生效，false=只对没湿透的人生效。</summary>
+    public bool? Soaked { get; set; }
+
+    /// <summary>说话人等级下限（含）。</summary>
+    public int? LevelMin { get; set; }
+
+    /// <summary>是否要求全队角色均已满级（100级）。苛刻剧情使用。</summary>
+    public bool? AllMembersMaxLevel { get; set; }
+
+    /// <summary>是否要求刚从战斗/副本胜利归来。同床共寝或归来剧情使用。</summary>
+    public bool? ReturnedFromCombat { get; set; }
+
+    /// <summary>所在房间包含这些标签之一（如"卧室"、"室外"等）。</summary>
+    public List<string> RoomTags { get; set; } = new();
 
     /// <summary>身上有这些素质。</summary>
     public List<Trait> RequireTraits { get; set; } = new();
@@ -140,6 +156,14 @@ public sealed class VoiceGate
             return false;
         if (MoodMax.HasValue && character.Affect.Mood > MoodMax.Value)
             return false;
+        if (Soaked.HasValue && character.Condition.Soaked != Soaked.Value)
+            return false;
+        if (LevelMin.HasValue && character.Level < LevelMin.Value)
+            return false;
+        if (AllMembersMaxLevel.HasValue && ctx.AllMembersMaxLevel != AllMembersMaxLevel.Value)
+            return false;
+        if (ReturnedFromCombat.HasValue && ctx.ReturnedFromCombat != ReturnedFromCombat.Value)
+            return false;
 
         foreach (var trait in RequireTraits)
         {
@@ -212,6 +236,21 @@ public sealed class VoiceGate
         if (RoomIds.Count > 0 && !RoomIds.Contains(ctx.CharacterRoomId))
             return false;
 
+        if (RoomTags.Count > 0)
+        {
+            var match = false;
+            foreach (var tag in RoomTags)
+            {
+                if (ctx.RoomTags.Contains(tag))
+                {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match)
+                return false;
+        }
+
         return true;
     }
 
@@ -220,7 +259,7 @@ public sealed class VoiceGate
     {
         var memory = ctx.Memory;
 
-        if (Once && memory.HasSaid(lineId))
+        if (Once && (memory.HasSaid(lineId) || ctx.FiredEvents.Contains(lineId)))
             return false;
 
         foreach (var required in RequireSaid)

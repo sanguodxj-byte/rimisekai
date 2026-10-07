@@ -1,6 +1,8 @@
+﻿using System.Linq;
 using System;
 using System.Collections.Generic;
 using Godot;
+using Rimisekai.Hub;
 
 namespace Rimisekai.Ink;
 
@@ -26,28 +28,19 @@ public static class InkDraw
         if (dense.Count < 2)
             return;
 
-        var count = dense.Count;
-        var last = closed ? count : count - 1;
-        var outPts = new Vector2[closed ? count : count];
-        for (var i = 0; i < count; i++)
+        // 主人指示：彻底废除扭曲与手绘抖动，所有线条拉直，画干净挺拔的线条。
+        var ptsArray = pts.ToArray();
+        if (closed && ptsArray.Length > 0 && ptsArray[0] != ptsArray[^1])
         {
-            var prev = dense[(i - 1 + count) % count];
-            var next = dense[(i + 1) % count];
-            var tangent = (next - prev);
-            if (tangent.LengthSquared() < 1e-8f)
-                tangent = Vector2.Right;
-            var normal = tangent.Normalized().Orthogonal();
-
-            // 开线两端收敛，闭合线不做收敛。
-            var taper = closed ? 1f : Taper(i, last);
-            var off = Noise(i * 0.37f, seed) * amp * taper;
-            outPts[i] = dense[i] + normal * off;
+            var closedPts = new Vector2[ptsArray.Length + 1];
+            Array.Copy(ptsArray, closedPts, ptsArray.Length);
+            closedPts[^1] = ptsArray[0];
+            ci.DrawPolyline(closedPts, color, width, true);
         }
-
-        if (closed)
-            outPts[count - 1] = outPts[0];
-
-        ci.DrawPolyline(outPts, color, width, true);
+        else
+        {
+            ci.DrawPolyline(ptsArray, color, width, true);
+        }
     }
 
     private static float Taper(int i, int last)
@@ -59,10 +52,19 @@ public static class InkDraw
         return d >= edge ? 1f : d / (float)edge;
     }
 
-    /// <summary>直线笔画。</summary>
+    // 🚨 手绘抖动笔画（曾用名 `Sketch`）已于 2026-10-01 被主人**全局禁止**并删除，
+    // 禁止以任何名义再引入。它曾被短暂恢复过一版（按 8px 重采样、沿法线做确定性偏移、
+    // 端点收幅），主人看到成品后明确否掉：「不要抖动笔画，全局禁止这玩意」。
+    // 结论：**所有线条一律拉直**。要手绘感靠**纹样本身的疏密与转折**，
+    // 不靠把线画歪——把线画歪只会让界面显脏。
+
+    /// <summary>
+    /// 直线笔画。干净直线，不做手绘抖动（扭曲折线已废除，主人 2026-09-30 定）；
+    /// width 之外的 amp/seed 参数位保留，调用点无需改动，不再生效。
+    /// </summary>
     public static void InkLine(CanvasItem ci, Vector2 a, Vector2 b, Color color,
         float width = 1f, float amp = 1f, int seed = 1) =>
-        Ink(ci, new[] { a, b }, color, width, amp, seed);
+        ci.DrawLine(a, b, color, width, antialiased: true);
 
     private static List<Vector2> Resample(IReadOnlyList<Vector2> pts, float step, bool closed)
     {
@@ -128,7 +130,7 @@ public static class InkDraw
         return pts;
     }
 
-    /// <summary>菱形珠饰，中心实心点。界面里的端点装饰都用它。</summary>
+    /// <summary>菱形珠饰。全项目严禁空心，一律实心填充。</summary>
     public static void Jewel(CanvasItem ci, Vector2 c, float r, Color color, bool filled = true)
     {
         var pts = new[]
@@ -137,57 +139,43 @@ public static class InkDraw
             new Vector2(c.X + r, c.Y),
             new Vector2(c.X, c.Y + r),
             new Vector2(c.X - r, c.Y),
-            new Vector2(c.X, c.Y - r),
         };
-        ci.DrawPolyline(pts, color, 1f, true);
-        if (filled)
-            ci.DrawCircle(c, Mathf.Max(1f, r * 0.32f), color);
-    }
-
-    /// <summary>
-    /// 纸纹：在矩形里铺稀疏的短横纹，模拟铜版纸的颗粒，不要密到发脏。
-    /// </summary>
-    public static void Paper(CanvasItem ci, Rect2 r, Color? color = null, int seed = 1)
-    {
-        var c = color ?? new Color(InkStyle.Line, 0.045f);
-        var rng = new InkRng(seed + (int)r.Position.X * 13 + (int)r.Position.Y * 29);
-        var count = Mathf.Clamp((int)(r.Size.X * r.Size.Y / 2800f), 18, 90);
-        for (var i = 0; i < count; i++)
-        {
-            var x = r.Position.X + rng.Range(2f, r.Size.X - 2f);
-            var y = r.Position.Y + rng.Range(2f, r.Size.Y - 2f);
-            var w = rng.Range(8f, 22f);
-            ci.DrawLine(new Vector2(x, y), new Vector2(x + w, y + rng.Range(-0.6f, 0.6f)), c, 1f);
-        }
+        ci.DrawColoredPolygon(pts, color);
     }
 
     /// <summary>
     /// 角花：沿两条边各画一段 C 卷，末端向内收成小涡，角上嵌一颗珠。
     /// dx/dy 指向框内。装饰贴着边走，不斜着穿过标题。
+    ///
+    /// width / jewel 供竖屏用毫米档笔画：默认值即横屏原值（1.2px 线、2.4px 珠），
+    /// 传默认值时输出与从前逐像素一致。竖屏 1.2px 只有 0.077mm，会画成灰影，必须放大。
     /// </summary>
     public static void CornerFlourish(CanvasItem ci, Vector2 corner, float dx, float dy,
-        Color color, float size = 36f, int seed = 1)
+        Color color, float size = 36f, int seed = 1, float width = 1.2f, float jewel = 2.4f)
     {
         var k = Mathf.Max(20f, size);
-        var origin = corner + new Vector2(dx * 7f, dy * 7f);
+        var origin = corner + new Vector2(dx, dy) * Mathf.Max(7f, width * 2.4f);
         var inward = new Vector2(dx, dy);
 
-        Scroll(ci, origin, new Vector2(dx * k, 0), new Vector2(0, dy), color, seed);
-        Scroll(ci, origin, new Vector2(0, dy * k), new Vector2(dx, 0), color, seed + 3);
+        Scroll(ci, origin, new Vector2(dx * k, 0), new Vector2(0, dy), color, seed, width);
+        Scroll(ci, origin, new Vector2(0, dy * k), new Vector2(dx, 0), color, seed + 3, width);
 
         var inner = k * 0.48f;
-        Scroll(ci, origin + inward * 10f, new Vector2(dx * inner, 0), new Vector2(0, dy),
-            new Color(color, 0.75f), seed + 6);
-        Scroll(ci, origin + inward * 10f, new Vector2(0, dy * inner), new Vector2(dx, 0),
-            new Color(color, 0.75f), seed + 9);
+        Scroll(ci, origin + inward * (k * 0.16f), new Vector2(dx * inner, 0), new Vector2(0, dy),
+            new Color(color, 0.75f), seed + 6, width * 0.875f);
+        Scroll(ci, origin + inward * (k * 0.16f), new Vector2(0, dy * inner), new Vector2(dx, 0),
+            new Color(color, 0.75f), seed + 9, width * 0.875f);
 
-        Jewel(ci, origin, 2.4f, color);
-        Jewel(ci, origin + new Vector2(dx * (k * 0.22f), dy * (k * 0.22f)), 1.5f, color, filled: false);
+        Jewel(ci, origin, jewel, color);
+        Jewel(ci, origin + new Vector2(dx * (k * 0.22f), dy * (k * 0.22f)), jewel * 0.625f, color, filled: false);
     }
 
-    /// <summary>一段贴边的卷轴：直线略弯，末端向内卷一下。</summary>
+    /// <summary>
+    /// 一段贴边的卷轴：直线略弯，末端向内卷一下。
+    /// width 默认 1.2f 即横屏原值；卷曲段的笔画按 width 的 0.875 收细。
+    /// </summary>
     public static void Scroll(CanvasItem ci, Vector2 from, Vector2 along, Vector2 inward,
-        Color color, int seed)
+        Color color, int seed, float width = 1.2f)
     {
         var len = along.Length();
         if (len < 8f)
@@ -195,141 +183,37 @@ public static class InkDraw
         var dir = along / len;
         var n = inward.LengthSquared() < 1e-6f ? dir.Orthogonal() : inward.Normalized();
         var end = from + along;
+        var curl = width * 0.875f;
         Ink(ci, CubicArc(from,
-            from + dir * (len * 0.28f) + n * 2.5f,
-            from + dir * (len * 0.72f) + n * 1.2f,
-            end, 8), color, 1.2f, 0.14f, seed);
+            from + dir * (len * 0.28f) + n * (width * 2.1f),
+            from + dir * (len * 0.72f) + n * (width * 1.0f),
+            end, 8), color, width, 0.14f, seed);
 
         Ink(ci, CubicArc(end,
-            end + dir * 4f + n * 6f,
-            end - dir * 2f + n * 10f,
-            end - dir * 7f + n * 4f, 6), color, 1.05f, 0.12f, seed + 1);
+            end + dir * (width * 3.4f) + n * (width * 5.0f),
+            end - dir * (width * 1.7f) + n * (width * 8.4f),
+            end - dir * (width * 5.9f) + n * (width * 3.4f), 6), color, curl, 0.12f, seed + 1);
     }
 
-    /// <summary>墨线圆：闭合抖动小圆，花瓣与玫瑰结的基本件。</summary>
-    public static void InkCircle(CanvasItem ci, Vector2 c, float r, Color color, int seed = 1)
-    {
-        const int n = 12;
-        var pts = new Vector2[n];
-        for (var i = 0; i < n; i++)
-        {
-            var a = Mathf.Tau * i / n;
-            pts[i] = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
-        }
-        Ink(ci, pts, color, 1f, Mathf.Clamp(r * 0.12f, 0.1f, 0.4f), seed, closed: true);
-    }
-
-    /// <summary>玫瑰结：六瓣小环抱着中心珠，花带方格里的填充纹样。</summary>
-    public static void Rosette(CanvasItem ci, Vector2 c, float r, Color color, int seed = 1)
-    {
-        const int petals = 6;
-        for (var i = 0; i < petals; i++)
-        {
-            var a = Mathf.Tau * i / petals + seed * 0.07f;
-            InkCircle(ci, c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r * 0.46f,
-                r * 0.42f, color, seed + i);
-        }
-        Jewel(ci, c, Mathf.Max(1.4f, r * 0.18f), color);
-    }
-
-    /// <summary>
-    /// 连续花带：上下双轨之间排满方格，每格一种纹样（玫瑰结/菱珠/对叶），格间短竖刻。
-    /// 参考稿外框与标题带下缘的花边就是它；只画横向通栏。
-    /// </summary>
-    public static void Frieze(CanvasItem ci, Rect2 band, Color color, int seed = 1)
-    {
-        var h = band.Size.Y;
-        if (h < 10f || band.Size.X < h * 3f)
-            return;
-
-        var dim = new Color(InkStyle.Dim, 0.6f);
-
-        // 双轨：亮线贴边，暗线靠内。
-        InkLine(ci, new Vector2(band.Position.X, band.Position.Y + 1.5f),
-            new Vector2(band.End.X, band.Position.Y + 1.5f), color, 1.2f, 0.22f, seed);
-        InkLine(ci, new Vector2(band.Position.X, band.Position.Y + 4.5f),
-            new Vector2(band.End.X, band.Position.Y + 4.5f), dim, 0.9f, 0.16f, seed + 1);
-        InkLine(ci, new Vector2(band.Position.X, band.End.Y - 4.5f),
-            new Vector2(band.End.X, band.End.Y - 4.5f), dim, 0.9f, 0.16f, seed + 2);
-        InkLine(ci, new Vector2(band.Position.X, band.End.Y - 1.5f),
-            new Vector2(band.End.X, band.End.Y - 1.5f), color, 1.2f, 0.22f, seed + 3);
-
-        // 方格纹样：不足一格的余量均分到两端，纹样带整体居中。
-        var cell = h - 6f;
-        var n = Math.Max(1, (int)(band.Size.X / cell));
-        var x0 = band.Position.X + (band.Size.X - n * cell) / 2f;
-        var cy = band.GetCenter().Y;
-
-        for (var i = 0; i < n; i++)
-        {
-            var c = new Vector2(x0 + (i + 0.5f) * cell, cy);
-            switch ((seed + i) % 3)
-            {
-                case 0:
-                    Rosette(ci, c, cell * 0.34f, color, seed + i * 7);
-                    break;
-                case 1:
-                    Jewel(ci, c, cell * 0.24f, color);
-                    Jewel(ci, c + new Vector2(-cell * 0.34f, 0f), 1.3f, dim, filled: false);
-                    Jewel(ci, c + new Vector2(cell * 0.34f, 0f), 1.3f, dim, filled: false);
-                    break;
-                default:
-                    // 对叶：一对镜像弧，从底中分向两侧。
-                    var foot = c + new Vector2(0f, cell * 0.26f);
-                    Ink(ci, QuadArc(foot,
-                        c + new Vector2(-cell * 0.30f, cell * 0.02f),
-                        c + new Vector2(-cell * 0.20f, -cell * 0.26f), 5),
-                        color, 1f, 0.10f, seed + i * 7 + 3);
-                    Ink(ci, QuadArc(foot,
-                        c + new Vector2(cell * 0.30f, cell * 0.02f),
-                        c + new Vector2(cell * 0.20f, -cell * 0.26f), 5),
-                        color, 1f, 0.10f, seed + i * 7 + 4);
-                    break;
-            }
-
-            if (i > 0)
-            {
-                var x = x0 + i * cell;
-                InkLine(ci, new Vector2(x, band.Position.Y + 6f),
-                    new Vector2(x, band.End.Y - 6f), dim, 0.9f, 0.12f, seed + 100 + i);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 箭头收头：指向 dir（+1 右 / -1 左）的外向箭头。
-    /// 主刺两笔外撇，根部一枚菱珠压住接口；花带两端的闭合件。
-    /// </summary>
-    public static void ArrowHead(CanvasItem ci, Vector2 tip, float dir, Color color, int seed = 1)
-    {
-        const float spread = 9f;
-        const float back = 13f;
-        InkLine(ci, tip, new Vector2(tip.X - dir * back, tip.Y - spread), color, 1.4f, 0.25f, seed);
-        InkLine(ci, tip, new Vector2(tip.X - dir * back, tip.Y + spread), color, 1.4f, 0.25f, seed + 1);
-        InkLine(ci, new Vector2(tip.X - dir * 3f, tip.Y - spread * 0.55f),
-            new Vector2(tip.X - dir * 3f, tip.Y + spread * 0.55f), color, 1f, 0.18f, seed + 2);
-        Jewel(ci, new Vector2(tip.X - dir * (back + 5f), tip.Y), 2.2f, color);
-    }
-
-    /// <summary>
-    /// 箭头闭合花带：连续花带两端各一个外向箭头收头，
-    /// 让通栏饰带从箭头到箭头读作一件完整饰品。标题带下缘用。
-    /// </summary>
-    public static void FriezeClosed(CanvasItem ci, Rect2 band, Color color, int seed = 1)
-    {
-        Frieze(ci, band, color, seed);
-        var cy = band.GetCenter().Y;
-        ArrowHead(ci, new Vector2(band.Position.X - 11f, cy), -1f, color, seed + 40);
-        ArrowHead(ci, new Vector2(band.End.X + 11f, cy), 1f, color, seed + 44);
-    }
+    // 🚨 2026-10-01 主人否掉全部「厚框条」方案，整支已删除，禁止以任何名义回退：
+    //   `BandGrain`（框条走向细纹）、`Rosette` / `RoseFrieze`（玫瑰花结/花带）、
+    //   `BorderBand`（厚白浮雕框 + 铜版墨框两案）、`WhitePlateFrame` 开关。
+    // 主人原话：「都不通过，回到最初的边框形态」。
+    // **边框一律回到最初的细双线框＋四角角花**（见 `InkFrame.Panel` / `InkFrame.Zone`）。
+    // 走过的弯路（别再走）：卷草缠枝实心浮雕 → 骨脊框 → 骨板框 → 玫瑰花带雕花框，
+    // 全部被否。教训：框条一旦加厚，它就变成画面的主角，把内容压死。
 
     /// <summary>
     /// 四角交叉排线：v1 参考图里"细排线贴着四角、向黑场渐隐"的手绘底纹。
     /// 沿两条对角线方向排细线，越靠外越淡，偶发断线保留手绘感；
     /// 只做角部气氛，不抢角花。排线画在角花之前，让卷草压在纹理上。
+    ///
+    /// width / spacing 供竖屏用毫米档：默认 1px 线、7px 间隔即横屏原值。
+    /// 竖屏传 3px 线、15px 间隔——1px 排线在手机上糊成一层灰雾，读不出是排线。
     /// </summary>
     public static void CornerEtching(CanvasItem ci, Rect2 r, Color? color = null,
-        float alpha = 0.09f, float zone = 240f, int seed = 9030)
+        float alpha = 0.09f, float zone = 240f, int seed = 9030,
+        float width = 1f, float spacing = 7f)
     {
         var c = color ?? new Color(InkStyle.Line, alpha);
         var corners = new[]
@@ -350,17 +234,16 @@ public static class InkDraw
                             sy > 0 ? corner.Y : corner.Y - zone),
                 new Vector2(zone, zone));
 
-            EtchFan(ci, corner, zr, sx, sy, c, seed + k * 17);
+            EtchFan(ci, corner, zr, sx, sy, c, seed + k * 17, width, spacing);
         }
     }
 
     /// <summary>一个角上的双向扇形排线：以角为源，四个斜向铺细线。</summary>
     private static void EtchFan(CanvasItem ci, Vector2 corner, Rect2 zone,
-        float sx, float sy, Color c, int seed)
+        float sx, float sy, Color c, int seed, float width, float spacing)
     {
         var rng = new InkRng(seed);
         const float step = 4f;
-        const float spacing = 7f;
 
         foreach (var (ux, uy) in new[] { (sx, sy), (sx, -sy) })
         {
@@ -386,14 +269,14 @@ public static class InkDraw
                         line.Add(p);
                     else if (line.Count > 1)
                     {
-                        ci.DrawPolyline(line.ToArray(), new Color(c, c.A * fade), 1f);
+                        ci.DrawPolyline(line.ToArray(), new Color(c, c.A * fade), width);
                         line.Clear();
                     }
                     else
                         line.Clear();
                 }
                 if (line.Count > 1)
-                    ci.DrawPolyline(line.ToArray(), new Color(c, c.A * fade), 1f);
+                    ci.DrawPolyline(line.ToArray(), new Color(c, c.A * fade), width);
             }
         }
     }
@@ -512,74 +395,520 @@ public static class InkDraw
         }
     }
 
-    // ---------- 人形 ----------
+    /// <summary>
+    /// 多边形：先实填底色（压住后方网格线），再沿边描一圈干净墨线。
+    /// 三角瓦片、任意多边构件都用它；轮廓走 Ink，线条风格与全界面一致。
+    /// </summary>
+    public static void Polygon(CanvasItem ci, IReadOnlyList<Vector2> pts, Color color,
+        Color? fill = null, float width = 1.3f, float amp = 0.3f, int seed = 1)
+    {
+        if (pts.Count < 3)
+            return;
+
+        var loop = new Vector2[pts.Count];
+        for (var i = 0; i < pts.Count; i++)
+            loop[i] = pts[i];
+
+        if (fill.HasValue)
+            ci.DrawColoredPolygon(loop, fill.Value);
+
+        Ink(ci, loop, color, width, amp, seed, closed: true);
+    }
 
     /// <summary>
-    /// 站立人形线稿。cx 是中轴，footY 是脚底，h 是总高。
-    /// 头、肩、束腰长袍轮廓加两道衣褶，比单纯的圆圈加梯形更耐看。
+    /// 弧线：以 center 为心、radius 为半径，从 a0 到 a1 的墨线圆弧。
+    /// 星盘的外圈与环界用它；steps 越大越圆滑。
     /// </summary>
-    public static void Figure(CanvasItem ci, float cx, float footY, float h, Color color, int seed = 7)
+    public static void Arc(CanvasItem ci, Vector2 center, float radius, float a0, float a1,
+        Color color, float width = 1f, int steps = 48, int seed = 1)
     {
-        var headR = h * 0.115f;
-        var headY = footY - h * 0.875f;
-        var shoulderY = footY - h * 0.70f;
-        var waistY = footY - h * 0.42f;
-        var hemHalf = h * 0.185f;
-        var shoulderHalf = h * 0.155f;
-        var waistHalf = h * 0.115f;
-
-        // 头
-        var head = new Vector2[25];
-        for (var i = 0; i < 24; i++)
+        if (steps < 2)
+            return;
+        var pts = new Vector2[steps + 1];
+        for (var i = 0; i <= steps; i++)
         {
-            var a = Mathf.Tau * i / 24f;
-            head[i] = new Vector2(cx + Mathf.Cos(a) * headR, headY + Mathf.Sin(a) * headR * 1.08f);
+            var a = Mathf.Lerp(a0, a1, i / (float)steps);
+            pts[i] = center + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
         }
-        head[24] = head[0];
-        Ink(ci, head, color, 1.6f, 0.5f, seed);
+        Ink(ci, pts, color, width, 0.25f, seed);
+    }
 
-        // 颈
-        InkLine(ci, new Vector2(cx, headY + headR * 1.05f),
-            new Vector2(cx, shoulderY), color, 1.4f, 0.4f, seed + 1);
+    // ---------- 边框裁剪与受限绘制 ----------
 
-        // 肩线
-        var shoulder = new[]
+    /// <summary>
+    /// Cohen-Sutherland 线段裁剪算法：将直线段 (p0, p1) 裁剪至矩形 r 内部。
+    /// 若线段完全在矩形外部则返回 false。
+    /// </summary>
+    public static bool ClipSegment(Vector2 p0, Vector2 p1, Rect2 r, out Vector2 c0, out Vector2 c1)
+    {
+        c0 = p0;
+        c1 = p1;
+        var x0 = p0.X; var y0 = p0.Y;
+        var x1 = p1.X; var y1 = p1.Y;
+        var xmin = r.Position.X; var ymin = r.Position.Y;
+        var xmax = r.End.X; var ymax = r.End.Y;
+
+        const int Inside = 0; const int Left = 1; const int Right = 2; const int Bottom = 4; const int Top = 8;
+        int Code(float x, float y)
         {
-            new Vector2(cx - shoulderHalf, shoulderY + h * 0.012f),
-            new Vector2(cx, shoulderY - h * 0.012f),
-            new Vector2(cx + shoulderHalf, shoulderY + h * 0.012f),
+            var c = Inside;
+            if (x < xmin) c |= Left;
+            else if (x > xmax) c |= Right;
+            if (y < ymin) c |= Top;
+            else if (y > ymax) c |= Bottom;
+            return c;
+        }
+
+        var code0 = Code(x0, y0);
+        var code1 = Code(x1, y1);
+
+        while (true)
+        {
+            if ((code0 | code1) == 0)
+            {
+                c0 = new Vector2(x0, y0);
+                c1 = new Vector2(x1, y1);
+                return true;
+            }
+            if ((code0 & code1) != 0)
+                return false;
+
+            var codeOut = code0 != 0 ? code0 : code1;
+            float x, y;
+
+            if ((codeOut & Bottom) != 0)
+            {
+                x = x0 + (x1 - x0) * (ymax - y0) / (y1 - y0);
+                y = ymax;
+            }
+            else if ((codeOut & Top) != 0)
+            {
+                x = x0 + (x1 - x0) * (ymin - y0) / (y1 - y0);
+                y = ymin;
+            }
+            else if ((codeOut & Right) != 0)
+            {
+                y = y0 + (y1 - y0) * (xmax - x0) / (x1 - x0);
+                x = xmax;
+            }
+            else
+            {
+                y = y0 + (y1 - y0) * (xmin - x0) / (x1 - x0);
+                x = xmin;
+            }
+
+            if (codeOut == code0)
+            {
+                x0 = x; y0 = y;
+                code0 = Code(x0, y0);
+            }
+            else
+            {
+                x1 = x; y1 = y;
+                code1 = Code(x1, y1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sutherland-Hodgman 多边形裁剪算法：将凸多边形/凹多边形 poly 裁剪至矩形 r 内部。
+    /// 边框外的部分一律被边框裁剪截除。
+    /// </summary>
+    public static Vector2[] ClipPolygon(IReadOnlyList<Vector2> poly, Rect2 r)
+    {
+        if (poly.Count < 3)
+            return Array.Empty<Vector2>();
+
+        var xmin = r.Position.X; var ymin = r.Position.Y;
+        var xmax = r.End.X; var ymax = r.End.Y;
+
+        var output = new List<Vector2>(poly);
+
+        output = ClipEdge(output, p => p.X >= xmin, (p1, p2) => new Vector2(xmin, p1.Y + (p2.Y - p1.Y) * (xmin - p1.X) / (p2.X - p1.X)));
+        if (output.Count < 3) return Array.Empty<Vector2>();
+
+        output = ClipEdge(output, p => p.X <= xmax, (p1, p2) => new Vector2(xmax, p1.Y + (p2.Y - p1.Y) * (xmax - p1.X) / (p2.X - p1.X)));
+        if (output.Count < 3) return Array.Empty<Vector2>();
+
+        output = ClipEdge(output, p => p.Y >= ymin, (p1, p2) => new Vector2(p1.X + (p2.X - p1.X) * (ymin - p1.Y) / (p2.Y - p1.Y), ymin));
+        if (output.Count < 3) return Array.Empty<Vector2>();
+
+        output = ClipEdge(output, p => p.Y <= ymax, (p1, p2) => new Vector2(p1.X + (p2.X - p1.X) * (ymax - p1.Y) / (p2.Y - p1.Y), ymax));
+        if (output.Count < 3) return Array.Empty<Vector2>();
+
+        return output.ToArray();
+
+        static List<Vector2> ClipEdge(List<Vector2> points, Func<Vector2, bool> inside, Func<Vector2, Vector2, Vector2> intersect)
+        {
+            var result = new List<Vector2>();
+            if (points.Count == 0) return result;
+            var prev = points[^1];
+            for (var i = 0; i < points.Count; i++)
+            {
+                var curr = points[i];
+                var inCurr = inside(curr);
+                var inPrev = inside(prev);
+                if (inCurr)
+                {
+                    if (!inPrev)
+                        result.Add(intersect(prev, curr));
+                    result.Add(curr);
+                }
+                else if (inPrev)
+                {
+                    result.Add(intersect(prev, curr));
+                }
+                prev = curr;
+            }
+            return result;
+        }
+    }
+
+    /// <summary>裁剪墨线：只画矩形 r 内部的线段部分。</summary>
+    public static void ClippedInkLine(CanvasItem ci, Vector2 p0, Vector2 p1, Rect2 r,
+        Color color, float width = 1f, float amp = 0.15f, int seed = 1)
+    {
+        if (ClipSegment(p0, p1, r, out var c0, out var c1))
+            InkLine(ci, c0, c1, color, width, amp, seed);
+    }
+
+    /// <summary>裁剪圆弧：圆弧上超出矩形 r 的部分被精确截断裁剪，不出框。</summary>
+    public static void ClippedArc(CanvasItem ci, Vector2 center, float radius, float a0, float a1,
+        Rect2 r, Color color, float width = 1f, int steps = 192, int seed = 1)
+    {
+        if (steps < 2)
+            return;
+        for (var i = 0; i < steps; i++)
+        {
+            var angle0 = a0 + (a1 - a0) * i / steps;
+            var angle1 = a0 + (a1 - a0) * (i + 1) / steps;
+            var pt0 = center + new Vector2(Mathf.Cos(angle0), Mathf.Sin(angle0)) * radius;
+            var pt1 = center + new Vector2(Mathf.Cos(angle1), Mathf.Sin(angle1)) * radius;
+            if (ClipSegment(pt0, pt1, r, out var c0, out var c1))
+                InkLine(ci, c0, c1, color, width, 0.15f, seed + i);
+        }
+    }
+
+    /// <summary>裁剪多边形：实体填充与墨线轮廓超出矩形 r 的部分被精确截断裁剪，不出框。</summary>
+    public static void ClippedPolygon(CanvasItem ci, IReadOnlyList<Vector2> poly, Rect2 r,
+        Color color, Color? fill = null, float width = 1.2f, float amp = 0.2f, int seed = 1)
+    {
+        var clipped = ClipPolygon(poly, r);
+        if (clipped.Length >= 3)
+            Polygon(ci, clipped, color, fill, width, amp, seed);
+    }
+
+    /// <summary>裁剪菱珠：仅当珠心在矩形内部时绘制。</summary>
+    public static void ClippedJewel(CanvasItem ci, Vector2 center, float radius, Rect2 r, Color color)
+    {
+        if (r.HasPoint(center))
+            Jewel(ci, center, radius, color);
+    }
+
+    // ---------- 角色标识 ----------
+
+    /// <summary>国际象棋棋子类型。</summary>
+    public enum ChessPiece
+    {
+        King,   // ♔ 国王（玩家）
+        Queen,  // ♕ 王后（好感 > 600）
+        Rook,   // ♖ 城堡/车（好感 100-600 随机）
+        Bishop, // ♗ 主教/象（好感 100-600 随机）
+        Knight, // ♘ 骑士/马（好感 100-600 随机）
+        Pawn,   // ♙ 士兵（好感 < 100，或未占用的空槽上限）
+    }
+
+    /// <summary>
+    /// 程序化绘制古典国际象棋实心单色棋子。
+    /// 在场角色为实心纯白（InkStyle.Line）；空位上限为暗色实心小兵（InkStyle.Dim，永不画空心）。
+    /// </summary>
+    public static void Chess(CanvasItem ci, Vector2 basePt, float h, ChessPiece piece, bool isLimitCap = false)
+    {
+        var cx = basePt.X;
+        var cy = basePt.Y;
+        var bw = h * 0.50f;     // 底座总宽
+        var bh = h * 0.11f;     // 底座总高
+        var color = isLimitCap ? InkStyle.Dim : InkStyle.Line;
+        var waistY = cy - bh;
+
+        // 1. 通用双阶基座：底层台座 + 次层凸环阶梯
+        var baseBottom = new[]
+        {
+            new Vector2(cx - bw * 0.50f, cy),
+            new Vector2(cx - bw * 0.46f, cy - bh * 0.52f),
+            new Vector2(cx + bw * 0.46f, cy - bh * 0.52f),
+            new Vector2(cx + bw * 0.50f, cy),
         };
-        Ink(ci, shoulder, color, 1.6f, 0.6f, seed + 2);
-
-        // 袍身两侧：肩 → 腰 → 下摆
-        Ink(ci, new[]
+        var baseTop = new[]
         {
-            new Vector2(cx - shoulderHalf, shoulderY + h * 0.012f),
-            new Vector2(cx - waistHalf, waistY),
-            new Vector2(cx - hemHalf, footY - h * 0.02f),
-        }, color, 1.6f, 0.8f, seed + 3);
-        Ink(ci, new[]
+            new Vector2(cx - bw * 0.40f, cy - bh * 0.52f),
+            new Vector2(cx - bw * 0.34f, waistY),
+            new Vector2(cx + bw * 0.34f, waistY),
+            new Vector2(cx + bw * 0.40f, cy - bh * 0.52f),
+        };
+        ci.DrawColoredPolygon(baseBottom, color);
+        ci.DrawColoredPolygon(baseTop, color);
+
+        // 空位上限标识强制画暗色实心小兵
+        if (isLimitCap)
+            piece = ChessPiece.Pawn;
+
+        switch (piece)
         {
-            new Vector2(cx + shoulderHalf, shoulderY + h * 0.012f),
-            new Vector2(cx + waistHalf, waistY),
-            new Vector2(cx + hemHalf, footY - h * 0.02f),
-        }, color, 1.6f, 0.8f, seed + 4);
+            case ChessPiece.Pawn:
+            {
+                // 兵：显著改矮（约王高70%）、大头圆球（高辨识度矮实心造型）
+                var neckY = cy - h * 0.36f;
+                var collarY = cy - h * 0.40f;
+                var bodyPoly = new[]
+                {
+                    new Vector2(cx - bw * 0.32f, waistY),
+                    new Vector2(cx - bw * 0.16f, neckY),
+                    new Vector2(cx - bw * 0.23f, neckY),
+                    new Vector2(cx - bw * 0.23f, collarY),
+                    new Vector2(cx + bw * 0.23f, collarY),
+                    new Vector2(cx + bw * 0.23f, neckY),
+                    new Vector2(cx + bw * 0.16f, neckY),
+                    new Vector2(cx + bw * 0.32f, waistY),
+                };
+                var ballR = h * 0.17f;
+                var ballCenter = new Vector2(cx, collarY - ballR + h * 0.02f);
 
-        // 下摆弧：两点二次贝塞尔，中点作为控制点，形成自然下垂。
-        Ink(ci, QuadArc(
-            new Vector2(cx - hemHalf, footY - h * 0.02f),
-            new Vector2(cx, footY + h * 0.045f),
-            new Vector2(cx + hemHalf, footY - h * 0.02f), 12), color, 1.6f, 0.8f, seed + 5);
+                ci.DrawColoredPolygon(bodyPoly, color);
+                ci.DrawCircle(ballCenter, ballR, color);
+                ci.DrawCircle(new Vector2(cx, ballCenter.Y - ballR), h < 40f ? 1.5f : 3.0f, color);
+                break;
+            }
 
-        // 衣褶
-        InkLine(ci, new Vector2(cx - h * 0.035f, shoulderY + h * 0.06f),
-            new Vector2(cx - h * 0.055f, footY - h * 0.05f), color, 1f, 0.6f, seed + 6);
-        InkLine(ci, new Vector2(cx + h * 0.045f, waistY + h * 0.02f),
-            new Vector2(cx + h * 0.065f, footY - h * 0.05f), color, 1f, 0.6f, seed + 8);
+            case ChessPiece.Knight:
+            {
+                // 骑士/马：标准 Staunton 极度典雅威武的战马昂首实心雕塑
+                // 优美 S 型轮廓：后颈背向右饱满隆起拱弧、警惕双耳、额头鼻梁挺拔、鼻吻圆润下探、喉部深陷内收、前胸威武隆起
+                var pts = new[]
+                {
+                    new Vector2(cx + bw * 0.32f, waistY),
+                    new Vector2(cx + bw * 0.38f, cy - h * 0.25f),   // 后颈饱满向外拱弧下段
+                    new Vector2(cx + bw * 0.42f, cy - h * 0.45f),   // 后颈拱弧顶点（饱满的马鬃颈肌！）
+                    new Vector2(cx + bw * 0.36f, cy - h * 0.65f),   // 颈上段向头内收
+                    new Vector2(cx + bw * 0.25f, cy - h * 0.80f),   // 耳后枕骨
+                    new Vector2(cx + bw * 0.18f, cy - h * 0.94f),   // 后耳尖
+                    new Vector2(cx + bw * 0.11f, cy - h * 0.84f),   // 双耳间隙
+                    new Vector2(cx + bw * 0.08f, cy - h * 0.92f),   // 前耳尖
+                    new Vector2(cx + bw * 0.02f, cy - h * 0.80f),   // 前耳根
+                    new Vector2(cx - bw * 0.10f, cy - h * 0.74f),   // 额头骨线
+                    new Vector2(cx - bw * 0.28f, cy - h * 0.64f),   // 鼻梁斜直挺拔
+                    new Vector2(cx - bw * 0.48f, cy - h * 0.55f),   // 鼻端轮廓
+                    new Vector2(cx - bw * 0.52f, cy - h * 0.48f),   // 鼻吻前端
+                    new Vector2(cx - bw * 0.45f, cy - h * 0.43f),   // 上唇
+                    new Vector2(cx - bw * 0.32f, cy - h * 0.43f),   // 下巴下颌
+                    new Vector2(cx - bw * 0.18f, cy - h * 0.41f),   // 下颚转折
+                    new Vector2(cx - bw * 0.06f, cy - h * 0.36f),   // 咽喉深邃内收拐角（优雅喉线！）
+                    new Vector2(cx - bw * 0.18f, cy - h * 0.25f),   // 强健隆起的前胸中段
+                    new Vector2(cx - bw * 0.26f, cy - h * 0.14f),   // 下前胸
+                    new Vector2(cx - bw * 0.30f, waistY),           // 前胸入座根部
+                };
+                ci.DrawColoredPolygon(pts, color);
+                break;
+            }
 
-        // 束腰
-        InkLine(ci, new Vector2(cx - waistHalf * 1.02f, waistY),
-            new Vector2(cx + waistHalf * 1.02f, waistY), color, 1.2f, 0.5f, seed + 9);
+            case ChessPiece.Bishop:
+            {
+                // 主教/象：纯净实心尖拱主教法冠（完整无缺口，左右对称优雅造型）
+                var collarY = cy - h * 0.54f;
+                var bodyPoly = new[]
+                {
+                    new Vector2(cx - bw * 0.30f, waistY),
+                    new Vector2(cx - bw * 0.14f, collarY + h * 0.04f),
+                    new Vector2(cx + bw * 0.14f, collarY + h * 0.04f),
+                    new Vector2(cx + bw * 0.30f, waistY),
+                };
+                var collarPoly = new[]
+                {
+                    new Vector2(cx - bw * 0.22f, collarY + h * 0.04f),
+                    new Vector2(cx - bw * 0.22f, collarY),
+                    new Vector2(cx + bw * 0.22f, collarY),
+                    new Vector2(cx + bw * 0.22f, collarY + h * 0.04f),
+                };
+                var mitreTopY = cy - h * 0.88f;
+                var mitreMidY = collarY - h * 0.16f;
+
+                // 尖拱法冠：完整流畅的椭圆尖拱，左右完全对称，无任何凹口缺痕
+                var mitrePoly = new[]
+                {
+                    new Vector2(cx - bw * 0.18f, collarY),
+                    new Vector2(cx - bw * 0.23f, mitreMidY),
+                    new Vector2(cx - bw * 0.16f, mitreTopY + h * 0.06f),
+                    new Vector2(cx, mitreTopY),
+                    new Vector2(cx + bw * 0.16f, mitreTopY + h * 0.06f),
+                    new Vector2(cx + bw * 0.23f, mitreMidY),
+                    new Vector2(cx + bw * 0.18f, collarY),
+                };
+
+                ci.DrawColoredPolygon(bodyPoly, color);
+                ci.DrawColoredPolygon(collarPoly, color);
+                ci.DrawColoredPolygon(mitrePoly, color);
+
+                // 冠顶实心圆珠
+                ci.DrawCircle(new Vector2(cx, mitreTopY - 2.4f), 2.4f, color);
+                break;
+            }
+
+            case ChessPiece.Rook:
+            {
+                // 车/城堡：实心石砌塔身 + 挑檐横台 + 凸凹四齿城垛
+                var roofY = cy - h * 0.72f;
+                var tower = new[]
+                {
+                    new Vector2(cx - bw * 0.30f, waistY),
+                    new Vector2(cx - bw * 0.25f, roofY),
+                    new Vector2(cx + bw * 0.25f, roofY),
+                    new Vector2(cx + bw * 0.30f, waistY),
+                };
+                var crenelTopY = cy - h * 0.88f;
+                var cw = bw * 0.62f;
+
+                ci.DrawColoredPolygon(tower, color);
+                ci.DrawRect(new Rect2(cx - bw * 0.32f, roofY, bw * 0.64f, -h * 0.04f), color);
+                ci.DrawRect(new Rect2(cx - cw * 0.50f, crenelTopY, cw * 0.24f, roofY - crenelTopY), color);
+                ci.DrawRect(new Rect2(cx - cw * 0.12f, crenelTopY, cw * 0.24f, roofY - crenelTopY), color);
+                ci.DrawRect(new Rect2(cx + cw * 0.26f, crenelTopY, cw * 0.24f, roofY - crenelTopY), color);
+                break;
+            }
+
+            case ChessPiece.Queen:
+            {
+                // 王后：实心收腰身躯 + 盛放冠冕 + 齿顶宝珠
+                // 小尺寸（房间与设施标识）采用 3 齿宽展冠，保证每个冠齿与宝珠在低像素下绝对分明
+                var neckY = cy - h * 0.56f;
+                var bodyPoly = new[]
+                {
+                    new Vector2(cx - bw * 0.32f, waistY),
+                    new Vector2(cx - bw * 0.16f, neckY),
+                    new Vector2(cx + bw * 0.16f, neckY),
+                    new Vector2(cx + bw * 0.32f, waistY),
+                };
+                var crownBaseY = neckY - h * 0.03f;
+                var cTopY = cy - h * 0.88f;
+                var cMidY = cy - h * 0.78f;
+
+                ci.DrawColoredPolygon(bodyPoly, color);
+
+                if (h < 30f)
+                {
+                    // 房间与设施标识尺寸（h <= 28px）：3 齿宽展冠冕，轮廓极度鲜明
+                    var crownPts = new[]
+                    {
+                        new Vector2(cx - bw * 0.22f, crownBaseY),
+                        new Vector2(cx - bw * 0.34f, cTopY + h * 0.02f), // 左外展齿
+                        new Vector2(cx - bw * 0.14f, cMidY),            // 左凹
+                        new Vector2(cx, cTopY),                         // 中正齿
+                        new Vector2(cx + bw * 0.14f, cMidY),            // 右凹
+                        new Vector2(cx + bw * 0.34f, cTopY + h * 0.02f), // 右外展齿
+                        new Vector2(cx + bw * 0.22f, crownBaseY),
+                    };
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[1], crownPts[2] }, color);
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[2], crownPts[3], crownPts[4] }, color);
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[4], crownPts[5], crownPts[6] }, color);
+
+                    ci.DrawCircle(crownPts[1], 1.8f, color);
+                    ci.DrawCircle(crownPts[3], 2.2f, color);
+                    ci.DrawCircle(crownPts[5], 1.8f, color);
+                }
+                else
+                {
+                    // 大号展示：五齿盛放冠冕
+                    var crownPts = new[]
+                    {
+                        new Vector2(cx - bw * 0.22f, crownBaseY),
+                        new Vector2(cx - bw * 0.32f, cTopY + h * 0.03f),
+                        new Vector2(cx - bw * 0.16f, cy - h * 0.81f),
+                        new Vector2(cx - bw * 0.08f, cTopY),
+                        new Vector2(cx, cy - h * 0.79f),
+                        new Vector2(cx + bw * 0.08f, cTopY),
+                        new Vector2(cx + bw * 0.16f, cy - h * 0.81f),
+                        new Vector2(cx + bw * 0.32f, cTopY + h * 0.03f),
+                        new Vector2(cx + bw * 0.22f, crownBaseY),
+                    };
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[1], crownPts[2] }, color);
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[2], crownPts[3], crownPts[4] }, color);
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[4], crownPts[5], crownPts[6] }, color);
+                    ci.DrawColoredPolygon(new[] { crownPts[0], crownPts[6], crownPts[7], crownPts[8] }, color);
+
+                    ci.DrawCircle(crownPts[1], 2.0f, color);
+                    ci.DrawCircle(crownPts[3], 2.2f, color);
+                    ci.DrawCircle(crownPts[5], 2.2f, color);
+                    ci.DrawCircle(crownPts[7], 2.0f, color);
+                    ci.DrawCircle(new Vector2(cx, cTopY - 2.8f), 2.8f, color);
+                }
+                break;
+            }
+
+            case ChessPiece.King:
+            {
+                // 国王：实心威严身躯 + 拱顶大王冠 + 顶立实心拉丁十字架（无任何内部杂线！）
+                var neckY = cy - h * 0.58f;
+                var bodyPoly = new[]
+                {
+                    new Vector2(cx - bw * 0.34f, waistY),
+                    new Vector2(cx - bw * 0.17f, neckY),
+                    new Vector2(cx + bw * 0.17f, neckY),
+                    new Vector2(cx + bw * 0.34f, waistY),
+                };
+                var domeTopY = cy - h * 0.82f;
+                var domeMidY = cy - h * 0.72f;
+                var dome = new[]
+                {
+                    new Vector2(cx - bw * 0.25f, neckY),
+                    new Vector2(cx - bw * 0.29f, domeMidY),
+                    new Vector2(cx - bw * 0.15f, domeTopY),
+                    new Vector2(cx, domeTopY - h * 0.02f),
+                    new Vector2(cx + bw * 0.15f, domeTopY),
+                    new Vector2(cx + bw * 0.29f, domeMidY),
+                    new Vector2(cx + bw * 0.25f, neckY),
+                };
+
+                var crossBottom = domeTopY - h * 0.02f;
+                var crossTop = cy - h * 1.04f;
+                var crossArmY = crossBottom - (crossBottom - crossTop) * 0.60f;
+                var armHalf = Mathf.Max(3.0f, h * 0.15f);
+                var barW = Mathf.Max(1.8f, h * 0.05f);
+
+                ci.DrawColoredPolygon(bodyPoly, color);
+                ci.DrawColoredPolygon(dome, color);
+
+                // 顶端清晰端庄的实心十字架
+                ci.DrawLine(new Vector2(cx, crossBottom), new Vector2(cx, crossTop), color, barW);
+                ci.DrawLine(new Vector2(cx - armHalf, crossArmY), new Vector2(cx + armHalf, crossArmY), color, barW);
+                break;
+            }
+        }
+    }
+
+    /// <summary>兼容重载：全部强制以实心单色输出。</summary>
+    public static void Chess(CanvasItem ci, Vector2 basePt, float h, ChessPiece piece, Color color, float alphaFill = 0f)
+    {
+        var isCap = color == InkStyle.Dim || alphaFill == 0f && piece == ChessPiece.Pawn && color != InkStyle.Line;
+        Chess(ci, basePt, h, piece, isCap);
+    }
+
+    /// <summary>根据角色卡属性映射其代表的国际象棋棋子类型。</summary>
+    public static ChessPiece PieceFor(CharacterCard card)
+    {
+        if (card.IsPlayer)
+            return ChessPiece.King;
+        if (card.Favor > 600)
+            return ChessPiece.Queen;
+        if (card.Favor >= 100)
+        {
+            // 100-600 的随机一个类型：按角色 Id 确定性哈希，同一角色类型稳定不跳变
+            return (card.Id % 3) switch
+            {
+                0 => ChessPiece.Rook,
+                1 => ChessPiece.Bishop,
+                _ => ChessPiece.Knight,
+            };
+        }
+        return ChessPiece.Pawn;
     }
 
     /// <summary>“此处”条目右侧的槽位小人，实心剪影。</summary>
@@ -606,10 +935,11 @@ public static class InkDraw
     public static void Text(CanvasItem ci, Vector2 at, string text, int size, Color color,
         string anchor = "lt")
     {
+        size = Mathf.Max(InkStyle.MinFontSize, size);
         var font = InkStyle.Font;
         var ascent = font.GetAscent(size);
         var descent = font.GetDescent(size);
-        var w = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
+        var w = Measure(text, size).X;
 
         var x = anchor[0] switch
         {
@@ -624,19 +954,57 @@ public static class InkDraw
             _ => at.Y + ascent,
         };
 
+        if (text.Contains('\u2009'))
+        {
+            var parts = text.Split('\u2009');
+            var curX = x;
+            var gap = Mathf.Max(2f, 4f * (size / 26f));
+            for (var i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Length > 0)
+                {
+                    ci.DrawString(font, new Vector2(curX, baseline), parts[i],
+                        HorizontalAlignment.Left, -1, size, color);
+                    curX += font.GetStringSize(parts[i], HorizontalAlignment.Left, -1, size).X;
+                }
+                if (i < parts.Length - 1)
+                    curX += gap;
+            }
+            return;
+        }
+
         ci.DrawString(font, new Vector2(x, baseline), text,
             HorizontalAlignment.Left, -1, size, color);
     }
 
-    public static Vector2 Measure(string text, int size) =>
-        InkStyle.Font.GetStringSize(text, HorizontalAlignment.Left, -1, size);
+    public static Vector2 Measure(string text, int size)
+    {
+        var font = InkStyle.Font;
+        if (!text.Contains('\u2009'))
+            return font.GetStringSize(text, HorizontalAlignment.Left, -1, size);
+
+        var parts = text.Split('\u2009');
+        var totalW = 0f;
+        var gap = Mathf.Max(2f, 4f * (size / 26f));
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (i > 0)
+                totalW += gap;
+            totalW += font.GetStringSize(parts[i], HorizontalAlignment.Left, -1, size).X;
+        }
+        var h = font.GetStringSize(text.Replace('\u2009', ' '), HorizontalAlignment.Left, -1, size).Y;
+        return new Vector2(totalW, h);
+    }
 
     /// <summary>
-    /// 自适应字号：在 [min, max] 内挑一个能把 text 放进 maxWidth 的最大字号。
+    /// 自适应字号：在 [min, max] 之间自动缩字号，直到宽度放得下。
+    /// 约定（2026-10-02 主人定）：最小字号下限为 26。
     /// 缩到 min 仍放不下就返回 min（不再继续缩，由调用方决定截断或换行）。
     /// </summary>
     public static int FitSize(string text, float maxWidth, int max, int min)
     {
+        max = Mathf.Max(InkStyle.MinFontSize, max);
+        min = Mathf.Max(InkStyle.MinFontSize, min);
         if (text.Length == 0 || maxWidth <= 0f)
             return max;
 
@@ -653,6 +1021,8 @@ public static class InkDraw
     public static int TextFitted(CanvasItem ci, Vector2 at, string text,
         float maxWidth, int max, int min, Color color, string anchor = "lt")
     {
+        max = Mathf.Max(InkStyle.MinFontSize, max);
+        min = Mathf.Max(InkStyle.MinFontSize, min);
         var size = FitSize(text, maxWidth, max, min);
         Text(ci, at, text, size, color, anchor);
         return size;
@@ -660,8 +1030,10 @@ public static class InkDraw
 
     /// <summary>单行文本先缩字号，再省略尾部；绘制范围不超出给定矩形。</summary>
     public static int TextBounded(CanvasItem ci, Rect2 r, string text,
-        int max = 22, int min = 14, Color? color = null, string anchor = "lm")
+        int max = 26, int min = 26, Color? color = null, string anchor = "lm")
     {
+        max = Mathf.Max(InkStyle.MinFontSize, max);
+        min = Mathf.Max(InkStyle.MinFontSize, min);
         if (r.Size.X <= 0f || r.Size.Y <= 0f || string.IsNullOrEmpty(text))
             return max;
         var size = FitSize(text, r.Size.X, max, min);
@@ -728,6 +1100,47 @@ public static class InkDraw
     }
 
     /// <summary>计量槽/量表：底槽加填充。</summary>
+    /// <summary>
+    /// 竖向滚动条：细轨居中一条暗线，滑块是双线小矩形、上下端各一枚菱珠（端珠合规）。
+    /// ratio = 首行/(总行-可见行)（0..1）；thumbRatio = 可见/总行（0..1]。
+    /// 内容不溢出（thumbRatio >= 1）时由调用方不画。
+    /// </summary>
+    public static void Scrollbar(CanvasItem ci, Rect2 track, float ratio, float thumbRatio)
+    {
+        // 轨：一条居中暗竖线。
+        var cx = track.GetCenter().X;
+        InkLine(ci, new Vector2(cx, track.Position.Y), new Vector2(cx, track.End.Y),
+            new Color(InkStyle.Dim, 0.6f), 1.1f, 0.25f, 9500);
+
+        var thumbH = Mathf.Clamp(track.Size.Y * Mathf.Clamp(thumbRatio, 0f, 1f), 28f, track.Size.Y);
+        var max = Mathf.Max(0f, track.Size.Y - thumbH);
+        var y = track.Position.Y + Mathf.Clamp(ratio, 0f, 1f) * max;
+        var thumb = new Rect2(track.Position.X, y, track.Size.X, thumbH);
+
+        // 滑块：浅填 + 双线框。
+        ci.DrawRect(thumb, InkStyle.Hover);
+        Ink(ci, new[]
+        {
+            thumb.Position,
+            new Vector2(thumb.End.X, thumb.Position.Y),
+            thumb.End,
+            new Vector2(thumb.Position.X, thumb.End.Y),
+            thumb.Position,
+        }, InkStyle.Line, 1.3f, 0.3f, 9501);
+        Ink(ci, new[]
+        {
+            thumb.Position + new Vector2(2f, 2f),
+            new Vector2(thumb.End.X - 2f, thumb.Position.Y + 2f),
+            thumb.End - new Vector2(2f, 2f),
+            new Vector2(thumb.Position.X + 2f, thumb.End.Y - 2f),
+            thumb.Position + new Vector2(2f, 2f),
+        }, InkStyle.Dim, 0.9f, 0.22f, 9502);
+
+        // 端珠：滑块上下端各一枚菱珠（只缀两端，合规）。
+        Jewel(ci, new Vector2(cx, thumb.Position.Y), 2.6f, InkStyle.Line);
+        Jewel(ci, new Vector2(cx, thumb.End.Y), 2.6f, InkStyle.Line);
+    }
+
     public static void Meter(CanvasItem ci, Rect2 r, float ratio)
     {
         ci.DrawRect(r, InkStyle.Inset);

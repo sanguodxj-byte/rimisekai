@@ -1,3 +1,5 @@
+using System;
+using Rimisekai.Character;
 using Rimisekai.Housing;
 
 namespace Rimisekai.Defs;
@@ -36,4 +38,18 @@ public class ThingDef : Def
         var cat = DefDatabase<ThingCategoryDef>.Get(Category);
         return cat != null && cat.IsOrChildOf(categoryDefName);
     }
+
+    /// <summary>武器类型。null 表示不是武器。</summary>
+    public WeaponType? Weapon { get; init; }
+
+    /// <summary>材料标签（木、铁、石……）。武器由"材料 + 类型"两轴决定，这里记材料那一轴。</summary>
+    public string Material { get; init; } = "";
+
+    /// <summary>是不是武器。</summary>
+    public bool IsWeapon => Weapon.HasValue;
+
+    /// <summary>是不是某种材料做的（按材料标签比，大小写不敏感）。</summary>
+    public bool IsOfMaterial(string material) =>
+        !string.IsNullOrEmpty(Material)
+        && string.Equals(Material, material, StringComparison.OrdinalIgnoreCase);
 }

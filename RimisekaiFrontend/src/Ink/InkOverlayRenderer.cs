@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Rimisekai.Hub;
 
@@ -13,8 +14,9 @@ public static class InkOverlayRenderer
 
         var rect = InkLayout.OverlayContent;
 
-        ci.DrawRect(rect, new Color(InkStyle.Panel, 0.97f));
-        InkDraw.Paper(ci, rect.Grow(-4f), seed: 7260);
+        // 演出中插画作底：聊天层转半透明，画从底下透出来；平时照旧近乎不透明。
+        var backdrop = model.SceneMode ? 0.6f : 0.97f;
+        ci.DrawRect(rect, new Color(InkStyle.Panel, backdrop));
         InkDraw.Ink(ci, new[]
         {
             rect.Position,
@@ -32,9 +34,6 @@ public static class InkOverlayRenderer
             rect.Position + new Vector2(5f, 5f),
         }, InkStyle.Dim, 1f, 0.3f, 7262);
 
-        InkDraw.Jewel(ci, new Vector2(rect.GetCenter().X, rect.Position.Y + 2.5f), 3f, InkStyle.Line);
-        InkDraw.Jewel(ci, new Vector2(rect.GetCenter().X, rect.End.Y - 2.5f), 3f, InkStyle.Line);
-
         if (overlay.Kind == OverlayKind.Illustration)
         {
             InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 40f, rect.GetCenter().Y - 20f, rect.Size.X - 80f, 40f),
@@ -45,21 +44,16 @@ public static class InkOverlayRenderer
             return;
         }
 
-        var textToDisplay = overlay.Revealed <= 0
-            ? ""
-            : overlay.Revealed < overlay.Text.Length
-                ? overlay.Text[..overlay.Revealed]
-                : overlay.Text;
+        // 段落累积：同段之前的句子整句保留，末句跟随打字机逐字；
+        // 各句独立折行，超出文本框容量时保留最新的行。
+        var sentences = new List<string>(overlay.OverlayLines);
+        if (sentences.Count > 0 && overlay.Revealed < overlay.Text.Length)
+            sentences[^1] = overlay.Text[..overlay.Revealed];
 
         if (overlay.Kind == OverlayKind.Dialogue)
         {
-            DrawPortrait(ci, overlay);
+            DrawPortrait(ci, overlay, model.SceneMode);
             DrawMeters(ci, overlay);
-
-            var splitX = (InkLayout.ChatPortrait.End.X + InkLayout.ChatBody.Position.X) / 2f;
-            InkFrame.Divider(ci,
-                new Vector2(splitX, InkLayout.ChatPortrait.Position.Y + 8f),
-                new Vector2(splitX, rect.End.Y - 12f));
 
             var body = InkLayout.ChatBody;
 
@@ -70,13 +64,6 @@ public static class InkOverlayRenderer
             var headerRect = InkLayout.ChatHeaderRect;
             var headerY = headerRect.Position.Y;
             var entriesLeft = InkLayout.ChatEntry(0, InkHubModel.ChatEntries.Length).Position.X;
-
-            var portraitMidX = InkLayout.ChatPortrait.GetCenter().X;
-            InkDraw.InkLine(ci, new Vector2(portraitMidX - 34f, headerY + 17f),
-                new Vector2(portraitMidX - 12f, headerY + 17f), InkStyle.Dim, 0.9f, 0.2f, 7330);
-            InkDraw.Jewel(ci, new Vector2(portraitMidX, headerY + 17f), 2.6f, InkStyle.Line, filled: false);
-            InkDraw.InkLine(ci, new Vector2(portraitMidX + 12f, headerY + 17f),
-                new Vector2(portraitMidX + 34f, headerY + 17f), InkStyle.Dim, 0.9f, 0.2f, 7331);
 
             if (speakerTag.Length > 0)
             {
@@ -105,21 +92,33 @@ public static class InkOverlayRenderer
                 InkDraw.TextBounded(ci, new Rect2(headerRect.Position.X, headerY, nameW + 8f, nameSize + 10f),
                     speakerTag, nameSize, 16, InkStyle.Line, "lm");
 
-                InkFrame.HeaderRule(ci, plate.End.X + 14f, entriesLeft - 14f,
-                    plate.GetCenter().Y - 2f);
             }
             else
             {
-                InkFrame.HeaderRule(ci, headerRect.Position.X, entriesLeft - 14f, headerY + 14f);
             }
 
             DrawEntries(ci, model);
 
             var hasChoices = overlay.Choices.Count > 0;
             var textBox = InkLayout.ChatTextRect(hasChoices, overlay.Choices.Count);
-            if (!string.IsNullOrEmpty(textToDisplay))
+
+            var bodyLines = new List<(string Text, bool Dim)>();
+            for (var s = 0; s < sentences.Count; s++)
             {
-                InkDraw.Wrapped(ci, textBox, textToDisplay, 22, InkStyle.Line, 32f);
+                var sentence = sentences[s];
+                var isDim = sentence.StartsWith("［判定");
+                foreach (var line in InkDraw.WrapLines(sentence, textBox.Size.X, 22))
+                    bodyLines.Add((line, isDim));
+            }
+            const float lineHeight = 32f;
+            var capacity = Mathf.Max(1, (int)((textBox.Size.Y + 8f) / lineHeight));
+            var skip = Mathf.Max(0, bodyLines.Count - capacity);
+            for (var i = skip; i < bodyLines.Count; i++)
+            {
+                var color = bodyLines[i].Dim ? InkStyle.Dim : InkStyle.Line;
+                InkDraw.Text(ci,
+                    new Vector2(textBox.Position.X, textBox.Position.Y + (i - skip) * lineHeight),
+                    bodyLines[i].Text, 22, color);
             }
 
             if (hasChoices)
@@ -144,9 +143,15 @@ public static class InkOverlayRenderer
 
         var storyChoicesCount = overlay.Choices.Count;
         var storyTextBox = InkLayout.StoryTextRect(storyChoicesCount);
-        if (!string.IsNullOrEmpty(textToDisplay))
+        // 旁白段保持旧行为：单句跟随打字机。
+        var storyText = overlay.Revealed <= 0
+            ? ""
+            : overlay.Revealed < overlay.Text.Length
+                ? overlay.Text[..overlay.Revealed]
+                : overlay.Text;
+        if (!string.IsNullOrEmpty(storyText))
         {
-            InkDraw.Wrapped(ci, storyTextBox, textToDisplay, 22, InkStyle.Line, 32f);
+            InkDraw.Wrapped(ci, storyTextBox, storyText, 22, InkStyle.Line, 32f);
         }
 
         for (var i = 0; i < overlay.Choices.Count; i++)
@@ -159,10 +164,11 @@ public static class InkOverlayRenderer
         DrawContinueHint(ci, overlay);
     }
 
-    private static void DrawPortrait(CanvasItem ci, OverlayView overlay)
+    private static void DrawPortrait(CanvasItem ci, OverlayView overlay, bool overIllustration)
     {
         var box = InkLayout.ChatPortrait;
-        ci.DrawRect(box, InkStyle.Bg);
+        // 演出中这块底下是插画：底色转半透明，不掏出一块死黑。
+        ci.DrawRect(box, overIllustration ? new Color(InkStyle.Bg, 0.6f) : InkStyle.Bg);
 
         var loaded = false;
         if (overlay.PortraitPath.Length > 0 && ResourceLoader.Exists(overlay.PortraitPath))
@@ -179,8 +185,6 @@ public static class InkOverlayRenderer
 
         if (!loaded)
         {
-            InkDraw.Figure(ci, box.GetCenter().X, box.End.Y - 18f, box.Size.Y * 0.62f,
-                InkStyle.Line, 7);
             InkDraw.Text(ci, new Vector2(box.GetCenter().X, box.Position.Y + 18f),
                 "（无立绘）", 16, InkStyle.Dim, "cm");
         }
@@ -231,9 +235,9 @@ public static class InkOverlayRenderer
         var valRect = InkLayout.ChatMeterValue(row);
         var barRect = InkLayout.ChatMeterBar(row);
 
-        InkDraw.TextBounded(ci, labelRect, label, 16, 12, InkStyle.Dim, "lm");
-        InkDraw.TextBounded(ci, valRect, valText, 16, 12, InkStyle.Line, "rm");
-        InkDraw.Meter(ci, barRect, ratio);
+        InkDraw.TextBounded(ci, labelRect, label, 26, 26, InkStyle.Dim, "lm");
+        InkDraw.TextBounded(ci, valRect, valText, 26, 26, InkStyle.Line, "rm");
+        InkDynamicMeter.Draw(ci, $"chat_meter_{label}", barRect, ratio, isHp: false);
     }
 
     private static float FavorRatio(int favor) =>
@@ -247,7 +251,7 @@ public static class InkOverlayRenderer
             var widget = model.Find(InkAction.ChatEntry, i);
             var enabled = widget?.Enabled ?? false;
             InkFrame.Button(ci, InkLayout.ChatEntry(i, entries.Length),
-                InkPageModel.Info(entries[i]).Label, false, enabled, 18);
+                InkPageModel.Info(entries[i]).Label, false, enabled, 26);
         }
     }
 
@@ -256,8 +260,8 @@ public static class InkOverlayRenderer
         if (overlay.Waiting)
             return;
 
-        var hint = overlay.FullyRevealed ? "▽ 点击继续" : "▽ 点击跳过";
+        var hint = "▽";
         InkDraw.TextBounded(ci, InkLayout.ChatContinueRect,
-            hint, 18, 14, InkStyle.Dim, "rm");
+            hint, 26, 26, InkStyle.Dim, "rm");
     }
 }

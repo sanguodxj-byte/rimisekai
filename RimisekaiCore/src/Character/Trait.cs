@@ -27,6 +27,9 @@ public enum Trait
     /// <summary>女仆。不要工资，也不按好感决定接不接受邀请。</summary>
     Maid,
 
+    /// <summary>速咏。咏唱回合 -1（下限 1）。</summary>
+    QuickChant,
+
     // ---------- 性格光谱（docs/voice-writing-guide.md 第十一节） ----------
 
     // 外向组
@@ -75,4 +78,30 @@ public enum Trait
     Sentimental,
     NightOwl,
     VerbalTic,
+
+    // ---------- 第二批扩充（2026-09-30 主人指示补充） ----------
+    // 认知组
+    Vigilant,
+    Intuitive,
+    Analytical,
+    // 情绪组
+    Stoic,
+    Sensitive,
+    Thickskinned,
+    // 外向组
+    Gregarious,
+    LoneWolf,
+    // 待人组
+    Compassionate,
+    Vengeful,
+    Loyal,
+    // 做事组
+    Decisive,
+    Hesitant,
+    Persistent,
+    Dependable,
+    // 独特组
+    Adventurous,
+    Ascetic,
+    Restless,
 }

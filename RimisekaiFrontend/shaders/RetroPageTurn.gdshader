@@ -2,6 +2,7 @@ shader_type canvas_item;
 // 复古转场三：书页翻页。旧画面是一页从右边缘掀起的纸：
 // 页缘附近有卷曲阴影与高光，页影投在新画面上。与铜版书页气质同源。
 uniform sampler2D old_screen : filter_linear;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
 uniform float progress : hint_range(0.0, 1.0);
 
 void fragment() {
@@ -14,8 +15,9 @@ void fragment() {
 	vec3 old = texture(old_screen, uv).rgb;
 	vec3 neu = texture(SCREEN_TEXTURE, uv).rgb;
 
-	// 旧页掀到页影阈值内才显示。
-	vec3 col = mix(neu, old, smoothstep(-0.002, 0.002, d));
+	// 旧页掀到页影阈值内才显示：progress=0 时 d 全 ≤0、整幅是旧页；
+	// 页缘左扫到底后 d 全 >0、整幅换成新画面。
+	vec3 col = mix(old, neu, smoothstep(-0.002, 0.002, d));
 
 	// 卷曲阴影：页背面靠近页缘处压暗，外侧（已掀起的部分）稍提亮。
 	float shade = smoothstep(-curl, 0.0, d) * (1.0 - smoothstep(0.0, curl * 0.6, d));

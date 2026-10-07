@@ -16,57 +16,99 @@ public sealed partial class HubSession
     /// <summary>最近一次写入所属的操作序号。-1 保证开局第一笔也走清空路径。</summary>
     private long _writtenAtOperation = -1;
 
-    /// <summary>
-    /// 角色行为行在 _log 里的下标。一个角色只占一行：再写就替换旧行，
-    /// 因此日志里看到的永远是“他此刻在做什么”，而不是一路做过的事。
-    /// </summary>
-    private readonly Dictionary<int, int> _activityRow = new();
+    /// <summary>固定顺序第 1 层：环境变化行（天气、季节、日终大事件等）。</summary>
+    private readonly List<string> _envLines = new();
+
+    /// <summary>固定顺序第 2 层：其他角色行动行（一人一行快照，后写覆盖先写）。键为角色 Id。</summary>
+    private readonly Dictionary<int, string> _activityLines = new();
+
+    /// <summary>固定顺序第 3 层：玩家行动行（打量四周、移动、工作、使用设施等）。</summary>
+    private readonly List<string> _playerLines = new();
 
     public IReadOnlyList<LogLine> Log => _log;
 
     /// <summary>
     /// 标记一次玩家操作开始。日志的更新单位是操作：新操作的首次写入会
     /// 清掉之前留下的全部内容，禁止跨操作堆积。操作边界由输入层负责标
-    /// （据点界面每次点击调一次），Core 不逐方法插桩——玩家操作有几百种，
-    /// 逐个标记必然漏。没写出任何内容的操作（校验失败、纯界面点击）不动旧日志。
+    /// （据点界面每次点击调一次），Core 不逐方法插桩。
     /// </summary>
     public void BeginOperation() => _operation++;
 
-    public void Write(string text)
+    private void EnsureFreshOperation()
     {
         if (_writtenAtOperation != _operation)
         {
+            _envLines.Clear();
+            _activityLines.Clear();
+            _playerLines.Clear();
             _log.Clear();
-            _activityRow.Clear();
             _writtenAtOperation = _operation;
         }
-        _log.Add(new LogLine(text));
-        if (_log.Count > LogLimit)
-            _log.RemoveAt(0);
     }
 
     /// <summary>
-    /// 写某角色此刻在做什么。同一角色只保留一行——重复调用会替换旧行，
-    /// 因此推进时间不会把一个角色的过程堆成好几行。
+    /// 写入环境变化日志（固定排版第 1 层：天气、季节等）。
+    /// </summary>
+    public void WriteEnvironment(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+        EnsureFreshOperation();
+        _envLines.Add(text);
+        RebuildLog();
+    }
+
+    /// <summary>
+    /// 写某角色此刻在做什么（固定排版第 2 层：其他角色行动）。
+    /// 同一角色只保留一行快照——重复调用会替换旧行。
     /// </summary>
     public void WriteActivity(int characterId, string text)
     {
-        if (text.Length == 0)
+        if (string.IsNullOrEmpty(text))
             return;
-        if (_writtenAtOperation != _operation)
+        EnsureFreshOperation();
+        _activityLines[characterId] = text;
+        RebuildLog();
+    }
+
+    /// <summary>
+    /// 通用写入：根据内容特征智能分流（环境变化进第 1 层，其余作为玩家行动进第 3 层）。
+    /// 无论调用先后，最终呈现的日志顺序永远固定：
+    /// 1. 环境变化(天气，季节等等)
+    /// 2. 其他角色行动
+    /// 3. 玩家行动(观察属于这里)
+    /// </summary>
+    public void Write(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+        if (IsEnvironmentText(text))
         {
-            _log.Clear();
-            _activityRow.Clear();
-            _writtenAtOperation = _operation;
-        }
-        if (_activityRow.TryGetValue(characterId, out var row) && row < _log.Count)
-        {
-            _log[row] = new LogLine(text);
+            WriteEnvironment(text);
             return;
         }
-        _activityRow[characterId] = _log.Count;
-        _log.Add(new LogLine(text));
-        if (_log.Count > LogLimit)
+        EnsureFreshOperation();
+        _playerLines.Add(text);
+        RebuildLog();
+    }
+
+    private static bool IsEnvironmentText(string text) =>
+        text.StartsWith("天气") ||
+        text.StartsWith("今日天气") ||
+        text.StartsWith("季节") ||
+        text.StartsWith("夜里有动静");
+
+    private void RebuildLog()
+    {
+        _log.Clear();
+        foreach (var line in _envLines)
+            _log.Add(new LogLine(line));
+        foreach (var line in _activityLines.Values)
+            _log.Add(new LogLine(line));
+        foreach (var line in _playerLines)
+            _log.Add(new LogLine(line));
+
+        while (_log.Count > LogLimit)
             _log.RemoveAt(0);
     }
 }

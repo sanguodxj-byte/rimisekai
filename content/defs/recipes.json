@@ -1,0 +1,133 @@
+{
+  "defType": "RecipeDef",
+  "defs": [
+    {
+      "defName": "Recipe_Bread",
+      "label": "烤面包",
+      "description": "用小麦烘烤朴素可口的面包。",
+      "itemId": "bread",
+      "station": "Cook",
+      "outputCount": 2,
+      "skill": "Cooking",
+      "costs": [
+        {
+          "itemId": "小麦",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Stew",
+      "label": "炖菜",
+      "description": "炖煮一锅热腾腾的丰盛蔬菜浓汤，提振心情。",
+      "itemId": "stew",
+      "station": "Cook",
+      "outputCount": 2,
+      "skill": "Cooking",
+      "costs": [
+        {
+          "itemId": "小麦",
+          "count": 1
+        },
+        {
+          "itemId": "水",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_IronIngot",
+      "label": "冶炼铁锭",
+      "description": "在铁砧与熔炉前将金属原矿熔炼为铁锭。",
+      "itemId": "铁",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁矿",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Tan",
+      "label": "鞣制皮革",
+      "description": "把生皮泡进鞣液，鞣成能用的皮。",
+      "itemId": "皮",
+      "station": "Brew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "兽皮",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_SpinWool",
+      "label": "纺羊毛",
+      "description": "把羊毛纺成线，再织成布。",
+      "itemId": "布",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "羊毛",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Pottery",
+      "label": "拉坯成罐",
+      "description": "陶土拉坯，入窑烧成陶罐。",
+      "itemId": "陶罐",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "石材",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Book",
+      "label": "装订成书",
+      "description": "皮纸裁齐，墨水誊抄，装订成册。",
+      "itemId": "书本",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Research",
+      "costs": [
+        {
+          "itemId": "兽皮",
+          "count": 1
+        },
+        {
+          "itemId": "炼金尘",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Cloth",
+      "label": "纺织布匹",
+      "description": "在缝纫台将天然植物纤维编织成布。",
+      "itemId": "布",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "纤维",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

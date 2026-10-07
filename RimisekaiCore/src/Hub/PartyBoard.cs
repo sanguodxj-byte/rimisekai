@@ -2,7 +2,9 @@ using System.Collections.Generic;
 
 namespace Rimisekai.Hub;
 
-public readonly record struct CharacterCard(int Id, string Name, bool IsPlayer, int RoomId);
+/// <summary>据点角色卡。战斗形态下界面按威胁等级重新排位（等级越高越靠前）。</summary>
+public readonly record struct CharacterCard(
+    int Id, string Name, bool IsPlayer, int RoomId, int ThreatTier, int Favor = 0);
 
 public sealed partial class HubSession
 {
@@ -17,7 +19,9 @@ public sealed partial class HubSession
                 character.Id,
                 character.Name,
                 character.IsMaster,
-                _presence.GetValueOrDefault(character.Id, -1)));
+                _presence.GetValueOrDefault(character.Id, -1),
+                character.ThreatTier,
+                character.Condition.Favor));
         }
         return list;
     }
@@ -32,7 +36,13 @@ public sealed partial class HubSession
                 continue;
             if (_presence.GetValueOrDefault(character.Id, -1) != PlayerRoomId)
                 continue;
-            list.Add(new CharacterCard(character.Id, character.Name, false, PlayerRoomId));
+            list.Add(new CharacterCard(
+                character.Id,
+                character.Name,
+                false,
+                PlayerRoomId,
+                character.ThreatTier,
+                character.Condition.Favor));
         }
         return list;
     }
@@ -50,8 +60,16 @@ public sealed partial class HubSession
 
     public void Place(int characterId, int roomId)
     {
-        if (State.Roster.Find(characterId) == null || Room(roomId) == null)
+        var character = State.Roster.Find(characterId);
+        var room = Room(roomId);
+        if (character == null || room == null)
             return;
+        // 私人空间锁着时，除了主人谁都进不去。
+        if (!character.IsMaster && State.Territory.IsLocked(room))
+        {
+            Write($"{character.Name}进不了{room.Name}——门锁着。");
+            return;
+        }
         _presence[characterId] = roomId;
         Day.Track(characterId, roomId).RoomId = roomId;
     }

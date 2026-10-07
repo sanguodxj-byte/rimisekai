@@ -9,7 +9,7 @@ public enum OverlayKind
     Illustration,
 }
 
-public readonly record struct OverlayLine(string Speaker, string Text);
+public readonly record struct OverlayLine(string Speaker, string Text, bool Dim = false);
 
 public readonly record struct OverlayChoice(int Id, string Label);
 
@@ -21,6 +21,7 @@ public sealed class MapOverlay
     public OverlayKind Kind { get; }
     public string Speaker { get; private set; } = "";
     public string Text { get; private set; } = "";
+    public bool CurrentLineDim { get; private set; }
     public string IllustrationId { get; private set; } = "";
     public List<OverlayChoice> Choices { get; } = new();
     public bool Waiting { get; private set; }
@@ -29,11 +30,20 @@ public sealed class MapOverlay
 
     public MapOverlay(OverlayKind kind) => Kind = kind;
 
+    public static MapOverlay Dialogue(string speaker, IEnumerable<OverlayLine> lines)
+    {
+        var overlay = new MapOverlay(OverlayKind.Dialogue) { Speaker = speaker };
+        foreach (var line in lines)
+            overlay._lines.Enqueue(line);
+        overlay.Advance();
+        return overlay;
+    }
+
     public static MapOverlay Dialogue(string speaker, IEnumerable<string> lines)
     {
         var overlay = new MapOverlay(OverlayKind.Dialogue) { Speaker = speaker };
         foreach (var line in lines)
-            overlay._lines.Enqueue(new OverlayLine(speaker, line));
+            overlay._lines.Enqueue(new OverlayLine(speaker, line, false));
         overlay.Advance();
         return overlay;
     }
@@ -72,6 +82,7 @@ public sealed class MapOverlay
         var line = _lines.Dequeue();
         Speaker = line.Speaker;
         Text = line.Text;
+        CurrentLineDim = line.Dim;
         return true;
     }
 

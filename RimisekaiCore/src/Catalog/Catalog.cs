@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Rimisekai.Character;
 using Rimisekai.Housing;
 
+using Rimisekai.Combat;
+
 namespace Rimisekai.Catalog;
 
 /// <summary>
@@ -32,6 +34,16 @@ public enum SkillTarget
     Self,
     AllEnemies,
     AllAllies,
+
+    /// <summary>打击格：某一列敌人整列（玩家方 AOE 用）。</summary>
+    FoesColumn,
+}
+
+/// <summary>攻击射程：近战只能打最前排，远程按列/威胁权重索敌。</summary>
+public enum SkillRange
+{
+    Melee,
+    Ranged,
 }
 
 /// <summary>增益/减益作用在哪个战斗数值上。</summary>
@@ -42,28 +54,46 @@ public enum StatusStat
     Defence,
     Dodge,
     SpellPower,
-    /// <summary>敌视权重：挑衅类正值、隐匿类负值，只影响被索敌的倾向。</summary>
-    Threat,
+
+    /// <summary>行动速度：加速/减速，作用于战斗跑条的行动间隔。</summary>
+    Speed,
 }
 
-/// <summary>敌人的索敌取向。</summary>
-public enum TargetMode
+public sealed class SkillDef : Defs.Def
 {
-    /// <summary>按敌视权重随机取目标。</summary>
-    Balanced,
-    /// <summary>咬住血量最少的敌人。</summary>
-    HuntWeak,
-    /// <summary>优先打攻击最高的敌人。</summary>
-    HuntStrong,
-}
+    public string Id
+    {
+        get => string.IsNullOrEmpty(DefName) ? _id : DefName;
+        init
+        {
+            _id = value;
+            if (string.IsNullOrEmpty(DefName)) DefName = value;
+        }
+    }
+    private string _id = "";
 
-public sealed class SkillDef
-{
-    public string Id { get; init; } = "";
-    public string Name { get; init; } = "";
+    public string Name
+    {
+        get => string.IsNullOrEmpty(Label) ? (string.IsNullOrEmpty(_name) ? DefName : _name) : Label;
+        init
+        {
+            _name = value;
+            if (string.IsNullOrEmpty(Label)) Label = value;
+        }
+    }
+    private string _name = "";
     public string Category { get; init; } = "";
     public int MaxLevel { get; init; } = 1;
-    public int Cooldown { get; init; }
+
+    /// <summary>
+    /// 解锁门槛：一组可空条件（流派／熟练／属性／生活技能／素质／前置技能），逐条 AND。
+    /// 无门槛的技能（普通攻击、防御架势）用 <see cref="SkillGate.Open"/>。
+    /// 技能的流派归属即 <see cref="SkillGate.Style"/>，星盘据此分扇区。
+    /// </summary>
+    public SkillGate Gate { get; init; } = SkillGate.Open;
+
+    /// <summary>射程：近程打最前排，远程选列后按威胁权重落点。</summary>
+    public SkillRange Range { get; init; } = SkillRange.Melee;
 
     public SkillKind Kind { get; init; } = SkillKind.Strike;
     public SkillTarget Target { get; init; } = SkillTarget.Enemy;
@@ -74,15 +104,33 @@ public sealed class SkillDef
     /// <summary>命中修正（百分点），只对打击类生效。</summary>
     public int HitMod { get; init; }
 
-    public int MpCost { get; init; }
+    /// <summary>
+    /// 咏唱回合数。0 = 瞬发（打击/增益等）；
+    /// ≥1 = 法术类需要咏唱，咏唱期间被任意控制状态命中即打断。
+    /// </summary>
+    public int ChantRounds { get; init; }
 
-    /// <summary>状态三件套：作用数值、增减幅度（基础值百分比，可负）、持续回合。</summary>
-    public StatusStat Stat { get; init; } = StatusStat.None;
+    /// <summary>控制类：命中即打断目标的咏唱。</summary>
+    public bool Control { get; init; }
+
+    /// <summary>
+    /// 附加状态：StatMod = 数值增减；Dot = 每轮伤害的持续弱化；Shield = 点数护盾。
+    /// null = 不带状态。打击类命中才附加，法术/增益类直接生效。
+    /// </summary>
+    public StatusKind? Status { get; init; }
+
+    /// <summary>StatMod 的作用面。</summary>
+    public StatusStat StatusStat { get; init; } = StatusStat.None;
+
+    /// <summary>StatMod 的幅度（百分点，可负）。</summary>
     public int StatusPercent { get; init; }
+
+    /// <summary>DoT 每轮伤害 / Shield 初始点数。</summary>
+    public int StatusPower { get; init; }
+
+    /// <summary>状态持续回合。</summary>
     public int StatusRounds { get; init; }
 
-    /// <summary>增益类技能可以顺带给目标叠护盾点数；护盾只挡物理，法术穿透。</summary>
-    public int ShieldPoints { get; init; }
 }
 
 public sealed class ItemDef
@@ -119,13 +167,27 @@ public sealed class EnemyDef
     public int Defence { get; init; }
     public int Dodge { get; init; }
     public int SpellPower { get; init; }
-    public int Threat { get; init; }
+
+    /// <summary>行动速度：决定跑条上的行动间隔。</summary>
+    public int Speed { get; init; } = 10;
+
+    /// <summary>威胁等级 1-5：越高越靠前（同列更高层级），敌方近战只打最前的玩家。</summary>
+    public int ThreatTier { get; init; } = 1;
+
+    /// <summary>站位列 1-4：跨列的精英/首领以其最左列声明，整场最多 4x4。</summary>
+    public int Column { get; init; } = 1;
+
+    /// <summary>占位边长：1=杂兵 1x1，2=精英 2x2，4=首领 4x4，锚在威胁等级所在排向纵深延展。</summary>
+    public int Size { get; init; } = 1;
+
+    /// <summary>行动点数：战斗界面在首领血条下方按此数目画实心菱。默认 1。</summary>
+    public int ActionPoints { get; init; } = 1;
+
+    /// <summary>立绘资产名：映射 assets/portraits/monster/{portrait}.png，空串表示暂无立绘。</summary>
+    public string Portrait { get; init; } = "";
 
     /// <summary>护甲：实数减挡，物理全额、法术减半。</summary>
     public int Armour { get; init; }
-
-    /// <summary>索敌取向，默认按敌视权重随机。</summary>
-    public TargetMode Targeting { get; init; } = TargetMode.Balanced;
 
     /// <summary>击坠后的金钱奖励。</summary>
     public long Money { get; init; }
@@ -137,6 +199,10 @@ public sealed class EnemyDef
     public List<EnemyLoot> Loot { get; init; } = new();
 }
 
+/// <summary>
+/// 存档内的战斗/物品目录。房间与设施的定义不在这里——
+/// 它们是内容包定义，权威在 <see cref="Defs.DefDatabase{T}"/>，按 defName 查。
+/// </summary>
 public sealed class GameCatalog
 {
     public Dictionary<int, StatDef> Stats { get; } = new();
@@ -144,6 +210,4 @@ public sealed class GameCatalog
     public Dictionary<string, ItemDef> Items { get; } = new();
     public Dictionary<string, WeaponDef> Weapons { get; } = new();
     public Dictionary<string, EnemyDef> Enemies { get; } = new();
-    public Dictionary<int, Defs.RoomDef> Rooms { get; } = new();
-    public Dictionary<int, Defs.FacilityDef> Facilities { get; } = new();
 }

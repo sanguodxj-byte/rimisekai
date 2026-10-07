@@ -2,6 +2,7 @@ shader_type canvas_item;
 // 复古转场一：胶片烧灼。旧画面带门架晃动，被噪声孔洞逐块烧穿露出新画面，
 // 烧灼前沿发亮，叠加竖直划痕与灰尘点，四角压暗角。全程只动明度，不引新色相。
 uniform sampler2D old_screen : filter_linear;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
 uniform float progress : hint_range(0.0, 1.0);
 uniform float time_sec = 0.0;
 
@@ -23,34 +24,17 @@ float vnoise(vec2 p) {
 void fragment() {
 	vec2 uv = SCREEN_UV;
 
-	// 门架晃动：整幅旧画面随进度衰减地左右微晃。
-	float weave = (hash21(vec2(floor(time_sec * 13.0), 7.0)) - 0.5) * 0.005 * (1.0 - progress);
-	vec3 old = texture(old_screen, uv + vec2(weave, 0.0)).rgb;
+	// 纯净采样：严禁任何随机 UV 抖动或画面错位位移（彻底废除所谓门架晃动）。
+	vec3 old = texture(old_screen, uv).rgb;
 	vec3 neu = texture(SCREEN_TEXTURE, uv).rgb;
 
-	// 烧灼孔洞：两频噪声叠加，阈值随进度推进。
-	float burn = vnoise(uv * vec2(14.0, 9.0)) * 0.65 + vnoise(uv * vec2(38.0, 25.0)) * 0.35;
-	float th = progress * 1.35;
-	float edge = smoothstep(th - 0.09, th + 0.09, burn);
+	// 纯净消散：基于平滑双频柏林噪声，旧画面干净自然地过渡到新画面。
+	// 彻底废除高光火舌前沿（斜向亮白痕迹根源）、废除划痕、废除灰尘点、废除雪花噪点。
+	float burn = vnoise(uv * vec2(10.0, 6.0)) * 0.7 + vnoise(uv * vec2(24.0, 15.0)) * 0.3;
+	float th = progress * 1.3 - 0.15;
+	float edge = 1.0 - smoothstep(th - 0.08, th + 0.08, burn);
 
 	vec3 col = mix(old, neu, edge);
-
-	// 烧灼前沿：阈值附近提亮一圈，像火舌。
-	float rim = smoothstep(0.09, 0.0, abs(burn - th));
-	col += rim * 0.35 * (1.0 - progress * 0.5);
-
-	// 竖直划痕：随机列，随进度变多变亮。
-	float sc = step(0.992, hash21(vec2(floor(uv.x * 260.0), floor(time_sec * 18.0))));
-	col += sc * 0.5 * (1.0 - abs(progress * 2.0 - 1.0));
-
-	// 灰尘点。
-	float dust = step(0.9975, hash21(uv * vec2(640.0, 400.0) + floor(time_sec * 11.0)));
-	col += dust * 0.45;
-
-	// 颗粒与暗角。
-	col += (hash21(uv * 1024.0 + time_sec) - 0.5) * 0.05;
-	float vig = smoothstep(1.05, 0.35, length(uv - 0.5));
-	col *= mix(1.0, vig, 0.55);
 
 	COLOR = vec4(clamp(col, 0.0, 1.0), 1.0);
 }

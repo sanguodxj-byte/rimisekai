@@ -48,7 +48,12 @@ public sealed class SeekingChatState : BaseWorkerState
         var target = territory.Rooms.Find(r => r.Id == stepCtx.PlayerRoomId);
         if (target == null || !Enterable(target, character, stepCtx))
         {
-            worker.SeekWaiting = true;
+            // 进不去玩家的房间（如主人私室）：在门外等，并把等待写进状态行。
+            if (!worker.SeekWaiting)
+            {
+                worker.SeekWaiting = true;
+                stepCtx.Narrate(character, $"{character.Name}似乎想对你说什么。");
+            }
             return false;
         }
 
@@ -62,7 +67,7 @@ public sealed class SeekingChatState : BaseWorkerState
             }
         }
 
-        MoveAlong(worker);
+        MoveAlong(worker, ctx);
 
         if (worker.RoomId == stepCtx.PlayerRoomId && worker.Path.Count == 0)
         {

@@ -1,0 +1,25 @@
+{
+  "combat": {
+    "default": "res://assets/combat_natural_cave.png",
+    "natural_cave": "res://assets/combat_natural_cave.png",
+    "dungeon_ruins": "res://assets/combat_dungeon_ruins.png"
+  },
+  "rooms": {
+    "bedroom_day": "res://assets/room_bedroom_day.png",
+    "bedroom_night": "res://assets/room_bedroom_night.png",
+    "courtyard": "res://assets/room_courtyard.png",
+    "tavern": "res://assets/room_tavern.png",
+    "workshop": "res://assets/room_workshop.png"
+  },
+  "terrains": {
+    "dark_forest": "res://assets/terrain_dark_forest.png",
+    "storm_mountains": "res://assets/terrain_storm_mountains.png"
+  },
+  "settlements": {
+    "village": "res://assets/settlement_village.png",
+    "town": "res://assets/settlement_town.png"
+  },
+  "overlay": {
+    "portrait_frame": "res://assets/portrait_frame_overlay.png"
+  }
+}

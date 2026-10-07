@@ -15,7 +15,7 @@ public static class InkText
         Character.Bond.Hostile => "敌意",
         Character.Bond.Dislike => "嫌恶",
         Character.Bond.None => "普通",
-        Character.Bond.Fond => "好感",
+        Character.Bond.Fond => "友好",
         Character.Bond.Close => "亲密",
         Character.Bond.Lover => "爱慕",
         _ => "普通",
@@ -41,7 +41,6 @@ public static class InkText
         Character.LifeSkill.Husbandry => "驯兽",
         Character.LifeSkill.Craft => "手工",
         Character.LifeSkill.Research => "研究",
-        Character.LifeSkill.Haul => "搬运",
         Character.LifeSkill.Smithing => "锻造",
         _ => "?",
     };
@@ -77,27 +76,121 @@ public static class InkText
     /// <summary>工种名。</summary>
     public static string WorkType(Housing.WorkType type) => Housing.WorkTypeMap.LabelOf(type);
 
-    /// <summary>工作时段名。0=0:00 1=6:00 2=12:00 3=18:00。</summary>
-    public static string WorkSlot(int slot) => slot switch
+    /// <summary>工作时段名。0时00分 / 6时00分 / 12时00分 / 18时00分（项目禁用冒号）。</summary>
+    public static string FoodTier(Housing.FoodTier tier) => tier switch
     {
-        0 => "0:00",
-        1 => "6:00",
-        2 => "12:00",
-        3 => "18:00",
+        Housing.FoodTier.Plain => "朴素",
+        Housing.FoodTier.Delicate => "精致",
+        Housing.FoodTier.Feast => "丰盛",
+        Housing.FoodTier.Exquisite => "绝味",
+        _ => "普通",
+    };
+
+        public static string WorkSlot(int slot) => slot switch
+    {
+        0 => "0时00分",
+        1 => "6时00分",
+        2 => "12时00分",
+        3 => "18时00分",
         _ => "?",
     };
 
-    /// <summary>时段开关名（空闲 / 工作 / 不干活）。</summary>
+    /// <summary>时段开关名（空闲 / 工作 / 娱乐）。</summary>
     public static string SlotMode(Housing.SlotMode mode) => mode switch
     {
         Housing.SlotMode.Free => "空闲",
         Housing.SlotMode.Work => "工作",
-        Housing.SlotMode.Rest => "不干活",
+        Housing.SlotMode.Entertainment => "娱乐",
         _ => "?",
     };
 
     /// <summary>工作优先级：0 画成空白（不做），1-4 直接显示档位。</summary>
     public static string Priority(int value) => value <= 0 ? "" : value.ToString();
+
+    /// <summary>
+    /// 货币格式化：三位一组空格分隔，带 G 后缀（如 10 000G）。
+    /// 避免宋体西文逗号自带过大空隙导致的视觉异常。
+    /// </summary>
+    public static string Money(long amount)
+    {
+        if (amount < 0)
+            return "-" + Money(-amount);
+
+        var raw = amount.ToString();
+        if (raw.Length <= 3)
+            return $"{raw}G";
+
+        var sb = new System.Text.StringBuilder();
+        var head = raw.Length % 3;
+        if (head > 0)
+        {
+            sb.Append(raw.Substring(0, head));
+            if (head < raw.Length)
+                sb.Append('\u2009');
+        }
+        for (var i = head; i < raw.Length; i += 3)
+        {
+            if (i > head)
+                sb.Append('\u2009');
+            sb.Append(raw.Substring(i, 3));
+        }
+        sb.Append('G');
+        return sb.ToString();
+    }
+
+    // ---------- 战斗技能的面（技能页右栏详情用）----------
+
+    /// <summary>技能种类名。</summary>
+    public static string SkillKind(Catalog.SkillKind kind) => kind switch
+    {
+        Catalog.SkillKind.Strike => "打击",
+        Catalog.SkillKind.Spell => "法术",
+        Catalog.SkillKind.Heal => "治疗",
+        Catalog.SkillKind.Buff => "增益",
+        _ => "?",
+    };
+
+    /// <summary>技能目标名。</summary>
+    public static string SkillTarget(Catalog.SkillTarget target) => target switch
+    {
+        Catalog.SkillTarget.Enemy => "单体敌人",
+        Catalog.SkillTarget.Ally => "单体友方",
+        Catalog.SkillTarget.Self => "自身",
+        Catalog.SkillTarget.AllEnemies => "全体敌人",
+        Catalog.SkillTarget.AllAllies => "全体友方",
+        Catalog.SkillTarget.FoesColumn => "整列敌人",
+        _ => "?",
+    };
+
+    /// <summary>技能射程名。</summary>
+    public static string SkillRange(Catalog.SkillRange range) => range switch
+    {
+        Catalog.SkillRange.Melee => "近程",
+        Catalog.SkillRange.Ranged => "远程",
+        _ => "?",
+    };
+
+    /// <summary>状态作用面名。</summary>
+    public static string StatusStat(Catalog.StatusStat stat) => stat switch
+    {
+        Catalog.StatusStat.Attack => "攻击",
+        Catalog.StatusStat.Defence => "防御",
+        Catalog.StatusStat.Dodge => "闪避",
+        Catalog.StatusStat.SpellPower => "法术",
+        Catalog.StatusStat.Speed => "速度",
+        _ => "?",
+    };
+
+    // ---------- 技能门槛（技能盘瓦片与右栏详情用） ----------
+
+    /// <summary>素质的中文名，从素质目录查（唯一来源在 Core）。</summary>
+    public static string TraitName(Character.Trait trait)
+    {
+        foreach (var def in Character.Traits.Catalog)
+            if (def.Trait == trait)
+                return def.Name;
+        return trait.ToString();
+    }
 
     /// <summary>
     /// 设施行动的按钮字。行动名不强行缩成两字，按日常说法写全。

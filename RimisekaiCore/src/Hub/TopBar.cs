@@ -10,7 +10,7 @@ public sealed partial class HubSession
 
     public HubHeader Header()
     {
-        var place = $"[{MapTitle()}·{PlaceName()}]";
+        var place = MapTitle();
         return new HubHeader(place, State.Clock.Season, Weather, State.Clock.Minutes / 60, State.Clock.Minutes % 60, State.Money);
     }
 
@@ -29,6 +29,11 @@ public sealed partial class HubSession
         Weather.Cloud => "多云",
         Weather.Rain => "雨",
         Weather.Snow => "雪",
+        Weather.HeavyRain => "暴雨",
+        Weather.Thunder => "雷雨",
+        Weather.Wind => "大风",
+        Weather.HeavySnow => "大雪",
+        Weather.Blizzard => "暴雪",
         _ => "?",
     };
 }

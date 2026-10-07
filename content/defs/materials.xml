@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    材料轴。全项目只有这一张材料表，兵器与防具共用。
+    材料本身就是物品（MaterialDef 继承 ThingDef），不再另立 ThingDef，
+    因此"铁"在项目里只存在一份，旧武器材料表（weapon_materials）已删。
+
+    等级由劣到优：布、皮、木材、珊瑚、青铜、铁、钢、秘银、精金、以太。
+    （黑曜石已移除；石制武器没有。）
+    weaponUsable / armorUsable 决定它能打兵器还是能缝甲——
+    布和皮做不了兵器；铁以下的装备只做布甲皮甲，木材/珊瑚/青铜也缝不了甲。
+  -->
+  <MaterialDef>
+    <defName>布</defName>
+    <label>布</label>
+    <description>布制。最便宜也最不经打，刚出门那身就是它。</description>
+    <category>Cloth</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>2</marketValue>
+    <tier>0</tier>
+    <weaponUsable>false</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>0</damageBonus>
+    <valueFactor>80</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>皮</defName>
+    <label>皮</label>
+    <description>皮革。比布韧，猎户与游侠常穿。</description>
+    <category>Cloth</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>4</marketValue>
+    <tier>1</tier>
+    <weaponUsable>false</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>2</damageBonus>
+    <valueFactor>130</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>木材</defName>
+    <label>木材</label>
+    <description>伐木取得的原木料，也能削成木器。</description>
+    <category>RawMaterial</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>1</marketValue>
+    <tier>2</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>false</armorUsable>
+    <damageBonus>1</damageBonus>
+    <valueFactor>160</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>珊瑚</defName>
+    <label>珊瑚</label>
+    <description>海底采来的珊瑚骨，质脆却锋利。</description>
+    <category>RawMaterial</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>3</marketValue>
+    <tier>3</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>false</armorUsable>
+    <damageBonus>2</damageBonus>
+    <valueFactor>175</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>青铜</defName>
+    <label>青铜</label>
+    <description>铜锡合铸的古料，比铁软，胜在好铸。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>6</marketValue>
+    <tier>4</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>false</armorUsable>
+    <damageBonus>3</damageBonus>
+    <valueFactor>200</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>铁</defName>
+    <label>铁</label>
+    <description>铁制。锋利耐用，要铁匠铺才打得出。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>8</marketValue>
+    <tier>5</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>4</damageBonus>
+    <valueFactor>220</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>钢</defName>
+    <label>钢</label>
+    <description>钢。反复锻打出来的好料，佣兵们的标配。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>14</marketValue>
+    <tier>6</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>9</damageBonus>
+    <valueFactor>420</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>秘银</defName>
+    <label>秘银</label>
+    <description>秘银。轻得像没有重量，锋利却不下钢。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>30</marketValue>
+    <tier>7</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>15</damageBonus>
+    <valueFactor>750</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>精金</defName>
+    <label>精金</label>
+    <description>精金。铸起来极难，一旦成型便无坚不摧。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>50</marketValue>
+    <tier>8</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>19</damageBonus>
+    <valueFactor>1000</valueFactor>
+  </MaterialDef>
+
+  <MaterialDef>
+    <defName>以太</defName>
+    <label>以太</label>
+    <description>以太。不属此世的物质，握着能听见回声。</description>
+    <category>Metal</category>
+    <stackLimit>999</stackLimit>
+    <marketValue>90</marketValue>
+    <tier>9</tier>
+    <weaponUsable>true</weaponUsable>
+    <armorUsable>true</armorUsable>
+    <damageBonus>24</damageBonus>
+    <valueFactor>1400</valueFactor>
+  </MaterialDef>
+</Defs>

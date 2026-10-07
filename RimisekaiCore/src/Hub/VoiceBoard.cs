@@ -19,25 +19,10 @@ public sealed partial class HubSession
         VoiceTrigger trigger,
         string giftItemId = "",
         VoiceRole role = VoiceRole.Actor,
-        VoicePlace place = VoicePlace.Before)
+        VoicePlace place = VoicePlace.Before,
+        VoiceKind? kind = null)
     {
-        var ctx = VoiceContext.For(
-            who,
-            trigger,
-            State.Roster.Master?.Id ?? -1,
-            State.Clock.Season,
-            State.Weather,
-            State.Clock.Day,
-            State.Clock.Minutes,
-            PlayerRoomId,
-            giftItemId,
-            Day.Rng,
-            ActivityOf(who.Id),
-            role,
-            place,
-            VoiceContext.EmotionOf(who),
-            _presence.GetValueOrDefault(who.Id, -1));
-        var utterance = State.Voice.Speak(who, trigger, ctx);
+        var utterance = PickVoice(who, trigger, giftItemId, role, place, kind);
         if (utterance == null)
             return false;
         Show(VoiceDirector.ToOverlay(utterance.Value));
@@ -52,29 +37,42 @@ public sealed partial class HubSession
     public async System.Threading.Tasks.Task<bool> SayAsync(
         CharacterState who,
         VoiceTrigger trigger,
-        string giftItemId = "")
+        string giftItemId = "",
+        VoiceRole role = VoiceRole.Actor,
+        VoicePlace place = VoicePlace.Before,
+        VoiceKind? kind = null)
     {
-        var ctx = VoiceContext.For(
-            who,
-            trigger,
-            State.Roster.Master?.Id ?? -1,
-            State.Clock.Season,
-            State.Weather,
-            State.Clock.Day,
-            State.Clock.Minutes,
-            PlayerRoomId,
-            giftItemId,
-            Day.Rng,
-            ActivityOf(who.Id),
-            VoiceRole.Actor,
-            VoicePlace.Before,
-            VoiceContext.EmotionOf(who),
-            _presence.GetValueOrDefault(who.Id, -1));
-        var utterance = await State.Voice.SpeakAsync(who, trigger, ctx).ConfigureAwait(false);
+        var utterance = await PickVoiceAsync(who, trigger, giftItemId, role, place, kind).ConfigureAwait(false);
         if (utterance == null)
             return false;
         Show(VoiceDirector.ToOverlay(utterance.Value));
         return true;
+    }
+
+    /// <summary>同步挑一句台词或地文（不直接弹层），供复合对话/地文队列装配。</summary>
+    public VoiceUtterance? PickVoice(
+        CharacterState who,
+        VoiceTrigger trigger,
+        string giftItemId = "",
+        VoiceRole role = VoiceRole.Actor,
+        VoicePlace place = VoicePlace.Before,
+        VoiceKind? kind = null)
+    {
+        var ctx = CreateVoiceContext(who, trigger, giftItemId, null, role, place);
+        return State.Voice.Speak(who, trigger, ctx, kind, place);
+    }
+
+    /// <summary>异步挑一句台词或地文（支持 LLM 动态生成，不直接弹层），供复合对话/地文队列装配。</summary>
+    public async System.Threading.Tasks.Task<VoiceUtterance?> PickVoiceAsync(
+        CharacterState who,
+        VoiceTrigger trigger,
+        string giftItemId = "",
+        VoiceRole role = VoiceRole.Actor,
+        VoicePlace place = VoicePlace.Before,
+        VoiceKind? kind = null)
+    {
+        var ctx = CreateVoiceContext(who, trigger, giftItemId, null, role, place);
+        return await State.Voice.SpeakAsync(who, trigger, ctx, kind, place).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -85,22 +83,7 @@ public sealed partial class HubSession
     {
         if (State.Voice.Scenes.Count == 0)
             return null;
-        var ctx = VoiceContext.For(
-            who,
-            VoiceTrigger.Scene,
-            State.Roster.Master?.Id ?? -1,
-            State.Clock.Season,
-            State.Weather,
-            State.Clock.Day,
-            State.Clock.Minutes,
-            PlayerRoomId,
-            "",
-            Day.Rng,
-            ActivityOf(who.Id),
-            VoiceRole.Actor,
-            VoicePlace.Before,
-            VoiceContext.EmotionOf(who),
-            _presence.GetValueOrDefault(who.Id, -1));
+        var ctx = CreateVoiceContext(who, VoiceTrigger.Scene);
         return new SceneRunner(State.Voice.Scenes, State.Territory).Begin(who, ctx);
     }
 
@@ -111,22 +94,7 @@ public sealed partial class HubSession
     /// </summary>
     bool IVoiceSink.Dialogue(CharacterState who, VoiceTrigger trigger)
     {
-        var ctx = VoiceContext.For(
-            who,
-            trigger,
-            State.Roster.Master?.Id ?? -1,
-            State.Clock.Season,
-            State.Weather,
-            State.Clock.Day,
-            State.Clock.Minutes,
-            PlayerRoomId,
-            "",
-            Day.Rng,
-            ActivityOf(who.Id),
-            VoiceRole.Actor,
-            VoicePlace.Before,
-            VoiceContext.EmotionOf(who),
-            _presence.GetValueOrDefault(who.Id, -1));
+        var ctx = CreateVoiceContext(who, trigger);
         var utterance = State.Voice.Speak(who, trigger, ctx);
         if (utterance == null)
             return false;
@@ -141,26 +109,66 @@ public sealed partial class HubSession
     /// </summary>
     string? IVoiceSink.StateLine(CharacterState who, VoiceActivity activity, string facilityName)
     {
-        var ctx = VoiceContext.For(
+        var ctx = CreateVoiceContext(who, VoiceTrigger.State, "", activity);
+        var utterance = State.Voice.Speak(who, VoiceTrigger.State, ctx);
+        if (utterance == null)
+            return null;
+        return VoiceDirector.ToLog(utterance.Value);
+    }
+
+    public IReadOnlyList<string> RoomTagsOf(int roomId)
+    {
+        var room = Room(roomId);
+        if (room == null || room.Tags.Count == 0)
+            return System.Array.Empty<string>();
+        return new List<string>(room.Tags);
+    }
+
+    public bool CheckAllMembersMaxLevel()
+    {
+        if (State.Roster.Members.Count == 0)
+            return false;
+        foreach (var m in State.Roster.Members)
+        {
+            if (m.Level < Character.XpTable.MaxLevel)
+                return false;
+        }
+        return true;
+    }
+
+    public VoiceContext CreateVoiceContext(
+        CharacterState who,
+        VoiceTrigger trigger,
+        string giftItemId = "",
+        VoiceActivity? activity = null,
+        VoiceRole role = VoiceRole.Actor,
+        VoicePlace place = VoicePlace.Before,
+        VoiceEmotion? emotion = null,
+        int characterRoomId = -1,
+        int facilityId = -1)
+    {
+        var charRoom = characterRoomId >= 0 ? characterRoomId : _presence.GetValueOrDefault(who.Id, -1);
+        return VoiceContext.For(
             who,
-            VoiceTrigger.State,
+            trigger,
             State.Roster.Master?.Id ?? -1,
             State.Clock.Season,
             State.Weather,
             State.Clock.Day,
             State.Clock.Minutes,
             PlayerRoomId,
-            "",
+            giftItemId,
             Day.Rng,
-            activity,
-            VoiceRole.Actor,
-            VoicePlace.Before,
-            VoiceContext.EmotionOf(who),
-            _presence.GetValueOrDefault(who.Id, -1));
-        var utterance = State.Voice.Speak(who, VoiceTrigger.State, ctx);
-        if (utterance == null)
-            return null;
-        return VoiceDirector.ToLog(utterance.Value);
+            activity ?? ActivityOf(who.Id),
+            role,
+            place,
+            emotion ?? VoiceContext.EmotionOf(who),
+            charRoom,
+            facilityId,
+            State.FiredEvents,
+            CheckAllMembersMaxLevel(),
+            RoomTagsOf(charRoom),
+            State.ReturnedFromCombat);
     }
 
     /// <summary>

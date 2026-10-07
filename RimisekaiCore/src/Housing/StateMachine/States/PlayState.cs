@@ -18,7 +18,7 @@ public sealed class PlayState : BaseWorkerState
 
     public override bool Tick(WorkerContext ctx)
     {
-        if (MoveAlong(ctx.Worker))
+        if (MoveAlong(ctx.Worker, ctx))
             return false;
 
         if (ctx.Worker.FacilityId >= 0 && ctx.Worker.Phase != WorkPhase.Working)

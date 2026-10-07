@@ -64,4 +64,7 @@ public sealed class VoiceRequest
 
     /// <summary>触发的时机，实现方可以据此调整措辞。</summary>
     public VoiceTrigger Trigger { get; init; }
+
+    /// <summary>生成类型：台词（Speech）或神态/动作地文（Narration）。</summary>
+    public VoiceKind Kind { get; init; } = VoiceKind.Speech;
 }

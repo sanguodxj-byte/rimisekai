@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dulrgeh7763q3"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Ink/Portrait/PortraitPressProbe.cs" id="1_ppress"]
+
+[node name="PortraitPressProbe" type="Node"]
+script = ExtResource("1_ppress")

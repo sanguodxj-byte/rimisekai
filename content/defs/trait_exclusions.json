@@ -1,0 +1,115 @@
+{
+  "defType": "TraitExclusionDef",
+  "defs": [
+    {
+      "a": "健谈",
+      "b": "寡言",
+      "defName": "Exclusion_健谈_寡言"
+    },
+    {
+      "a": "情绪外露",
+      "b": "内敛",
+      "defName": "Exclusion_情绪外露_内敛"
+    },
+    {
+      "a": "乐观",
+      "b": "忧郁",
+      "defName": "Exclusion_乐观_忧郁"
+    },
+    {
+      "a": "迎合",
+      "b": "傲慢",
+      "defName": "Exclusion_迎合_傲慢"
+    },
+    {
+      "a": "尽责",
+      "b": "拖沓",
+      "defName": "Exclusion_尽责_拖沓"
+    },
+    {
+      "a": "严谨",
+      "b": "随性",
+      "defName": "Exclusion_严谨_随性"
+    },
+    {
+      "a": "务实",
+      "b": "空想家",
+      "defName": "Exclusion_务实_空想家"
+    },
+    {
+      "a": "懒散",
+      "b": "尽责",
+      "defName": "Exclusion_懒散_尽责"
+    },
+    {
+      "a": "迟钝",
+      "b": "聪慧",
+      "defName": "Exclusion_迟钝_聪慧"
+    },
+    {
+      "a": "怕痛",
+      "b": "耐痛",
+      "defName": "Exclusion_怕痛_耐痛"
+    },
+    {
+      "a": "强韧",
+      "b": "体弱",
+      "defName": "Exclusion_强韧_体弱"
+    },
+    {
+      "a": "大方",
+      "b": "吝啬",
+      "defName": "Exclusion_大方_吝啬"
+    },
+    {
+      "a": "急躁",
+      "b": "沉稳",
+      "defName": "Exclusion_急躁_沉稳"
+    },
+    {
+      "a": "直率",
+      "b": "圆滑",
+      "defName": "Exclusion_直率_圆滑"
+    },
+    {
+      "a": "随性",
+      "b": "有条理",
+      "defName": "Exclusion_随性_有条理"
+    },
+    {
+      "a": "叛逆",
+      "b": "尽责",
+      "defName": "Exclusion_叛逆_尽责"
+    },
+    {
+      "a": "合群",
+      "b": "独狼",
+      "defName": "Exclusion_合群_独狼"
+    },
+    {
+      "a": "敏感",
+      "b": "钝感",
+      "defName": "Exclusion_敏感_钝感"
+    },
+    {
+      "a": "淡漠",
+      "b": "情绪外露",
+      "defName": "Exclusion_淡漠_情绪外露"
+    },
+    {
+      "a": "慈悲",
+      "b": "记仇",
+      "defName": "Exclusion_慈悲_记仇"
+    },
+    {
+      "a": "果决",
+      "b": "犹豫",
+      "defName": "Exclusion_果决_犹豫"
+    },
+    {
+      "a": "执着",
+      "b": "拖沓",
+      "defName": "Exclusion_执着_拖沓"
+    }
+  ]
+}

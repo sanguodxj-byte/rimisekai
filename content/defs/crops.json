@@ -1,0 +1,40 @@
+{
+  "defType": "CropDef",
+  "defs": [
+    {
+      "defName": "小麦",
+      "seedItemId": "小麦种子",
+      "produceItemId": "小麦",
+      "growthDays": 6,
+      "seasons": ["Spring", "Summer", "Autumn"]
+    },
+    {
+      "defName": "卷心菜",
+      "seedItemId": "卷心菜种子",
+      "produceItemId": "卷心菜",
+      "growthDays": 5,
+      "seasons": ["Spring", "Summer", "Autumn"]
+    },
+    {
+      "defName": "洋葱",
+      "seedItemId": "洋葱种子",
+      "produceItemId": "洋葱",
+      "growthDays": 4,
+      "seasons": ["Spring", "Summer", "Autumn"]
+    },
+    {
+      "defName": "萝卜",
+      "seedItemId": "萝卜种子",
+      "produceItemId": "萝卜",
+      "growthDays": 4,
+      "seasons": ["Autumn", "Winter"]
+    },
+    {
+      "defName": "药草",
+      "seedItemId": "药草种子",
+      "produceItemId": "药草",
+      "growthDays": 4,
+      "seasons": ["Spring", "Summer"]
+    }
+  ]
+}

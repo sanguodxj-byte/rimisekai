@@ -4,7 +4,7 @@ using Rimisekai.Character;
 namespace Rimisekai.Housing.StateMachine.States;
 
 /// <summary>
-/// 休息状态：在能够休息的设施（椅子、沙发等）上闭目歇息，消除疲劳并回复气力。
+/// 休息状态：在能够休息的设施（椅子、沙发等）上闭目歇息，回复气力。
 /// </summary>
 public sealed class RestingState : BaseWorkerState
 {
@@ -21,7 +21,7 @@ public sealed class RestingState : BaseWorkerState
 
     public override bool Tick(WorkerContext ctx)
     {
-        if (MoveAlong(ctx.Worker))
+        if (MoveAlong(ctx.Worker, ctx))
             return false;
 
         if (ctx.Worker.FacilityId >= 0 && ctx.Worker.Phase != WorkPhase.Working)
@@ -31,10 +31,10 @@ public sealed class RestingState : BaseWorkerState
         }
 
         ctx.Character.Condition.RestTick();
-        ctx.Character.Condition.Recover(0, Traits.RestSpiritBonus(ctx.Character), false);
+        ctx.Character.Condition.Recover(0, Traits.RestSpiritBonus(ctx.Character));
 
-        // 疲劳清零或气力回满即完成休息
-        return ctx.Character.Condition.Fatigue == 0;
+        // 气力回满即完成休息
+        return ctx.Character.Condition.Spirit >= ctx.Character.Condition.MaxSpirit;
     }
 
     public override void Exit(WorkerContext ctx)

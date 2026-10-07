@@ -15,7 +15,6 @@ public static class InkRenameRenderer
 
         InkDraw.TextBounded(ci, InkLayout.RenameTitle,
             "给领地取名", 26, 18, InkStyle.Line, "lm");
-        InkFrame.HeaderRule(ci, panel.Position.X + 30f, panel.End.X - 30f, panel.Position.Y + 44f);
 
         InkDraw.TextBounded(ci, InkLayout.RenameHint,
             $"回车确定　Esc 取消　最多 {InkLayout.RenameMaxChars} 字", 18, 14, InkStyle.Dim, "lm");

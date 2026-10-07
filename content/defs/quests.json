@@ -1,0 +1,170 @@
+{
+  "defType": "QuestDef",
+  "defs": [
+    {
+      "defName": "Quest_MorningDew",
+      "id": 1,
+      "label": "晨露草",
+      "kind": "map",
+      "description": "领地北面的缓坡上晨露草成片生长，采回十株交到仓库即可。往返半日，不需翻山。",
+      "difficulty": 3.5,
+      "cooldownDays": 0,
+      "maxPartySize": 4,
+      "rewards": [
+        "金币 x120",
+        "晨露草 x3"
+      ],
+      "rumor": "听说北坡的草要趁露水没干时下手，日头一高就只剩柴火味——反正采药的老规矩，早去早回。",
+      "foes": [
+        {
+          "id": "wolf_scout",
+          "portrait": "monster_dire_wolf",
+          "name": "野狼",
+          "maxHp": 30,
+          "attack": 3,
+          "speed": 10,
+          "threatTier": 1,
+          "column": 1,
+          "money": 10
+        },
+        {
+          "id": "wolf_alpha",
+          "portrait": "monster_dire_wolf",
+          "name": "头狼",
+          "maxHp": 40,
+          "attack": 4,
+          "speed": 10,
+          "threatTier": 2,
+          "column": 2,
+          "money": 15
+        },
+        {
+          "id": "wolf_prowl",
+          "portrait": "monster_dire_wolf",
+          "name": "野狼",
+          "maxHp": 30,
+          "attack": 3,
+          "speed": 10,
+          "threatTier": 1,
+          "column": 3,
+          "money": 10
+        }
+      ]
+    },
+    {
+      "defName": "Quest_GranaryRats",
+      "id": 2,
+      "label": "谷仓鼠患",
+      "kind": "dialogue",
+      "description": "谷仓底下又闹起耗子，把闹事的家伙清一清，别伤了麻袋。",
+      "difficulty": 2,
+      "cooldownDays": 2,
+      "maxPartySize": 3,
+      "rewards": [
+        "金币 x60",
+        "干粮 x2"
+      ],
+      "rumor": "看门的大爷说夜里听见仓底有磨牙声，一声一声，跟数拍子似的。",
+      "foes": [
+        {
+          "id": "rat_small",
+          "portrait": "monster_giant_rat",
+          "name": "大鼠",
+          "maxHp": 18,
+          "attack": 2,
+          "speed": 12,
+          "threatTier": 1,
+          "column": 1,
+          "money": 6
+        },
+        {
+          "id": "rat_big",
+          "portrait": "monster_giant_rat",
+          "name": "鼠王",
+          "maxHp": 26,
+          "attack": 3,
+          "speed": 12,
+          "threatTier": 2,
+          "column": 2,
+          "money": 12,
+          "size": 2
+        },
+        {
+          "id": "rat_small2",
+          "portrait": "monster_giant_rat",
+          "name": "大鼠",
+          "maxHp": 18,
+          "attack": 2,
+          "speed": 12,
+          "threatTier": 1,
+          "column": 3,
+          "money": 6
+        }
+      ]
+    },
+    {
+      "defName": "Quest_OldMine",
+      "id": 3,
+      "label": "废弃矿道",
+      "kind": "graphicalMap",
+      "description": "矿道深处的支撑木烂了大半。探到最底层的竖井，把那头的景象记下来活着带回来。",
+      "difficulty": 12,
+      "cooldownDays": 5,
+      "maxPartySize": 6,
+      "rewards": [
+        "金币 x800",
+        "铁矿石 x10",
+        "不明矿块 x1"
+      ],
+      "rumor": "老矿工们提起来都要先啐一口：下到第七支道的灯，从来没人点回来过。",
+      "foes": [
+        {
+          "id": "mine_rat_a",
+          "portrait": "monster_giant_rat",
+          "name": "矿道鼠",
+          "maxHp": 60,
+          "attack": 5,
+          "speed": 10,
+          "threatTier": 2,
+          "column": 1,
+          "money": 25
+        },
+        {
+          "id": "mine_rat_b",
+          "portrait": "monster_giant_rat",
+          "name": "矿道鼠",
+          "maxHp": 60,
+          "attack": 5,
+          "speed": 10,
+          "threatTier": 2,
+          "column": 2,
+          "money": 25
+        },
+        {
+          "id": "mine_rat_c",
+          "portrait": "monster_giant_rat",
+          "name": "矿道鼠",
+          "maxHp": 60,
+          "attack": 5,
+          "speed": 10,
+          "threatTier": 3,
+          "column": 3,
+          "money": 30
+        },
+        {
+          "id": "mine_king",
+          "portrait": "monster_giant_rat",
+          "name": "鼠王",
+          "maxHp": 150,
+          "attack": 7,
+          "speed": 9,
+          "threatTier": 4,
+          "column": 1,
+          "size": 3,
+          "armour": 2,
+          "money": 120
+        }
+      ]
+    }
+  ]
+}

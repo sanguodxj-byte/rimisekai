@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rimisekai.Defs;
 using Rimisekai.Housing;
 
 namespace Rimisekai.Hub;
@@ -11,7 +12,8 @@ public sealed partial class HubSession
     public bool AddRoomCopy(int sourceRoomId, int x, int y)
     {
         var source = Room(sourceRoomId);
-        if (source == null || !source.Buildable || State.Territory.RoomAt(x, y) != null)
+        if (source == null || !source.Buildable
+            || State.Territory.RoomAt(source.RegionId, x, y) != null)
             return false;
         if (!State.Territory.CanPayWith(State.Roster.Master, source.MaterialCost))
             return false;
@@ -66,7 +68,7 @@ public sealed partial class HubSession
     public bool MoveRoom(int roomId, int x, int y)
     {
         var room = Room(roomId);
-        if (room == null || State.Territory.RoomAt(x, y) != null)
+        if (room == null || State.Territory.RoomAt(room.RegionId, x, y) != null)
             return false;
         if (room.X == x && room.Y == y)
             return false;
@@ -112,6 +114,220 @@ public sealed partial class HubSession
         room.Open = false;
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
         Write($"关闭了{room.Name}。");
+        return true;
+    }
+
+    /// <summary>
+    /// 开发：把「挨着已开发地方」的未开发房间开拓成一间空房。
+    /// 花该房间的钱（OpenCost）与材料（MaterialCost），开出来就是一间空房间，
+    /// 家具另配（去中下操作面板里建设施）。
+    /// </summary>
+    /// <summary>未开发房间现在能不能开拓：相邻、钱与材料都够。与 DevelopEmptyRoom 同一前置。</summary>
+    public bool CanDevelopEmptyRoom(int roomId)
+    {
+        var room = Room(roomId);
+        if (room == null || room.Open || room.X < 0 || room.Y < 0)
+            return false;
+        if (!State.Territory.NearOpenRoom(room))
+            return false;
+        if (State.Money < room.OpenCost)
+            return false;
+        return State.Territory.CanPayWith(State.Roster.Master, room.MaterialCost);
+    }
+
+    public bool DevelopEmptyRoom(int roomId)
+    {
+        var room = Room(roomId);
+        if (room == null || room.Open || room.X < 0 || room.Y < 0)
+            return false;
+        if (!State.Territory.NearOpenRoom(room))
+            return false;
+        var money = State.Money;
+        if (money < room.OpenCost)
+            return false;
+        if (!State.Territory.CanPayWith(State.Roster.Master, room.MaterialCost))
+            return false;
+        PassTime(CostDevelop * TerritoryClock.StepMinutes);
+        if (!State.Territory.PayWith(State.Roster.Master, room.MaterialCost))
+            return false;
+        money -= room.OpenCost;
+        room.Open = true;
+        State.Money = money;
+        Write($"开拓了{room.Name}。");
+        return true;
+    }
+
+    // ---- 开拓空地（空格子）----
+    // 空地是「还没有房间实体的格子」。开出来是一间「空房」（Vacant），
+    // 之后把建好的房间安装进去（PlaceRoom）。
+
+    /// <summary>开拓定价：钱 1000 ＋ 木材 5 起步，每开一格按 1.2 倍递增（复利）。</summary>
+    public const int VacantBaseMoney = 1000;
+    public const int VacantBaseWood = 5;
+
+    /// <summary>第 3 个起额外要石材，基准也是 5，同比例涨。</summary>
+    public const int VacantBaseStone = 5;
+
+    /// <summary>从第几个开始要石材（0 基：2 ＝ 第 3 个）。</summary>
+    public const int VacantStoneFrom = 2;
+
+    /// <summary>每级涨幅。</summary>
+    public const double VacantCostGrowth = 1.2;
+
+    public const string VacantCostItemId = "木材";
+    public const string VacantCostStoneItemId = "石材";
+
+    /// <summary>
+    /// 已经开拓过几格空地。定价按它指数递增——**每开一格贵 20%**。
+    /// 存在 <see cref="Territory"/> 上，随存档走；跨区域也继续涨。
+    /// </summary>
+    private int VacantDevelopCount => State.Territory.VacantDevelopCount;
+
+    private double VacantGrowth =>
+        System.Math.Pow(VacantCostGrowth, System.Math.Max(0, VacantDevelopCount));
+
+    private static int VacantScaled(int baseAmount, double growth) =>
+        System.Math.Max(1, (int)System.Math.Round(baseAmount * growth,
+            System.MidpointRounding.AwayFromZero));
+
+    /// <summary>下一格空地的钱（界面显示用）。</summary>
+    public int VacantCostMoney => VacantScaled(VacantBaseMoney, VacantGrowth);
+
+    /// <summary>下一格空地的木材。</summary>
+    public int VacantCostWood => VacantScaled(VacantBaseWood, VacantGrowth);
+
+    /// <summary>下一格空地的石材；还没到第 3 个就是 0。</summary>
+    public int VacantCostStone => VacantDevelopCount < VacantStoneFrom
+        ? 0
+        : VacantScaled(VacantBaseStone, VacantGrowth);
+
+    /// <summary>下一格空地要的材料（木材，第 3 个起加石材）。</summary>
+    public List<RecipeCost> VacantCostMaterial()
+    {
+        var list = new List<RecipeCost> { new(VacantCostItemId, VacantCostWood) };
+        if (VacantCostStone > 0)
+            list.Add(new RecipeCost(VacantCostStoneItemId, VacantCostStone));
+        return list;
+    }
+
+    /// <summary>这个空格子能不能开拓：得是空格、挨着**同一区域**已开发的地方、钱和料都够。</summary>
+    public bool CanDevelopVacantCell(int regionId, int x, int y)
+    {
+        if (State.Territory.RoomAt(regionId, x, y) != null)
+            return false;
+        if (!State.Territory.NearOpenAt(regionId, x, y))
+            return false;
+        if (State.Money < VacantCostMoney)
+            return false;
+        return State.Territory.CanPayWith(State.Roster.Master, VacantCostMaterial());
+    }
+
+    /// <summary>
+    /// 开发：把「挨着已开发地方」的空格子开拓成一间空房。
+    /// 花按 1.2 倍递增的钱、木材（第 3 个起加石材），开出来是一间毛坯，
+    /// 之后把建好的房间安装进去（见 <see cref="PlaceRoom"/>）。
+    /// 开完顺手判一次「这块铺满了没有」——满了就解锁下一档区域。
+    /// </summary>
+    public bool DevelopVacantCell(int regionId, int x, int y)
+    {
+        if (!CanDevelopVacantCell(regionId, x, y))
+            return false;
+        var moneyCost = VacantCostMoney;
+        var material = VacantCostMaterial();
+        PassTime(CostDevelop * TerritoryClock.StepMinutes);
+        if (!State.Territory.PayWith(State.Roster.Master, material))
+            return false;
+        var id = 0;
+        foreach (var room in State.Territory.Rooms)
+            id = System.Math.Max(id, room.Id);
+        var added = new Room
+        {
+            Id = id + 1, Name = "空房", RegionId = regionId,
+            X = x, Y = y, Open = true, Vacant = true,
+        };
+        added.EnsureDefaultTag();
+        if (!State.Territory.AddRoom(added))
+            return false;
+        State.Money -= moneyCost;
+        State.Territory.VacantDevelopCount++;
+        Write("开拓了一间空房。");
+
+        // 铺满 → 解锁下一档。
+        var opened = State.Territory.TryUnlockByFill();
+        if (opened.Count > 0)
+        {
+            var names = new List<string>();
+            foreach (var r in opened)
+                names.Add(Territory.RegionName(r));
+            Write($"这里铺满了，{string.Join("、", names)}跟着开出来了。");
+        }
+        return true;
+    }
+
+    // ---- 过界：走到边缘连接点，从那儿去隔壁区域 ----
+
+    private static readonly Territory.RegionDir[] GateDirs =
+    {
+        Territory.RegionDir.North, Territory.RegionDir.East,
+        Territory.RegionDir.South, Territory.RegionDir.West,
+    };
+
+    /// <summary>这间房是朝哪个方向的连接点；不是连接点返回 null。</summary>
+    private static Territory.RegionDir? GateDirOf(Room room)
+    {
+        foreach (var dir in GateDirs)
+        {
+            var (gx, gy) = Territory.RegionGate(dir);
+            if (room.X == gx && room.Y == gy)
+                return dir;
+        }
+        return null;
+    }
+
+    /// <summary>某区域朝某方向的连接点上的房间；没房就是 null。</summary>
+    public Room? GateRoom(int regionId, Territory.RegionDir dir)
+    {
+        var (gx, gy) = Territory.RegionGate(dir);
+        return State.Territory.RoomAt(regionId, gx, gy);
+    }
+
+    /// <summary>
+    /// 人站在这间房里能不能过界，能的话去的是哪块区域；不能返回 -1。
+    /// 条件：这间房在本区域的连接点上，对面区域已解锁，
+    /// 且**对面那块地图的对应连接点上也有房**——两边各有房才通。
+    /// </summary>
+    public int CrossTargetRegion(int roomId)
+    {
+        var room = Room(roomId);
+        if (room == null || room.X < 0 || room.Y < 0)
+            return -1;
+        var dir = GateDirOf(room);
+        if (dir == null)
+            return -1;
+        var neighbor = Territory.RegionNeighbor(room.RegionId, dir.Value);
+        if (neighbor < 0 || !State.Territory.IsRegionUnlocked(neighbor))
+            return -1;
+        var other = GateRoom(neighbor, Territory.Opposite(dir.Value));
+        if (other == null || !other.Open)
+            return -1;
+        return neighbor;
+    }
+
+    /// <summary>过界：把人送到对面区域的连接点房。</summary>
+    public bool CrossTo(int regionId)
+    {
+        var here = Room(PlayerRoomId);
+        if (here == null || CrossTargetRegion(here.Id) != regionId)
+            return false;
+        var dir = GateDirOf(here);
+        if (dir == null)
+            return false;
+        var other = GateRoom(regionId, Territory.Opposite(dir.Value));
+        if (other == null)
+            return false;
+        PassTime(CostMove * TerritoryClock.StepMinutes);
+        Enter(other.Id);
+        Write($"你去了{Territory.RegionName(regionId)}。");
         return true;
     }
 
@@ -264,7 +480,7 @@ public sealed partial class HubSession
     /// <summary>开发：按建筑表建新房间。花材料，建成后先进入未放置列表。</summary>
     public bool BuildRoomDef(int defId)
     {
-        if (!State.Catalog.Rooms.TryGetValue(defId, out var def) || !def.Buildable)
+        if (DefDatabase<RoomDef>.GetById(defId) is not RoomDef def || !def.Buildable)
             return false;
         if (State.Territory.Level < def.MinTerritoryLevel)
             return false;
@@ -281,6 +497,7 @@ public sealed partial class HubSession
             Id = id + 1, Name = def.Name, RegionId = def.RegionId,
             X = -1, Y = -1, Open = true, Permission = def.Permission,
             Buildable = def.Buildable,
+            Illustration = def.Illustration,
         };
         added.MaterialCost.AddRange(def.MaterialCost);
         foreach (var tag in def.Tags)
@@ -295,7 +512,7 @@ public sealed partial class HubSession
     /// <summary>开发：按建筑表建新设施。花材料，建成后先进入未放置列表。</summary>
     public bool BuildFacilityDef(int defId)
     {
-        if (!State.Catalog.Facilities.TryGetValue(defId, out var def) || !def.Buildable)
+        if (DefDatabase<FacilityDef>.GetById(defId) is not FacilityDef def || !def.Buildable)
             return false;
         if (!State.Territory.CanPayWith(State.Roster.Master, def.MaterialCost))
             return false;
@@ -322,12 +539,20 @@ public sealed partial class HubSession
         return true;
     }
 
-    public bool BuildRoomDef(int defId, int x, int y)
+    /// <summary>
+    /// 建一间房间并直接安装进指定空房。
+    /// 所有前置条件都在扣料之前验完——否则建成了却装不进去，材料就白扣了。
+    /// </summary>
+    public bool BuildRoomDef(int defId, int vacantRoomId)
     {
+        var vacant = Room(vacantRoomId);
+        if (vacant == null || !vacant.Vacant || vacant.X < 0 || vacant.Y < 0)
+            return false;
+        if (DefDatabase<RoomDef>.GetById(defId) is not RoomDef def || !def.Buildable)
+            return false;
         if (!BuildRoomDef(defId))
             return false;
-        var last = State.Territory.Rooms[^1];
-        return PlaceRoom(last.Id, x, y);
+        return PlaceRoom(State.Territory.Rooms[^1].Id, vacantRoomId);
     }
 
     public bool BuildFacilityDef(int defId, int roomId)
@@ -351,15 +576,27 @@ public sealed partial class HubSession
         return true;
     }
 
-    /// <summary>开发：把未放置的房间放到网格空位上。</summary>
-    public bool PlaceRoom(int roomId, int x, int y)
+    /// <summary>
+    /// 开发：把已建好的房间安装进一间空房。空房本体被顶替掉，格子从此归新房间。
+    /// 房间只能装在空房里——想往别处放，得先开拓出空房。
+    /// </summary>
+    public bool PlaceRoom(int roomId, int vacantRoomId)
     {
         var room = Room(roomId);
+        var vacant = Room(vacantRoomId);
         if (room == null || room.X >= 0)
             return false;
-        if (!State.Territory.PlaceRoom(x, y, room))
+        if (vacant == null || !vacant.Vacant || vacant.X < 0 || vacant.Y < 0)
             return false;
-        Write($"把{room.Name}放到了网格上。");
+        var x = vacant.X;
+        var y = vacant.Y;
+        State.Territory.Rooms.Remove(vacant);
+        if (!State.Territory.PlaceRoom(x, y, room))
+        {
+            State.Territory.Rooms.Add(vacant); // 放不回去就还原，别把空房弄丢
+            return false;
+        }
+        Write($"把{room.Name}装进了空房。");
         return true;
     }
 

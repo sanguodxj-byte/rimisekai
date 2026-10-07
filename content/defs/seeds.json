@@ -1,0 +1,63 @@
+{
+  "defType": "NewGameSeedDef",
+  "defs": [
+    {
+      "defName": "Standard",
+      "label": "标准开局",
+      "money": 10000,
+      "startRoomId": 1,
+      "startCharacterName": "璐米埃尔",
+      "voicePath": "res://content/voice.json",
+      "voicePaths": [],
+      "bagStock": {
+        "干粮": 5,
+        "木材": 10,
+        "石材": 10
+      },
+      "characters": [
+        {
+          "name": "你",
+          "master": true,
+          "roomId": -1,
+          "favor": 0,
+          "traits": [],
+          "portrait": ""
+        },
+        {
+          "name": "璐米埃尔",
+          "master": false,
+          "roomId": 1,
+          "favor": 50,
+          "traits": [
+            "Maid"
+          ],
+          "portrait": ""
+        }
+      ]
+    },
+    {
+      "defName": "Hard",
+      "label": "困难开局",
+      "money": 10000,
+      "startRoomId": 1,
+      "startCharacterName": "",
+      "voicePath": "res://content/voice.json",
+      "voicePaths": [],
+      "bagStock": {
+        "干粮": 5,
+        "木材": 10,
+        "石材": 10
+      },
+      "characters": [
+        {
+          "name": "你",
+          "master": true,
+          "roomId": -1,
+          "favor": 0,
+          "traits": [],
+          "portrait": ""
+        }
+      ]
+    }
+  ]
+}

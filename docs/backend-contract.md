@@ -23,17 +23,28 @@
 
 `Header() -> HubHeader(Place, Season, Weather, Hour, Minute, Money)`
 
-- 地点形如 `[领地·中央 · 庭院]`，区域名按 RegionId：0 中央 / 1 东部 / 2 西部
-- 季节 `Season`（Spring/Summer/Autumn/Winter），天气 `Weather`（Clear/Cloud/Rain/Snow），时刻 24 小时，金钱 `long`
+- 地点 `Place` 就是领地名（`Territory.Name`，空则「领地」），**不拼区域名、不拼房名**。
+  区域名（`Territory.RegionName`）只出现在「去往XX」这类文案里，3×3 拼图扁平编号：
+  0 中心区 / 1 北区 / 2 东区 / 3 南区 / 4 西区 / 5 西北区 / 6 东北区 / 7 西南区 / 8 东南区
+- 季节 `Season`（Spring/Summer/Autumn/Winter，15 天一换），天气 `Weather`（Clear/Cloud/Rain/Snow/HeavyRain/Thunder/Wind/HeavySnow/Blizzard），时刻 24 小时，金钱 `long`
 
 ### 2.2 地图
 
-- `Map() -> IReadOnlyList<Room>`：只返回当前 `RegionId` 的房间。`Room` 字段：`Id, Name, RegionId, X, Y, Open, OpenCost, Links(List<int>), Permission`
+- `Map() -> IReadOnlyList<Room>`：只返回当前 `RegionId` 的房间。`Room` 字段：`Id, Name, RegionId, X, Y, Open, OpenCost, Vacant, Links(List<int>), Permission`
 - `Open == false` 即"未开拓"；`Links` 是双向通路
-- `SelectRegion(id)`：只能选 `< UnlockedRegions` 的区域
-- `Enter(roomId)`：进已开放房间（读档/开局定位用，无返回值）
+- `SelectRegion(id)` 只认 `Territory.IsRegionUnlocked(id)`；`Enter(roomId)` 进已开放房间（读档/开局定位用，无返回值）
 - `Move(roomId) -> bool`：必须通路相连且目标开放；**被遮盖层盖住时（`MapCovered`）一定失败**
 - `Develop(roomId) -> bool`：花钱开拓（扣 `OpenCost`），成功写日志
+- **未开发格分两种**（2026-10-01）：① 有房间实体但 `Open == false`；② **空格子**（压根没有房间实体）。
+  起始区域 5×5 里 25 格只有 5 间房，剩下 20 格全是第 ② 种。开拓第 ② 种走
+  `DevelopVacantCell(regionId, x, y)`，按**越开越贵**定价（见 §4 的 `Vacant*` 常量），
+  开出来是 `Name = "空房"`、`Vacant = true` 的毛坯。相邻判定用 `Territory.NearOpenAt(regionId, x, y)`。
+- **安装**：`PlaceRoom(roomId, vacantRoomId)` —— 已建好的房间**只能装进空房**（`Vacant == true`），
+  不能往裸格子上放；装进去时空房本体被顶替掉。`Room.Vacant` 随存档走。
+- **过界**（2026-10-01）：`CrossTargetRegion(roomId) -> int` 看人站的这间房能不能去隔壁，
+  能则返回目标区域 Id，否则 -1。三条同时成立才通：① 这间房在本区的**连接点**格上
+  （`Territory.RegionGate(dir)` 那一格）；② 对面区域已解锁；③ **对面那块地图的对应连接点上也有房**。
+  `CrossTo(regionId) -> bool` 落地：扣移动时间，`Enter` 到对面连接点房，写日志。
 
 ### 2.3 此处
 
@@ -134,7 +145,8 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - `FindFoodIn(who, roomId) / ConsumeFood(who, roomId)`：吃东西必须取到实物，背包优先、其次该房间设施存货
 - `Stock() -> IReadOnlyDictionary<string, int>`：**玩家背包**快照（买卖、送礼都走背包）
 - `Trade(itemId, count, unitPrice, selling)`：通用买卖（自定价，调试/事件用）
-- `MarketTrade(itemId, count, selling) -> bool`：按报价表买卖；报价 `MarketOffer(ItemId, BuyPrice, SellPrice)`，`BuyPrice`=从店买，`SellPrice`=卖给店
+- **交易结算制**：`OpenTrade()` 打开交易页（浏览行情**不耗时**）；`AtMarket` 为真才能 `MarketTrade`；`LeaveMarket()` 关页结束（不耗时）。**首笔成交即结算行程**：当天第一笔买/卖成交时固定扣 6 小时（`MarketSettledDay` 记当天，0 点刷新），之后的成交免费；校验失败的买卖不耗时也不结算。`TradeAvailable` = 今天还没成交过，供交易入口按钮置灰
+- `MarketTrade(itemId, count, selling) -> bool`：按当日行情买卖；报价 `MarketOffer(ItemId, BuyPrice, SellPrice, SellOnly, Stock)`。**行情每日 0 点重掷**（`Territory.RollMarketDay`）：每种 ThingDef 物品有存货（按价值分档，0=今日无货买不了但仍可卖）与价格系数（70-130）。**库存即价格**：买入压库存、卖出抬库存——买入价 = 基准 × 系数% × (100−库存×4，下限 60)%；卖出价 = 基准 × 60% × 系数% × (100−库存×5，下限 70)%（集市存货越多，玩家卖价越低）。武器为**运行时独特实例**：集市每日随机锻 3-6 件（材料/品质只取前三种，附魔低概率，不强化不祝福），在售武器买走即下架；玩家卖武器 = 价值 × 60% × 当日武器系数（`WeaponPricePercent`，70-130），卖掉即上架可被买回。设施无库存概念，直报价。显式报价表（`Territory.Market`）优先级最高
 - `Craft(itemId) -> bool`：材料从背包+设施存货扣，成品进背包；主角涨对应生活经验
 - 配方 `Recipe`：`ItemId, Station(工作台种类，对应 WorkTask), OutputCount, Skill, Costs[]`
 
@@ -194,6 +206,10 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 
 一句台词是"说一句就走"，场景事件是"演一段"。整条做成数据，不需要写代码。
 
+- **全存档终身仅演一次**：一旦触发开演即记入 `State.FiredEvents`（存档原生持久化集合），已演过绝不重复演出
+- **触发点唯一且情境语义明确**：严禁在 `PassTime` 或进房 `Move`/`Enter` 挂全局抽签；必须在特定生命周期业务挂点（如 `CoSleep` 双人同床共寝、`EventBoard` 重大事件板）所有严苛条件同时满足时精确触发
+- **严苛门槛（无极度宽松）**：`Gate` 必须精确表达情境，支持 `RoomTags`（房间标签匹配）、`LevelMin`（角色等级门槛）、`AllMembersMaxLevel`（全队满级100级）、`ReturnedFromCombat`（从战斗/副本胜利归来状态）、`Soaked`（淋湿）、`Weather/Season`、`Bond/Favor`，缺一不可
+- **演出态互斥**：场景开演或对话进行时，右下角面板切换为**演出态**（展示剧本标题或发言人，隐藏交谈/接触/离开等社交按钮，点击面板推进对话），绝不与日常交互打架
 - `State.Voice.Scenes: SceneLibrary` 持有事件表；`SceneRunner(library, territory)` 负责执行
 - `SceneRunner.Begin(character, ctx) -> SceneRun?`：挑一个可触发的事件开演；挑不出返回 null
 - `SceneRun`：`NextLine()` 推进一句、`Advance(run, ctx)` 推进一步、`Choose(run, id, ctx)` 选分支、
@@ -206,7 +222,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
   SetFlag / ClearFlag / SetCounter / GrantTrait / RemoveTrait / AddRelation / RemoveRelation / Log
 - 状态机：`Begin` 时立刻记 `SceneLastDay` 冷却；`Flag` 留到跑完才置位，
   因此中途中断的事件下次还能接着讲
-- 触发判定顺序：角色匹配 → Gate → 状态机 → 冷却 → 掷骰
+- 触发判定顺序：FiredEvents 终身去重 → 角色匹配 → Gate 全条件通过 → 状态机 → 冷却 → 掷骰
 
 #### 2.11d LLM 生成层
 
@@ -231,7 +247,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - **日志是快照不是流水**：每次玩家操作（`BeginOperation`）清空重写，一次推进只留当前状态
 - **角色行为一人一行**：`WriteActivity(characterId, text)` 同角色重复调用只替换旧行，
   因此推进时间不会把一个角色的过程堆成好几行。主界面每步据此显示“谁在做什么”
-- `CloseDay(random?) -> DaySummary(SeasonChanged, Season, Weather)`：全员回满体力气力、清疲劳、雇佣天数+1、任务冷却、日终事件；季节变化与天气自动写日志。**主界面日终调这个**
+- `CloseDay(random?) -> DaySummary(SeasonChanged, Season, Weather)`：全员回满体力气力、清疲劳、雇佣天数+1、任务冷却、作物生长、日终事件；季节变化与当日天气自动写日志。**主界面日终调这个**
 
 ## 3. 角色：`Rimisekai.Character.CharacterState`
 
@@ -274,8 +290,19 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 
 ## 4. 领地：`Rimisekai.Housing.Territory`
 
-- 常量：区域上限 3、房间上限 100；采集每步 +10、制作 +15，满 100 出货；采集/制作经验 3
-- `UnlockRegion / SetUnlockedRegions`；`AddRoom` 要求 `RegionId < UnlockedRegions`
+- 常量：每区 5×5（`RegionSize`）、领地最多 3×3 个区域（`MaxTerritoryRegions = 9`）、房间上限 100；
+  采集每步 +10、制作 +15，满 100 出货；采集/制作经验 3
+- **3×3 拼图**：RegionId 是扁平编号，位置固定
+  （0 中心 / 1 北 / 2 东 / 3 南 / 4 西 / 5 西北 / 6 东北 / 7 西南 / 8 东南，见 `RegionCellOf`）。
+  解锁状态存在位掩码 `UnlockedRegionMask` 上（随存档走），用 `IsRegionUnlocked(id)` 查询。
+  **两段式解锁**：中心区铺满（`IsRegionFull`，25 格都有房间，不看房里有没有设施）→ 开四正
+  （`OrthogonalMask`）；四正里任意一块铺满 → 开四角（`DiagonalMask`）。
+  `TryUnlockByFill() -> List<int>` 返回本次新开的区域；`UnlockRegion()` 是手动入口，
+  只推进到下一档、不做铺满判定。POI 区域从 `MaxTerritoryRegions` 起顺延（`SetUnlockedRegions`）。
+- **连接点**：每区四边正中一格（`RegionGate(dir)`：北 (2,0) / 东 (4,2) / 南 (2,4) / 西 (0,2)）。
+  `RegionNeighbor(regionId, dir)` / `Opposite(dir)` / `RegionName(id)` 是拼图几何与文案。
+  过界判定见 §2.2。
+- `AddRoom` 要求 `IsRegionUnlocked(room.RegionId)`
 - `OpenRoom / Build` 花钱（`OpenCost / BuildCost`），设施建成后按 `EffectId` 累房间效果，`Effect(id)` 查询
 - 设施 `Facility`：`Id, Name, RoomId, Usage, Capacity, YieldItemId, Skill, Built, BuildCost, EffectId`
 - 客人 `Guest(Id, Name, RoomId, Purpose)`；`AddGuest / RemoveGuest`
@@ -283,11 +310,19 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 
 ## 5. 时钟与世界效果
 
-`Rimisekai.Clock.GameClock`：一天 1440 分钟，槽 360 分钟×4 段，7 天一季；`Day, Minutes, Season, Week, Slot`；`Advance / SkipToNextDay / SetTime`。
+`Rimisekai.Clock.GameClock`：一天 1440 分钟，槽 360 分钟×4 段，15 天一季、全年 60 天；`Day, Minutes, Season, Week, Slot`；`Advance / SkipToNextDay / SetTime`。
 
 `WorldEffects`：
 
-- 天气按季节权重 roll（春晴多、冬雪多）；`YieldPercent`：冬天采集/烹饪减半，雨天采矿 70%，雪天采集/采矿 70%，其余 100%
+- 天气是**按小时步进的马尔可夫演化**（`Advance(current, season, rng)`，由 `PassTime` 每跨整点调用）：每种天气有持续概率（晴约一天半、雷雨约七小时），转变只在相邻天气间走；状态空间按季隔离——冬季不下雨，非冬季不落雪。变天写日志"天气转为X。"并触发 `HubEventTrigger.Weather`。不再有每日定时重掷
+- `YieldPercent`：冬天采集/烹饪减半，雨天采矿 70%，雪天采集/采矿 70%，其余 100%
+
+耕地（`Territory` 的耕作语义 + `CropDef`）：
+
+- 设施 `YieldItemId` 命中某 `CropDef.ProduceItemId` 即为**耕地**；其余采集设施（矿脉、果树等）保持即时抽取
+- 耕作（Till）在耕地上= 播种（消耗背包/仓储里的 `SeedItemId` 一份）→ 当季每天 `SettleDay` 生长 +1 → 长满 `GrowthDays` 收获（产量沿用采集公式并套 `YieldPercent`）
+- 非当季**暂停不枯**：播不了种、也不生长；换季时没长熟的留着，回来接着长
+- 状态判定 `PlotState`（ReadySow/ReadyHarvest/Growing/OutOfSeason/NoSeed/NotPlot）供玩家操作前置检查与 NPC 选活过滤共用；NPC 耕完一下若地里无事可做就回决策层重挑，不会站田头空转
 
 ## 6. 存档：`Rimisekai.Save.SaveSystem`
 
@@ -307,6 +342,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - 内容分两层：`content/world.json` 是静态表（领地名/食物定义/5 房/5 通路/7 设施），`content/newgame.json` 是正常种子（玩家+女仆），`content/newgame_hard.json` 是困难种子（只有玩家）；开场日志不配表，按出生房间生成。读档世界重进时种子只补台词
 - 开局 5 房：庭院（水井/躺椅/篝火）、客厅（沙发）、卧室（床）、森林（草药丛）、山岳（矿脉）；起始木材×10、石材×10 在玩家背包，干粮×5 放在篝火里（NPC 够得着才有饭吃）
 - 开发（`HubSession`）：`AddRoomCopy/AddFacilityCopy`（照抄**可建造**类型，花材料）、`MoveRoom/MoveFacility`（空格子）、`SetRoomOpen`（开花钱/关免费）、`SetLink`（加拆通路）、`RemoveRoom/RemoveFacility`（材料按 60% 向下取整返还，拆房先挪人、级联拆设施、清通路；玩家在里面不给拆）。每次开发走 1 格时间；定义与运行时都有 `MaterialCost` + `Buildable`，存档保留
+- 开拓/安装（2026-10-01）：`DevelopEmptyRoom(roomId)`（已有实体、`Open == false`，花 `OpenCost` ＋ `MaterialCost`）、`DevelopVacantCell(x, y)`（空格子，越开越贵，生成 `Vacant` 空房）、`PlaceRoom(roomId, vacantRoomId)`（已建房间**只能装进空房**，空房被顶替）。`Room.Vacant` 随存档走
 - 可建造名单：`Territory.BuildableRooms/BuildableFacilities`（按名去重，开发菜单直接读）。当前房间仅客厅/卧室，设施除草药丛/矿脉外全可建；地形与野外资源不可建，删了也不返材料
 - 设施用途一览：水井 Gather、躺椅/床/沙发 Rest、晾衣绳 Tailoring、灶/餐桌 Cooking、工作台 Woodwork、草药 Gather、矿脉 Mine、神龛/货架 Free；`Territory.RoomActions(roomId)` 直接给某房能支撑的行动并集
 

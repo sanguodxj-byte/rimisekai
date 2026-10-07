@@ -18,29 +18,77 @@ public sealed class HaulingState : BaseWorkerState
     public override bool Tick(WorkerContext ctx)
     {
         var worker = ctx.Worker;
+
+        // 阶段一：前往源设施取料
+        if (worker.HaulPhase == HaulPhase.Fetching)
+        {
+            if (worker.Path.Count > 0)
+            {
+                MoveAlong(worker, ctx);
+                if (worker.Path.Count > 0)
+                    return false;
+            }
+
+            // 物理抵达源设施房间，当面取料
+            var source = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulSourceId && f.Built);
+            if (source == null)
+            {
+                EndHaul(worker);
+                return true;
+            }
+
+            var taken = ctx.Territory.TakeFrom(ctx.Character, source, worker.HaulItemId, worker.HaulCount);
+            if (taken <= 0)
+            {
+                EndHaul(worker);
+                return true;
+            }
+
+            worker.HaulCount = taken;
+            worker.HaulPhase = HaulPhase.Delivering;
+
+            var target = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulTargetId && f.Built);
+            if (target != null && target.RoomId != worker.RoomId)
+            {
+                GotoRoom(worker, ctx.Territory, target.RoomId);
+                worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+                return false;
+            }
+        }
+
+        // 阶段二：携带物品前往目标设施卸料
         if (worker.Path.Count > 0)
         {
-            MoveAlong(worker);
+            MoveAlong(worker, ctx);
             if (worker.Path.Count > 0)
                 return false;
         }
 
-        var target = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulTargetId && f.Built);
-        if (target == null)
+        var deliverTarget = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulTargetId && f.Built);
+        if (deliverTarget == null)
         {
             EndHaul(worker);
             return true;
         }
 
-        var moved = target.CanStore
-            ? ctx.Territory.StoreFrom(ctx.Character, target, worker.HaulItemId, worker.HaulCount)
-            : Deposit(ctx.Character, target, worker.HaulItemId, worker.HaulCount);
+        var moved = deliverTarget.CanStore
+            ? ctx.Territory.StoreFrom(ctx.Character, deliverTarget, worker.HaulItemId, worker.HaulCount)
+            : Deposit(ctx.Character, deliverTarget, worker.HaulItemId, worker.HaulCount);
 
         if (moved > 0)
-            ctx.Narrate($"{ctx.Character.Name}把{worker.HaulItemId}放到了{target.Name}。");
+            ctx.Narrate($"{ctx.Character.Name}把{worker.HaulItemId}放到了{deliverTarget.Name}。");
 
         EndHaul(worker);
         return true;
+    }
+
+    private static void GotoRoom(Worker worker, Territory territory, int toRoomId)
+    {
+        worker.Path.Clear();
+        if (worker.RoomId == toRoomId)
+            return;
+        foreach (var step in territory.Route(worker.RoomId, toRoomId))
+            worker.Path.Enqueue(step);
     }
 
     private static int Deposit(Character.CharacterState who, Facility target, string itemId, int count)
@@ -81,6 +129,14 @@ public sealed class HaulingState : BaseWorkerState
         }
 
         var place = GetPlaceName(ctx);
+        if (worker.HaulPhase == HaulPhase.Fetching)
+        {
+            var source = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulSourceId);
+            return source == null
+                ? $"{ctx.Character.Name}在{place}准备取{worker.HaulItemId}。"
+                : $"{ctx.Character.Name}在{place}从{source.Name}取{worker.HaulItemId}。";
+        }
+
         var target = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulTargetId);
         return target == null
             ? $"{ctx.Character.Name}正把{worker.HaulItemId}送去{place}。"

@@ -1,5 +1,6 @@
 using System;
 using Rimisekai.Character;
+using Rimisekai.Clock;
 
 namespace Rimisekai.Housing.StateMachine.States;
 
@@ -25,7 +26,7 @@ public sealed class WorkingState : BaseWorkerState
 
         if (worker.Path.Count > 0)
         {
-            MoveAlong(worker);
+            MoveAlong(worker, ctx);
             if (worker.Path.Count > 0)
                 return false;
         }
@@ -57,12 +58,10 @@ public sealed class WorkingState : BaseWorkerState
 
         worker.Progress += tick;
 
-        if (character.Condition.Fatigue >= 100)
-            character.Affect.AddMood(-1);
-
         if (worker.Progress >= Territory.FinishAt)
         {
-            var log = Finish(territory, character, worker, facility, ctx.YieldFor);
+            var log = Finish(territory, character, worker, facility, ctx.YieldFor,
+                ctx.StepContext?.Season ?? Season.Spring);
             if (log != null)
                 ctx.WorkLogs.Add(log);
             worker.Progress = 0;
@@ -71,18 +70,35 @@ public sealed class WorkingState : BaseWorkerState
         return false;
     }
 
-    private static WorkLog? Finish(Territory territory, CharacterState character, Worker worker, Facility facility, Func<ActionKind, int>? yieldFor)
+    private static WorkLog? Finish(Territory territory, CharacterState character, Worker worker,
+        Facility facility, Func<ActionKind, int>? yieldFor, Season season)
     {
         if (ActionKindMap.IsExtractive(worker.Task))
         {
+            // 耕地按播种/收获结算，不是无中生有的抽取；生长中这一格空过。
+            var farm = territory.FarmWork(character, facility, worker.Task, season, yieldFor, out var handled);
+            if (handled)
+            {
+                character.Condition.Spend(0, 0);
+                // 耕完这一下若地里已无事可做，回决策层重挑。
+                if (territory.PlotState(facility, season, character)
+                    is Territory.FarmState.Growing
+                    or Territory.FarmState.OutOfSeason
+                    or Territory.FarmState.NoSeed)
+                {
+                    worker.Goal = ActionKind.None;
+                    worker.Task = ActionKind.None;
+                    worker.Phase = WorkPhase.Idle;
+                }
+                return farm;
+            }
             var amount = Math.Clamp(Math.Max(1, character.Life(ActionKindMap.SkillOf(worker.Task)!.Value)) / 40, 1, 4);
             if (yieldFor != null)
                 amount = Math.Max(1, amount * yieldFor(worker.Task) / 100);
             if (facility.YieldItemId.Length > 0)
                 territory.Produce(character, facility.YieldItemId, amount);
             character.GainLifeExp(ActionKindMap.SkillOf(worker.Task)!.Value, Territory.GatherExp);
-            character.Condition.Spend(0, 0, Traits.ScaledFatigue(character, 5));
-            character.Condition.Apply(character);
+            character.Condition.Spend(0, 0);
             return new WorkLog
             {
                 CharacterId = worker.CharacterId,

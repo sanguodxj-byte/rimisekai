@@ -13,6 +13,8 @@ public sealed partial class HubSession : IVoiceSink
 {
     public GameState State { get; }
     public int PlayerRoomId { get; private set; } = -1;
+    public Room? PlayerRoom() => Room(PlayerRoomId);
+    public int Hour => State.Clock.Hour;
 
     private readonly Dictionary<int, int> _presence = new();
 
@@ -28,4 +30,21 @@ public sealed partial class HubSession : IVoiceSink
     }
 
     private Facility? Fixture(int id) => State.Territory.Facilities.Find(f => f.Id == id);
+
+    /// <summary>
+    /// 设施是不是干活的地方：声明支持任一工作行动才算，床、浴池这类不算。
+    /// 排班页据此决定点它排的是工作还是娱乐；查不到返回 false。
+    /// </summary>
+    public bool FacilityIsWorkbench(int facilityId)
+    {
+        var facility = Fixture(facilityId);
+        if (facility == null)
+            return false;
+        foreach (var task in ActionKindMap.WorkOrdered)
+        {
+            if (facility.Supports(task))
+                return true;
+        }
+        return false;
+    }
 }

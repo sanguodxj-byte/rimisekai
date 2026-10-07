@@ -16,6 +16,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
     <RootNamespace>Rimisekai</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RimisekaiCore\RimisekaiCore.csproj" />
+    <Compile Remove="src\Tools\InkCapture.cs" />
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Godot.NET.Sdk" Version="4.7.0" />
