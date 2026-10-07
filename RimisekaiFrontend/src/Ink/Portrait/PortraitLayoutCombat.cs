@@ -17,7 +17,7 @@ public static partial class PortraitLayout
     public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
     public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
     /// <summary>首领条：紧贴顶栏下方（主人定 2026-10-08：不留无用空白），宽 1000，不得被侵占。</summary>
-    public static Rect2 CombatBoss => new(40, CombatTop.End.Y + 10f, 1000, 90f);
+    public static Rect2 CombatBoss => new(40, CombatTop.End.Y + 10f, 1000, 110f);
     public static Rect2 CombatRound => CombatTop;
     /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
     public static Rect2 CombatGearHit => new(CanvasWidth - Pad - 118f, SafeTop + 6f, 118f, 118f);
@@ -48,12 +48,12 @@ public static partial class PortraitLayout
         var width = (CanvasWidth - 100f) / 2f;
         return new Rect2(40f + slot % 2 * (width + 20f), CombatActions.Position.Y + (CombatActions.Size.Y - 420f) / 2f + slot / 2 * 220f, width, 200f);
     }
-    /// <summary>首领血条右侧的行动点行：实心菱 18px、间距 30px。</summary>
+    /// <summary>首领行动点：移到血条下方一行、右对齐（主人定 2026-10-08：血条与 HP 数字占满整宽）：实心菱 18px、间距 30px。</summary>
     public static Vector2 BossPipCenter(int index, int count) =>
-        new(CombatBoss.End.X - 20f - (count - 1 - index) * 30f, CombatBoss.Position.Y + 64f);
+        new(CombatBoss.End.X - 10f - (count - 1 - index) * 30f, CombatBoss.Position.Y + 92f);
     public static Rect2 BossName => new(CombatBoss.Position.X, CombatBoss.Position.Y, 420f, 52f);
-    public static Rect2 BossHp => new(CombatBoss.Position.X + 440f, CombatBoss.Position.Y, 420f, 52f);
-    public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 58f, CombatBoss.Size.X - 160f, 14f);
+    public static Rect2 BossHp => new(CombatBoss.Position.X + 440f, CombatBoss.Position.Y, CombatBoss.Size.X - 440f, 52f);
+    public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 58f, CombatBoss.Size.X, 14f);
 
     // 纵深档位放缓：前后排卡片尺寸差距减小（最远排内宽仍 148px，26px 字号完整可显）。
     /// <summary>3D DRPG 纵深投影深度分档（从近到远）。</summary>
