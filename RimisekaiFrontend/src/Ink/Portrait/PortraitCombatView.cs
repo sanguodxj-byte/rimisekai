@@ -270,10 +270,10 @@ public partial class PortraitCombatView : Control
         InkDraw.TextBounded(this, PortraitLayout.BossHp, $"HP {boss.Hp} / {boss.MaxHp}",
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
         PortraitFrame.Bar(this, PortraitLayout.BossMeter, (float)boss.Hp / boss.MaxHp);
-        // 血条下方一行右对齐，按内容声明的行动点数画实心菱（默认 1 枚）。
+        // 血条下方正中一行，按内容声明的行动点数画实心菱（默认 1 枚）。
         var pips = Math.Max(1, boss.ActionPoints);
         for (var i = 0; i < pips; i++)
-            InkDraw.Jewel(this, PortraitLayout.BossPipCenter(i, pips), 9f, InkStyle.Line);
+            InkDraw.Jewel(this, PortraitLayout.BossPipCenter(i, pips), 14f, InkStyle.Line);
     }
 
     private void BuildEnemyGeometry(Battle battle)

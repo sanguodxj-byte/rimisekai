@@ -48,9 +48,9 @@ public static partial class PortraitLayout
         var width = (CanvasWidth - 100f) / 2f;
         return new Rect2(40f + slot % 2 * (width + 20f), CombatActions.Position.Y + (CombatActions.Size.Y - 420f) / 2f + slot / 2 * 220f, width, 200f);
     }
-    /// <summary>首领行动点：移到血条下方一行、右对齐（主人定 2026-10-08：血条与 HP 数字占满整宽）：实心菱 18px、间距 30px。</summary>
+    /// <summary>首领行动点：血条下方正中一行，实心菱半径 14、间距 44（主人定 2026-10-08：血条与 HP 数字占满整宽）：实心菱 18px、间距 30px。</summary>
     public static Vector2 BossPipCenter(int index, int count) =>
-        new(CombatBoss.End.X - 10f - (count - 1 - index) * 30f, CombatBoss.Position.Y + 92f);
+        new(CombatBoss.GetCenter().X + (index - (count - 1) / 2f) * 44f, CombatBoss.Position.Y + 92f);
     public static Rect2 BossName => new(CombatBoss.Position.X, CombatBoss.Position.Y, 420f, 52f);
     public static Rect2 BossHp => new(CombatBoss.Position.X + 440f, CombatBoss.Position.Y, CombatBoss.Size.X - 440f, 52f);
     public static Rect2 BossMeter => new(CombatBoss.Position.X, CombatBoss.Position.Y + 58f, CombatBoss.Size.X, 14f);
