@@ -210,7 +210,7 @@ public partial class PortraitCombatView : Control
             if (ally)
             {
                 if (_actor?.Id == m.Id)
-                    DrawCircle(c, 54f, InkStyle.Line);
+                    DrawRect(new Rect2(c - new Vector2(54f, 54f), new Vector2(108f, 108f)), InkStyle.Line);
                 PortraitFrame.Avatar(this, c, 44f, tex, m.Name, ring: _actor?.Id != m.Id);
             }
             else
@@ -374,7 +374,7 @@ public partial class PortraitCombatView : Control
     private void DrawOpEntry(Battle battle)
     {
         var panel = PortraitLayout.CombatActions;
-        PortraitFrame.RoundRect(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)), 50f, InkStyle.Panel, InkStyle.Dim, 4f);
+        PortraitFrame.Dock(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)));
         var enabled = _actor != null;
         if (_actor != null)
         {
@@ -389,8 +389,10 @@ public partial class PortraitCombatView : Control
             var rect = PortraitLayout.CombatButton(slot);
             var pressed = PortraitFrame.IsPressed(rect);
             var armed = enabled && slot == 0 && _armed == BattleSkills.AttackId;
-            PortraitFrame.RoundRect(this, rect, 28f, pressed ? PortraitFrame.PressFill : InkStyle.Bg,
+            PortraitFrame.RoundRect(this, rect, 28f, pressed ? PortraitFrame.PressFill : new Color(InkStyle.Bg, 0.9f),
                 enabled ? InkStyle.Line : InkStyle.WoodDark, 4f);
+            if (enabled)
+                PortraitFrame.RoundRect(this, rect.Grow(-9f), 19f, null, new Color(InkStyle.Dim, 0.6f), 2f);
             var ink = enabled ? InkStyle.Line : InkStyle.Dim;
             OpGlyphs[slot](this, rect.Position.X + 80f, rect.GetCenter().Y, 34f, ink);
             InkDraw.Text(this, new Vector2(rect.Position.X + 150f, rect.GetCenter().Y), OpLabels[slot], PortraitLayout.FontTitle, ink, "lm");

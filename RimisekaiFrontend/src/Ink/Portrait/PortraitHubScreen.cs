@@ -285,6 +285,7 @@ public partial class PortraitHubScreen : Control
     {
         var top = PortraitLayout.PageTop;
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
+        GothicArt.Tile(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), 0.7f);
         var back = PortraitLayout.PageBack;
         if (PortraitFrame.IsPressed(back))
             PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
@@ -304,6 +305,7 @@ public partial class PortraitHubScreen : Control
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), action, PortraitLayout.FontBody, InkStyle.Line, "rm");
             _widgets.Add(new PortraitWidget(r, actionKind, 0, true, action));
         }
+        DrawRect(new Rect2(0, top.End.Y - 4f, PortraitLayout.CanvasWidth, 3f), InkStyle.Dim);
         PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
     }
 
@@ -315,6 +317,7 @@ public partial class PortraitHubScreen : Control
     {
         var hud = PortraitLayout.Hud;
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, hud.End.Y), InkStyle.Bg);
+        GothicArt.Tile(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, hud.End.Y), 0.7f);
         var header = _vm.Hub.Header();
         var items = _vm.HeaderItems();
 
@@ -339,7 +342,7 @@ public partial class PortraitHubScreen : Control
 
         var pill = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - moneyWidth, PortraitLayout.HudLine1 - 38f,
             moneyWidth, 76f);
-        PortraitFrame.RoundRect(this, pill, 38f, null, InkStyle.WoodDark, 3f);
+        PortraitFrame.RoundRect(this, pill, 38f, new Color(InkStyle.Inset, 0.85f), InkStyle.Dim, 3f);
         PortraitGlyph.Coin(this, pill.Position.X + 46f, pill.GetCenter().Y, 20f, InkStyle.Line);
         InkDraw.Text(this, new Vector2(pill.End.X - 32f, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "rm");
 
@@ -361,15 +364,28 @@ public partial class PortraitHubScreen : Control
         PortraitGlyph.Gear(this, sys.GetCenter().X, sys.GetCenter().Y, 26f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(sys, PortraitAction.OpenSystem, 0, true, "系统"));
 
+        DrawRect(new Rect2(0, hud.End.Y - 4f, PortraitLayout.CanvasWidth, 3f), InkStyle.Dim);
         PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, hud.End.Y - 2f);
     }
 
-    /// <summary>底部五页签：图标＋字，当前页签＝骨白实心药丸托底、图标反黑。</summary>
+    /// <summary>
+    /// 底部五页签：图标＋字。哥特版：暗纹石板底、顶沿双线；当前页签＝骨白尖拱牌托底、
+    /// 图标反黑，页签顶沿正上方一枚菱珠。命中块与旧版一致（整格）。
+    /// </summary>
     private void DrawTabBar()
     {
         var bar = PortraitLayout.TabBar;
-        DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y), InkStyle.Bg);
-        PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, bar.Position.Y);
+        var back = new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y);
+        DrawRect(back, InkStyle.Bg);
+        GothicArt.Tile(this, back, 0.7f);
+        DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, 4f), InkStyle.Line);
+        DrawLine(new Vector2(0, bar.Position.Y + 12f), new Vector2(PortraitLayout.CanvasWidth, bar.Position.Y + 12f),
+            InkStyle.Dim, 2f);
+        for (var i = 1; i < PortraitLayout.TabCount; i++)
+        {
+            var x = PortraitLayout.Tab(i).Position.X;
+            DrawLine(new Vector2(x, bar.Position.Y + 48f), new Vector2(x, bar.Position.Y + 160f), new Color(InkStyle.WoodDark, 0.6f), 2f);
+        }
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
@@ -378,7 +394,12 @@ public partial class PortraitHubScreen : Control
             var cy = r.Position.Y + 70f;
             var pill = new Rect2(cx - 76f, cy - 40f, 152f, 80f);
             if (on)
-                PortraitFrame.RoundRect(this, pill, 40f, InkStyle.Line);
+            {
+                PortraitFrame.RoundRect(this, pill, 40f, InkStyle.Line, InkStyle.Line, 3f);
+                PortraitFrame.RoundRect(this, pill.Grow(-8f), 32f, null, new Color(InkStyle.Bg, 0.4f), 2f);
+                InkDraw.Jewel(this, new Vector2(cx, r.Position.Y + 8f), 10f, InkStyle.Line);
+                InkDraw.Jewel(this, new Vector2(cx, r.Position.Y + 8f), 4f, InkStyle.Bg);
+            }
             else if (PortraitFrame.IsPressed(r))
                 PortraitFrame.RoundRect(this, pill, 40f, PortraitFrame.PressFill);
             PortraitGlyph.TabIcons[i](this, cx, cy, 26f, on ? InkStyle.Bg : InkStyle.Dim);
@@ -399,7 +420,7 @@ public partial class PortraitHubScreen : Control
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;
         var width = Mathf.Min(PortraitLayout.FullWidth, InkDraw.Measure(_notice, PortraitLayout.FontMeta).X + 96f);
         var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - 96f, width, 96f);
-        PortraitFrame.RoundRect(this, r, 48f, InkStyle.Hover, InkStyle.Dim, 3f);
+        PortraitFrame.RoundRect(this, r, 48f, new Color(InkStyle.Hover, 0.96f), InkStyle.Line, 3f);
         InkDraw.TextBounded(this, r.Grow(-24f), _notice, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
     }
 

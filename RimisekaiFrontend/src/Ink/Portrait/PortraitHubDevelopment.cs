@@ -77,7 +77,7 @@ public partial class PortraitHubScreen
         }
 
         var panel = PortraitLayout.DevelopmentPanel;
-        PortraitFrame.RoundRect(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)), 56f, InkStyle.Panel, InkStyle.Dim, 4f);
+        PortraitFrame.Dock(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)));
         var counts = new[] { model.ActionRows.Count, model.FacilityRows.Count, model.RoomRows.Count };
         var labels = DevelopmentTabs.Select((t, i) => counts[i] > 0 ? $"{t} {counts[i]}" : t).ToArray();
         var seg = PortraitLayout.DevelopmentSegment;

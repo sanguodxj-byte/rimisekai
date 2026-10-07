@@ -113,18 +113,20 @@ public partial class PortraitHubScreen
         _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, true, room.Name));
     }
 
-    /// <summary>格内角色小圆标：主角实心骨白黑字，其余黑底骨白环。</summary>
+    /// <summary>格内角色小方标（头像一律正方形）：主角骨白实底黑字，其余黑底骨白框。</summary>
     private void DrawToken(Vector2 at, CharacterCard card)
     {
         if (card.IsPlayer)
         {
-            DrawCircle(at, 24f, InkStyle.Line);
+            var box = new Rect2(at - new Vector2(24f, 24f), new Vector2(48f, 48f));
+            DrawRect(box, InkStyle.Line);
             InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Bg, "cm");
         }
         else
         {
-            DrawCircle(at, 24f, InkStyle.Bg);
-            DrawArc(at, 24f, 0f, Mathf.Tau, 32, InkStyle.Line, 3f, true);
+            var box = new Rect2(at - new Vector2(24f, 24f), new Vector2(48f, 48f));
+            DrawRect(box, InkStyle.Bg);
+            DrawRect(box, InkStyle.Line, false, 3f);
             InkDraw.Text(this, at, card.Name[..1], PortraitLayout.FontToken, InkStyle.Line, "cm");
         }
     }

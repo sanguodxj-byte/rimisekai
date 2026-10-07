@@ -200,12 +200,14 @@ public partial class PortraitHubScreen
             var dot = new Vector2(r.End.X - 70f, r.GetCenter().Y);
             if (on)
             {
-                DrawCircle(dot, 40f, InkStyle.Line);
+                InkDraw.Jewel(this, dot, 44f, InkStyle.Line);
+                InkDraw.Jewel(this, dot, 38f, InkStyle.Line);
                 PortraitGlyph.Check(this, dot.X, dot.Y, 22f, InkStyle.Bg);
             }
             else
             {
-                DrawArc(dot, 40f, 0f, Mathf.Tau, 40, can ? InkStyle.Line : InkStyle.WoodDark, 3f, true);
+                InkDraw.Jewel(this, dot, 44f, can ? InkStyle.Line : InkStyle.WoodDark);
+                InkDraw.Jewel(this, dot, 40f, InkStyle.Panel);
                 PortraitGlyph.Plus(this, dot.X, dot.Y, 22f, can ? InkStyle.Line : InkStyle.WoodDark);
             }
             _widgets.Add(new PortraitWidget(r, PortraitAction.PartyPick, who.Id, can, who.Name));
@@ -360,7 +362,7 @@ public partial class PortraitHubScreen
         var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
         var volume = InkSettings.CurrentMasterVolume;
         PortraitFrame.Bar(this, track, volume);
-        DrawCircle(new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 28f, InkStyle.Line);
+        InkDraw.Jewel(this, new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 30f, InkStyle.Line);
         for (var i = 0; i <= 4; i++)
         {
             var cx = track.Position.X + track.Size.X * i / 4f;
