@@ -35,7 +35,7 @@ public partial class PortraitHubScreen
     private void DrawDevelopment()
     {
         var model = DevelopmentModel();
-        PortraitFrame.NotchedFrame(this, PortraitLayout.DevelopmentFrame, InkStyle.Bg);
+        PortraitFrame.GothicFrame(this, PortraitLayout.DevelopmentFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
             for (var x = 0; x < PortraitLayout.GridCols; x++)
                 InkDraw.Ink(this, RectLoop(PortraitLayout.DevelopmentCell(x, y).Grow(-6f)), new Color(InkStyle.WoodDark, 0.5f), 2f);

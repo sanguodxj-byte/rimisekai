@@ -185,7 +185,7 @@ public partial class PortraitHubScreen
             }
             InkDraw.TextBounded(this, PortraitLayout.SkillFocusedLabel,
                 disc.SectorLabels[disc.FocusedSector], PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Pill(this, PortraitLayout.SkillResetButton, "全盘视角", glyph: PortraitGlyph.Back);
+            PortraitFrame.Plaque(this, PortraitLayout.SkillResetButton, "全盘视角", glyph: PortraitGlyph.Back);
             _widgets.Add(new PortraitWidget(PortraitLayout.SkillResetButton, PortraitAction.SkillReset, 0, true, "‹ 全盘视角"));
             DrawTextureRect(ResourceLoader.Load<Texture2D>("res://assets/disc_nav_button.svg"),
                 PortraitLayout.SkillNavigation, false);

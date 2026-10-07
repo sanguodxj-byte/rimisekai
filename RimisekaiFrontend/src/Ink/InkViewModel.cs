@@ -146,10 +146,11 @@ public sealed class InkViewModel
         };
     }
 
+    /// <summary>近期日志（最旧在前），每条一句「a，b」。</summary>
     public IReadOnlyList<string> LogLines()
     {
         var list = new List<string>();
-        foreach (var line in Hub.Log)
+        foreach (var line in Hub.History)
             list.Add(line.Text);
         return list;
     }

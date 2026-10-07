@@ -137,7 +137,7 @@ public partial class PortraitHubScreen
 
         var search = PortraitLayout.StockSearch;
         var editing = _searchEdit is { Visible: true };
-        PortraitFrame.RoundRect(this, search, search.Size.Y / 2f, InkStyle.Panel, editing ? InkStyle.Line : InkStyle.WoodDark, 3f);
+        PortraitFrame.Bevel(this, search, search.Size.Y / 2f, InkStyle.Panel, editing ? InkStyle.Line : InkStyle.WoodDark, 3f);
         PortraitGlyph.Search(this, search.Position.X + 70f, search.GetCenter().Y, 24f, InkStyle.Dim);
         InkDraw.TextBounded(this, new Rect2(search.Position.X + 120f, search.Position.Y, search.Size.X - 160f, search.Size.Y),
             _stockSearch.Length > 0 ? _stockSearch : "搜索物品", PortraitLayout.FontBody, PortraitLayout.FontMeta,
@@ -255,7 +255,7 @@ public partial class PortraitHubScreen
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
             var q = _tradeQty.GetValueOrDefault(line.Id);
-            PortraitFrame.RoundRect(this, r, 22f, q > 0 ? InkStyle.Hover : InkStyle.Bg, q > 0 ? InkStyle.Line : InkStyle.WoodDark,
+            PortraitFrame.Bevel(this, r, 22f, q > 0 ? InkStyle.Hover : InkStyle.Bg, q > 0 ? InkStyle.Line : InkStyle.WoodDark,
                 q > 0 ? 4f : 3f);
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 14f, 360f, 64f), line.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
@@ -264,13 +264,13 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, new Vector2(r.Position.X + 470f, r.GetCenter().Y), $"{line.Price}", PortraitLayout.FontBody, InkStyle.Line, "lm");
 
             var stepper = new Rect2(r.End.X - 30f - 354f, r.GetCenter().Y - 59f, 354f, PortraitLayout.TouchMin);
-            PortraitFrame.RoundRect(this, stepper, 59f, null, InkStyle.Dim, 3f);
+            PortraitFrame.Bevel(this, stepper, 59f, null, InkStyle.Dim, 3f);
             var minus = new Rect2(stepper.Position.X, stepper.Position.Y, PortraitLayout.TouchMin, PortraitLayout.TouchMin);
             var plus = new Rect2(stepper.End.X - PortraitLayout.TouchMin, stepper.Position.Y, PortraitLayout.TouchMin, PortraitLayout.TouchMin);
             if (PortraitFrame.IsPressed(minus))
-                PortraitFrame.RoundRect(this, minus.Grow(-8f), 51f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, minus.Grow(-8f));
             if (PortraitFrame.IsPressed(plus))
-                PortraitFrame.RoundRect(this, plus.Grow(-8f), 51f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, plus.Grow(-8f));
             PortraitGlyph.Minus(this, minus.GetCenter().X, minus.GetCenter().Y, 22f, q > 0 ? InkStyle.Line : InkStyle.WoodDark);
             PortraitGlyph.Plus(this, plus.GetCenter().X, plus.GetCenter().Y, 22f, q < line.Max ? InkStyle.Line : InkStyle.WoodDark);
             InkDraw.Text(this, stepper.GetCenter(), $"{q}", PortraitLayout.FontBody, InkStyle.Line, "cm");
@@ -290,14 +290,14 @@ public partial class PortraitHubScreen
         DrawRect(new Rect2(0, view.End.Y, PortraitLayout.CanvasWidth, PortraitLayout.TabTop - view.End.Y), InkStyle.Bg);
         var (count, delta) = TradeTotals();
         var money = _vm.Hub.State.Money;
-        PortraitFrame.RoundRect(this, bar, 40f, InkStyle.Line);
+        PortraitFrame.Bevel(this, bar, 40f, InkStyle.Line);
         InkDraw.Text(this, new Vector2(bar.Position.X + 50f, bar.Position.Y + 56f), $"共 {count} 件", PortraitLayout.FontMeta, InkStyle.WoodDark, "lm");
         InkDraw.TextBounded(this, new Rect2(bar.Position.X + 50f, bar.Position.Y + 84f, bar.Size.X - 420f, 66f),
             $"{(delta >= 0 ? "+" : "−")} {Math.Abs(delta)}  →  余 {InkText.Money(money + delta)}",
             PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Bg, "lm");
         var commit = new Rect2(bar.End.X - 30f - 290f, bar.Position.Y + 26f, 290f, PortraitLayout.TouchMin);
         var canCommit = count > 0 && money + delta >= 0 && _vm.Hub.TradeAvailable;
-        PortraitFrame.RoundRect(this, commit, 59f, PortraitFrame.IsPressed(commit) ? InkStyle.Hover : InkStyle.Bg);
+        PortraitFrame.Bevel(this, commit, 59f, PortraitFrame.IsPressed(commit) ? InkStyle.Hover : InkStyle.Bg);
         InkDraw.Text(this, commit.GetCenter(), "成交", PortraitLayout.FontBody, canCommit ? InkStyle.Line : InkStyle.Dim, "cm");
         _widgets.Add(new PortraitWidget(commit, PortraitAction.TradeRun, 0, canCommit, "成交"));
     }
@@ -371,7 +371,7 @@ public partial class PortraitHubScreen
         var selRecipe = recipes.First(r => r.ItemId == _craftSel);
         var frame = PortraitLayout.CraftDetail;
         DrawRect(new Rect2(0, view.End.Y, PortraitLayout.CanvasWidth, PortraitLayout.TabTop - view.End.Y), InkStyle.Bg);
-        PortraitFrame.NotchedFrame(this, frame);
+        PortraitFrame.GothicFrame(this, frame);
         var x = frame.Position.X + 50f;
         InkDraw.TextBounded(this, new Rect2(x, frame.Position.Y + 30f, frame.Size.X - 100f, 80f), ItemName(selRecipe.ItemId),
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
@@ -388,7 +388,7 @@ public partial class PortraitHubScreen
         }
         var button = new Rect2(x, frame.End.Y - 50f - 128f, frame.Size.X - 100f, 128f);
         var isTarget = selRecipe.ItemId == target;
-        PortraitFrame.Pill(this, button, isTarget ? "取消生产目标" : "设为生产目标", primary: !isTarget);
+        PortraitFrame.Plaque(this, button, isTarget ? "取消生产目标" : "设为生产目标", primary: !isTarget);
         _widgets.Add(new PortraitWidget(button, PortraitAction.CraftToggle, 0, true, selRecipe.ItemId));
     }
 

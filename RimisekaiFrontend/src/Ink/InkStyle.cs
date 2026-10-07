@@ -56,7 +56,7 @@ public static class InkStyle
         if (System.IO.File.Exists(WindowsFontPath) && file.LoadDynamicFont(WindowsFontPath) == Error.Ok)
             return file;
 
-        if (ResourceLoader.Exists(ProjectFontPath) && file.LoadDynamicFont(ProjectFontPath) == Error.Ok)
+        if (Godot.FileAccess.FileExists(ProjectFontPath) && file.LoadDynamicFont(ProjectFontPath) == Error.Ok)
             return file;
 
         GD.PushWarning($"Rimisekai: 无法加载 {WindowsFontPath} 或 {ProjectFontPath}，回退到系统字体。");

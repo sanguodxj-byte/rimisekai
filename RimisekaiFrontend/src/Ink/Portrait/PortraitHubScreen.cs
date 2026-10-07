@@ -72,6 +72,7 @@ public enum PortraitAction
     RoomGo,
     RoomDemolish,
     NowAvatar,
+    NowPage,
     CharacterSegment,
     SkillCard,
     TraitInfo,
@@ -163,6 +164,7 @@ public partial class PortraitHubScreen : Control
         _interactionOpen = _giftOpen = _observing = false;
         _socialCategory = -1;
         _sheetRoom = -1;
+        _nowPage = 0;
         _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
         _developmentFacilityFirst = _developmentRoomFirst = _developmentActionFirst = 0;
         _tradeQty.Clear();
@@ -183,6 +185,8 @@ public partial class PortraitHubScreen : Control
         LeaveTradeIfOpen();
         CloseTransient();
         _push = PushPage.None;
+        if (i != _tab)
+            StartTabSlide(_tab);
         _tab = i;
         if (_tab == 3 && _storeMode == 1)
             _vm.Hub.OpenTrade();
@@ -219,30 +223,24 @@ public partial class PortraitHubScreen : Control
         _widgets.Clear();
         _scrollAreas.Clear();
         _sheetTop = -1f;
-        // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发。
-        PortraitFrame.SetPress(_pressed && !_dragging ? _pressRect : null);
+        // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发（之后浅填淡出）。
+        ApplyPress();
         PortraitFrame.Backdrop(this);
 
         if (_push != PushPage.None)
-            DrawPushed();
+            DrawPushLayer();
         else if (ConversationActive)
         {
+            _pushShown = PushPage.None;
+            _sheetWasOpen = false;
             DrawScene();
             DrawToast();
             return;
         }
         else
         {
-            switch (_tab)
-            {
-                case 0: DrawTerritory(); break;
-                case 1: DrawRoster(); break;
-                case 2: DrawQuestBoard(); break;
-                case 3: DrawStore(); break;
-                default: DrawLog(); break;
-            }
-            DrawHud();
-            DrawTabBar();
+            _pushShown = PushPage.None;
+            DrawRootTab();
         }
 
         if (_vm.StorageOpen)
@@ -257,27 +255,30 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawSlotSheet);
         else if (_sheet == SheetKind.Item)
             OpenSheetLayer(DrawItemSheet);
+        else
+            _sheetWasOpen = false;
 
         DrawToast();
     }
 
-    /// <summary>
-    /// 抽屉层：下层画面已画完，这里把它的命中块与滚动区整个清掉（只剩压暗的背景），
-    /// 再由 draw 画面板并注册抽屉自己的命中块；draw 返回面板上沿。
-    /// 抽屉之上的压暗区是一整块「收起」命中块。
-    /// </summary>
-    private void OpenSheetLayer(Func<float> draw)
+    /// <summary>根页签：内容＋HUD＋五页签。</summary>
+    private void DrawRootTab()
     {
-        _widgets.Clear();
-        _scrollAreas.Clear();
-        _sheetTop = draw();
-        _widgets.Insert(0, new PortraitWidget(new Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop),
-            PortraitAction.SheetClose, 0, true, "收起"));
+        switch (_tab)
+        {
+            case 0: DrawTerritory(); break;
+            case 1: DrawRoster(); break;
+            case 2: DrawQuestBoard(); break;
+            case 3: DrawStore(); break;
+            default: DrawLog(); break;
+        }
+        DrawHud();
+        DrawTabBar();
     }
 
-    private void DrawPushed()
+    private void DrawPushed(PushPage page)
     {
-        switch (_push)
+        switch (page)
         {
             case PushPage.Character: DrawCharacterPage(); break;
             case PushPage.Disc: DrawSkillPage(); break;
@@ -295,7 +296,7 @@ public partial class PortraitHubScreen : Control
         GothicArt.Tile(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), 0.7f);
         var back = PortraitLayout.PageBack;
         if (PortraitFrame.IsPressed(back))
-            PortraitFrame.RoundRect(this, back.Grow(-8f), 40f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, back.Grow(-8f));
         PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
         var cy = top.GetCenter().Y;
@@ -308,7 +309,7 @@ public partial class PortraitHubScreen : Control
         {
             var r = PortraitLayout.PageAction;
             if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, r.Grow(-8f), 40f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, r.Grow(-8f));
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), action, PortraitLayout.FontBody, InkStyle.Line, "rm");
             _widgets.Add(new PortraitWidget(r, actionKind, 0, true, action));
         }
@@ -330,7 +331,7 @@ public partial class PortraitHubScreen : Control
 
         var place = PortraitLayout.HudPlace;
         if (PortraitFrame.IsPressed(place))
-            PortraitFrame.RoundRect(this, place, 30f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, place);
         var title = _vm.MapTitle();
         var money = items[3].Value;
         var moneyWidth = InkDraw.Measure(money, PortraitLayout.FontMeta).X + 120f;
@@ -367,7 +368,7 @@ public partial class PortraitHubScreen : Control
 
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))
-            PortraitFrame.RoundRect(this, sys.Grow(-10f), 49f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, sys.Grow(-10f));
         PortraitGlyph.Gear(this, sys.GetCenter().X, sys.GetCenter().Y, 26f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(sys, PortraitAction.OpenSystem, 0, true, "系统"));
 
@@ -376,52 +377,57 @@ public partial class PortraitHubScreen : Control
     }
 
     /// <summary>
-    /// 底部五页签：图标＋字。哥特版：暗纹石板底、顶沿双线；当前页签＝骨白尖拱牌托底、
-    /// 图标反黑，页签顶沿正上方一枚菱珠。命中块与旧版一致（整格）。
+    /// 底部五页签＝一条雕花檐壁：上沿双线，五个页签各占一龛（龛与龛之间一根细柱、柱头一枚小菱），
+    /// 当前页签＝一扇骨白实心尖拱窗托住图标（图标反黑），切页签时这扇窗从旧龛滑到新龛。
     /// </summary>
     private void DrawTabBar()
     {
         var bar = PortraitLayout.TabBar;
-        var back = new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y);
-        DrawRect(back, InkStyle.Bg);
-        GothicArt.Tile(this, back, 0.7f);
-        DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, 4f), InkStyle.Line);
-        DrawLine(new Vector2(0, bar.Position.Y + 12f), new Vector2(PortraitLayout.CanvasWidth, bar.Position.Y + 12f),
-            InkStyle.Dim, 2f);
-        for (var i = 1; i < PortraitLayout.TabCount; i++)
-        {
-            var x = PortraitLayout.Tab(i).Position.X;
-            DrawLine(new Vector2(x, bar.Position.Y + 48f), new Vector2(x, bar.Position.Y + 160f), new Color(InkStyle.WoodDark, 0.6f), 2f);
-        }
+        DrawRect(new Rect2(0, bar.Position.Y, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - bar.Position.Y), InkStyle.Bg);
+        var y0 = bar.Position.Y;
+        DrawLine(new Vector2(0, y0), new Vector2(PortraitLayout.CanvasWidth, y0), InkStyle.Dim, 3f, true);
+        DrawLine(new Vector2(0, y0 + 10f), new Vector2(PortraitLayout.CanvasWidth, y0 + 10f), new Color(InkStyle.WoodDark, 0.9f), 2f, true);
+        var cy = PortraitLayout.Tab(0).Position.Y + 70f;
+        // 龛：每个页签一道压暗尖拱轮廓（自檐下垂到字下），柱：页签缝上一根细柱＋柱头菱
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
-            var on = i == _tab && _push == PushPage.None;
-            var cx = r.GetCenter().X;
-            var cy = r.Position.Y + 70f;
-            var pill = new Rect2(cx - 76f, cy - 40f, 152f, 80f);
-            if (on)
+            if (i > 0)
             {
-                PortraitFrame.RoundRect(this, pill, 40f, InkStyle.Line, InkStyle.Line, 3f);
-                PortraitFrame.RoundRect(this, pill.Grow(-8f), 32f, null, new Color(InkStyle.Bg, 0.4f), 2f);
-                InkDraw.Jewel(this, new Vector2(cx, r.Position.Y + 8f), 10f, InkStyle.Line);
-                InkDraw.Jewel(this, new Vector2(cx, r.Position.Y + 8f), 4f, InkStyle.Bg);
+                var x = r.Position.X;
+                DrawLine(new Vector2(x, y0 + 30f), new Vector2(x, bar.End.Y - 30f), new Color(InkStyle.WoodDark, 0.8f), 2f, true);
+                InkDraw.Jewel(this, new Vector2(x, y0 + 30f), 6f, InkStyle.WoodDark);
             }
-            else if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, pill, 40f, PortraitFrame.PressFill);
-            PortraitGlyph.TabIcons[i](this, cx, cy, 26f, on ? InkStyle.Bg : InkStyle.Dim);
-            InkDraw.Text(this, new Vector2(cx, cy + 84f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
+            var cx = r.GetCenter().X;
+            if (i != _tab && PortraitFrame.IsPressed(r))
+                PortraitFrame.PressMark(this, new Rect2(cx - 70f, cy - 64f, 140f, 110f));
+        }
+        // 当前页签的尖拱窗：从旧位置滑到新位置，图标在窗压住时反黑。
+        var markX = TabPillX();
+        var win = new Rect2(markX - 64f, cy - 66f, 128f, 112f);
+        PortraitFrame.Arch(this, win, 46f, InkStyle.Line);
+        PortraitFrame.Arch(this, win.Grow(8f), 52f, null, new Color(InkStyle.Line, 0.55f), 2f);
+        InkDraw.Jewel(this, new Vector2(markX, win.Position.Y - 22f), 6f, InkStyle.Line);
+        for (var i = 0; i < PortraitLayout.TabCount; i++)
+        {
+            var r = PortraitLayout.Tab(i);
+            var on = i == _tab;
+            var cx = r.GetCenter().X;
+            var covered = Mathf.Abs(markX - cx) < 50f;
+            PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
+            InkDraw.Text(this, new Vector2(cx, cy + 90f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
         }
     }
 
     /// <summary>
-    /// 操作反馈：领地页签上由提示条常显；其余画面在底部弹一枚 3 秒的浅填签，不拦输入。
+    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。领地页签上若这句已是日志面板最新一条就不再弹。
     /// </summary>
     private void DrawToast()
     {
-        if (_notice.Length == 0 || _noticeAge > 3f || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f))
+        if (_notice.Length == 0 || _noticeAge > 3f
+            || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f && _vm.Hub.History.Count > 0 && _vm.Hub.History[^1].Text == _notice))
             return;
         var bottom = _sheetTop >= 0f ? _sheetTop - 30f
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;
@@ -448,6 +454,14 @@ public partial class PortraitHubScreen : Control
 
     public override void _GuiInput(InputEvent e)
     {
+        if (InputLocked)
+        {
+            _pressed = _dragging = false;
+            _pressRect = null;
+            _pressWidget = null;
+            ResetListDrag();
+            return;
+        }
         if (HandleSkillInput(e) || HandleListInput(e))
             return;
         if (e is InputEventMouseMotion { ButtonMask: not 0 } motion)
@@ -471,7 +485,9 @@ public partial class PortraitHubScreen : Control
             _pressed = true;
             _dragging = false;
             _pressPos = mb.Position;
-            _pressRect = Hit(mb.Position)?.Widget.Rect;
+            _pressWidget = Hit(mb.Position)?.Widget;
+            _pressRect = _pressWidget?.Rect;
+            _pressHeld = 0f;
             QueueRedraw();
             return;
         }
@@ -480,6 +496,7 @@ public partial class PortraitHubScreen : Control
             return;
         _pressed = false;
         _pressRect = null;
+        _pressWidget = null;
         if (_dragging || _holdFired)
         {
             QueueRedraw();
@@ -497,6 +514,7 @@ public partial class PortraitHubScreen : Control
         if (hit == null || !hit.Value.Widget.Enabled)
             return;
         var w = hit.Value.Widget;
+        Flash(w.Rect);
         _vm.Hub.BeginOperation();
         var before = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
         switch (w.Action)
@@ -511,10 +529,10 @@ public partial class PortraitHubScreen : Control
                 OpenRename();
                 return;
             case PortraitAction.SheetClose:
-                CloseSheet();
+                RequestSheetClose();
                 break;
             case PortraitAction.Back:
-                Back();
+                RequestBack();
                 break;
             default:
                 Execute(w);

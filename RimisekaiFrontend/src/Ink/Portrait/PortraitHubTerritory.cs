@@ -9,8 +9,9 @@ using Rimisekai.Ink;
 namespace Rimisekai.Portrait;
 
 /// <summary>
-/// 领地页签：提示条（最新操作反馈）、5×5 领地网格、「此刻」头像带、出行 / 建造两枚浮动药丸；
-/// 点房间格弹设施抽屉（设施、在场的人、可做的事、拆除 / 前往）。
+/// 领地页签：日志面板（近期两段式日志「a，b」，点一下进日志页签）、5×5 领地网格（格底棋子＝在场的人，至多 4 枚）、
+/// 「此刻」头像带（只列与主角同区的人，每页 4 人，三角钮翻页）、出行 / 建造两枚浮动药丸。
+/// 点房间格＝当场前往；再点主角所在的格、或长按任一房间格，弹设施抽屉（设施、在场的人、拆除）。
 /// 世界层（出行后）网格换成兴趣点格，点格即进入该地点。
 /// </summary>
 public partial class PortraitHubScreen
@@ -21,9 +22,9 @@ public partial class PortraitHubScreen
 
     private void DrawTerritory()
     {
-        DrawTerritoryLog();
+        DrawLogPanel();
 
-        PortraitFrame.NotchedFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
+        PortraitFrame.GothicFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
             for (var x = 0; x < PortraitLayout.GridCols; x++)
                 DrawCell(x, y);
@@ -34,50 +35,11 @@ public partial class PortraitHubScreen
 
         var travel = PortraitLayout.TravelButton;
         var travelLabel = WorldLayer ? "返回领地" : "出行";
-        PortraitFrame.Pill(this, travel, travelLabel, glyph: WorldLayer ? PortraitGlyph.Castle : PortraitGlyph.Map);
+        PortraitFrame.Plaque(this, travel, travelLabel, glyph: WorldLayer ? PortraitGlyph.Castle : PortraitGlyph.Map);
         _widgets.Add(new PortraitWidget(travel, PortraitAction.HubWorld, 0, true, travelLabel));
         var build = PortraitLayout.BuildButton;
-        PortraitFrame.Pill(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
+        PortraitFrame.Plaque(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
         _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, !WorldLayer, "建造"));
-    }
-
-    /// <summary>
-    /// 日志栏：卡片里自下而上列最近几条日志，每条一行（过长截断），最新一条亮色、其余灰；
-    /// 有尚未入日志的操作反馈（3 秒内）时，它顶替最新一行。整卡可点，转到日志页签。
-    /// </summary>
-    private void DrawTerritoryLog()
-    {
-        var strip = PortraitLayout.AlertStrip;
-        PortraitFrame.Card(this, strip);
-        PortraitGlyph.Bell(this, strip.Position.X + 56f, strip.Position.Y + 58f, 24f, InkStyle.Dim);
-        InkDraw.Text(this, new Vector2(strip.Position.X + 96f, strip.Position.Y + 58f), "日志",
-            PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-
-        var lines = new List<string>(_vm.LogLines());
-        var latest = lines.Count > 0 ? lines[^1] : "";
-        if (_notice.Length > 0 && _noticeAge <= 3f && _notice != latest)
-            lines.Add(_notice);
-        var top = strip.Position.Y + 110f;
-        var bottom = strip.End.Y - 20f;
-        var fit = Math.Max(0, (int)((bottom - top) / PortraitLayout.TerritoryLogLine));
-        var shown = lines.Skip(Math.Max(0, lines.Count - fit)).ToArray();
-        var x = strip.Position.X + 56f;
-        var width = strip.Size.X - 56f - 40f;
-        for (var i = 0; i < shown.Length; i++)
-        {
-            var newest = i == shown.Length - 1;
-            var cy = bottom - (shown.Length - i - 0.5f) * PortraitLayout.TerritoryLogLine;
-            InkDraw.Jewel(this, new Vector2(x, cy), 7f, newest ? InkStyle.Line : InkStyle.WoodDark);
-            var line = InkDraw.WrapLines(shown[i], width - 40f, PortraitLayout.FontMeta);
-            var text = line.Count > 1 ? line[0].TrimEnd() + "…" : shown[i];
-            InkDraw.TextBounded(this, new Rect2(x + 30f, cy - PortraitLayout.TerritoryLogLine / 2f, width - 30f,
-                PortraitLayout.TerritoryLogLine), text, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-                newest ? InkStyle.Line : InkStyle.Dim, "lm");
-        }
-        if (shown.Length == 0)
-            InkDraw.Text(this, new Vector2(strip.GetCenter().X, (top + bottom) / 2f), "暂无记录",
-                PortraitLayout.FontMeta, InkStyle.Dim, "cm");
-        _widgets.Add(new PortraitWidget(strip, PortraitAction.Tab, PortraitLayout.TabCount - 1, true, "日志"));
     }
 
     private void DrawCell(int x, int y)
@@ -163,11 +125,19 @@ public partial class PortraitHubScreen
     /// <summary>「此刻」头像右下角的棋子徽：黑底骨白环里一枚与领地格同款的棋子。</summary>
     private void DrawPieceBadge(Vector2 center, CharacterCard card)
     {
-        DrawCircle(center, PortraitLayout.BadgeRadius, InkStyle.Bg);
-        DrawArc(center, PortraitLayout.BadgeRadius, 0f, Mathf.Tau, 40, InkStyle.Line, 3f, true);
+        var badge = new Rect2(center - Vector2.One * PortraitLayout.BadgeRadius, Vector2.One * PortraitLayout.BadgeRadius * 2f);
+        PortraitFrame.Poly(this, PortraitFrame.ChamferPoints(badge, PortraitLayout.BadgeRadius * 0.55f), InkStyle.Bg, InkStyle.Line, 3f);
         InkDraw.Chess(this, center + new Vector2(0f, PortraitLayout.BadgeRadius * 0.62f),
             PortraitLayout.BadgeRadius * 1.3f, InkDraw.PieceFor(card));
     }
+
+    /// <summary>
+    /// 与主角同区：所在房间的 <see cref="Room.RegionId"/> 等于 <c>HubSession.RegionId</c>
+    /// （主角所在的 5×5 区，Enter / Move 时随主角更新）。领地分区 0..8，兴趣点的房间从 9 起另编区号，
+    /// 所以主角出门在外时，留在领地的人不算同区。不在任何房间（RoomId＜0）的人不算。
+    /// </summary>
+    private bool SameAreaAsPlayer(CharacterCard card) =>
+        card.IsPlayer || _vm.Hub.State.Territory.Rooms.Exists(r => r.Id == card.RoomId && r.RegionId == _vm.Hub.RegionId);
 
     /// <summary>当前时段（0/6/12/18 时起各 6 小时）。</summary>
     private int CurrentSlot => Math.Clamp(_vm.Hub.Header().Hour / 6, 0, WorkSlot.Count - 1);
@@ -189,40 +159,114 @@ public partial class PortraitHubScreen
         return "";
     }
 
+    /// <summary>「此刻」带当前页（每页 4 人）。</summary>
+    private int _nowPage;
+
     /// <summary>
-    /// 「此刻」：全员头像＋名字＋此刻的安排。与主角同房的人点了即交流；主角与不在场的人点了看角色详情。
-    /// 人多时整条横拖。
+    /// 「此刻」：与主角同区的人（头像＋棋子徽＋名字＋此刻的安排），每页至多 4 人。与主角同房的人点了即交流；
+    /// 主角与同区别房的人点了看角色详情。多于 4 人时第 4 人右侧画一枚实心右指三角钮，点了翻到下 4 人，末页再点回首页。
     /// </summary>
     private void DrawNowStrip()
     {
-        var cards = _vm.Cards();
-        var strip = PortraitLayout.NowStrip;
-        var total = (int)(PortraitLayout.Pad * 2f + cards.Count * PortraitLayout.NowSlot);
-        var offset = Pan("now", total, (int)strip.Size.X);
-        for (var i = 0; i < cards.Count; i++)
+        var cards = _vm.Cards().Where(SameAreaAsPlayer).ToArray();
+        var size = PortraitLayout.NowPageSize;
+        var pages = Math.Max(1, (cards.Length + size - 1) / size);
+        _nowPage %= pages;
+        for (var i = 0; i < size && _nowPage * size + i < cards.Length; i++)
         {
-            var card = cards[i];
-            var r = PortraitLayout.NowCard(i, offset);
-            if (r.End.X < 0f || r.Position.X > PortraitLayout.CanvasWidth)
-                continue;
+            var card = cards[_nowPage * size + i];
+            var r = PortraitLayout.NowCard(i);
             var present = card.IsPlayer || card.RoomId == _vm.Hub.PlayerRoomId;
             var cx = r.GetCenter().X;
             if (PortraitFrame.IsPressed(r))
-                PortraitFrame.RoundRect(this, r, 24f, PortraitFrame.PressFill);
+                PortraitFrame.PressMark(this, r);
             PortraitFrame.Avatar(this, new Vector2(cx, r.Position.Y + 84f), 66f,
-                PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: card.RoomId < 0 && !card.IsPlayer);
+                PortraitAvatars.Resolve(_vm.FindById(card.Id)), card.Name, ring: true, dim: !present);
             DrawPieceBadge(new Vector2(cx + 56f, r.Position.Y + 130f), card);
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 168f, r.Size.X, 56f), card.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 226f, r.Size.X, 52f),
                 card.IsPlayer || present ? ActivityOf(card.Id) : RoomNameOf(card.RoomId).Length > 0 ? RoomNameOf(card.RoomId) : ActivityOf(card.Id),
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
-            AddClipped(r, strip, PortraitAction.NowAvatar, card.Id, true, card.Name);
+            _widgets.Add(new PortraitWidget(r, PortraitAction.NowAvatar, card.Id, true, card.Name));
         }
-        RegisterScroll("now", strip, total, (int)strip.Size.X, offset, v => _pan["now"] = v, 1f, horizontal: true);
+        if (cards.Length <= size)
+            return;
+        var pager = PortraitLayout.NowPager;
+        if (PortraitFrame.IsPressed(pager))
+            PortraitFrame.PressMark(this, pager);
+        var c = new Vector2(pager.GetCenter().X, PortraitLayout.NowStrip.Position.Y + 84f);
+        DrawColoredPolygon(new[] { c + new Vector2(-18f, -30f), c + new Vector2(26f, 0f), c + new Vector2(-18f, 30f) }, InkStyle.Line);
+        _widgets.Add(new PortraitWidget(pager, PortraitAction.NowPage, 0, true, "下一页"));
     }
 
+    /// <summary>
+    /// 日志面板：近期日志（Core 的 <c>HubSession.History</c>，最旧在前）自下而上排，最新一条贴底。
+    /// 每条是一句「a，b」（<see cref="LogEntry.Text"/>）；本次操作写下的几条骨白，更早的压暗。
+    /// 字号自 50 往下收到恰好放下最近 <see cref="PortraitLayout.LogFitEntries"/> 条，不低于 44；
+    /// 收到 44 仍放不下，最旧的整条不画，不溢出。整块点一下即进日志页签（那里可滚动看全部）。
+    /// </summary>
+    private void DrawLogPanel()
+    {
+        var panel = PortraitLayout.LogPanel;
+        var pressed = PortraitFrame.IsPressed(panel);
+        PortraitFrame.GothicFrame(this, panel, InkStyle.Panel, ornate: false);
+        PortraitFrame.CornerRivets(this, panel.Grow(-24f), InkStyle.Dim);
+        if (pressed)
+            PortraitFrame.PressMark(this, panel);
+        _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
+        var area = PortraitLayout.LogPanelText;
+        var history = _vm.Hub.History;
+        if (history.Count == 0)
+            return;
+        var current = new HashSet<LogEntry>(_vm.Hub.Log);
+        var gap = 12f;
+        var size = PortraitLayout.LogFontMin;
+        var fit = Math.Min(history.Count, PortraitLayout.LogFitEntries);
+        for (var s = PortraitLayout.LogFontMax; s >= PortraitLayout.LogFontMin; s -= 2)
+        {
+            var need = 0f;
+            for (var i = history.Count - fit; i < history.Count; i++)
+                need += InkDraw.WrapLines(history[i].Text, area.Size.X, s).Count * LogLineHeight(s) + gap;
+            if (need - gap <= area.Size.Y)
+            {
+                size = s;
+                break;
+            }
+        }
+        var lineH = LogLineHeight(size);
+        var bottom = area.End.Y;
+        for (var i = history.Count - 1; i >= 0; i--)
+        {
+            var lines = InkDraw.WrapLines(history[i].Text, area.Size.X, size);
+            var height = lines.Count * lineH;
+            // 放不下的旧条目整条不画（最新一条除外：它只裁掉开头放不下的行），不溢出、不露半句。
+            if (bottom - height < area.Position.Y - 0.5f && i != history.Count - 1)
+                break;
+            var color = current.Contains(history[i]) ? InkStyle.Line : InkStyle.Dim;
+            for (var k = lines.Count - 1; k >= 0; k--)
+            {
+                var top = bottom - lineH;
+                if (top < area.Position.Y - 0.5f)
+                    break;
+                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), lines[k], size, color, "lm");
+                bottom = top;
+            }
+            bottom -= gap;
+        }
+    }
+
+    private static float LogLineHeight(int size) => Mathf.Round(size * 1.36f);
+
     // ---------- 设施抽屉 ----------
+
+    private void OpenRoomSheet(int roomId)
+    {
+        _sheetRoom = roomId;
+        _sheet = SheetKind.Room;
+        _pan.Remove("room_fixtures");
+        QueueRedraw();
+    }
 
     private float DrawRoomSheet()
     {
@@ -268,7 +312,7 @@ public partial class PortraitHubScreen
         {
             var f = fixtures[first + i];
             var row = PortraitLayout.RoomSheetRow(i);
-            PortraitFrame.RoundRect(this, row, 22f, null, InkStyle.WoodDark, 3f);
+            PortraitFrame.Bevel(this, row, 22f, null, InkStyle.WoodDark, 3f);
             var workers = _vm.WorkersAtFixture(f.Id);
             InkDraw.TextBounded(this, new Rect2(row.Position.X + 40f, row.Position.Y, 360f, row.Size.Y), f.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
@@ -278,16 +322,16 @@ public partial class PortraitHubScreen
                 PortraitFrame.Avatar(this, new Vector2(row.Position.X + 560f + k * 70f, row.GetCenter().Y), 28f,
                     PortraitAvatars.Resolve(_vm.FindById(workers[k].Id)), workers[k].Name, ring: false);
             var use = PortraitLayout.RoomSheetUse(row);
-            PortraitFrame.Pill(this, use, "使用", enabled: !WorldLayer);
+            PortraitFrame.Plaque(this, use, "使用", enabled: !WorldLayer);
             _widgets.Add(new PortraitWidget(use, PortraitAction.Fixture, f.Id, !WorldLayer, f.Name));
         }
         RegisterScroll("room_fixtures", new Rect2(0, PortraitLayout.RoomSheetRow(0).Position.Y, PortraitLayout.CanvasWidth,
             visible * 140f), fixtures.Count, visible, first, v => _pan["room_fixtures"] = v, 140f);
 
         var canDemolish = !WorldLayer && !here;
-        PortraitFrame.Pill(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
+        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomDemolish, room.Id, canDemolish, "拆除"));
-        PortraitFrame.Pill(this, PortraitLayout.SheetFooterRight, here ? "已在此处" : "前往", primary: true, enabled: !here);
+        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterRight, here ? "已在此处" : "前往", primary: true, enabled: !here);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterRight, PortraitAction.RoomGo, room.Id, !here, "前往"));
         return sheet.Position.Y;
     }
@@ -307,9 +351,16 @@ public partial class PortraitHubScreen
                         SetNotice("这里无法进入。");
                     return true;
                 }
-                _sheetRoom = w.Index;
-                _sheet = SheetKind.Room;
-                _pan.Remove("room_fixtures");
+                // 点格即前往；已在这格里再点，才弹设施抽屉（长按任一格也弹，见 StepLongPress）。
+                if (_vm.IsPlayerRoom(w.Index))
+                    OpenRoomSheet(w.Index);
+                else
+                {
+                    hub.Arrive(w.Index);
+                }
+                return true;
+            case PortraitAction.NowPage:
+                _nowPage++;
                 return true;
             case PortraitAction.HubWorld:
                 hub.ToggleWorldLayer();
@@ -320,7 +371,7 @@ public partial class PortraitHubScreen
                 _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
                 return true;
             case PortraitAction.RoomGo:
-                hub.Enter(w.Index);
+                hub.Arrive(w.Index);
                 return true;
             case PortraitAction.RoomDemolish:
                 var roomName = RoomNameOf(w.Index);

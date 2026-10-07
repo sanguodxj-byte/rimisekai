@@ -448,7 +448,7 @@ public partial class PortraitCombatView : Control
         var hit = PortraitLayout.CombatGearHit;
         _hits.Add(new PortraitWidget(hit, PortraitAction.CombatSettings, 0, true, "设置"));
         if (PortraitFrame.IsPressed(hit))
-            PortraitFrame.RoundRect(this, hit.Grow(-10f), 49f, PortraitFrame.PressFill);
+            PortraitFrame.PressMark(this, hit.Grow(-10f));
         PortraitGlyph.Gear(this, hit.GetCenter().X, hit.GetCenter().Y, 28f, InkStyle.Line);
     }
 

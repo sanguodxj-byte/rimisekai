@@ -27,6 +27,7 @@ public partial class PortraitPressProbe : Node
             return;
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_prefix))!);
+        PortraitMotion.Instant = true;
         InkSaveStore.OverrideDirectory =
             Path.Combine(Path.GetTempPath(), $"rimisekai-press-{Guid.NewGuid():N}").Replace('\\', '/');
         _sub = new SubViewport

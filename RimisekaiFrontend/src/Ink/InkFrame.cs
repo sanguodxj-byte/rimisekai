@@ -224,7 +224,7 @@ public static class InkFrame
 
     /// <summary>
     /// 面板标题：文字左对齐放在托角右侧的“安全区”，
-    /// 下面一条三段渐隐的细线，长度不触及两侧托角。
+    /// 下面一条渐隐细线，长度不触及两侧托角。
     /// 🚨 2026-10-01 主人定：**不要标题牌**——标题字外面不许再套矩形框、
     /// 不许缀端珠。就是「一行字＋一条渐隐线」，与基线一致。
     /// </summary>
@@ -244,27 +244,14 @@ public static class InkFrame
     // 主人原话：「日志角色的框体和白点是谁添加的？需要删掉」。
     // 那个「框体」＝标题字外的矩形牌面，「白点」＝牌面两端的实心菱珠。
     // **基线提交里本来就没有这东西**，是后来照参考稿的「铜版书名牌」加的，
-    // 属自造语汇，主人不要。标题一律只有「一行字 ＋ 一条三段渐隐线」。
+    // 属自造语汇，主人不要。标题一律只有「一行字 ＋ 一条渐隐线」。
 
     /// <summary>
-    /// 分割细线：三段渐隐的墨线，无珠无框。标题下饰与面板内分段分隔共用这一种画法。
+    /// 分割细线：平滑连续的纺锤形渐隐线（正中最亮最粗，两端收成透明细尖），无珠无框。
+    /// 标题下饰与面板内分段分隔共用这一种画法；实现唯一来源是 <see cref="InkDraw.FadeRule"/>。
     /// </summary>
-    public static void FadingRule(CanvasItem ci, float left, float right, float y, int seed = 6200)
-    {
-        if (right <= left)
-            return;
-
-        const int segs = 3;
-        var seg = (right - left) / segs;
-        for (var i = 0; i < segs; i++)
-        {
-            var a = left + seg * i;
-            var b = a + seg;
-            var alpha = 0.5f - i * 0.14f;
-            InkDraw.InkLine(ci, new Vector2(a, y), new Vector2(b, y),
-                new Color(InkStyle.Dim, alpha), 1f, 0.3f, seed + i);
-        }
-    }
+    public static void FadingRule(CanvasItem ci, float left, float right, float y) =>
+        InkDraw.FadeRule(ci, left, right, y, 2f, new Color(InkStyle.Dim, 0.85f));
 
     /// <summary>
     /// 自适应版面板标题：与 Title 同一套几何（起点、下饰线），

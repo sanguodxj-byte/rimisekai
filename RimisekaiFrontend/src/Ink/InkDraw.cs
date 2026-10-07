@@ -130,6 +130,79 @@ public static class InkDraw
         return pts;
     }
 
+    /// <summary>渐隐线的收尖方向。</summary>
+    public enum FadeTaper
+    {
+        /// <summary>两端渐隐、正中最亮（分割线、标题下饰）。</summary>
+        Both,
+
+        /// <summary>左端渐隐、右端最亮（贴在右侧文字/菱珠左边的半截线）。</summary>
+        Left,
+
+        /// <summary>右端渐隐、左端最亮（贴在左侧文字/菱珠右边的半截线）。</summary>
+        Right,
+    }
+
+    /// <summary>
+    /// 全项目唯一的渐隐线画法（分割细线、标题下饰、分节线两翼、日序线共用）。
+    /// 一条平滑连续的纺锤形细线：沿长度切成 48 段，每段一块逐顶点上色的四边形，
+    /// 亮度与粗细都在最亮处达峰（正中，或 taper 指定的那一端），向收尖端平滑收成透明的细尖。
+    /// width＝最粗处线宽；color 取调色板色，透明度由画法自己乘；lozenge＝最亮处嵌一枚小实心菱。
+    /// </summary>
+    public static void FadeRule(CanvasItem ci, float left, float right, float y, float width, Color color,
+        FadeTaper taper = FadeTaper.Both, bool lozenge = false)
+    {
+        if (right - left < 2f)
+            return;
+        const int segs = 48;
+        var points = new Vector2[4];
+        var colors = new Color[4];
+        float Weight(float t)
+        {
+            // d：离最亮处的归一化距离（0＝最亮，1＝收尖端）。
+            var d = taper switch
+            {
+                FadeTaper.Left => 1f - t,
+                FadeTaper.Right => t,
+                _ => Mathf.Abs(t * 2f - 1f),
+            };
+            var k = 1f - d;
+            return k * k * (3f - 2f * k);
+        }
+        for (var i = 0; i < segs; i++)
+        {
+            var t0 = (float)i / segs;
+            var t1 = (float)(i + 1) / segs;
+            var w0 = Weight(t0);
+            var w1 = Weight(t1);
+            var x0 = Mathf.Lerp(left, right, t0);
+            var x1 = Mathf.Lerp(left, right, t1);
+            var h0 = Mathf.Max(0.35f, width * (0.3f + 0.7f * w0)) / 2f;
+            var h1 = Mathf.Max(0.35f, width * (0.3f + 0.7f * w1)) / 2f;
+            points[0] = new Vector2(x0, y - h0);
+            points[1] = new Vector2(x1, y - h1);
+            points[2] = new Vector2(x1, y + h1);
+            points[3] = new Vector2(x0, y + h0);
+            var c0 = new Color(color, color.A * w0);
+            var c1 = new Color(color, color.A * w1);
+            colors[0] = c0;
+            colors[1] = c1;
+            colors[2] = c1;
+            colors[3] = c0;
+            ci.DrawPolygon(points, colors);
+        }
+        if (lozenge)
+        {
+            var at = taper switch
+            {
+                FadeTaper.Left => right,
+                FadeTaper.Right => left,
+                _ => (left + right) / 2f,
+            };
+            Jewel(ci, new Vector2(at, y), Mathf.Max(3f, width * 1.6f), color);
+        }
+    }
+
     /// <summary>菱形珠饰。全项目严禁空心，一律实心填充。</summary>
     public static void Jewel(CanvasItem ci, Vector2 c, float r, Color color, bool filled = true)
     {

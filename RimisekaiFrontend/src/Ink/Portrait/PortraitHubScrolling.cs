@@ -49,10 +49,10 @@ public partial class PortraitHubScreen
         if (scroll.Maximum == 0 || horizontal)
             return;
         var track = new Rect2(area.End.X - 16f, area.Position.Y + 8f, 6f, area.Size.Y - 16f);
-        PortraitFrame.RoundRect(this, track, 3f, InkStyle.Hover);
+        PortraitFrame.Bevel(this, track, 3f, InkStyle.Hover);
         var h = Mathf.Max(60f, track.Size.Y * visible / total);
         var y = track.Position.Y + (track.Size.Y - h) * first / scroll.Maximum;
-        PortraitFrame.RoundRect(this, new Rect2(track.Position.X, y, track.Size.X, h), 3f, InkStyle.Dim);
+        PortraitFrame.Bevel(this, new Rect2(track.Position.X, y, track.Size.X, h), 3f, InkStyle.Dim);
     }
 
     private bool HandleListInput(InputEvent input)
@@ -110,6 +110,7 @@ public partial class PortraitHubScreen
         _dragging = false;
         _pressPos = point;
         _pressRect = Hit(point)?.Widget.Rect;
+        _pressWidget = null;
         QueueRedraw();
         return true;
     }

@@ -18,7 +18,11 @@ public static class PortraitFrame
     /// 按下态：矩形与它一致者按选中画。触摸没有悬停，按下当场不给反馈就只剩"点没点中"的疑问。
     /// 每个画面在 _Draw 开头调一次（没有按下就传 null）；后画的画面会覆盖前一个的值。
     /// </summary>
-    public static void SetPress(Rect2? rect) => _press = rect;
+    public static void SetPress(Rect2? rect, float strength = 1f)
+    {
+        _press = rect;
+        _pressStrength = strength;
+    }
 
     private static bool Pressed(Rect2 r) =>
         _press is { } p && p.Position == r.Position && p.Size == r.Size;
@@ -27,7 +31,7 @@ public static class PortraitFrame
     public static bool IsPressed(Rect2 r) => Pressed(r);
 
     /// <summary>按压填色（自绘块与 Button 共用同一档，保持全界面一致）。</summary>
-    public static Color PressFill => new(InkStyle.Line, 0.16f);
+    public static Color PressFill => new(InkStyle.Line, 0.16f * _pressStrength);
 
     private static IReadOnlyList<Vector2> Loop(Rect2 r) => new[]
     {
@@ -639,5 +643,336 @@ public static class PortraitFrame
         var src = new Vector2(r.Size.X / scale, r.Size.Y / scale);
         var origin = new Vector2((size.X - src.X) / 2f, (size.Y - src.Y) * anchorY);
         ci.DrawTextureRectRegion(tex, r, new Rect2(origin, src));
+    }
+
+
+    // ======================================================================
+    // 合并自 ui-motion-territory：哥特饰件与几何工具（铭牌、尖拱、四叶、石碑等）
+    // ======================================================================
+
+    private static Vector2[] Loop(Vector2[] pts)
+    {
+        var loop = new Vector2[pts.Length + 1];
+        pts.CopyTo(loop, 0);
+        loop[^1] = pts[0];
+        return loop;
+    }
+    private static float _pressStrength = 1f;
+
+    /// <summary>
+    /// 按压记号：倒角极淡衬底＋四角各一道 L 形刻痕（像铜牌上被按下的四枚角钉），
+    /// 取代 Material 那种整块浅填 / 水波。
+    /// </summary>
+    public static void PressMark(CanvasItem ci, Rect2 r)
+    {
+        Bevel(ci, r, 18f, PressFill);
+        var k = Mathf.Min(30f, Mathf.Min(r.Size.X, r.Size.Y) * 0.28f);
+        var c = new Color(InkStyle.Line, 0.85f * _pressStrength);
+        var g = r.Grow(-6f);
+        foreach (var (o, dx, dy) in new[]
+                 {
+                     (g.Position, 1f, 1f), (new Vector2(g.End.X, g.Position.Y), -1f, 1f),
+                     (g.End, -1f, -1f), (new Vector2(g.Position.X, g.End.Y), 1f, -1f),
+                 })
+            ci.DrawPolyline(new[] { o + new Vector2(dx * k, 0), o, o + new Vector2(0, dy * k) }, c, 3f, true);
+    }
+
+    /// <summary>封闭多边形：fill 为空不填，line 为空不描。</summary>
+    public static void Poly(CanvasItem ci, Vector2[] pts, Color? fill, Color? line = null, float width = 3f)
+    {
+        if (fill is { } f)
+            ci.DrawColoredPolygon(pts, f);
+        if (line is { } l)
+            ci.DrawPolyline(Loop(pts), l, width, true);
+    }
+
+    // ======================================================================
+    // 几何：倒角八边形、尖拱顶、四叶饰、菱头签
+    // ======================================================================
+
+    /// <summary>倒角八边形（四角各切去 cut）。cut 自动收在短边三分之一以内。</summary>
+    public static Vector2[] ChamferPoints(Rect2 r, float cut)
+    {
+        var c = Mathf.Clamp(cut, 0f, Mathf.Min(r.Size.X, r.Size.Y) / 3f);
+        var x = r.Position.X;
+        var y = r.Position.Y;
+        var X = r.End.X;
+        var Y = r.End.Y;
+        if (c < 1f)
+            return new[] { r.Position, new Vector2(X, y), r.End, new Vector2(x, Y) };
+        return new[]
+        {
+            new Vector2(x + c, y), new Vector2(X - c, y), new Vector2(X, y + c), new Vector2(X, Y - c),
+            new Vector2(X - c, Y), new Vector2(x + c, Y), new Vector2(x, Y - c), new Vector2(x, y + c),
+        };
+    }
+
+    /// <summary>
+    /// 倒角块（取代旧的圆角矩形）：hint 是旧圆角半径的口径，换算成倒角＝hint×0.45、至多 20px，
+    /// 于是 3px 的细槽仍是直角，药丸尺寸的大圆角变成一刀利落的斜切。
+    /// </summary>
+    public static void Bevel(CanvasItem ci, Rect2 r, float hint, Color? fill, Color? line = null, float width = 3f) =>
+        Poly(ci, ChamferPoints(r, Mathf.Min(hint * 0.45f, 20f)), fill, line, width);
+
+    /// <summary>
+    /// 尖拱轮廓：从左拱脚 (x0, ys) 经拱顶 (x0+w/2, ys-h) 到右拱脚，两段椭圆弧在拱顶相交成尖。
+    /// 任意宽高都成立（矮宽的也是尖的），返回点序自左到右。
+    /// </summary>
+    public static List<Vector2> ArchCurve(float x0, float ys, float w, float h, int steps = 14)
+    {
+        const float tm = 1.05f; // 弧段止于 60°：拱顶切线不水平，故而成尖
+        var pts = new List<Vector2>();
+        var sm = Mathf.Sin(tm);
+        var cm = 1f - Mathf.Cos(tm);
+        for (var i = 0; i <= steps; i++)
+        {
+            var t = tm * i / steps;
+            pts.Add(new Vector2(x0 + w / 2f * (1f - Mathf.Cos(t)) / cm, ys - h * Mathf.Sin(t) / sm));
+        }
+        for (var i = steps - 1; i >= 0; i--)
+        {
+            var t = tm * i / steps;
+            pts.Add(new Vector2(x0 + w - w / 2f * (1f - Mathf.Cos(t)) / cm, ys - h * Mathf.Sin(t) / sm));
+        }
+        return pts;
+    }
+
+    /// <summary>尖拱窗：矩形顶部换成高 rise 的尖拱（拱顶即 r 的上沿），平底。</summary>
+    public static Vector2[] ArchPoints(Rect2 r, float rise)
+    {
+        var rs = Mathf.Min(rise, r.Size.Y);
+        var pts = ArchCurve(r.Position.X, r.Position.Y + rs, r.Size.X, rs);
+        pts.Add(r.End);
+        pts.Add(new Vector2(r.Position.X, r.End.Y));
+        return pts.ToArray();
+    }
+
+    /// <summary>尖拱窗块。</summary>
+    public static void Arch(CanvasItem ci, Rect2 r, float rise, Color? fill, Color? line = null, float width = 3f) =>
+        Poly(ci, ArchPoints(r, rise), fill, line, width);
+
+    /// <summary>
+    /// 四叶饰（quatrefoil）轮廓：四瓣圆叶在上下左右，叶与叶之间收成尖角。r＝外接半径。
+    /// 由「自圆心向外的射线与四个叶圆的最远交点」取样，故交接处是干净的尖。
+    /// </summary>
+    public static Vector2[] QuatrefoilPoints(Vector2 c, float r, int steps = 72)
+    {
+        var d = r * 0.42f;
+        var rho = r - d;
+        var lobes = new[] { new Vector2(d, 0), new Vector2(0, d), new Vector2(-d, 0), new Vector2(0, -d) };
+        var pts = new Vector2[steps];
+        for (var i = 0; i < steps; i++)
+        {
+            var a = Mathf.Tau * i / steps;
+            var u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+            var best = 0f;
+            foreach (var l in lobes)
+            {
+                var b = u.Dot(l);
+                var disc = rho * rho - (l.LengthSquared() - b * b);
+                if (disc >= 0f)
+                    best = Mathf.Max(best, b + Mathf.Sqrt(disc));
+            }
+            pts[i] = c + u * best;
+        }
+        return pts;
+    }
+
+    /// <summary>菱头签轮廓：左右两端削成尖（像一枚拉长的菱）。cap＝尖的进深。</summary>
+    public static Vector2[] LozengeCapPoints(Rect2 r, float cap)
+    {
+        var cy = r.GetCenter().Y;
+        return new[]
+        {
+            new Vector2(r.Position.X + cap, r.Position.Y), new Vector2(r.End.X - cap, r.Position.Y),
+            new Vector2(r.End.X, cy), new Vector2(r.End.X - cap, r.End.Y),
+            new Vector2(r.Position.X + cap, r.End.Y), new Vector2(r.Position.X, cy),
+        };
+    }
+
+    // ======================================================================
+    // 小饰件
+    // ======================================================================
+
+    /// <summary>十字珠：一枚实心小菱，四向各缀一粒细点（「·◆·」竖横皆有），作标题两旁的小饰。</summary>
+    public static void CrossJewel(CanvasItem ci, Vector2 c, float s, Color color)
+    {
+        InkDraw.Jewel(ci, c, s, color);
+        var dot = Mathf.Max(2.5f, s * 0.28f);
+        foreach (var d in new[] { Vector2.Left, Vector2.Right, Vector2.Up, Vector2.Down })
+            ci.DrawCircle(c + d * (s * 1.75f), dot, color);
+    }
+
+    /// <summary>铁艺铆钉：一粒实心小圆点。</summary>
+    public static void Rivet(CanvasItem ci, Vector2 c, Color color, float r = 3.5f) => ci.DrawCircle(c, r, color);
+
+    /// <summary>三叶饰：三瓣实心小叶（上、左下、右下）＋中心菱，r＝外接半径。</summary>
+    public static void Trefoil(CanvasItem ci, Vector2 c, float r, Color color)
+    {
+        var lr = r * 0.42f;
+        for (var i = 0; i < 3; i++)
+        {
+            var a = -Mathf.Pi / 2f + Mathf.Tau * i / 3f;
+            ci.DrawCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (r - lr), lr, color);
+        }
+        InkDraw.Jewel(ci, c, r * 0.36f, InkStyle.Bg);
+    }
+
+    /// <summary>四叶饰小件：空心双线四叶，正中一枚实心菱。</summary>
+    public static void QuatrefoilMark(CanvasItem ci, Vector2 c, float r, Color color, Color? fill = null)
+    {
+        var pts = QuatrefoilPoints(c, r, 56);
+        Poly(ci, pts, fill ?? InkStyle.Bg, color, 3f);
+        InkDraw.Jewel(ci, c, r * 0.26f, color);
+    }
+
+    public static void CornerRivets(CanvasItem ci, Rect2 r, Color color, float size = 3.5f)
+    {
+        Rivet(ci, r.Position, color, size);
+        Rivet(ci, new Vector2(r.End.X, r.Position.Y), color, size);
+        Rivet(ci, r.End, color, size);
+        Rivet(ci, new Vector2(r.Position.X, r.End.Y), color, size);
+    }
+
+    // ======================================================================
+    // 铭牌钮（取代药丸钮）
+    // ======================================================================
+
+    private static float PlaqueCut(Rect2 r) => Mathf.Clamp(r.Size.Y * 0.24f, 12f, 26f);
+
+    /// <summary>
+    /// 铭牌底：primary＝外一道骨白细线框住一块骨白实心倒角牌（字反黑）；
+    /// 否则＝双道倒角线（外骨白、内压暗），左右两条竖边正中各钉一枚小菱。
+    /// lit＝选中或按住：内线提亮并在内腔压一层极淡衬底与四角刻痕。
+    /// </summary>
+    public static void PlaqueBody(CanvasItem ci, Rect2 r, bool primary, bool enabled, bool lit)
+    {
+        var cut = PlaqueCut(r);
+        var edge = enabled ? InkStyle.Line : InkStyle.WoodDark;
+        if (primary && enabled)
+        {
+            Poly(ci, ChamferPoints(r, cut), InkStyle.Bg, InkStyle.Line, 3f);
+            Poly(ci, ChamferPoints(r.Grow(-9f), cut - 5f), lit ? new Color(InkStyle.Line, 0.8f) : InkStyle.Line);
+            var cy = r.GetCenter().Y;
+            InkDraw.Jewel(ci, new Vector2(r.Position.X + 22f, cy), 6f, InkStyle.Bg);
+            InkDraw.Jewel(ci, new Vector2(r.End.X - 22f, cy), 6f, InkStyle.Bg);
+            return;
+        }
+        Poly(ci, ChamferPoints(r, cut), lit ? PressFill : InkStyle.Bg, edge, enabled ? 3.5f : 2.5f);
+        Poly(ci, ChamferPoints(r.Grow(-9f), cut - 5f), null,
+            lit ? InkStyle.Line : enabled ? InkStyle.Dim : new Color(InkStyle.WoodDark, 0.7f), 2f);
+        var my = r.GetCenter().Y;
+        InkDraw.Jewel(ci, new Vector2(r.Position.X, my), 7f, edge);
+        InkDraw.Jewel(ci, new Vector2(r.End.X, my), 7f, edge);
+        if (lit && enabled)
+        {
+            var g = r.Grow(-16f);
+            var k = Mathf.Min(22f, g.Size.Y * 0.3f);
+            foreach (var (o, dx, dy) in new[]
+                     {
+                         (g.Position, 1f, 1f), (new Vector2(g.End.X, g.Position.Y), -1f, 1f),
+                         (g.End, -1f, -1f), (new Vector2(g.Position.X, g.End.Y), 1f, -1f),
+                     })
+                ci.DrawPolyline(new[] { o + new Vector2(dx * k, 0), o, o + new Vector2(0, dy * k) },
+                    new Color(InkStyle.Line, _pressStrength), 2.5f, true);
+        }
+    }
+
+    /// <summary>
+    /// 刻字铭牌钮：primary＝骨白实心牌黑字（一屏只给一个主操作），否则＝双线铭牌骨白字。
+    /// 不可用时线降为暗木色、字降为银灰。glyph 非空时图标在字左。sub 是第二行小字。
+    /// </summary>
+    public static void Plaque(CanvasItem ci, Rect2 r, string label, bool primary = false, bool enabled = true,
+        Action<CanvasItem, float, float, float, Color>? glyph = null, string sub = "", int size = PortraitLayout.FontBody)
+    {
+        var pressed = Pressed(r);
+        PlaqueBody(ci, r, primary, enabled, pressed);
+        var text = primary && enabled ? InkStyle.Bg : enabled ? InkStyle.Line : InkStyle.Dim;
+        var cy = r.GetCenter().Y - (sub.Length > 0 ? 18f : 0f);
+        var room = r.Size.X - 80f - (glyph != null ? 76f : 0f);
+        var fit = InkDraw.FitSize(label, room, size, PortraitLayout.FontMeta);
+        var tw = InkDraw.Measure(label, fit).X;
+        if (glyph != null)
+        {
+            var start = r.GetCenter().X - (56f + 20f + tw) / 2f;
+            glyph(ci, start + 28f, cy, 26f, text);
+            InkDraw.Text(ci, new Vector2(start + 76f, cy), label, fit, text, "lm");
+        }
+        else
+            InkDraw.Text(ci, new Vector2(r.GetCenter().X, cy), label, fit, text, "cm");
+        if (sub.Length > 0)
+            InkDraw.TextBounded(ci, new Rect2(r.Position.X + 40f, cy + 22f, r.Size.X - 80f, 48f), sub,
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, primary && enabled ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+    }
+
+    public static void Brackets(CanvasItem ci, Rect2 r, Color color, float width = 3f)
+    {
+        var hook = Mathf.Min(16f, r.Size.Y * 0.2f);
+        var x0 = r.Position.X + 4f;
+        var x1 = r.End.X - 4f;
+        var y0 = r.Position.Y;
+        var y1 = r.End.Y;
+        // 〔 〕：竖笔两端各折一道斜钩
+        ci.DrawPolyline(new[] { new Vector2(x0 + hook + 6f, y0), new Vector2(x0 + 6f, y0 + hook),
+            new Vector2(x0 + 6f, y1 - hook), new Vector2(x0 + hook + 6f, y1) }, color, width, true);
+        ci.DrawPolyline(new[] { new Vector2(x1 - hook - 6f, y0), new Vector2(x1 - 6f, y0 + hook),
+            new Vector2(x1 - 6f, y1 - hook), new Vector2(x1 - hook - 6f, y1) }, color, width, true);
+    }
+
+    /// <summary>碑板上方压暗的满档透明度。</summary>
+    public const float ScrimAlpha = 0.70f;
+
+    /// <summary>碑板本体（Sheet 与战斗行动板共用）：crest＝是否画正中冠饰。</summary>
+    public static void Tablet(CanvasItem ci, Rect2 r, bool crest = true)
+    {
+        var top = r.Position.Y;
+        var w = r.Size.X;
+        var x = r.Position.X;
+        ci.DrawRect(new Rect2(x, top, w, r.Size.Y + 80f), InkStyle.Panel);
+        // 上沿：骨白主线＋两道压暗细线（三道线读作石碑的线脚）
+        ci.DrawLine(new Vector2(x, top), new Vector2(x + w, top), InkStyle.Line, 4f, true);
+        ci.DrawLine(new Vector2(x + 18f, top + 12f), new Vector2(x + w - 18f, top + 12f), InkStyle.Dim, 2f, true);
+        ci.DrawLine(new Vector2(x + 30f, top + 20f), new Vector2(x + w - 30f, top + 20f), new Color(InkStyle.WoodDark, 0.9f), 1.5f, true);
+        // 两侧竖线脚
+        var bottom = r.End.Y + 80f;
+        ci.DrawLine(new Vector2(x + 18f, top + 12f), new Vector2(x + 18f, bottom), new Color(InkStyle.WoodDark, 0.9f), 2f, true);
+        ci.DrawLine(new Vector2(x + w - 18f, top + 12f), new Vector2(x + w - 18f, bottom), new Color(InkStyle.WoodDark, 0.9f), 2f, true);
+        // 两上角：卷草角花（贴线脚内侧）
+        PortraitOrnaments.Corners(ci, new Rect2(x + 22f, top + 24f, w - 44f, 400f), 118f, 0.42f, bottom: false);
+        if (!crest)
+        {
+            QuatrefoilMark(ci, new Vector2(x + w / 2f, top), 17f, InkStyle.Line, InkStyle.Panel);
+            return;
+        }
+        // 冠饰：上沿正中立一枚位图尖拱冠（底边骑在上沿，主体升在压暗区里，只是装饰，不收点击）
+        PortraitOrnaments.Crest(ci, new Vector2(x + w / 2f, top), 600f, 0.9f, above: true);
+    }
+
+    // ======================================================================
+    // 哥特框（取代缺角框）、徽章头像（取代圆头像）
+    // ======================================================================
+
+    /// <summary>
+    /// 哥特框：倒角外线（骨白）＋内收 12px 暗木细线；ornate＝四角收位图卷草、上下沿正中各一枚小菱；
+    /// crest＝上沿正中再立一枚冠饰（弹窗用）。
+    /// </summary>
+    public static void GothicFrame(CanvasItem ci, Rect2 r, Color? fill = null, bool ornate = true, bool crest = false)
+    {
+        Poly(ci, ChamferPoints(r, 22f), fill ?? InkStyle.Panel, InkStyle.Line, 4f);
+        Poly(ci, ChamferPoints(r.Grow(-12f), 14f), null, InkStyle.WoodDark, 2f);
+        if (!ornate)
+            return;
+        var k = Mathf.Min(120f, Mathf.Min(r.Size.X, r.Size.Y) * 0.26f);
+        PortraitOrnaments.Corners(ci, r.Grow(-16f), k, 0.5f);
+        var cx = r.GetCenter().X;
+        InkDraw.Jewel(ci, new Vector2(cx, r.End.Y), 9f, InkStyle.Line);
+        InkDraw.Jewel(ci, new Vector2(cx, r.End.Y), 4f, InkStyle.Bg);
+        if (crest)
+            PortraitOrnaments.Crest(ci, new Vector2(cx, r.Position.Y), Mathf.Min(560f, r.Size.X * 0.72f), 0.9f, above: true);
+        else
+        {
+            InkDraw.Jewel(ci, new Vector2(cx, r.Position.Y), 9f, InkStyle.Line);
+            InkDraw.Jewel(ci, new Vector2(cx, r.Position.Y), 4f, InkStyle.Bg);
+        }
     }
 }

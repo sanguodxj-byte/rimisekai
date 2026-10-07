@@ -9,37 +9,51 @@ namespace Rimisekai.Portrait;
 /// </summary>
 public static partial class PortraitLayout
 {
-    public const float MapCell = 184f;
+    /// <summary>领地格边长 172（≥118 触控下限），省出的高度让给日志面板。</summary>
+    public const float MapCell = 172f;
 
-    /// <summary>日志栏：HUD 之下到网格框之上，列最近几条日志（新的在下）；点开转日志页签。</summary>
-    public static Rect2 AlertStrip => new(Pad, Body.Position.Y + 24f, FullWidth, MapFrame.Position.Y - 32f - Body.Position.Y - 24f);
-    public const float TerritoryLogLine = 66f;
+    /// <summary>
+    /// 日志面板：HUD 之下到网格框之上的整块（约 430 高），自下而上排近期日志，点一下进日志页签。
+    /// 高度由下方网格与「此刻」带反推：「此刻」带底贴浮动药丸上方 12px。
+    /// </summary>
+    public static Rect2 LogPanel => new(Pad, Body.Position.Y + 20f, FullWidth, MapFrame.Position.Y - 30f - (Body.Position.Y + 20f));
 
-    /// <summary>网格自下定位：「此刻」带底边离药丸顶 32px，往上依次是分节线、网格框。</summary>
-    public static Vector2 MapOrigin => new((CanvasWidth - MapCell * GridCols) / 2f,
-        TravelButton.Position.Y - 32f - NowStripHeight - 28f - 60f - 24f - MapCell * GridRows);
-    public static Rect2 MapGrid => new(MapOrigin, new Vector2(MapCell * GridCols, MapCell * GridRows));
+    /// <summary>日志面板内文字区：四边让 28px。</summary>
+    public static Rect2 LogPanelText => LogPanel.Grow(-28f);
+
+    /// <summary>日志字号自 50 往下收，不低于 44；收到 44 仍放不下就裁掉最旧的。</summary>
+    public const int LogFontMax = FontBody;
+    public const int LogFontMin = FontMeta;
+
+    /// <summary>字号自适应时要求完整放下的最近几条。</summary>
+    public const int LogFitEntries = 4;
+
+    /// <summary>「此刻」带：每页 4 人，每人一格 220 宽；人多时第 4 人右侧一枚翻页三角钮（120 宽，≥118）。</summary>
+    public const float NowSlot = 220f;
+    public const int NowPageSize = 4;
+    public const float NowStripHeight = 290f;
+    public static Rect2 NowStrip => new(0, TravelButton.Position.Y - 12f - NowStripHeight, CanvasWidth, NowStripHeight);
+    public static float NowRuleY => NowStrip.Position.Y - 28f;
+    public static Rect2 NowCard(int i) => new(Pad + i * NowSlot, NowStrip.Position.Y, NowSlot - 16f, NowStrip.Size.Y);
+
+    /// <summary>翻页三角钮：紧挨第 4 格右侧，垂直对准头像圆心，命中块 120×150。</summary>
+    public static Rect2 NowPager => new(Pad + NowPageSize * NowSlot - 4f, NowStrip.Position.Y + 9f, 120f, 150f);
+
     public static Rect2 MapFrame => MapGrid.Grow(24f);
+    public static Rect2 MapGrid => new(MapOrigin, new Vector2(MapCell * GridCols, MapCell * GridRows));
+    public static Vector2 MapOrigin => new((CanvasWidth - MapCell * GridCols) / 2f, NowRuleY - 50f - 24f - MapCell * GridRows);
 
     public static Rect2 Cell(int x, int y) =>
         new(MapOrigin.X + x * MapCell, MapOrigin.Y + y * MapCell, MapCell, MapCell);
 
-    /// <summary>格内名字下方的角色小圆标带（自右向左排）。</summary>
-    /// <summary>领地格底的棋子带：底线对齐，棋子高 PieceHeight、步距 PieceStep，至多 PieceCap 枚。</summary>
+    /// <summary>领地格底的棋子带（主线棋子标识）：底线对齐，棋子高 54、步距 37（172 宽的格放四枚）；多于 4 人时第 4 位换成「+」。</summary>
     public static Rect2 CellPieces(Rect2 cell) => new(cell.Position.X + 12f, cell.End.Y - 80f, cell.Size.X - 24f, 62f);
     public const float PieceHeight = 54f;
     public const float PieceStep = 37f;
     public const int PieceCap = 4;
-    /// <summary>「此刻」头像右下角棋子徽半径。</summary>
+
+    /// <summary>「此刻」头像右下角的棋子徽半径。</summary>
     public const float BadgeRadius = 30f;
-
-    public static float NowRuleY => MapFrame.End.Y + 60f;
-
-    /// <summary>「此刻」头像带：横向可拖，每人一格 250 宽；头像圆 r=66。</summary>
-    public const float NowSlot = 250f;
-    public const float NowStripHeight = 290f;
-    public static Rect2 NowStrip => new(0, NowRuleY + 28f, CanvasWidth, NowStripHeight);
-    public static Rect2 NowCard(int i, int offset) => new(Pad + i * NowSlot - offset, NowStrip.Position.Y, NowSlot - 16f, NowStrip.Size.Y);
 
     /// <summary>浮动药丸：左「出行」（描边）、右「建造」（实心），压在页签带上方。</summary>
     public static Rect2 TravelButton => new(Pad + 20f, TabTop - 152f, 320f, 124f);

@@ -50,9 +50,9 @@ public partial class PortraitHubScreen
             var work = a.Mode == SlotMode.Work && a.FacilityId >= 0;
             var fun = a.Mode == SlotMode.Entertainment && a.FacilityId >= 0;
             if (work)
-                PortraitFrame.RoundRect(this, r, 20f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
+                PortraitFrame.Bevel(this, r, 20f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
             else
-                PortraitFrame.RoundRect(this, r, 20f, pressed ? PortraitFrame.PressFill : fun ? InkStyle.Hover : InkStyle.Bg,
+                PortraitFrame.Bevel(this, r, 20f, pressed ? PortraitFrame.PressFill : fun ? InkStyle.Hover : InkStyle.Bg,
                     fun ? InkStyle.Dim : InkStyle.WoodDark, 3f);
             var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}"
                 : fun ? $"娱乐 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
@@ -88,7 +88,7 @@ public partial class PortraitHubScreen
 
         var free = new Rect2(PortraitLayout.Pad, top + PortraitLayout.SheetContentOffset, PortraitLayout.FullWidth, PortraitLayout.TouchMin);
         var isFree = current.Mode == SlotMode.Free || current.FacilityId < 0;
-        PortraitFrame.Pill(this, free, "空闲", primary: isFree);
+        PortraitFrame.Plaque(this, free, "空闲", primary: isFree);
         _widgets.Add(new PortraitWidget(free, PortraitAction.ScheduleCancel, _scheduleSlot, true, "空闲"));
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, free.End.Y + 50f, "房间");

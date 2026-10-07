@@ -84,7 +84,7 @@ public partial class PortraitHubScreen
                 PortraitLayout.QuestCardHeight);
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
-            PortraitFrame.NotchedFrame(this, r);
+            PortraitFrame.GothicFrame(this, r);
             var x = r.Position.X + 50f;
             var size = def.MaxPartySize > 0 ? $"{def.MaxPartySize} 人" : "";
             var pillW = size.Length > 0 ? InkDraw.Measure(size, PortraitLayout.FontMeta).X + 56f : 0f;
@@ -93,7 +93,7 @@ public partial class PortraitHubScreen
             if (size.Length > 0)
             {
                 var pill = new Rect2(r.End.X - 50f - pillW, r.Position.Y + 44f, pillW, 64f);
-                PortraitFrame.RoundRect(this, pill, 32f, null, InkStyle.Dim, 3f);
+                PortraitFrame.Brackets(this, pill, InkStyle.Dim);
                 InkDraw.Text(this, pill.GetCenter(), size, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             }
             InkDraw.Text(this, new Vector2(x, r.Position.Y + 150f), "难度", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
@@ -114,7 +114,7 @@ public partial class PortraitHubScreen
             PortraitGlyph.Coin(this, x + 18f, take.GetCenter().Y, 18f, InkStyle.Dim);
             InkDraw.TextBounded(this, new Rect2(x + 54f, take.Position.Y, take.Position.X - x - 74f, take.Size.Y),
                 string.Join(" · ", def.Rewards), PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Pill(this, take, "接取", primary: true);
+            PortraitFrame.Plaque(this, take, "接取", primary: true);
             AddClipped(take, view, PortraitAction.QuestTake, i, true, def.Id.ToString());
         }
         if (defs.Count == 0)
@@ -170,7 +170,7 @@ public partial class PortraitHubScreen
             }
             else
             {
-                PortraitFrame.RoundRect(this, r, 18f, null, i < cap ? InkStyle.WoodDark : new Color(InkStyle.WoodDark, 0.4f), 3f);
+                PortraitFrame.Bevel(this, r, 18f, null, i < cap ? InkStyle.WoodDark : new Color(InkStyle.WoodDark, 0.4f), 3f);
                 if (i < cap)
                 {
                     PortraitGlyph.Plus(this, r.GetCenter().X, r.Position.Y + 130f, 36f, InkStyle.WoodDark);
@@ -220,7 +220,7 @@ public partial class PortraitHubScreen
         InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, footer.Position.Y + 20f, 480f, 140f), FoesOf(def),
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
         var go = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 440f, footer.Position.Y + 26f, 440f, 140f);
-        PortraitFrame.Pill(this, go, "出发", primary: true, glyph: PortraitGlyph.Swords);
+        PortraitFrame.Plaque(this, go, "出发", primary: true, glyph: PortraitGlyph.Swords);
         _widgets.Add(new PortraitWidget(go, PortraitAction.QuestStart, 0, true, "出发"));
         return top;
     }
@@ -258,28 +258,35 @@ public partial class PortraitHubScreen
     // ---------- 日志 ----------
 
     /// <summary>
-    /// 日志时间线：Core 的日志是「一次操作一份快照」（环境 / 他人 / 自己三层），没有时间戳与类型，
-    /// 所以只按当日分组、不做类型筛选。每条前一枚菱，竖线串起来。
+    /// 日志时间线：Core 的近期日志（<c>HubSession.History</c>，最旧在前），每条一句「a，b」。
+    /// 按游戏日分组（日序标题＋一条渐隐线），最新的日子与条目在最上；每条前一枚菱，竖线串起来。
     /// </summary>
     private void DrawLog()
     {
         var view = PortraitLayout.LogView;
-        var entries = _vm.LogLines();
+        var history = _vm.Hub.History;
         var offset = _pan.GetValueOrDefault("log");
         var y = view.Position.Y + 30f - offset;
-        var day = $"第 {_vm.Hub.State.Clock.Day} 日";
-        InkDraw.Text(this, new Vector2(PortraitLayout.Pad, y + 30f), day, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad + 30f + InkDraw.Measure(day, PortraitLayout.FontBody).X, y + 30f),
-            new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 30f), InkStyle.WoodDark, 2f);
-        y += 110f;
         const float rail = 80f;
         var textX = rail + 50f;
         var width = PortraitLayout.CanvasWidth - PortraitLayout.Pad - textX - 20f;
-        for (var i = 0; i < entries.Count; i++)
+        var day = -1;
+        for (var i = history.Count - 1; i >= 0; i--)
         {
-            var lines = InkDraw.WrapLines(entries[i], width, PortraitLayout.FontMeta);
+            var entry = history[i];
+            if (entry.Day != day)
+            {
+                day = entry.Day;
+                var label = $"第 {day} 日";
+                InkDraw.Text(this, new Vector2(PortraitLayout.Pad, y + 30f), label, PortraitLayout.FontBody, InkStyle.Line, "lm");
+                InkDraw.FadeRule(this, PortraitLayout.Pad + 30f + InkDraw.Measure(label, PortraitLayout.FontBody).X,
+                    PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 30f, PortraitLayout.LineHair, InkStyle.Dim, InkDraw.FadeTaper.Right);
+                y += 110f;
+            }
+            var lines = InkDraw.WrapLines(entry.Text, width, PortraitLayout.FontMeta);
             var height = Mathf.Max(1, lines.Count) * PortraitLayout.LogLineHeight;
-            if (i < entries.Count - 1)
+            var last = i == 0 || history[i - 1].Day != day;
+            if (!last)
                 InkDraw.InkLine(this, new Vector2(rail, y + 50f), new Vector2(rail, y + height + 40f), InkStyle.Hover, 3f);
             InkDraw.Jewel(this, new Vector2(rail, y + 30f), 12f, InkStyle.Line);
             for (var k = 0; k < lines.Count; k++)
@@ -320,7 +327,7 @@ public partial class PortraitHubScreen
         var total = (int)(slots.Count * step + 220f);
         var offset = Pan("system", total, (int)view.Size.Y);
         var add = new Rect2(PortraitLayout.Pad, view.Position.Y - offset, PortraitLayout.FullWidth, 200f);
-        PortraitFrame.RoundRect(this, add, 18f, PortraitFrame.IsPressed(add) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
+        PortraitFrame.Bevel(this, add, 18f, PortraitFrame.IsPressed(add) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
         PortraitGlyph.Plus(this, add.GetCenter().X, add.Position.Y + 76f, 34f, InkStyle.Dim);
         InkDraw.Text(this, new Vector2(add.GetCenter().X, add.Position.Y + 150f), "保存当前进度", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         AddClipped(add, view, PortraitAction.SaveNow, 0, true, "保存");
@@ -362,7 +369,9 @@ public partial class PortraitHubScreen
         var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
         var volume = InkSettings.CurrentMasterVolume;
         PortraitFrame.Bar(this, track, volume);
-        InkDraw.Jewel(this, new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y), 30f, InkStyle.Line);
+        var knob = new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y);
+        InkDraw.Jewel(this, knob, 30f, InkStyle.Line);
+        InkDraw.Jewel(this, knob, 11f, InkStyle.Bg);
         for (var i = 0; i <= 4; i++)
         {
             var cx = track.Position.X + track.Size.X * i / 4f;

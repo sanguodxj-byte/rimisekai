@@ -608,7 +608,7 @@ public sealed class ArchitectureTests
         loadedHub.Restore(snapshot.Hub);
         Assert.Equal(1, loadedHub.PlayerRoomId);
         Assert.Equal(friend.Id, loadedHub.SelectedCharacterId);
-        Assert.Contains(loadedHub.Log, l => l.Text == "测试日志");
+        Assert.Contains(loadedHub.History, l => l.Text == "测试日志");
     }
 
     [Fact]

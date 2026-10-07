@@ -55,20 +55,7 @@ public sealed partial class HubSession
             Write("你环顾四周。");
             return true;
         }
-        // 补充房间描述日志：描述原文接在打量后，打量着xx后面永远是逗号。
-        // 只按名字权威检索（DefName/Label），禁止按数值 Id 撞库——运行时自增 Id 会撞上无关定义。
-        var def = DefDatabase<RoomDef>.Get(room.Name)
-               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.Name || d.Label == room.Name);
-        var desc = def != null && def.Description.Length > 0 ? def.Description : "";
-
-        // 卧室夜间昼夜差分描述（20:00~6:00）：与插画 room_bedroom_night 呼应
-        if ((room.Name.Contains("卧") || room.HasTag("卧室")) && (State.Clock.Hour < 6 || State.Clock.Hour >= 20))
-        {
-            desc = "月光透过尖拱石窗斜洒在木床上，床幔半掩，粗石壁炉前留有一层静寂的灰烬。";
-        }
-
-        if (!string.IsNullOrEmpty(desc) && !desc.EndsWith("。") && !desc.EndsWith("，"))
-            desc += "。";
+        var desc = SceneDescription(room);
         Write(string.IsNullOrEmpty(desc)
             ? $"你打量着{room.Name}，"
             : $"你打量着{room.Name}，{desc}");
