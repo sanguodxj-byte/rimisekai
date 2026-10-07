@@ -15,7 +15,7 @@ public static partial class PortraitLayout
     // 2026-10-08 主人改：行动面板夹在敌阵与我方之间，我方卡贴屏底；敌阵向下吃满余下高度，屏底不留空。
     // 同日再改：回合数居中；行动顺序条撤掉，改成左上的竖向速度跑条（只占原顺序条与首领条左段，战场网格不动）（沿用历史版：顶端出手线，左列我方右列敌方）。
     public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
-    public static Rect2 CombatTop => new(CombatTrack.End.X + 16f, SafeTop, CanvasWidth - CombatTrack.End.X - 16f, 130f);
+    public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
     /// <summary>首领条：原位原宽（40, 270, 1000, 90），任何改动不得侵占。</summary>
     public static Rect2 CombatBoss => new(40, SafeTop + 270f, 1000, 90f);
     public static Rect2 CombatRound => CombatTop;
@@ -27,14 +27,15 @@ public static partial class PortraitLayout
     public static Rect2 CombatAvatars => new(40, CanvasHeight - Pad - CombatAvatarsHeight, 1000, CombatAvatarsHeight);
     public static Rect2 CombatActions => new(0, CombatAvatars.Position.Y - 30f - CombatActionsHeight, CanvasWidth, CombatActionsHeight);
     /// <summary>
-    /// 左上竖向速度跑条：宽 220，屏顶安全区到首领条上缘（原行动顺序条腾出的空位＋顶栏左段），无命中块。
-    /// 主人定：首领条与敌阵都不许被侵占；顶栏内容（回合居中、齿轮在右）本就不落在左段。
+    /// 竖向速度跑条：嵌在战场网格左上角（属于 enemies 区内的绘制，不单开容器、不报独立 region），无命中块。
+    /// 主人定（2026-10-08）：跑条嵌入战场内左上；顶栏、首领条恢复原位原宽。
+    /// 常规敌阵（含 3×3 首领）左上是透视网格上方的空地；4×4 首领格吃满战场时跑条直接压在首领画像左上（不加底框）。
     /// 2026-10-08 主人定：各区互不侵占，跑条不得挤占战场——敌阵网格几何保持原样（40, 380, 1000, …）。
     /// </summary>
     public const float CombatTrackWidth = 220f;
     /// <summary>敌阵上缘：与原版同为 SafeTop+380，跑条改动不得移动它。</summary>
     private static float FieldTop => SafeTop + 380f;
-    public static Rect2 CombatTrack => new(40, SafeTop + 10f, CombatTrackWidth, 250f);
+    public static Rect2 CombatTrack => new(CombatField.Position.X + 20f, FieldTop + 20f, CombatTrackWidth, 400f);
     public static Rect2 CombatField => new(40, FieldTop, 1000, CombatActions.Position.Y - 30f - FieldTop);
     /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
@@ -120,7 +121,7 @@ public static partial class PortraitLayout
 
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
     {
-        new PortraitRegion("top", CombatTop), new PortraitRegion("track", CombatTrack),
+        new PortraitRegion("top", CombatTop),
         new PortraitRegion("boss", CombatBoss),
         new PortraitRegion("enemies", CombatField), new PortraitRegion("actions", CombatActions),
         new PortraitRegion("avatars", CombatAvatars),

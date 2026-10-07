@@ -204,7 +204,7 @@ public partial class PortraitCombatView : Control
         var track = PortraitLayout.CombatTrack;
         var alive = battle.Members.Where(m => m.Alive).ToList();
         var cx = track.GetCenter().X;
-        const float size = 52f;
+        const float size = 72f;
         var top = track.Position.Y + 24f + size / 2f;
         var bottom = track.End.Y - size / 2f - 2f;
         // 出手线：轨顶一道骨白横线，两端菱珠。
@@ -223,7 +223,7 @@ public partial class PortraitCombatView : Control
             if (members.Count == 0)
                 continue;
             // 同列间距随人数收紧，保证整列收在轨内、不越出跑条区。
-            var minGap = members.Count > 1 ? MathF.Min(60f, (bottom - top) / (members.Count - 1)) : 60f;
+            var minGap = members.Count > 1 ? MathF.Min(82f, (bottom - top) / (members.Count - 1)) : 82f;
             var ys = new List<float>();
             foreach (var m in members)
             {
