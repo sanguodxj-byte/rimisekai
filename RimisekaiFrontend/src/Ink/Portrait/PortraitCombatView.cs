@@ -371,12 +371,12 @@ public partial class PortraitCombatView : Control
             var card = PortraitLayout.AllyCard(i);
             var rect = new Rect2(card.Position + shake, card.Size);
             PortraitFrame.Card(this, rect, _actor?.Id == unit.Id, 22f);
-            PortraitFrame.Avatar(this, PortraitLayout.AllyAvatar(rect), 52f, UnitImageProvider?.Invoke(unit), unit.Name,
+            PortraitFrame.Avatar(this, PortraitLayout.AllyAvatar(rect), PortraitLayout.AllyAvatarRadius, UnitImageProvider?.Invoke(unit), unit.Name,
                 dim: !unit.Alive);
             InkDraw.TextBounded(this, PortraitLayout.AllyName(rect), unit.Name,
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, unit.Alive ? InkStyle.Line : InkStyle.Dim, "cm");
             PortraitFrame.Bar(this, PortraitLayout.AllyMeter(rect), (float)unit.Hp / unit.MaxHp);
-            for (var s = 0; s < unit.Statuses.Count && s < 4; s++)
+            for (var s = 0; s < unit.Statuses.Count && s < PortraitLayout.StatusMax; s++)
             {
                 var status = unit.Statuses[s];
                 var iconRect = PortraitLayout.StatusIcon(rect, s);
@@ -388,7 +388,7 @@ public partial class PortraitCombatView : Control
                     StatusKind.Dot => status.Power,
                     _ => status.Points,
                 });
-                InkDraw.Text(this, new Vector2(iconRect.End.X - 1f, iconRect.End.Y + 3f), strength.ToString(), 26, InkStyle.Line, "rb");
+                InkDraw.TextOutlined(this, new Vector2(iconRect.End.X + 20f, iconRect.End.Y + 10f), strength.ToString(), 26, InkStyle.Line, 8, "rb");
             }
             _hits.Add(new PortraitWidget(card, PortraitAction.CombatAct, unit.Id,
                 _actor != null && unit.Alive && Armed?.Target == SkillTarget.Ally, unit.Name));

@@ -977,6 +977,27 @@ public static class InkDraw
             HorizontalAlignment.Left, -1, size, color);
     }
 
+    /// <summary>带黑色描边的文字（数字角标用）：先画描边再画字，叠在图标上也完整清晰。</summary>
+    public static void TextOutlined(CanvasItem ci, Vector2 at, string text, int size, Color color, int outline,
+        string anchor = "lt")
+    {
+        size = Mathf.Max(InkStyle.MinFontSize, size);
+        var font = InkStyle.Font;
+        var ascent = font.GetAscent(size);
+        var descent = font.GetDescent(size);
+        var w = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
+        var x = anchor[0] switch { 'c' => at.X - w / 2f, 'r' => at.X - w, _ => at.X };
+        var baseline = anchor[1] switch
+        {
+            'm' => at.Y + (ascent - descent) / 2f,
+            'b' => at.Y - descent,
+            _ => at.Y + ascent,
+        };
+        var pos = new Vector2(x, baseline);
+        ci.DrawStringOutline(font, pos, text, HorizontalAlignment.Left, -1, size, outline, InkStyle.Bg);
+        ci.DrawString(font, pos, text, HorizontalAlignment.Left, -1, size, color);
+    }
+
     public static Vector2 Measure(string text, int size)
     {
         var font = InkStyle.Font;

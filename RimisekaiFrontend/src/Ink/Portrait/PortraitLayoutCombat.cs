@@ -22,10 +22,11 @@ public static partial class PortraitLayout
     /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
     public static Rect2 CombatGearHit => new(CanvasWidth - Pad - 118f, SafeTop + 6f, 118f, 118f);
     /// <summary>行动面板高：标题带 120 ＋ 两行钮（200＋20＋200）＋底边 40。</summary>
-    public const float CombatActionsHeight = 580f;
-    public const float CombatAvatarsHeight = 300f;
+    /// <summary>主人定 2026-10-08：行动面板收紧，与我方头像区等大（1000×440）；敌阵上缘与下缘不动。</summary>
+    public const float CombatActionsHeight = 440f;
+    public const float CombatAvatarsHeight = 440f;
     public static Rect2 CombatAvatars => new(40, CanvasHeight - Pad - CombatAvatarsHeight, 1000, CombatAvatarsHeight);
-    public static Rect2 CombatActions => new(0, CombatAvatars.Position.Y - 30f - CombatActionsHeight, CanvasWidth, CombatActionsHeight);
+    public static Rect2 CombatActions => new(40, CombatAvatars.Position.Y - 30f - CombatActionsHeight, 1000, CombatActionsHeight);
     /// <summary>
     /// 竖向速度跑条：嵌在战场网格左上角（属于 enemies 区内的绘制，不单开容器、不报独立 region），无命中块。
     /// 主人定（2026-10-08）：跑条嵌入战场内左上；顶栏、首领条恢复原位原宽。
@@ -45,8 +46,10 @@ public static partial class PortraitLayout
     /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
     {
-        var width = (CanvasWidth - 100f) / 2f;
-        return new Rect2(40f + slot % 2 * (width + 20f), CombatActions.Position.Y + (CombatActions.Size.Y - 420f) / 2f + slot / 2 * 220f, width, 200f);
+        // 面板内边距 30，钮高 170、行距 20，四钮在面板内上下居中。
+        var width = (CombatActions.Size.X - 60f - 20f) / 2f;
+        return new Rect2(CombatActions.Position.X + 30f + slot % 2 * (width + 20f),
+            CombatActions.Position.Y + (CombatActions.Size.Y - 360f) / 2f + slot / 2 * 190f, width, 170f);
     }
     /// <summary>首领行动点：血条下方正中一行，实心菱半径 14、间距 44（主人定 2026-10-08：血条与 HP 数字占满整宽）：实心菱 18px、间距 30px。</summary>
     public static Vector2 BossPipCenter(int index, int count) =>
@@ -113,16 +116,29 @@ public static partial class PortraitLayout
         return new Rect2(CombatAvatars.Position.X + index * (width + 16f), CombatAvatars.Position.Y, width, CombatAvatars.Size.Y);
     }
 
-    public static Vector2 AllyAvatar(Rect2 card) => new(card.GetCenter().X, card.Position.Y + 72f);
-    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.Position.Y + 132f, card.Size.X - 24, 56);
-    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 24, card.Position.Y + 202f, card.Size.X - 48, 14);
+    /// <summary>我方卡自上而下：buff 两排（头顶）→ 头像（半径 AllyAvatarRadius）→ 名字 → 血条。</summary>
+    public const float AllyAvatarRadius = 70f;
+    public static Vector2 AllyAvatar(Rect2 card) => new(card.GetCenter().X, card.Position.Y + 230f);
+    public static Rect2 AllyName(Rect2 card) => new(card.Position.X + 12, card.Position.Y + 308f, card.Size.X - 24, 56);
+    public static Rect2 AllyMeter(Rect2 card) => new(card.Position.X + 24, card.Position.Y + 380f, card.Size.X - 48, 14);
     public static Rect2 EnemyName(Rect2 card) => new(card.Position + new Vector2(4, 6), new Vector2(card.Size.X - 8, 32));
     public static Rect2 EnemyMeter(Rect2 card) => new(card.Position.X + 6, card.End.Y - 16, card.Size.X - 12, 10);
     public static Rect2 EnemyImage(Rect2 card) => new(card.Position.X + 4, card.Position.Y + 42,
         card.Size.X - 8, Math.Max(0, card.Size.Y - 100));
-    /// <summary>buff 图标条：悬在角色卡上方（卡外），绝不落入卡内头像区。</summary>
-    public static Rect2 StatusIcon(Rect2 card, int index) => new(card.Position.X + 20 + index * 52,
-        card.Position.Y + 234f, 44, 44);
+    /// <summary>
+    /// buff 图标：角色头顶两排，每排 3 枚（48px、步距 76），最多 6 枚。数字角标右下、向右伸进 28px 的列间空当，
+    /// 三位数也不压到邻格图标；排间留 16px 不被下排遮挡。
+    /// </summary>
+    public const int StatusPerRow = 3;
+    public const int StatusMax = 6;
+    public static Rect2 StatusIcon(Rect2 card, int index)
+    {
+        const float size = 48f, step = 76f;
+        var row = index / StatusPerRow;
+        var col = index % StatusPerRow;
+        var left = card.Position.X + (card.Size.X - (step * (StatusPerRow - 1) + size + 20f)) / 2f; // +20：末列角标伸出量
+        return new Rect2(left + col * step, card.Position.Y + 16f + row * 64f, size, size);
+    }
 
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
     {

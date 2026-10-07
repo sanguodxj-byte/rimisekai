@@ -454,6 +454,14 @@ public partial class PortraitCapture : Node
                     Token = "probe_swift", Name = "迅捷", Category = StatusCategory.Buff,
                     Kind = StatusKind.StatMod, Stat = Rimisekai.Catalog.StatusStat.Speed, Percent = 30,
                 });
+            // 末位再挂 4 枚，凑满两排（6 枚），验证双排与两位/三位数角标。
+            if (i == allies.Length - 1)
+                foreach (var pct in new[] { 100, 15, 200, 5 })
+                    allies[i].Statuses.Add(new StatusEffect
+                    {
+                        Token = $"probe_extra_{pct}", Name = pct % 2 == 0 ? "铁壁" : "迅捷", Category = StatusCategory.Buff,
+                        Kind = StatusKind.StatMod, Stat = Rimisekai.Catalog.StatusStat.Defence, Percent = pct,
+                    });
         }
         _root.EnterCombat(_battleProbe);
         _root.CombatView._Process(0.4);
