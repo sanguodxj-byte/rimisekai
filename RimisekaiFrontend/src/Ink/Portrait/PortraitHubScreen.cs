@@ -76,6 +76,9 @@ public enum PortraitAction
     SkillCard,
     TraitInfo,
     EquipInfo,
+    EquipSlotPick,
+    EquipOption,
+    EquipRemove,
     OpenDisc,
     StoreSegment,
     StockCategory,
@@ -120,6 +123,7 @@ public partial class PortraitHubScreen : Control
         Disc,
         Build,
         System,
+        Equip,
     }
 
     private enum SheetKind
@@ -278,6 +282,7 @@ public partial class PortraitHubScreen : Control
             case PushPage.Character: DrawCharacterPage(); break;
             case PushPage.Disc: DrawSkillPage(); break;
             case PushPage.Build: DrawDevelopment(); break;
+            case PushPage.Equip: DrawEquipmentPage(); break;
             default: DrawSystem(); break;
         }
     }
@@ -461,6 +466,8 @@ public partial class PortraitHubScreen : Control
 
         if (mb.Pressed)
         {
+            _holdFired = false;
+            _holdAge = 0f;
             _pressed = true;
             _dragging = false;
             _pressPos = mb.Position;
@@ -473,7 +480,7 @@ public partial class PortraitHubScreen : Control
             return;
         _pressed = false;
         _pressRect = null;
-        if (_dragging)
+        if (_dragging || _holdFired)
         {
             QueueRedraw();
             return;
@@ -521,7 +528,7 @@ public partial class PortraitHubScreen : Control
 
     private void Execute(PortraitWidget w)
     {
-        if (ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
+        if (ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
             || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w))
             return;
         switch (w.Action)
@@ -551,7 +558,7 @@ public partial class PortraitHubScreen : Control
     private void Back()
     {
         ResetSkillView();
-        if (_push == PushPage.Disc)
+        if (_push is PushPage.Disc or PushPage.Equip)
         {
             _push = PushPage.Character;
             return;

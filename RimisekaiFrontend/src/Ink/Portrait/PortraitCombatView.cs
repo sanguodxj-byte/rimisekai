@@ -187,37 +187,71 @@ public partial class PortraitCombatView : Control
     private void DrawTopBar(Battle battle)
     {
         var top = PortraitLayout.CombatTop;
-        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top.Position.Y, 420f, top.Size.Y), battle.PlaceName,
+        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top.Position.Y, 300f, top.Size.Y), battle.PlaceName,
             PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        InkDraw.Text(this, new Vector2(top.GetCenter().X + 110f, top.GetCenter().Y), $"第 {battle.Round} 回合",
+        InkDraw.Text(this, top.GetCenter(), $"第 {battle.Round} 回合",
             PortraitLayout.FontMeta, InkStyle.Dim, "cm");
     }
 
     /// <summary>
-    /// 行动顺序条：存活者按下次出手先后自左而右；我方圆形头像、敌方菱形，正在等指令的我方行动者实心骨白托底。
+    /// 速度跑条（沿用历史版）：敌阵左侧竖轨，顶端一道出手线；中线分左右两列——左列我方、右列敌方，
+    /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
     private void DrawTurnOrder(Battle battle)
     {
-        var order = PortraitLayout.CombatOrder;
-        InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, order.GetCenter().Y), "行动顺序", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-        var alive = battle.Members.Where(m => m.Alive).OrderBy(m => m.NextActAt).ThenBy(m => m.Id).Take(6).ToArray();
-        for (var i = 0; i < alive.Length; i++)
+        var track = PortraitLayout.CombatTrack;
+        var alive = battle.Members.Where(m => m.Alive).ToList();
+        var cx = track.GetCenter().X;
+        const float size = 50f, minGap = 60f;
+        var top = track.Position.Y + 30f + size / 2f;
+        var bottom = track.End.Y - size / 2f - 6f;
+        // 出手线：轨顶一道骨白横线，两端菱珠。
+        var lineY = track.Position.Y + 14f;
+        DrawRect(new Rect2(track.Position.X, lineY - 2f, track.Size.X, 4f), InkStyle.Line);
+        InkDraw.Jewel(this, new Vector2(track.Position.X, lineY), 7f, InkStyle.Line);
+        InkDraw.Jewel(this, new Vector2(track.End.X, lineY), 7f, InkStyle.Line);
+        InkDraw.InkLine(this, new Vector2(cx, lineY + 10f), new Vector2(cx, track.End.Y), InkStyle.Dim, 3f);
+        if (alive.Count == 0)
+            return;
+        var span = alive.Max(m => m.NextActAt) - battle.Time;
+        foreach (var ally in new[] { true, false })
         {
-            var m = alive[i];
-            var c = PortraitLayout.CombatOrderToken(i);
-            var ally = m.Side == battle.ControlledSide;
-            var tex = TrackImageProvider?.Invoke(m) ?? UnitImageProvider?.Invoke(m);
-            if (ally)
+            var columnX = track.Position.X + track.Size.X * (ally ? 0.25f : 0.75f);
+            var members = alive.Where(m => (m.Side == battle.ControlledSide) == ally).OrderBy(m => m.NextActAt).ThenBy(m => m.Id).ToList();
+            if (members.Count == 0)
+                continue;
+            var ys = new List<float>();
+            foreach (var m in members)
             {
-                if (_actor?.Id == m.Id)
-                    DrawRect(new Rect2(c - new Vector2(54f, 54f), new Vector2(108f, 108f)), InkStyle.Line);
-                PortraitFrame.Avatar(this, c, 44f, tex, m.Name, ring: _actor?.Id != m.Id);
+                var p = span <= 0 ? 1f : Mathf.Clamp(1f - (m.NextActAt - battle.Time) / (float)span, 0f, 1f);
+                ys.Add(bottom - (bottom - top) * p);
             }
-            else
+            for (var i = 1; i < ys.Count; i++)
+                if (ys[i] < ys[i - 1] + minGap)
+                    ys[i] = ys[i - 1] + minGap;
+            if (ys[^1] > bottom)
             {
-                InkDraw.Jewel(this, c, 48f, InkStyle.Dim);
-                InkDraw.Jewel(this, c, 44f, InkStyle.Bg);
-                InkDraw.Text(this, c, m.Name[..1], PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+                var shift = ys[^1] - bottom;
+                for (var i = 0; i < ys.Count; i++)
+                    ys[i] -= shift;
+            }
+            for (var i = 0; i < members.Count; i++)
+            {
+                var m = members[i];
+                var c = new Vector2(columnX, Mathf.Max(ys[i], top));
+                var tex = TrackImageProvider?.Invoke(m) ?? UnitImageProvider?.Invoke(m);
+                if (ally)
+                {
+                    if (_actor?.Id == m.Id)
+                        DrawRect(new Rect2(c - new Vector2(size / 2f + 5f, size / 2f + 5f), new Vector2(size + 10f, size + 10f)), InkStyle.Line);
+                    PortraitFrame.Avatar(this, c, size / 2f, tex, m.Name, ring: _actor?.Id != m.Id);
+                }
+                else
+                {
+                    InkDraw.Jewel(this, c, size / 2f + 2f, InkStyle.Dim);
+                    InkDraw.Jewel(this, c, size / 2f - 2f, InkStyle.Bg);
+                    InkDraw.Text(this, c, m.Name[..1], 30, InkStyle.Dim, "cm");
+                }
             }
         }
     }

@@ -94,12 +94,47 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.EquipInfo), "equipment slots clickable"); Shoot("char_equip", _root.HubScreen); });
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.EquipInfo, 0));
+        // 装备格点进装备页：背包塞一顶测试头盔（真实锻造入口），换上、长按看详情、卸下回背包。
+        var helmetId = "";
         _steps.Enqueue(() =>
         {
-            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Body.Length > 0, "equipment slot opens its detail popup");
-            Shoot("char_equip_popup", _root.HubScreen);
+            var hub = _root.HubScreen.DebugHub;
+            var material = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.MaterialDef>.All.First(m => m.ArmorUsable);
+            var helmet = Rimisekai.Defs.EquipForge.ForgeArmor(Rimisekai.Defs.EquipSlot.Head, material.DefName);
+            hub.State.Equips.Add(helmet);
+            hub.State.Roster.Master!.Bag.Add(helmet.Id, 1);
+            helmetId = helmet.Id;
+            _root.HubScreen.DebugPress(PortraitAction.EquipInfo, 2);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.EquipSlotPick)
+                && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.EquipOption && w.Label == helmetId),
+                "equipment slot opens the equipment page with bag candidates");
+            Shoot("equip_page", _root.HubScreen);
+            _root.HubScreen.DebugHold(PortraitAction.EquipOption, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Body.Length > 0, "holding a candidate shows its details");
+            Shoot("equip_hold", _root.HubScreen);
             _root.ModalLayer.Dismiss();
+            _root.HubScreen.DebugPress(PortraitAction.EquipOption, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            Require(master.EquippedId(Rimisekai.Defs.EquipSlot.Head) == helmetId && master.Bag.Get(helmetId) == 0,
+                "tapping a candidate equips it");
+            Shoot("equip_swapped", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.EquipRemove, 2);
+        });
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            Require(master.EquippedId(Rimisekai.Defs.EquipSlot.Head) == "" && master.Bag.Get(helmetId) == 1,
+                "unequip returns the piece to the bag");
+            _root.HubScreen.DebugPress(PortraitAction.Back, 0);
             _root.HubScreen.DebugPan("character", 0);
         });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 2));

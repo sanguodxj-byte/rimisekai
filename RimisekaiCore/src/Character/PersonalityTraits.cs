@@ -293,4 +293,112 @@ public static class PersonalityTraits
         if (c.Has(Trait.Lazy)) chance -= 25;
         return System.Math.Clamp(chance, 5, 90);
     }
+    // ---------- 界面：特质的具体影响 ----------
+
+    /// <summary>
+    /// 某特质对数值的具体影响，逐行给界面列示（无冒号，标签与数值空格分隔）。
+    /// 不另写一份数值表：拿「只有这条特质」与「什么特质都没有」的两个探针角色，
+    /// 逐个调用本文件的效果方法求差，所以改了上面的数值，这里自动跟着变。
+    /// 条件性效果用三种情境区分：陌生且心情平常 / 陌生且心情好 / 熟络且心情平常。
+    /// </summary>
+    public static IReadOnlyList<string> EffectLines(Trait trait)
+    {
+        var lines = new List<string>();
+        CharacterState Probe(bool with, bool fond, bool happy)
+        {
+            var c = new CharacterState(-1);
+            if (with)
+                c.Talents.Add((int)trait);
+            if (fond)
+                c.Condition.AddFavor(Vitals.FondAt + 50);
+            c.Affect.Mood = happy ? 80 : Affect.Neutral;
+            return c;
+        }
+
+        // 三情境求差；返回 (修饰前缀, 差值)，差值为 0 表示无影响。
+        (string Prefix, int Delta) Diff(System.Func<CharacterState, int> f)
+        {
+            var d0 = f(Probe(true, false, false)) - f(Probe(false, false, false));
+            var dm = f(Probe(true, false, true)) - f(Probe(false, false, true));
+            var df = f(Probe(true, true, false)) - f(Probe(false, true, false));
+            if (d0 == dm && d0 == df)
+                return ("", d0);
+            if (d0 == dm && df == 0)
+                return ("陌生时", d0);
+            if (d0 == df && d0 == 0)
+                return ("心情好时", dm);
+            return ("", d0 != 0 ? d0 : dm != 0 ? dm : df);
+        }
+
+        static string Signed(int v) => v > 0 ? $"+{v}" : v.ToString();
+
+        void Add(string label, System.Func<CharacterState, int> f, string unit = "%")
+        {
+            var (prefix, d) = Diff(f);
+            if (d != 0)
+                lines.Add($"{prefix}{label} {Signed(d)}{unit}");
+        }
+
+        // 工作效率：白天按工种分组；全部工种同幅度则合成一行。夜间、清晨另算相对白天的差。
+        var works = ActionKindMap.WorkOrdered;
+        var day = works.Select(a => (Action: a, Delta: Diff(c => WorkProgressPercent(c, a, 12)).Delta)).ToList();
+        foreach (var group in day.GroupBy(x => x.Delta).Where(g => g.Key != 0))
+        {
+            var label = group.Count() == works.Length ? "工作效率"
+                : string.Join("、", group.Select(x => ActionKindMap.LabelOf(x.Action))) + "效率";
+            lines.Add($"{label} {Signed(group.Key)}%");
+        }
+        var probeWork = works.FirstOrDefault(a => day.First(x => x.Action == a).Delta == day.GroupBy(x => x.Delta)
+            .OrderByDescending(g => g.Count()).First().Key);
+        var baseDay = day.First(x => x.Action == probeWork).Delta;
+        var night = Diff(c => WorkProgressPercent(c, probeWork, 23)).Delta - baseDay;
+        if (night != 0)
+            lines.Add($"夜间工作效率 {Signed(night)}%");
+        var morning = Diff(c => WorkProgressPercent(c, probeWork, 7)).Delta - baseDay;
+        if (morning != 0)
+            lines.Add($"清晨工作效率 {Signed(morning)}%");
+        if (!WillWork(Probe(true, false, false), true) && WillWork(Probe(false, false, false), true))
+            lines.Add("不肯干重活");
+
+        Add("心情收益", MoodGainPercent);
+        Add("亲密接触门槛", TouchGatePercent);
+
+        // 四类社交好感：同幅度合成一行。
+        var social = new[] { (SocialKind.Talk, "交谈"), (SocialKind.Gift, "送礼"), (SocialKind.Care, "关怀"), (SocialKind.Intimate, "亲密") }
+            .Select(k => (k.Item2, Diff(c => SocialFavorPercent(c, k.Item1)))).Where(x => x.Item2.Delta != 0).ToList();
+        if (social.Count == 4 && social.All(x => x.Item2 == social[0].Item2))
+            lines.Add($"{social[0].Item2.Prefix}社交好感 {Signed(social[0].Item2.Delta)}%");
+        else
+            foreach (var (label, (prefix, delta)) in social)
+                lines.Add($"{prefix}{label}好感 {Signed(delta)}%");
+
+        Add("进餐体力恢复", c => MealStamina(c, 0), "");
+        Add("进餐精神恢复", c => MealSpirit(c, 0), "");
+        Add("进餐心情", MealMoodPercent);
+        Add("休息精神恢复", RestSpiritBonus, "");
+        Add("学习速度", LearnPercentTotal);
+        Add("交谈难度", TalkDifficultyTotal, "");
+        Add("主动搭话的耐心", SeekBudgetDelta, "");
+        Add("找人聊天的欲望", ChatDesireBonus, "");
+        Add("闲坐倾向", SitWeightDelta, "");
+        Add("串门倾向", WanderChance);
+
+        var loiter = Diff(LoiterTicksFor).Delta;
+        if (loiter != 0)
+            lines.Add($"闲时活动时长 {Signed(loiter * 100 / LoiterTicksFor(Probe(false, false, false)))}%");
+        var wake = Diff(WakeHourFor).Delta;
+        if (wake != 0)
+            lines.Add($"起床推迟到 {WakeHourFor(Probe(true, false, false))}时");
+        var bed = Diff(BedHourFor).Delta;
+        if (bed != 0)
+            lines.Add($"就寝改到 {BedHourFor(Probe(true, false, false))}时");
+
+        if (!RequiresWage(Probe(true, false, false)))
+            lines.Add("不要工钱");
+        if (AcceptsInvite(Probe(true, false, false)) && !AcceptsInvite(Probe(false, false, false)))
+            lines.Add("不看好感，邀请必应");
+        if (trait == Trait.QuickChant)
+            lines.Add("战斗咏唱少一回合");
+        return lines;
+    }
 }

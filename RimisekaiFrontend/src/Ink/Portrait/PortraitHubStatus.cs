@@ -357,50 +357,29 @@ public partial class PortraitHubScreen
             case PortraitAction.TraitInfo:
                 ShowTraitInfo(w.Index);
                 return true;
-            case PortraitAction.EquipInfo:
-                ShowEquipInfo(w.Index);
-                return true;
             default:
                 return false;
         }
     }
 
-    /// <summary>特质说明弹窗：标题＝特质名，正文＝光谱分组＋内容表里的基调句（纯展示，点任意处关闭）。</summary>
+    /// <summary>特质说明弹窗：标题＝特质名，正文＝Core 求出的具体数值影响，末行是分组与内容表基调句（纯展示，点任意处关闭）。</summary>
     private void ShowTraitInfo(int index)
     {
         var def = TraitDefsOf(Who).ElementAtOrDefault(index);
         if (def == null)
             return;
-        var lines = new List<string>();
-        if (def.Group.Length > 0)
-            lines.Add(def.Group);
+        var lines = new List<string>(Rimisekai.Character.Traits.EffectLines(def.Trait));
+        if (lines.Count == 0)
+            lines.Add("暂无数值影响");
         if (def.Keynote.Length > 0)
-            lines.Add(def.Keynote);
+        {
+            lines.Add("");
+            lines.Add($"{def.Group}　{def.Keynote}");
+        }
         ModalWanted!(new InkModalPage { Title = def.Name, Body = string.Join("\n", lines) });
     }
 
-    /// <summary>装备详情弹窗：有实例装备列 Core 的逐行详情；武器槽列武器类型；空槽写未装备（纯展示）。</summary>
-    private void ShowEquipInfo(int index)
-    {
-        if (index < 0 || index >= DisplayEquipSlots.Length)
-            return;
-        var who = Who;
-        var slot = DisplayEquipSlots[index];
-        var registry = _vm.Hub.State.Equips;
-        var id = who.EquippedId(slot);
-        var gear = string.IsNullOrEmpty(id) ? null : registry.Get(id);
-        var name = EquipmentName(who, slot, registry);
-        string body;
-        if (gear != null)
-            body = string.Join("\n", gear.DescribeDetails());
-        else if (name != "空")
-            body = $"槽位　{EquipSlots.Label(slot)}";
-        else
-            body = "未装备";
-        ModalWanted!(new InkModalPage { Title = name == "空" ? EquipSlots.Label(slot) : name, Body = body });
-    }
-
-    private static string EquipmentName(CharacterState who, EquipSlot slot, EquipRegistry registry)
+    private string EquipmentName(CharacterState who, EquipSlot slot, EquipRegistry registry)
     {
         var id = who.EquippedId(slot);
         if (!string.IsNullOrEmpty(id))
@@ -408,6 +387,8 @@ public partial class PortraitHubScreen
             var gear = registry.Get(id);
             if (gear != null)
                 return EquipForge.NameOf(gear);
+            if (_vm.Hub.State.Weapons.Get(id) is { } weapon)
+                return WeaponForge.NameOf(weapon);
         }
         if (slot == EquipSlot.MainHand)
             return who.MainWeapon.HasValue ? InkText.Weapon(who.MainWeapon.Value) : "空";

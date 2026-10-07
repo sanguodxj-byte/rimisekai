@@ -103,6 +103,10 @@ public static class Traits
     public static int WanderChance(this CharacterState c) =>
         PersonalityTraits.WanderChance(c);
 
+    /// <summary>某特质的具体数值影响（界面逐行列示）。</summary>
+    public static IReadOnlyList<string> EffectLines(Trait trait) =>
+        PersonalityTraits.EffectLines(trait);
+
     /// <summary>可对外展示的素质列表。</summary>
     public static IReadOnlyList<Trait> Visible(this CharacterState character)
     {

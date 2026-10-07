@@ -13,20 +13,22 @@ public static partial class PortraitLayout
 {
     // 2026-10-07 重设计：顶栏（战场名 / 回合 / 设置）→ 行动顺序条 → 首领血条 → 透视敌阵 → 行动面板 → 我方卡一排。
     // 2026-10-08 主人改：行动面板夹在敌阵与我方之间，我方卡贴屏底；敌阵向下吃满余下高度，屏底不留空。
+    // 同日再改：回合数居中；行动顺序条撤掉，改成敌阵左侧的竖向速度跑条（沿用历史版：顶端出手线，左列我方右列敌方）。
     public static Rect2 CombatBackground => new(0, 0, CanvasWidth, CombatField.End.Y + 20f);
     public static Rect2 CombatTop => new(0, SafeTop, CanvasWidth, 130f);
-    public static Rect2 CombatOrder => new(0, CombatTop.End.Y, CanvasWidth, 130f);
-    public static Rect2 CombatBoss => new(40, CombatOrder.End.Y + 10f, 1000, 90f);
+    public static Rect2 CombatBoss => new(40, CombatTop.End.Y + 10f, 1000, 90f);
     public static Rect2 CombatRound => CombatTop;
     /// <summary>右上设置齿轮：命中块 118px，收在顶栏内。</summary>
     public static Rect2 CombatGearHit => new(CanvasWidth - Pad - 118f, SafeTop + 6f, 118f, 118f);
-    public static Vector2 CombatOrderToken(int i) => new(300f + i * 125f, CombatOrder.GetCenter().Y);
     /// <summary>行动面板高：标题带 120 ＋ 两行钮（200＋20＋200）＋底边 40。</summary>
     public const float CombatActionsHeight = 580f;
     public const float CombatAvatarsHeight = 300f;
     public static Rect2 CombatAvatars => new(40, CanvasHeight - Pad - CombatAvatarsHeight, 1000, CombatAvatarsHeight);
     public static Rect2 CombatActions => new(0, CombatAvatars.Position.Y - 30f - CombatActionsHeight, CanvasWidth, CombatActionsHeight);
-    public static Rect2 CombatField => new(40, CombatBoss.End.Y + 20f, 1000, CombatActions.Position.Y - 30f - CombatBoss.End.Y - 20f);
+    /// <summary>左侧竖向速度跑条：宽 120，与敌阵等高；无命中块。</summary>
+    public const float CombatTrackWidth = 120f;
+    public static Rect2 CombatTrack => new(40, CombatBoss.End.Y + 20f, CombatTrackWidth, CombatActions.Position.Y - 30f - CombatBoss.End.Y - 20f);
+    public static Rect2 CombatField => new(CombatTrack.End.X + 16f, CombatTrack.Position.Y, 1040f - CombatTrack.End.X - 16f, CombatTrack.Size.Y);
     /// <summary>行动面板 2×2 四钮：攻击 / 技能 / 道具 / 逃跑。</summary>
     public static Rect2 CombatButton(int slot)
     {
@@ -111,7 +113,7 @@ public static partial class PortraitLayout
 
     public static IReadOnlyList<PortraitRegion> CombatRegions => new[]
     {
-        new PortraitRegion("top", CombatTop), new PortraitRegion("order", CombatOrder),
+        new PortraitRegion("top", CombatTop), new PortraitRegion("track", CombatTrack),
         new PortraitRegion("boss", CombatBoss),
         new PortraitRegion("enemies", CombatField), new PortraitRegion("actions", CombatActions),
         new PortraitRegion("avatars", CombatAvatars),

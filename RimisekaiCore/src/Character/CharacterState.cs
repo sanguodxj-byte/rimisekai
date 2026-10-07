@@ -216,6 +216,10 @@ public sealed class CharacterState
         return true;
     }
 
+    /// <summary>直接写某槽的实例 Id（武器实例也记在主副手槽）。合法性由 HubSession 换装入口判定。</summary>
+    public void SetEquippedId(Rimisekai.Defs.EquipSlot slot, string id) =>
+        _equipped[(int)slot] = id ?? "";
+
     /// <summary>卸下某槽的装备，返回它的实例 Id；空槽返回空串。</summary>
     public string UnequipGear(Rimisekai.Defs.EquipSlot slot)
     {

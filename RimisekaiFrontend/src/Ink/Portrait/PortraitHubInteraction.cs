@@ -281,6 +281,7 @@ public partial class PortraitHubScreen
             _conversationReveal = Math.Min(_conversationText.Length, _conversationReveal + (float)delta * 30f);
             QueueRedraw();
         }
+        HoldTick(delta);
         // 提示签 3 秒后淡出。
         if (_notice.Length > 0 && _noticeAge <= 3f)
         {
