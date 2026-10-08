@@ -250,6 +250,21 @@ public partial class PortraitCombatView : Control
                         DrawRect(new Rect2(c - new Vector2(size / 2f + 5f, size / 2f + 5f), new Vector2(size + 10f, size + 10f)), InkStyle.Line);
                     PortraitFrame.Avatar(this, c, size / 2f, tex, m.Name, ring: _actor?.Id != m.Id);
                 }
+                else if (tex != null)
+                {
+                    // 敌方头像：方框收在轨内，外圈用暗线与我方亮框区分，右下角挂一枚小菱作敌方标记。
+                    var half = size / 2f;
+                    var box = new Rect2(c - new Vector2(half, half), new Vector2(size, size));
+                    DrawRect(box, InkStyle.Panel);
+                    var ts = tex.GetSize();
+                    var side = Mathf.Min(ts.X, ts.Y);
+                    DrawTextureRectRegion(tex, box, new Rect2(new Vector2((ts.X - side) / 2f, (ts.Y - side) / 2f), new Vector2(side, side)));
+                    DrawRect(box.Grow(2f), InkStyle.Bg, false, 3f);
+                    DrawRect(box.Grow(4f), InkStyle.Dim, false, 2f);
+                    var tag = c + new Vector2(half, half);
+                    InkDraw.Jewel(this, tag, 9f, InkStyle.Dim);
+                    InkDraw.Jewel(this, tag, 5f, InkStyle.Bg);
+                }
                 else
                 {
                     InkDraw.Jewel(this, c, size / 2f + 2f, InkStyle.Dim);

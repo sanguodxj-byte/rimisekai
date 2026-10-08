@@ -926,6 +926,7 @@ public partial class PortraitCapture : Node
                 {
                     Id = $"probe_{i}", Name = $"敌 {i}", MaxHp = 20, Attack = 3,
                     ThreatTier = i, Column = i, Speed = 1,
+                    Portrait = new[] { "monster_acid_slime", "monster_banshee", "monster_basilisk", "monster_bog_leech" }[i - 1],
                 });
         else
         {
@@ -933,7 +934,7 @@ public partial class PortraitCapture : Node
             {
                 Id = "probe_boss", Name = "首领", MaxHp = size * 120, Attack = 3,
                 ThreatTier = 4, Column = size == 4 ? 1 : 2, Size = size, Speed = 1,
-                ActionPoints = size, Portrait = "monster_boss_hobgoblin",
+                ActionPoints = size, Portrait = size switch { 2 => "monster_boss_magma_behemoth", 3 => "monster_boss_bone_colossus", _ => "monster_boss_flesh_titan" },
             });
             if (size == 2)
                 foreach (var column in new[] { 1, 2, 3, 4 })
@@ -941,7 +942,7 @@ public partial class PortraitCapture : Node
                     {
                         Id = $"probe_flank{column}", Name = $"敌 {column}", MaxHp = 30,
                         Attack = 2, ThreatTier = column is 2 or 3 ? 1 : 2, Column = column, Speed = 1,
-                        Portrait = "monster_goblin",
+                        Portrait = column is 1 or 4 ? "monster_bone_hound" : "monster_blood_beast",
                     });
         }
         _battleProbe = Encounters.Start(hub.State, foes)!;
