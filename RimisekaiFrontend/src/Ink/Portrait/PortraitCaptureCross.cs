@@ -139,6 +139,25 @@ public partial class PortraitCapture
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugHub.PlayerRoomId == _crossGate, "walked onto the north gate");
+            _root.HubScreen.QueueRedraw();
+        });
+        // 走进卧室会撞上同伴迎上来的那句对白（对白层盖住领地网格、箭头不画）：照实机点掉，再看箭头。
+        for (var i = 0; i < 8; i++)
+            _steps.Enqueue(() =>
+            {
+                var screen = _root.HubScreen;
+                var choice = screen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.ConversationChoice);
+                if (choice.Action == PortraitAction.ConversationChoice)
+                    screen.DebugPress(PortraitAction.ConversationChoice, choice.Index);
+                else
+                    screen.DebugPress(PortraitAction.ConversationAdvance, 0);
+                screen._Process(5);
+                screen.QueueRedraw();
+            });
+        _steps.Enqueue(() =>
+        {
+            Require(!_root.HubScreen.DebugWidgets.Any(w => w.Action is PortraitAction.ConversationAdvance or PortraitAction.ConversationChoice),
+                "arrival dialogue dismissed");
             CheckCrossArrow(1);
             Shoot("cross_north", _root.HubScreen);
         });
