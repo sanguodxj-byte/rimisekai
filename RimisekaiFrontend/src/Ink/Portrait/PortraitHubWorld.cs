@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Rimisekai.Hub;
@@ -104,7 +105,8 @@ public sealed partial class PortraitHubScreen
         var src = new Rect2(origin * PortraitWorldAtlas.TilePx, WorldSpan * PortraitWorldAtlas.TilePx);
         DrawTextureRectRegion(tex, grid, src);
 
-        // 聚落：小的先画，王都最后画在上面；名字按缩放分级出现。
+        // 聚落：小的先画，王都最后画在上面；名字按缩放分级出现。地名一律收齐了最后画（压在所有标记之上、不被队伍棋子挡住）。
+        _worldLabels.Clear();
         foreach (var poi in map.Pois.OrderBy(p => -(int)p.Type))
         {
             var c = WorldToScreen(new Vector2(poi.X + 0.5f, poi.Y + 0.5f));
@@ -137,6 +139,7 @@ public sealed partial class PortraitHubScreen
         }
 
         // 队伍：出门在外时在脚下那格立王棋（单环）。
+        Rect2? partyMark = null;
         if (!partyHome)
         {
             var pc = WorldToScreen(new Vector2(partyX + 0.5f, partyY + 0.5f));
@@ -146,8 +149,10 @@ public sealed partial class PortraitHubScreen
                 DrawCircle(pc, r, new Color(0f, 0f, 0f, 0.75f));
                 DrawArc(pc, r, 0f, Mathf.Tau, 48, InkStyle.Line, 3f, true);
                 InkDraw.Chess(this, pc + new Vector2(0f, r * 0.62f), r * 1.3f, InkDraw.ChessPiece.King);
+                partyMark = new Rect2(pc - Vector2.One * (r + 4f), Vector2.One * (r + 4f) * 2f);
             }
         }
+        DrawWorldLabels(partyMark);
 
         // 选中格：骨白方框＋四角菱。
         if (_worldPick.X >= 0)
@@ -172,12 +177,6 @@ public sealed partial class PortraitHubScreen
             (x, y) => PortraitGlyph.Minus(this, x, y, 22f, InkStyle.Line));
         WorldButton(home, PortraitAction.WorldHome, "领地", map.HasHome, (x, y) => PortraitGlyph.Castle(this, x, y, 26f, InkStyle.Line));
 
-        // 左下：比例与坐标提示。
-        var tip = $"{map.Width}×{map.Height} · 视野 {Mathf.RoundToInt(WorldSpan.X)} 格";
-        var tipSize = InkDraw.Measure(tip, PortraitLayout.FontMeta);
-        var tipRect = new Rect2(grid.Position.X + 8f, grid.End.Y - 8f - 56f, tipSize.X + 32f, 56f);
-        DrawRect(tipRect, new Color(0f, 0f, 0f, 0.7f));
-        InkDraw.Text(this, tipRect.GetCenter(), tip, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
     }
 
     private void WorldButton(Rect2 r, PortraitAction action, string label, bool enabled, Action<float, float> glyph)
@@ -232,16 +231,35 @@ public sealed partial class PortraitHubScreen
         }
     }
 
-    /// <summary>地图上的地名签：黑底半透明衬一下，骨白字。</summary>
+    private readonly List<(Vector2 At, string Text, Color Color)> _worldLabels = new();
+
+    /// <summary>地名签先记下，等标记都画完再一起画。</summary>
     private void WorldLabel(Vector2 at, string text, Color color)
     {
         if (text.Length == 0 || !PortraitLayout.MapGrid.Grow(-4f).HasPoint(at))
             return;
+        _worldLabels.Add((at, text, color));
+    }
+
+    /// <summary>
+    /// 地名签：黑底半透明衬一下，骨白字。签与队伍棋子相撞就挪到棋子下方；
+    /// 签整块收在地图框内（贴边的地名往里推，不出框）。
+    /// </summary>
+    private void DrawWorldLabels(Rect2? partyMark)
+    {
+        var grid = PortraitLayout.MapGrid.Grow(-4f);
         var size = PortraitLayout.FontMeta - 6;
-        var m = InkDraw.Measure(text, size);
-        var r = new Rect2(at - new Vector2(m.X / 2f + 10f, 22f), new Vector2(m.X + 20f, 44f));
-        DrawRect(r, new Color(0f, 0f, 0f, 0.72f));
-        InkDraw.Text(this, at, text, size, color, "cm");
+        foreach (var (at, text, color) in _worldLabels)
+        {
+            var m = InkDraw.Measure(text, size);
+            var r = new Rect2(at - new Vector2(m.X / 2f + 10f, 22f), new Vector2(m.X + 20f, 44f));
+            if (partyMark is { } mark && mark.Intersects(r))
+                r.Position = new Vector2(r.Position.X, mark.End.Y + 4f);
+            r.Position = new Vector2(Mathf.Clamp(r.Position.X, grid.Position.X, grid.End.X - r.Size.X),
+                Mathf.Clamp(r.Position.Y, grid.Position.Y, grid.End.Y - r.Size.Y));
+            DrawRect(r, new Color(0f, 0f, 0f, 0.72f));
+            InkDraw.Text(this, r.GetCenter(), text, size, color, "cm");
+        }
     }
 
     private string TerritoryName() =>
