@@ -415,7 +415,8 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(CheckSkillPopupFromButton);
         _steps.Enqueue(() => Shoot("combat_skill_popup", _root.CombatView));
         _steps.Enqueue(DispatchAttackViaButton);
-        for (var attempt = 0; attempt < 12; attempt++)
+        // 逃跑按双方平均躲闪掷骰（20%~95%），首领四人阵＋随机特质下可能只有两成：多给几次，免得出图偶发判败。
+        for (var attempt = 0; attempt < 30; attempt++)
             _steps.Enqueue(CheckFleeButtonAttempt);
         _steps.Enqueue(() =>
             Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Hub && !_root.ModalLayer.IsActive,
