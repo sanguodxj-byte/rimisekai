@@ -21,8 +21,6 @@ public sealed class SceneRunner
         _territory = territory;
     }
 
-    public SceneLibrary Library => _library;
-
     /// <summary>
     /// 试试给这个角色开一段场景事件。挑不出可触发的事件就返回 null，
     /// 宿主什么也不做（不发事件、不扣时间）。

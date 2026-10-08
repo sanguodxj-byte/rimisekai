@@ -688,11 +688,19 @@ public sealed class VoiceSceneTests
 
         var json = System.IO.File.ReadAllText(path);
         Assert.True(VoicePackJson.TryParse(json, out var characters, out _, out var scenes,
-            out var personas, out var error), error);
+            out var events, out var personas, out var error), error);
 
         // 教程角色要带上固定人设，LLM 生成时才有依据。
         Assert.True(personas.ContainsKey("璐米埃尔"));
         Assert.False(string.IsNullOrWhiteSpace(personas["璐米埃尔"]));
+
+        // 事件表必须指向真实存在的场景，否则永远演不出来。
+        Assert.NotEmpty(events);
+        foreach (var ev in events)
+        {
+            Assert.True(ev.Id.Length > 0);
+            Assert.Contains(scenes, s => s.Id == ev.SceneId);
+        }
 
         // 场景事件至少要有一条，且步骤与角色都齐。
         Assert.NotEmpty(scenes);

@@ -92,6 +92,8 @@ public partial class InkCombatFxLayer : Control
         public int UnitId;
         public string Name = "";
         public Rect2 CardRect;
+        public Texture2D? Tex;
+        public Rect2 TexRect;
         public float Time;
         public float Duration = 1.05f; // 充足时间展现切开、错位滑移与变透明消散
         public List<CutPiece> Pieces = new();
@@ -208,11 +210,16 @@ public partial class InkCombatFxLayer : Control
 
     /// <summary>
     /// 从战斗战况事件中捕获并生成对应的全彩 GPU Shader 攻击与受击特效。
+    /// getUnitCard 提供宿主画面坐标系下的单位卡片矩形（剑光与死亡斩裂都以它定位）；
+    /// getUnitImage 提供单位立绘贴图，死亡斩裂切的是立绘本身，没有立绘才回退切卡片剪影。
     /// </summary>
-    public void SpawnFromEvent(BattleEvent ev, Battle battle, Func<int, Vector2> getUnitCenter)
+    public void SpawnFromEvent(BattleEvent ev, Battle battle, Func<int, Vector2> getUnitCenter,
+        Func<Combatant, Rect2> getUnitCard, Func<Combatant, Texture2D?>? getUnitImage)
     {
         var actorPos = getUnitCenter(ev.ActorId);
         var targetPos = getUnitCenter(ev.TargetId);
+        var target = battle.Members.Find(m => m.Id == ev.TargetId);
+        var targetCard = target != null ? getUnitCard(target) : new Rect2(targetPos - new Vector2(90, 90), new Vector2(180, 180));
 
         var actor = battle.Members.Find(m => m.Id == ev.ActorId);
         var isPlayerSide = actor?.Side == battle.ControlledSide;
@@ -231,7 +238,7 @@ public partial class InkCombatFxLayer : Control
 
                 // 2. 根据技能种类生成专属 GPU Shader 全彩光效，并自适应捕获剑光切线
                 var def = battle.Lookup(ev.SkillId ?? "");
-                SpawnSkillShaderEffect(def, actorPos, targetPos, out var cuts, out var glowColor);
+                SpawnSkillShaderEffect(def, actorPos, targetPos, targetCard, out var cuts, out var glowColor);
 
                 // 3. 受击者受创横向剧烈震颤
                 _activeShakes.Add(new ActiveShake
@@ -256,15 +263,8 @@ public partial class InkCombatFxLayer : Control
 
                 // 5. 主人定：仅在死亡回合激活该动画——沿剑光将怪物卡片切开，然后变透明消散。
                 // 剑光位置可能会变化或者增加几道，自动根据上面的 cuts 列表自适应切分！
-                if (ev.HpAfter <= 0)
-                {
-                    var target = battle.Members.Find(m => m.Id == ev.TargetId);
-                    if (target != null && target.Side != battle.ControlledSide)
-                    {
-                        var cardRect = InkCombatRenderer.GetEnemyCardRect(battle, target.Id);
-                        SpawnDeathSlice(target.Id, target.Name, cardRect, cuts, glowColor);
-                    }
-                }
+                if (ev.HpAfter <= 0 && target != null && target.Side != battle.ControlledSide)
+                    SpawnDeathSlice(target.Id, target.Name, getUnitCard(target), getUnitImage?.Invoke(target), cuts, glowColor);
                 break;
             }
 
@@ -328,12 +328,11 @@ public partial class InkCombatFxLayer : Control
 
                 if (ev.HpAfter <= 0)
                 {
-                    var target = battle.Members.Find(m => m.Id == ev.TargetId);
                     if (target != null && target.Side != battle.ControlledSide)
                     {
-                        var cardRect = InkCombatRenderer.GetEnemyCardRect(battle, target.Id);
                         var dotCuts = new List<CutLine> { new(targetPos, -0.58f, new Color("#7C4DFF")) };
-                        SpawnDeathSlice(target.Id, target.Name, cardRect, dotCuts, new Color("#7C4DFF"));
+                        SpawnDeathSlice(target.Id, target.Name, getUnitCard(target), getUnitImage?.Invoke(target),
+                            dotCuts, new Color("#7C4DFF"));
                     }
                 }
                 break;
@@ -341,7 +340,7 @@ public partial class InkCombatFxLayer : Control
         }
     }
 
-    private void SpawnSkillShaderEffect(SkillDef? def, Vector2 actorPos, Vector2 targetPos, out List<CutLine> cuts, out Color primaryGlow)
+    private void SpawnSkillShaderEffect(SkillDef? def, Vector2 actorPos, Vector2 targetPos, Rect2 targetCard, out List<CutLine> cuts, out Color primaryGlow)
     {
         cuts = new List<CutLine>();
         primaryGlow = new Color("#2979FF");
@@ -382,23 +381,23 @@ public partial class InkCombatFxLayer : Control
                 _ => (new Color("#FFFFF0"), new Color("#FF9100"), -0.55f, false),            // 普攻：炽阳烈焰大剑气
             };
             primaryGlow = glowColor;
-            SpawnSlashShader(targetPos, coreColor, glowColor, angle);
+            SpawnSlashShader(targetCard, coreColor, glowColor, angle);
             cuts.Add(new CutLine(targetPos, angle, glowColor));
             if (isDouble)
             {
                 var crossGlow = new Color("#00E5FF");
-                SpawnSlashShader(targetPos, coreColor, crossGlow, 0.78f);
+                SpawnSlashShader(targetCard, coreColor, crossGlow, 0.78f);
                 cuts.Add(new CutLine(targetPos, 0.78f, crossGlow));
             }
         }
     }
 
-    public void SpawnSlashShader(Vector2 center, Color core, Color glow, float angle, float duration = 0.45f)
+    public void SpawnSlashShader(Rect2 card, Color core, Color glow, float angle, float duration = 0.45f)
     {
         var quad = GetPooledQuad(_slashShader);
-        // 左侧磅礴巨型大剑光：宽 1050px、高 680px，自左侧我方队伍狂暴横扫全场目标
-        var size = new Vector2(1050f, 680f);
-        quad.Position = center - size / 2f;
+        // 剑光贴合目标本体：光弧矩形随目标卡生成（外扩让刀尖探出卡缘），不再是横版的全屏横扫
+        var size = card.Size * 1.75f;
+        quad.Position = card.GetCenter() - size / 2f;
         quad.Size = size;
 
         var mat = (ShaderMaterial)quad.Material;
@@ -406,7 +405,7 @@ public partial class InkCombatFxLayer : Control
         mat.SetShaderParameter("color_glow", glow);
         mat.SetShaderParameter("angle", angle);
         mat.SetShaderParameter("quad_size", size);
-        mat.SetShaderParameter("slash_width_px", 12.0f);
+        mat.SetShaderParameter("slash_width_px", Mathf.Clamp(card.Size.X * 0.05f, 5f, 12f));
         mat.SetShaderParameter("progress", 0.0f);
 
         _activeEffects.Add(new ActiveEffect
@@ -497,14 +496,28 @@ public partial class InkCombatFxLayer : Control
             _popupCanvas?.QueueRedraw();
     }
 
-    public void SpawnDeathSlice(int targetId, string name, Rect2 cardRect, List<CutLine> cuts, Color glowColor)
+    public void SpawnDeathSlice(int targetId, string name, Rect2 cardRect, Texture2D? image, List<CutLine> cuts, Color glowColor)
     {
+        // 切的是立绘本身：立绘在卡内按 aspect-fit 居中，先求出它的真实落位再沿剑光切开；
+        // 没有立绘时回退切卡片矩形剪影。
+        var texRect = cardRect;
+        if (image != null)
+        {
+            var inner = new Rect2(cardRect.Position + new Vector2(4, 4), cardRect.Size - new Vector2(8, 8));
+            if (inner.Size.X > 0 && inner.Size.Y > 0)
+            {
+                var texSize = image.GetSize();
+                var fit = Mathf.Min(inner.Size.X / texSize.X, inner.Size.Y / texSize.Y);
+                texRect = new Rect2(inner.GetCenter() - texSize * fit / 2f, texSize * fit);
+            }
+        }
+
         var initialRect = new List<Vector2>
         {
-            cardRect.Position,
-            new Vector2(cardRect.End.X, cardRect.Position.Y),
-            cardRect.End,
-            new Vector2(cardRect.Position.X, cardRect.End.Y),
+            texRect.Position,
+            new Vector2(texRect.End.X, texRect.Position.Y),
+            texRect.End,
+            new Vector2(texRect.Position.X, texRect.End.Y),
         };
 
         if (cuts.Count == 0)
@@ -560,6 +573,8 @@ public partial class InkCombatFxLayer : Control
             UnitId = targetId,
             Name = name,
             CardRect = cardRect,
+            Tex = image,
+            TexRect = texRect,
             Duration = 1.05f,
             Pieces = pieces,
             Cuts = cuts,
@@ -756,21 +771,38 @@ public partial class InkCombatFxLayer : Control
                     shifted[i] = c + rotated + offset;
                 }
 
-                // 破片深黑背景填充
-                DrawColoredPolygon(shifted, bgCol);
+                if (ds.Tex != null)
+                {
+                    // 立绘碎片：UV 取自原顶点（与屏上立绘落位一致），随破片一起切开滑移、淡出
+                    var uvs = new Vector2[shifted.Length];
+                    var cols = new Color[shifted.Length];
+                    for (var i = 0; i < shifted.Length; i++)
+                    {
+                        var v = piece.Vertices[i];
+                        uvs[i] = new Vector2((v.X - ds.TexRect.Position.X) / ds.TexRect.Size.X,
+                            (v.Y - ds.TexRect.Position.Y) / ds.TexRect.Size.Y);
+                        cols[i] = new Color(1f, 1f, 1f, alpha);
+                    }
+                    DrawPolygon(shifted, cols, uvs, ds.Tex);
+                }
+                else
+                    DrawColoredPolygon(shifted, bgCol);
 
-                // 破片外轮廓与断口切面双线描边
-                var closed = new Vector2[shifted.Length + 1];
-                Array.Copy(shifted, closed, shifted.Length);
-                closed[^1] = shifted[0];
-                DrawPolyline(closed, lineCol, 1.6f, antialiased: true);
+                // 只有剪影碎片描墨线卡边；立绘碎片不描边，免得给立绘装框
+                if (ds.Tex == null)
+                {
+                    var closed = new Vector2[shifted.Length + 1];
+                    Array.Copy(shifted, closed, shifted.Length);
+                    closed[^1] = shifted[0];
+                    DrawPolyline(closed, lineCol, 1.6f, antialiased: true);
 
-                var inner = new Vector2[shifted.Length + 1];
-                var pieceCenter = c + offset;
-                for (var i = 0; i < shifted.Length; i++)
-                    inner[i] = shifted[i].Lerp(pieceCenter, 0.08f);
-                inner[^1] = inner[0];
-                DrawPolyline(inner, dimCol, 1.0f, antialiased: true);
+                    var inner = new Vector2[shifted.Length + 1];
+                    var pieceCenter = c + offset;
+                    for (var i = 0; i < shifted.Length; i++)
+                        inner[i] = shifted[i].Lerp(pieceCenter, 0.08f);
+                    inner[^1] = inner[0];
+                    DrawPolyline(inner, dimCol, 1.0f, antialiased: true);
+                }
             }
 
             // 2. 切缝刀痕炽热辉光：闪电般贯穿整张卡片的刀痕裂隙
@@ -788,13 +820,13 @@ public partial class InkCombatFxLayer : Control
                 }
             }
 
-            // 3. 怪物名称：落在对应破片上（随破片位移平滑淡出）
+            // 3. 怪物名称：随破片位移平滑淡出，落在竖版敌人名同位（卡片正下方）。
             if (ds.Pieces.Count > 0 && ds.Name.Length > 0)
             {
                 var upperPiece = ds.Pieces[0];
                 var offset = upperPiece.SeparationDir * ease;
-                var namePos = new Vector2(ds.CardRect.GetCenter().X, ds.CardRect.Position.Y + 24f) + offset;
-                InkDraw.Text(this, namePos, ds.Name, 18, lineCol, "cm");
+                var namePos = new Vector2(ds.CardRect.GetCenter().X, ds.CardRect.End.Y + 23f) + offset;
+                InkDraw.Text(this, namePos, ds.Name, 26, lineCol, "cm");
             }
         }
     }
@@ -857,6 +889,7 @@ public static class InkCombatFx
     public static void Clear() =>
         InkCombatFxLayer.Instance?.Clear();
 
-    public static void SpawnFromEvent(BattleEvent ev, Battle battle, Func<int, Vector2> getUnitCenter) =>
-        InkCombatFxLayer.Instance?.SpawnFromEvent(ev, battle, getUnitCenter);
+    public static void SpawnFromEvent(BattleEvent ev, Battle battle, Func<int, Vector2> getUnitCenter,
+        Func<Combatant, Rect2> getUnitCard, Func<Combatant, Texture2D?>? getUnitImage) =>
+        InkCombatFxLayer.Instance?.SpawnFromEvent(ev, battle, getUnitCenter, getUnitCard, getUnitImage);
 }

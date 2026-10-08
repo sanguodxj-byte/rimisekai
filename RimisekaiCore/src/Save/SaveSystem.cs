@@ -253,14 +253,15 @@ public sealed class SaveData
     public bool ReturnedFromCombat { get; set; }
     public HubSnapshot? Hub { get; set; }
 
-    /// <summary>定时场景各行已生成出来的成品正文。</summary>
+    /// <summary>定时事件各行已生成出来的成品正文。</summary>
     public List<Voice.SceneTextEntry> SceneTexts { get; set; } = new();
 }
 
-/// <summary>一个暂存演员：它属于哪一场定时事件，以及角色本身。</summary>
+/// <summary>一个暂存演员：它属于哪一条定时事件，以及角色本身。</summary>
 public sealed class StagedActorData
 {
-    public string Scene { get; set; } = "";
+    /// <summary>所属事件的 Id。</summary>
+    public string EventId { get; set; } = "";
     public MemberData Actor { get; set; } = new();
 
     /// <summary>

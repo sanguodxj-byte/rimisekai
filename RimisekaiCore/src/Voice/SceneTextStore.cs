@@ -36,19 +36,6 @@ public sealed class SceneTextStore
     public bool Has(string key, int step, int line) =>
         _texts.ContainsKey(Key(key, step, line));
 
-    /// <summary>某个事件当前已备好的行数（供"这一场能不能开演"的判定）。</summary>
-    public int ReadyCount(string key)
-    {
-        var prefix = key + "\u001f";
-        var count = 0;
-        foreach (var entry in _texts.Keys)
-        {
-            if (entry.StartsWith(prefix, System.StringComparison.Ordinal))
-                count++;
-        }
-        return count;
-    }
-
     /// <summary>存档用：全部成品行的扁平快照。</summary>
     public List<SceneTextEntry> Export()
     {

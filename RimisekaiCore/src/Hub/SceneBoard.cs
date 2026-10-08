@@ -52,9 +52,6 @@ public sealed partial class HubSession
         return true;
     }
 
-    /// <summary>当前能否点继续——分支等待时只能先选。</summary>
-    public bool SceneCanContinue() => Scene != null && !Scene.Finished && !Scene.Waiting;
-
     /// <summary>当前步骤要呈现的行（说话人 + 文本）。</summary>
     public IReadOnlyList<SceneText> SceneLines { get; private set; } =
         System.Array.Empty<SceneText>();
@@ -67,27 +64,6 @@ public sealed partial class HubSession
     public string SceneTitle { get; private set; } = "";
 
     private SceneRunner? _sceneRunner;
-
-    /// <summary>
-    /// 开演：给一个角色开一段场景。挑不出（没内容/门槛不过/当日冷却中）
-    /// 返回 false，据点照常。
-    /// </summary>
-    public bool PlayScene(CharacterState who)
-    {
-        if (ScenePlaying || who.IsMaster)
-            return false;
-        var run = BeginScene(who);
-        if (run == null)
-            return false;
-
-        CloseOverlay();
-        State.FiredEvents.Add(run.Event.Id);
-        Scene = run;
-        SceneActor = who;
-        _sceneRunner = new SceneRunner(State.Voice.Scenes, State.Territory);
-        PresentScene();
-        return true;
-    }
 
     /// <summary>
     /// 继续：本步骤的行没放完就翻一行；放完了就收本步、施加效果进下一步。
@@ -249,7 +225,7 @@ public sealed partial class HubSession
         SceneChoices = choices;
     }
 
-    /// <summary>场景事件的上下文，与 BeginScene 同一口径。</summary>
+    /// <summary>场景事件的上下文。</summary>
     private VoiceContext SceneContextOf(CharacterState who) =>
         CreateVoiceContext(who, VoiceTrigger.Scene);
 
@@ -281,34 +257,5 @@ public sealed partial class HubSession
             speaker = actor.Name;
 
         return text with { Speaker = speaker, Text = VoicePack.Personalize(body, actor.Name) };
-    }
-
-    /// <summary>
-    /// 尝试触发当前房间的情境场景演出（进入房间等唯一情境挂点调用）。
-    /// 所有场景终身仅演一次（FiredEvents 终身去重）。
-    /// </summary>
-    public bool TryPlayScene()
-    {
-        // 只在领地生效：世界层在赶路，插画不该打断行程；演出中不重复触发。
-        if (Layer != MapLayer.Territory || ScenePlaying)
-            return false;
-
-        var present = new List<CharacterState>();
-        foreach (var m in State.Roster.Members)
-        {
-            if (!m.IsMaster && _presence.GetValueOrDefault(m.Id, -1) == PlayerRoomId)
-                present.Add(m);
-        }
-        if (present.Count == 0)
-            return false;
-
-        // 洗一下起点，免得每次都是同一个人先开演。
-        var start = Day.Rng.Next(present.Count);
-        for (var i = 0; i < present.Count; i++)
-        {
-            if (PlayScene(present[(start + i) % present.Count]))
-                return true;
-        }
-        return false;
     }
 }

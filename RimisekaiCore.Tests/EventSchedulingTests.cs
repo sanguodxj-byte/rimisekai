@@ -295,21 +295,24 @@ public sealed class EventSchedulingTests
     }
 
     [Fact]
-    public void 生成失败到上限后放弃该行()
+    public void 生成失败不丢弃任务_留着等重排()
     {
         var (state, hub) = Setup();
+        var before = hub.PendingGenerationCount;
 
         var task = hub.TakeGenerationTask()!;
-        // 反复失败：到上限后该行被放弃，不再留在队列里。
-        for (var i = 0; i < GenerationQueue.MaxAttempts; i++)
-        {
-            hub.FailGeneration(task, "网络不通");
-            var again = hub.TakeGenerationTask();
-            if (again == null)
-                break;
-            task = again;
-        }
+        hub.FailGeneration(task, "网络不通");
+
+        // 失败不丢行：任务仍在队列里等重排，否则整场事件永远演不出来。
+        Assert.Equal(before, hub.PendingGenerationCount);
         Assert.False(state.SceneTexts.Has(task.Key, task.Step, task.Line));
+
+        // 重排后再取，能拿到同一个槽；这次成功即落账。
+        var again = hub.TakeGenerationTask();
+        Assert.NotNull(again);
+        Assert.Equal(task.Key, again!.Key);
+        hub.CompleteGeneration(again, new[] { "补上的正文。" });
+        Assert.True(state.SceneTexts.Has(again.Key, again.Step, again.Line));
     }
 
     [Fact]
@@ -431,5 +434,65 @@ public sealed class EventSchedulingTests
         Assert.False(hub.SceneContentReady(scene, EventId));
         Drain(hub);
         Assert.True(hub.SceneContentReady(scene, EventId));
+    }
+
+    [Fact]
+    public void 收集事件时按Priority升序排队()
+    {
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        var maid = state.Roster.Add("璐米埃尔");
+        state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
+
+        // 注册两个同时触发的 Season 换季事件，Priority 分别为 20 和 5
+        var sceneLow = new SceneEvent
+        {
+            Id = "scene_p20",
+            Title = "低优场景",
+            Characters = { "璐米埃尔" },
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, "璐米埃尔", "后播") } } },
+        };
+        var sceneHigh = new SceneEvent
+        {
+            Id = "scene_p5",
+            Title = "高优场景",
+            Characters = { "璐米埃尔" },
+            Steps = { new SceneStep { Lines = { new SceneText(VoiceKind.Speech, "璐米埃尔", "先播") } } },
+        };
+        state.Voice.Scenes.Register(sceneLow);
+        state.Voice.Scenes.Register(sceneHigh);
+
+        var evLow = new HubEventDef
+        {
+            Id = "ev_p20",
+            SceneId = "scene_p20",
+            Characters = { "璐米埃尔" },
+            Trigger = HubEventTrigger.Season,
+            Priority = 20,
+        };
+        var evHigh = new HubEventDef
+        {
+            Id = "ev_p5",
+            SceneId = "scene_p5",
+            Characters = { "璐米埃尔" },
+            Trigger = HubEventTrigger.Season,
+            Priority = 5,
+        };
+        // 故意先注册低优再注册高优
+        state.Voice.Events.Register(evLow);
+        state.Voice.Events.Register(evHigh);
+
+        var hub = new HubSession(state);
+        hub.Enter(1);
+        hub.Place(maid.Id, 1);
+
+        // 触发换季
+        hub.CollectEvents(seasonChanged: true, weatherChanged: false, characterJoined: false);
+
+        Assert.Equal(2, hub.PendingEventCount);
+
+        // 队首应为 Priority = 5 的高优事件
+        Assert.True(hub.PlayNextEvent());
+        Assert.Equal("scene_p5", hub.Scene!.Event.Id);
     }
 }

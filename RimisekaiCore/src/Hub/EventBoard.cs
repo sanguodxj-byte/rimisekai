@@ -35,6 +35,7 @@ public sealed partial class HubSession
         if (Layer != MapLayer.Territory)
             return;
 
+        var matched = new List<HubEventDef>();
         foreach (var def in Events.All)
         {
             if (def.Once && State.FiredEvents.Contains(def.Id))
@@ -55,8 +56,13 @@ public sealed partial class HubSession
             if (!hit)
                 continue;
 
-            _pendingEvents.Enqueue(def);
+            matched.Add(def);
         }
+
+        // 按 Priority 升序排队（小的先演，同级保序）
+        matched.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+        foreach (var def in matched)
+            _pendingEvents.Enqueue(def);
     }
 
     /// <summary>
@@ -91,6 +97,9 @@ public sealed partial class HubSession
             return false;
 
         var def = _pendingEvents.Dequeue();
+        // 出队时再查一次终身去重：入队到演出之间可能已被别的路径演掉。
+        if (def.Once && State.FiredEvents.Contains(def.Id))
+            return PlayNextEvent();
         var scene = State.Voice.Scenes.Find(def.SceneId);
         if (scene == null)
             return PlayNextEvent();

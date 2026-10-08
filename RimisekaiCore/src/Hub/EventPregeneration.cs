@@ -131,14 +131,6 @@ public sealed partial class HubSession
     /// <summary>暂存演员快照（存档用）。</summary>
     public IReadOnlyDictionary<string, CharacterState> StagedActors => _staged;
 
-    /// <summary>读档用：把暂存的来客放回排班表。</summary>
-    public void StageActor(string eventId, CharacterState actor)
-    {
-        if (eventId.Length == 0 || actor == null)
-            return;
-        _staged[eventId] = actor;
-    }
-
     /// <summary>演员登场：入名册、就位，暂存表随之清掉。</summary>
     public void AdmitStagedActor(string eventId, CharacterState actor, string logLine)
     {
@@ -189,9 +181,12 @@ public sealed partial class HubSession
     public void CompleteGeneration(GenerationTask task, IReadOnlyList<string> lines) =>
         Generation.Complete(task, lines);
 
-    /// <summary>后台泵回报一次失败。</summary>
+    /// <summary>后台泵回报一次失败。任务留在队列里等重排。</summary>
     public void FailGeneration(GenerationTask task, string error) =>
         Generation.Fail(task, error);
+
+    /// <summary>把在飞任务交回队列（换会话/停泵时用），不记一次失败。</summary>
+    public void ReleaseGeneration(GenerationTask task) => Generation.Release(task);
 
     /// <summary>某条事件的场景内容是否已全部就绪（供事件板与测试查询）。</summary>
     public bool SceneContentReady(SceneEvent scene, string key) => Generation.SceneReady(scene, key);

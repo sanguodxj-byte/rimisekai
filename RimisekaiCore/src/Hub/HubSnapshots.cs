@@ -80,7 +80,7 @@ public sealed partial class HubSession
             State.Voice.Generation.Personas.TryGetValue(pair.Value.Name, out var persona);
             list.Add(new StagedActorData
             {
-                Scene = pair.Key,
+                EventId = pair.Key,
                 Actor = SaveSystem.CaptureMember(pair.Value),
                 Persona = persona ?? "",
             });
@@ -96,7 +96,7 @@ public sealed partial class HubSession
         foreach (var entry in staged)
         {
             var actor = SaveSystem.RestoreMember(entry.Actor);
-            _staged[entry.Scene] = actor;
+            _staged[entry.EventId] = actor;
             if (entry.Persona.Length > 0)
                 State.Voice.Generation.Personas[actor.Name] = entry.Persona;
         }

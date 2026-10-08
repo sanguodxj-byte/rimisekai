@@ -76,18 +76,6 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 给某个角色开一段场景事件（多步剧情）。挑不出可触发的事件就返回 null。
-    /// 事件表为空时整条链路旁路。
-    /// </summary>
-    public SceneRun? BeginScene(CharacterState who)
-    {
-        if (State.Voice.Scenes.Count == 0)
-            return null;
-        var ctx = CreateVoiceContext(who, VoiceTrigger.Scene);
-        return new SceneRunner(State.Voice.Scenes, State.Territory).Begin(who, ctx);
-    }
-
-    /// <summary>
     /// 角色主动找玩家搭话的出口（自动节律里唯一的弹层入口）。
     /// 挑得出台词就弹对话框并返回 true；挑不出返回 false，
     /// 节律那边退回自己的行为叙述。

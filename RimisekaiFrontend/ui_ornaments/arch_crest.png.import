@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2qypoybedhjp"
-path="res://.godot/imported/corner.png-81bb99c002572c0f5635df2e422e7d32.ctex"
+uid="uid://2lyfvkq8td7g"
+path="res://.godot/imported/arch_crest.png-93263b220160b9412f64f7fbaf55c6fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://RimisekaiFrontend/ui/gothic/corner.png"
-dest_files=["res://.godot/imported/corner.png-81bb99c002572c0f5635df2e422e7d32.ctex"]
+source_file="res://RimisekaiFrontend/ui_ornaments/arch_crest.png"
+dest_files=["res://.godot/imported/arch_crest.png-93263b220160b9412f64f7fbaf55c6fd.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

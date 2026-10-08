@@ -357,6 +357,7 @@ public partial class PortraitTitleView : Control
 
     private readonly List<PortraitWidget> _hits = new();
     private Texture2D? _art;
+    private Texture2D? _frame;
     private string _systemPage = "";
     private int _first;
     private Vector2 _press;
@@ -376,6 +377,7 @@ public partial class PortraitTitleView : Control
         SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Stop;
         _art = InkIllustration.LoadTexture("res://assets/title_reference.png");
+        _frame = InkIllustration.GetOverlayFrame();
     }
 
     public override void _Draw()
@@ -403,6 +405,10 @@ public partial class PortraitTitleView : Control
                 size: i == 1 ? 56 : PortraitLayout.FontBody);
             _hits.Add(new PortraitWidget(r, PortraitAction.Tab, i, enabled, labels[i]));
         }
+
+        if (_frame != null)
+            PortraitFrame.Mount(this, _frame,
+                new Rect2(0f, 0f, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight));
     }
 
     public void ShowSystem(string page)

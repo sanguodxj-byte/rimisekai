@@ -79,8 +79,6 @@ public sealed class EventLibrary
 
     public IReadOnlyList<HubEventDef> All => _events;
 
-    public int Count => _events.Count;
-
     /// <summary>注册一条事件。同 Id 覆盖旧的。</summary>
     public void Register(HubEventDef def)
     {
@@ -94,15 +92,5 @@ public sealed class EventLibrary
     {
         foreach (var def in defs)
             Register(def);
-    }
-
-    public HubEventDef? Find(string id)
-    {
-        foreach (var def in _events)
-        {
-            if (def.Id == id)
-                return def;
-        }
-        return null;
     }
 }

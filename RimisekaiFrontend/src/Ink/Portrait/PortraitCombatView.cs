@@ -144,7 +144,8 @@ public partial class PortraitCombatView : Control
         while (_lastEventCount < battle.Events.Count)
         {
             var ev = battle.Events[_lastEventCount++];
-            InkCombatFx.SpawnFromEvent(ev, battle, UnitCenter);
+            InkCombatFx.SpawnFromEvent(ev, battle, UnitCenter, unit => PortraitLayout.EnemyCard(unit),
+                unit => UnitImageProvider?.Invoke(unit));
         }
     }
 

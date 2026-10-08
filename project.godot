@@ -25,13 +25,7 @@ window/size/viewport_height=2340
 window/size/window_width_override=918
 window/size/window_height_override=1988
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 window/handheld/orientation="portrait"
-
-[input_devices]
-
-pointing/emulate_mouse_from_touch=true
-pointing/emulate_touch_from_mouse=false
 
 [dotnet]
 
@@ -40,9 +34,8 @@ project/solution="RimisekaiFrontend.sln"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=2
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
-textures/canvas_textures/default_texture_filter=2
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
-

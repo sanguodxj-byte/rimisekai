@@ -1924,7 +1924,8 @@ public partial class InkHubScreen : Control
         while (_lastEventCount < battle.Events.Count)
         {
             var ev = battle.Events[_lastEventCount++];
-            InkCombatFx.SpawnFromEvent(ev, battle, id => InkCombatRenderer.GetUnitCenter(battle, id));
+            InkCombatFx.SpawnFromEvent(ev, battle, id => InkCombatRenderer.GetUnitCenter(battle, id),
+                unit => InkCombatRenderer.GetEnemyCardRect(battle, unit.Id), null);
         }
     }
 

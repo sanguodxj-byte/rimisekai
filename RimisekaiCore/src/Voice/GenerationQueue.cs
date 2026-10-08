@@ -22,8 +22,11 @@ public sealed class GenerationTask
     /// <summary>拼好的请求。执行端直接交给生成器。</summary>
     public required VoiceRequest Request { get; init; }
 
-    /// <summary>已经试过几次。失败重排时累加，用于放弃。</summary>
+    /// <summary>已经试过几次。失败重排时累加，用于诊断。</summary>
     public int Attempts { get; set; }
+
+    /// <summary>最近一次失败的原因，供诊断。</summary>
+    public string LastError { get; set; } = "";
 }
 
 /// <summary>
@@ -32,12 +35,13 @@ public sealed class GenerationTask
 ///
 /// 本类只做数据与状态机，不碰线程、不碰 HTTP——执行在宿主（前端泵）。
 /// 这样 Core 保持纯逻辑、可单测，异步只集中在宿主一处。
+///
+/// 失败不丢弃任务：定时事件的内容是"全部就绪才开演"，
+/// 丢一行就等于整场永远演不出来。因此失败只是把任务放回队列等重排，
+/// 重排的快慢由宿主的泵控制（避免把 API 打限流）。
 /// </summary>
 public sealed class GenerationQueue
 {
-    /// <summary>同一任务失败重排的上限，超过就放弃（那一场便永远缺这一行）。</summary>
-    public const int MaxAttempts = 3;
-
     private readonly List<GenerationTask> _pending = new();
     private readonly HashSet<string> _inFlight = new();
     private readonly SceneTextStore _store;
@@ -46,20 +50,6 @@ public sealed class GenerationQueue
 
     /// <summary>还没完成的任务数（含在飞的）。</summary>
     public int Count => _pending.Count;
-
-    /// <summary>是否还有可取的任务。</summary>
-    public bool HasWork
-    {
-        get
-        {
-            foreach (var task in _pending)
-            {
-                if (!_inFlight.Contains(TaskKey(task)))
-                    return true;
-            }
-            return false;
-        }
-    }
 
     /// <summary>排一个任务。同一槽重复排只留一个。</summary>
     public void Enqueue(GenerationTask task)
@@ -114,15 +104,25 @@ public sealed class GenerationQueue
     }
 
     /// <summary>
-    /// 任务失败：出在飞表。还没到上限就留在队列里等下次重排，到上限就丢弃。
+    /// 任务失败：出在飞表、留在队列里等重排。任务不丢弃——
+    /// 丢一行就等于整场事件永远演不出来（内容要全部就绪才开演）。
+    /// 累计次数只作诊断，重排节奏由宿主的泵控制。
     /// </summary>
     public bool Fail(GenerationTask task, string error)
     {
         _inFlight.Remove(TaskKey(task));
         task.Attempts++;
-        if (task.Attempts >= MaxAttempts)
-            _pending.Remove(task);
+        task.LastError = error;
         return false;
+    }
+
+    /// <summary>
+    /// 把在飞标记清掉但不动次数（换会话等场景用）。
+    /// 换宿主不该算这个任务失败一次，只是把它交回队列等下一个宿主取。
+    /// </summary>
+    public void Release(GenerationTask task)
+    {
+        _inFlight.Remove(TaskKey(task));
     }
 
     /// <summary>

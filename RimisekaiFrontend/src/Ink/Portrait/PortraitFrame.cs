@@ -988,4 +988,50 @@ public static class PortraitFrame
             InkDraw.Jewel(ci, new Vector2(cx, r.Position.Y), 4f, InkStyle.Bg);
         }
     }
+
+    // ---------- 边框装裱 ----------
+
+    // portrait_frame_overlay.png（948×1659）的源像素切分：四角角花单元 220px 见方，
+    // 上下缘中央星簇（大星＋贴身小菱）取 420..532，其余都是可单向拉伸的直边；散布小菱全部落在角花单元内。
+    private const float FrameSrcW = 948f;
+    private const float FrameSrcCorner = 220f;
+    private const float FrameSrcStarL = 420f;
+    private const float FrameSrcStarR = 532f;
+
+    /// <summary>
+    /// 边框素材装裱：四角与上下星簇按横向比例原样缩放（不随画布比例变形），
+    /// 直边段单向拉伸补齐到矩形四缘。用于标题画面贴合 portrait_frame_overlay.png。
+    /// </summary>
+    public static void Mount(CanvasItem ci, Texture2D tex, Rect2 r)
+    {
+        var size = tex.GetSize();
+        var s = r.Size.X / FrameSrcW;
+        var c = FrameSrcCorner * s;
+        var starW = (FrameSrcStarR - FrameSrcStarL) * s;
+        var starX = r.Position.X + (r.Size.X - starW) / 2f;
+        var left = r.Position.X;
+        var right = r.End.X;
+        var top = r.Position.Y;
+        var bot = r.End.Y;
+        var edgeW = size.X - FrameSrcCorner - FrameSrcStarR;
+
+        void Cell(float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) =>
+            ci.DrawTextureRectRegion(tex, new Rect2(dx, dy, dw, dh), new Rect2(sx, sy, sw, sh));
+
+        // 四角角花（原样）
+        Cell(0f, 0f, FrameSrcCorner, FrameSrcCorner, left, top, c, c);
+        Cell(size.X - FrameSrcCorner, 0f, FrameSrcCorner, FrameSrcCorner, right - c, top, c, c);
+        Cell(0f, size.Y - FrameSrcCorner, FrameSrcCorner, FrameSrcCorner, left, bot - c, c, c);
+        Cell(size.X - FrameSrcCorner, size.Y - FrameSrcCorner, FrameSrcCorner, FrameSrcCorner, right - c, bot - c, c, c);
+        // 上下星簇（原样，页面居中）
+        Cell(FrameSrcStarL, 0f, FrameSrcStarR - FrameSrcStarL, FrameSrcCorner, starX, top, starW, c);
+        Cell(FrameSrcStarL, size.Y - FrameSrcCorner, FrameSrcStarR - FrameSrcStarL, FrameSrcCorner, starX, bot - c, starW, c);
+        // 直边段（单向拉伸）
+        Cell(FrameSrcCorner, 0f, FrameSrcStarL - FrameSrcCorner, FrameSrcCorner, left + c, top, starX - left - c, c);
+        Cell(FrameSrcStarR, 0f, edgeW, FrameSrcCorner, starX + starW, top, right - c - starX - starW, c);
+        Cell(FrameSrcCorner, size.Y - FrameSrcCorner, FrameSrcStarL - FrameSrcCorner, FrameSrcCorner, left + c, bot - c, starX - left - c, c);
+        Cell(FrameSrcStarR, size.Y - FrameSrcCorner, edgeW, FrameSrcCorner, starX + starW, bot - c, right - c - starX - starW, c);
+        Cell(0f, FrameSrcCorner, FrameSrcCorner, size.Y - FrameSrcCorner * 2f, left, top + c, c, bot - top - c * 2f);
+        Cell(size.X - FrameSrcCorner, FrameSrcCorner, FrameSrcCorner, size.Y - FrameSrcCorner * 2f, right - c, top + c, c, bot - top - c * 2f);
+    }
 }

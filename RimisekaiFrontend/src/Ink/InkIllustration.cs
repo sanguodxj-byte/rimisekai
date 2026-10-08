@@ -158,6 +158,9 @@ public static class InkIllustration
         return null;
     }
 
+    /// <summary>标题装裱边框素材（illustrations.json 的 overlay.portrait_frame）。</summary>
+    public static Texture2D? GetOverlayFrame() => GetFromCategory("overlay", "portrait_frame");
+
     /// <summary>按资源路径加载并缓存纹理（支持 res:// 与标准文件系统路径）。</summary>
     public static Texture2D? LoadTexture(string path)
     {
