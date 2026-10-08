@@ -463,7 +463,7 @@ public partial class PortraitCapture : Node
         _root.CombatView.DebugPress(PortraitAction.CombatSettings, 0);
         var page = _root.ModalLayer.Current;
         Require(page?.Title == "设置"
-            && page.Choices.Select(c => c.Label).SequenceEqual(new[] { "保存进度", "读取进度", "回到主界面", "返回" }),
+            && page.Choices.Select(c => c.Label).SequenceEqual(new[] { "保存进度", "读取进度", "放弃战斗并回到标题", "返回" }),
             "combat settings popup offers save load title back");
         _root.ModalLayer.Choose("save");
         Require(_root.ModalLayer.Current?.Body == "已保存。", "combat settings saves progress");
@@ -476,7 +476,7 @@ public partial class PortraitCapture : Node
         Require(_root.ModalLayer.Current?.Title == "设置", "combat settings popup reopens");
     }
 
-    /// <summary>战斗设置链路（下）：读取进度页含返回、返回回设置、关闭、回到主界面。</summary>
+    /// <summary>战斗设置链路（下）：读取进度页含返回、返回回设置、关闭、放弃战斗并回到标题。</summary>
     private void CheckCombatLoadAndTitle()
     {
         _root.ModalLayer.Choose("load");

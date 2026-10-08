@@ -82,7 +82,8 @@ public partial class PortraitHubScreen
         PortraitFrame.Dock(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)));
         var doors = DoorRows(model.RoomId);
         var counts = new[] { doors.Count + model.ActionRows.Count, model.FacilityRows.Count, model.RoomRows.Count };
-        var labels = DevelopmentTabs.Select((t, i) => counts[i] > 0 ? $"{t} {counts[i]}" : t).ToArray();
+        // 「操作」页是常备的整张目录（开门/封墙＋各类房），条数没有信息量，不标数；设施与待安装才标。
+        var labels = DevelopmentTabs.Select((t, i) => i > 0 && counts[i] > 0 ? $"{t} {counts[i]}" : t).ToArray();
         var seg = PortraitLayout.DevelopmentSegment;
         PortraitFrame.Segmented(this, seg, labels, _developmentTab);
         for (var i = 0; i < labels.Length; i++)

@@ -441,7 +441,7 @@ public partial class PortraitCombatView : Control
 
     /// <summary>
     /// 设置齿轮：右上角实心齿轮（战斗白名单外的浮件，无外框、无标题牌）。
-    /// 点按弹出 设置 弹窗：保存进度 / 读取进度 / 回到主界面 / 返回。
+    /// 点按弹出 设置 弹窗：保存进度 / 读取进度 / 放弃战斗并回到标题 / 返回。
     /// </summary>
     private void DrawSettingsGear()
     {
@@ -452,7 +452,7 @@ public partial class PortraitCombatView : Control
         PortraitGlyph.Gear(this, hit.GetCenter().X, hit.GetCenter().Y, 28f, InkStyle.Line);
     }
 
-    /// <summary>设置弹窗：保存进度 / 读取进度 / 回到主界面 / 返回（战斗中随时可开）。</summary>
+    /// <summary>设置弹窗：保存进度 / 读取进度 / 放弃战斗并回到标题 / 返回（战斗中随时可开）。</summary>
     private void OpenSettingsPopup()
     {
         _loadPage = 0;
@@ -464,7 +464,7 @@ public partial class PortraitCombatView : Control
             {
                 new() { Id = "save", Label = "保存进度", OnSelected = SaveProgress },
                 new() { Id = "load", Label = "读取进度", OnSelected = ShowLoadPopup },
-                new() { Id = "title", Label = "回到主界面", OnSelected = () => TitleRequested?.Invoke() },
+                new() { Id = "title", Label = "放弃战斗并回到标题", OnSelected = () => TitleRequested?.Invoke() },
                 new() { Id = "back", Label = "返回", OnSelected = () => { } },
             },
         });

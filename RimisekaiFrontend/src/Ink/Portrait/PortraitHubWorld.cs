@@ -421,7 +421,7 @@ public sealed partial class PortraitHubScreen
         var standing = hub.WorldPartyPosition == (x, y);
         var minutes = hub.WorldTravelMinutes(x, y);
         var journey = standing ? "就在此处" : minutes < 0 ? (map.IsPassable(x, y) ? "无路可达" : "无法通行")
-            : minutes >= 60 ? $"{minutes / 60} 时 {minutes % 60:00} 分" : $"{minutes} 分";
+            : minutes >= 60 ? $"{minutes / 60}时{minutes % 60:00}分" : $"{minutes}分";
         var lines = new[]
         {
             ("地区", region != null && region.NameZh.Length > 0 ? region.NameZh : "无名之地"),
@@ -440,8 +440,6 @@ public sealed partial class PortraitHubScreen
         var canGo = standing ? poi != null || isHome : minutes > 0;
         var goLabel = standing ? (poi != null ? "进入" : isHome ? "回到领地" : "已在此处")
             : minutes < 0 ? "去不了" : isHome ? "回到领地" : "前往";
-        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "收起");
-        _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.SheetClose, 1, true, "收起"));
         PortraitFrame.Plaque(this, PortraitLayout.SheetFooterRight, goLabel, primary: true, enabled: canGo);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterRight, PortraitAction.WorldGo, 0, canGo, goLabel));
         return top;

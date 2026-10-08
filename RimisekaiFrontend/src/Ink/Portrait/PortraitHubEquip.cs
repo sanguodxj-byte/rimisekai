@@ -89,9 +89,6 @@ public partial class PortraitHubScreen
                 PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             y += 120f;
         }
-        InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth / 2f, y + 40f), "按住看详情",
-            PortraitLayout.FontMeta, InkStyle.WoodDark, "cm");
-        y += 100f;
 
         var total = (int)(y + offset - view.Position.Y);
         offset = Pan("equip", total, (int)view.Size.Y);

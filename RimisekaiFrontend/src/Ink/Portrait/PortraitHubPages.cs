@@ -192,7 +192,8 @@ public partial class PortraitHubScreen
 
         var slotY = top + PortraitLayout.SheetContentOffset;
         var w = (PortraitLayout.FullWidth - 60f) / 4f;
-        for (var i = 0; i < 4; i++)
+        // 队位只画到人数上限：上限 3 就只有三格，不留一格压暗的空框。
+        for (var i = 0; i < cap; i++)
         {
             var r = new Rect2(PortraitLayout.Pad + i * (w + 20f), slotY, w, 320f);
             if (i < members.Count)
@@ -208,12 +209,9 @@ public partial class PortraitHubScreen
             }
             else
             {
-                PortraitFrame.Bevel(this, r, 18f, null, i < cap ? InkStyle.WoodDark : new Color(InkStyle.WoodDark, 0.4f), 3f);
-                if (i < cap)
-                {
-                    PortraitGlyph.Plus(this, r.GetCenter().X, r.Position.Y + 130f, 36f, InkStyle.WoodDark);
-                    InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 236f), "空位", PortraitLayout.FontMeta, InkStyle.WoodDark, "cm");
-                }
+                PortraitFrame.Bevel(this, r, 18f, null, InkStyle.WoodDark, 3f);
+                PortraitGlyph.Plus(this, r.GetCenter().X, r.Position.Y + 130f, 36f, InkStyle.WoodDark);
+                InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 236f), "空位", PortraitLayout.FontMeta, InkStyle.WoodDark, "cm");
             }
         }
 
