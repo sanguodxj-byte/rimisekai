@@ -209,9 +209,13 @@ public partial class PortraitHubScreen
         var art = actor != null ? LoadCharacterPortrait(actor) : null;
         if (art != null)
         {
-            PortraitFrame.Cover(this, art, new Rect2(0, 0, PortraitLayout.CanvasWidth, 1750f), 0f);
-            PortraitFrame.Fade(this, new Rect2(0, 1000f, PortraitLayout.CanvasWidth, 750f), 0f, 1f);
-            PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, 300f), 0.85f, 0f);
+            // 立绘铺满整屏（按高度铺满、水平居中裁两侧），全身入画；对白框半透明压在下半身上。
+            // 顶部一道浅渐隐托住地名与页签，底部从名字上方起渐暗，保证名字与正文可读。
+            PortraitFrame.Cover(this, art, new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), 0.5f);
+            PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, 260f), 0.7f, 0f);
+            var shade = PortraitLayout.SceneDialog(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3)).Position.Y - 260f;
+            PortraitFrame.Fade(this, new Rect2(0, shade, PortraitLayout.CanvasWidth, 260f), 0f, 0.55f);
+            DrawRect(new Rect2(0, shade + 260f, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - shade - 260f), new Color(InkStyle.Bg, 0.55f));
         }
         else if (actor != null)
         {
@@ -250,7 +254,7 @@ public partial class PortraitHubScreen
         else
             InkDraw.Text(this, new Vector2(60f, dialog.Position.Y - 70f), speaker, PortraitLayout.FontTitle, InkStyle.Line, "lm");
 
-        PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, 0.92f));
+        PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, art != null ? 0.6f : 0.92f));
         var textArea = PortraitLayout.SceneText(dialog);
         var shown = text[..Math.Min(text.Length, (int)_conversationReveal)];
         var lines = InkDraw.WrapLines(shown, textArea.Size.X - 20f, PortraitLayout.FontBody);
