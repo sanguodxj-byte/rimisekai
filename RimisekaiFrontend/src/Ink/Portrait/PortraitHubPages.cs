@@ -84,6 +84,29 @@ public partial class PortraitHubScreen
     private static float QuestFoesX(QuestDef def, float x) =>
         x + 130f + Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty))) * 44f;
 
+    /// <summary>报酬按「 · 」分项折行：整项放得下就整项挪到下一行，不把「不明矿块」拆成「不 / 明矿块」；单项一行都放不下才按字宽断。</summary>
+    private static List<string> WrapRewards(IReadOnlyList<string> items, float width)
+    {
+        var lines = new List<string>();
+        var line = "";
+        foreach (var item in items)
+        {
+            var joined = line.Length == 0 ? item : $"{line} · {item}";
+            if (InkDraw.Measure(joined, PortraitLayout.FontMeta).X <= width)
+            {
+                line = joined;
+                continue;
+            }
+            if (line.Length > 0)
+                lines.Add(line);
+            var parts = InkDraw.WrapLines(item, width, PortraitLayout.FontMeta);
+            lines.AddRange(parts.Take(parts.Count - 1));
+            line = parts[^1];
+        }
+        lines.Add(line);
+        return lines;
+    }
+
     private static QuestCardLayout LayoutQuest(QuestDef def, Rect2 r)
     {
         var x = r.Position.X + 50f;
@@ -95,8 +118,9 @@ public partial class PortraitHubScreen
         var lastLine = 150f + (foeLines.Count + bodyLines.Count) * QuestLineStep;
         var divider = Math.Max(420f, lastLine + 68f);
         var take = QuestTakeRect(r, divider, 0f);
-        var rewards = InkDraw.WrapLines(string.Join(" · ", def.Rewards), take.Position.X - x - 74f, PortraitLayout.FontMeta);
-        var band = Math.Max(PortraitLayout.TouchMin, rewards.Count * QuestRewardStep + 10f);
+        var rewards = WrapRewards(def.Rewards, take.Position.X - x - 74f);
+        // 折行时报酬带上下各多留一截，末行不贴到卡底内框线上。
+        var band = Math.Max(PortraitLayout.TouchMin, rewards.Count * QuestRewardStep + 40f);
         return new QuestCardLayout(foesInline, foeLines, bodyLines, divider, rewards, divider + 12f + band + 10f);
     }
 
