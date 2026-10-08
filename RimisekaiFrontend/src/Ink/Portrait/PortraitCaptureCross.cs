@@ -104,7 +104,7 @@ public partial class PortraitCapture
             CheckCrossArrow(hub.CrossTargetRegion(_crossGate));
             Shoot("cross_poi", _root.HubScreen);
         });
-        // 北向：走出兴趣点、回到领地，北区解锁并在其南连接点开一间，主角走进中心区北连接点那间（开局的卧室）。
+        // 北向：走出兴趣点、回到领地（落回东区西门再过界回中心区），北区解锁并在其南连接点开一间，主角走进中心区北连接点那间（开局的卧室）。
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
         {
@@ -114,7 +114,9 @@ public partial class PortraitCapture
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
-            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.RegionId == 0, "back home in the center region");
+            // 回到出门前那间（东区西门），过界回中心区。
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.RegionId == 2 && hub.CrossTo(0) && hub.RegionId == 0,
+                "back home and across into the center region");
             var t = hub.State.Territory;
             var (nx, ny) = Territory.RegionGate(Territory.RegionDir.North);
             var (sx, sy) = Territory.RegionGate(Territory.RegionDir.South);
