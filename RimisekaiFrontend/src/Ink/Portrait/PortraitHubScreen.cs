@@ -165,6 +165,7 @@ public partial class PortraitHubScreen : Control
     public void Bind(InkViewModel vm)
     {
         _vm = vm;
+        PortraitAvatars.Bind(vm.Hub.State.Roster);
         _tab = 0;
         _push = PushPage.None;
         _sheet = SheetKind.None;

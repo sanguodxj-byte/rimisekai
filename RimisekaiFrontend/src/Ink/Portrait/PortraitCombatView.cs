@@ -25,7 +25,6 @@ public partial class PortraitCombatView : Control
     private float _tick;
     private bool _settled;
     private int _skillPage;
-    private int _itemPage;
     private int _selectedTarget = -1;
     private int _selectedColumn;
     private int _loadPage;
@@ -255,7 +254,7 @@ public partial class PortraitCombatView : Control
                 {
                     InkDraw.Jewel(this, c, size / 2f + 2f, InkStyle.Dim);
                     InkDraw.Jewel(this, c, size / 2f - 2f, InkStyle.Bg);
-                    InkDraw.Text(this, c, m.Name[..1], PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+                    InkDraw.Text(this, c, PortraitAvatars.Glyph(m.Name, size, PortraitLayout.FontMeta), PortraitLayout.FontMeta, InkStyle.Dim, "cm");
                 }
             }
         }
@@ -513,10 +512,12 @@ public partial class PortraitCombatView : Control
         _modal.Show(new InkModalPage { Title = "技能", Choices = pageSkills });
     }
 
-    /// <summary>道具弹窗：参战我方背包汇总（名 ×数），每页五条。Core 尚无战斗道具结算，条目暂列不可选。</summary>
+    /// <summary>
+    /// 道具弹窗：参战我方背包汇总（名 ×数），一行一件，整列可拖动滚动（弹窗正文的滚动），不翻页。
+    /// Core 尚无战斗道具结算，条目只列不可选，底下一枚「返回」。
+    /// </summary>
     private void ShowItemPopup()
     {
-        const int perPage = 5;
         var bag = new Dictionary<string, int>();
         var battle = B;
         if (battle != null)
@@ -528,16 +529,13 @@ public partial class PortraitCombatView : Control
                 foreach (var pair in member.Bag.Items)
                     bag[pair.Key] = bag.GetValueOrDefault(pair.Key) + pair.Value;
             }
-        var items = bag.OrderBy(p => p.Key, StringComparer.Ordinal).ToList();
-        var pageItems = items.Skip(_itemPage * perPage).Take(perPage)
-            .Select(p => new InkModalChoice { Id = p.Key, Label = $"{ItemLabel(p.Key)} ×{p.Value}", Enabled = false })
-            .ToList();
-        if ((_itemPage + 1) * perPage < items.Count)
-            pageItems.Add(new InkModalChoice { Id = "next", Label = "下一页", OnSelected = () => { _itemPage++; ShowItemPopup(); } });
-        if (_itemPage > 0)
-            pageItems.Insert(0, new InkModalChoice { Id = "prev", Label = "上一页", OnSelected = () => { _itemPage--; ShowItemPopup(); } });
-        pageItems.Add(new InkModalChoice { Id = "back", Label = "返回", OnSelected = () => { } });
-        _modal.Show(new InkModalPage { Title = "道具", Choices = pageItems });
+        var lines = bag.Select(p => $"{ItemLabel(p.Key)} ×{p.Value}").OrderBy(l => l, StringComparer.Ordinal);
+        _modal.Show(new InkModalPage
+        {
+            Title = "道具",
+            Body = string.Join("\n", lines),
+            Choices = { new InkModalChoice { Id = "back", Label = "返回", OnSelected = () => { } } },
+        });
     }
 
     private string ItemLabel(string itemId)
@@ -635,7 +633,7 @@ public partial class PortraitCombatView : Control
                 {
                     case 0: ArmAndClose(BattleSkills.AttackId); break;
                     case 1: _skillPage = 0; ShowSkillPopup(); break;
-                    case 2: _itemPage = 0; ShowItemPopup(); break;
+                    case 2: ShowItemPopup(); break;
                     default: DoFlee(); break;
                 }
                 break;

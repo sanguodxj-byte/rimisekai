@@ -9,7 +9,7 @@ namespace Rimisekai.Portrait;
 /// <summary>
 /// 弹窗排版（2026-10-07 重设计）：整屏压暗 → 居中缺角双线框 → 标题（居中大字＋渐隐线）→ 正文 →
 /// 原生输入框（圆角框＋字数）→ 药丸钮（两钮并排，确定＝实心；多钮竖排）。
-/// 纯展示页底部一枚呼吸的实心 ▼；战后结算单独排（大字胜负 / 轮数 / 战利品菱块 / 各人经验）。
+/// 底部一律一枚呼吸的实心 ▼；战后结算单独排（大字胜负 / 轮数 / 战利品菱块 / 各人经验）。
 /// </summary>
 public partial class PortraitModalLayer
 {
@@ -43,7 +43,8 @@ public partial class PortraitModalLayer
             + (page.Input == null ? 0f : PortraitLayout.TouchComfort + PortraitLayout.ModalGap);
         var heading = page.Title.Length > 0 ? 170f : 0f;
         var bodyHeight = lines.Count * PortraitLayout.ModalLineHeight + (lines.Count > 0 ? 30f : 0f);
-        var arrow = page.HasInteractiveControls ? 0f : PortraitLayout.ModalArrowBand;
+        // 底端永远有一枚呼吸的实心 ▼（AGENTS「弹窗通用规格」），带选项 / 输入框的页同样留出这一带。
+        var arrow = PortraitLayout.ModalArrowBand;
         _modalPanel = PortraitLayout.ModalBounds(PortraitLayout.ModalPad * 2f + heading + bodyHeight + controls + arrow);
         PortraitFrame.GothicFrame(this, _modalPanel, new Color(InkStyle.Panel, 1f), crest: true);
 
@@ -104,8 +105,7 @@ public partial class PortraitModalLayer
             PortraitFrame.Plaque(this, rect, choice.Label, primary: primary, enabled: choice.Enabled);
             _hits.Add(new PortraitWidget(rect, PortraitAction.ModalChoice, i, choice.Enabled, choice.Id));
         }
-        if (!page.HasInteractiveControls)
-            DrawBreathingArrow();
+        DrawBreathingArrow();
     }
 
     private void DrawBreathingArrow()
@@ -178,6 +178,9 @@ public partial class PortraitModalLayer
         }
         var go = new Rect2(_modalPanel.Position.X + 80f, _modalPanel.End.Y - 70f - 128f, _modalPanel.Size.X - 160f, 128f);
         PortraitFrame.Plaque(this, go, "返回领地", primary: true);
+        // 结算的下一步是一枚真能点的钮（点别处照样推进）。
+        _hits.Add(new PortraitWidget(go, PortraitAction.ModalChoice, 0, true, "settle"));
+        DrawBreathingArrow();
     }
 
     private bool HandleModalScroll(InputEvent input)

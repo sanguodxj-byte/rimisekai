@@ -1,3 +1,4 @@
+using System.Linq;
 using Godot;
 using Rimisekai.Character;
 using Rimisekai.Ink;
@@ -36,6 +37,33 @@ public static class PortraitAvatars
         ["瑞雅莉"] = "knight",
         ["瑞茵"] = "scholar",
     };
+
+    /// <summary>当前会话的名册：没有头像图时字标要与同名册里首字相同的人区分开。领地屏绑定会话时绑上（战斗页与领地屏同一会话）。</summary>
+    private static Roster _roster = null!;
+
+    public static void Bind(Roster roster) => _roster = roster;
+
+    /// <summary>
+    /// 无图头像的字标：通常取名字首字；名册里另有人首字相同（瑞雅莉 / 瑞茵 / 瑞拉）时，
+    /// 框够宽（放得下两个 size 字）就写前两字，否则写名字里第一个与同首字者不同的字（雅 / 茵 / 拉）。
+    /// </summary>
+    public static string Glyph(string name, float boxWidth, int size)
+    {
+        if (name.Length < 2)
+            return name;
+        var twins = _roster.Members.Select(m => m.Name).Where(n => n != name && n.Length > 0 && n[0] == name[0]).ToList();
+        if (twins.Count == 0)
+            return name[..1];
+        if (InkDraw.Measure(name[..2], size).X <= boxWidth * 0.9f)
+            return name[..2];
+        for (var i = 1; i < name.Length; i++)
+        {
+            var at = i;
+            if (twins.All(t => t.Length <= at || t[at] != name[at]))
+                return name.Substring(i, 1);
+        }
+        return name[..1];
+    }
 
     private static string Identity(string key) => Root + $"identity/{key}_diff1.png";
 

@@ -616,8 +616,10 @@ public static class PortraitFrame
         {
             ci.DrawRect(box, InkStyle.Panel);
             if (name.Length > 0)
-                InkDraw.Text(ci, center, name[..1], (int)Mathf.Max(PortraitLayout.FontMeta, radius * 0.8f),
-                    dim ? InkStyle.Dim : InkStyle.Line, "cm");
+            {
+                var size = (int)Mathf.Max(PortraitLayout.FontMeta, radius * 0.8f);
+                InkDraw.Text(ci, center, PortraitAvatars.Glyph(name, radius * 2f, size), size, dim ? InkStyle.Dim : InkStyle.Line, "cm");
+            }
         }
         if (!ring)
         {
