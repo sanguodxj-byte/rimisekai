@@ -25,6 +25,8 @@ public partial class PortraitCapture : Node
     private readonly Queue<Action> _steps = new();
     private int _wait;
     private BattleSession _battleProbe = null!;
+    /// <summary>世界种子：默认 42 让画面可复现；<c>--pseed=</c> 换种子看别的世界。</summary>
+    private int _seed = 42;
     private int _probeHp;
     private long _probeTime;
 
@@ -35,6 +37,7 @@ public partial class PortraitCapture : Node
             if (arg.StartsWith("--pcap=")) _prefix = arg["--pcap=".Length..];
             if (arg.StartsWith("--pdump=")) _dump = arg["--pdump=".Length..];
             if (arg.StartsWith("--pblind=")) _blind = arg["--pblind=".Length..];
+            if (arg.StartsWith("--pseed=")) _seed = int.Parse(arg["--pseed=".Length..]);
         }
         if (_blind.Length > 0)
         {
@@ -46,7 +49,7 @@ public partial class PortraitCapture : Node
             return;
         // 截图与命中块核对一律取终态：动效直接跳完（CheckMotion 里临时关掉，专门核对过渡本身）。
         PortraitMotion.Instant = true;
-        InkWorldBootstrap.WorldSeedOverride = 42;
+        InkWorldBootstrap.WorldSeedOverride = _seed;
         if (_prefix.Length > 0)
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_prefix))!);
         _root = new PortraitRoot { Name = "PortraitRoot" };
