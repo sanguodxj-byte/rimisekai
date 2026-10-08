@@ -100,6 +100,7 @@ public enum PortraitAction
     SystemSegment,
     VolumeSet,
     DevelopmentTab,
+    CrossGate,
 }
 
 /// <summary>一个可点块。命中判定按注册逆序（后注册者画在上、先命中）。</summary>
@@ -229,6 +230,7 @@ public partial class PortraitHubScreen : Control
         _widgets.Clear();
         _scrollAreas.Clear();
         _sheetTop = -1f;
+        _crossArrowShown = false;
         // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发（之后浅填淡出）。
         ApplyPress();
         PortraitFrame.Backdrop(this);

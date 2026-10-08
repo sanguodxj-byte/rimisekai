@@ -319,6 +319,30 @@ public sealed partial class HubSession
         return neighbor;
     }
 
+    /// <summary>
+    /// 人站在这间房里过界是朝哪个方向出去；不能过界返回 null。
+    /// 领地按连接点所在的边；兴趣点 / 地城按边界通道两端的块内坐标（两块相邻，通道两端分处相对的两条边）。
+    /// </summary>
+    public Territory.RegionDir? CrossDir(int roomId)
+    {
+        if (CrossTargetRegion(roomId) < 0)
+            return null;
+        var room = Room(roomId)!;
+        if (room.RegionId < Territory.MaxTerritoryRegions)
+            return GateDirOf(room);
+        var across = PoiCrossLink(room)!;
+        var edge = Territory.RegionSize - 1;
+        if (room.Y == across.Y && room.X == edge && across.X == 0)
+            return Territory.RegionDir.East;
+        if (room.Y == across.Y && room.X == 0 && across.X == edge)
+            return Territory.RegionDir.West;
+        if (room.X == across.X && room.Y == edge && across.Y == 0)
+            return Territory.RegionDir.South;
+        if (room.X == across.X && room.Y == 0 && across.Y == edge)
+            return Territory.RegionDir.North;
+        throw new System.InvalidOperationException($"边界通道 {room.Id}→{across.Id} 两端不在相对的两条边上。");
+    }
+
     /// <summary>兴趣点里这间房通往别的块的那间房（生成器的边界通道）；没有返回 null。</summary>
     private Room? PoiCrossLink(Room room)
     {

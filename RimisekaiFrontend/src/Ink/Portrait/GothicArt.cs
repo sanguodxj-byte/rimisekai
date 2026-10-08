@@ -48,6 +48,22 @@ public static class GothicArt
             PortraitFrame.Cover(ci, _backdrop, full, 0.5f);
     }
 
+    /// <summary>
+    /// 全屏底图的一块：与 <see cref="Backdrop"/> 同一套铺法取出 part 那一片原样重画（过界平移时遮住滑出网格的部分）。
+    /// </summary>
+    public static void BackdropPart(CanvasItem ci, Rect2 part)
+    {
+        Load();
+        ci.DrawRect(part, InkStyle.Bg);
+        if (_backdrop == null)
+            return;
+        var size = _backdrop.GetSize();
+        var scale = Mathf.Max(PortraitLayout.CanvasWidth / size.X, PortraitLayout.CanvasHeight / size.Y);
+        var src = new Vector2(PortraitLayout.CanvasWidth / scale, PortraitLayout.CanvasHeight / scale);
+        var origin = new Vector2((size.X - src.X) / 2f, (size.Y - src.Y) * 0.5f);
+        ci.DrawTextureRectRegion(_backdrop, part, new Rect2(origin + part.Position / scale, part.Size / scale));
+    }
+
     /// <summary>石纹平铺：按 512 一块铺满 r（边缘按区域裁），modulate 控制明暗。</summary>
     public static void Tile(CanvasItem ci, Rect2 r, float brightness = 1f, float alpha = 1f)
     {

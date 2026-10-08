@@ -34,7 +34,7 @@ public partial class PortraitHubScreen
     private float _pressHeld;
 
     /// <summary>抽屉或推入页正在过渡：不收输入，免得点到半路上的东西。</summary>
-    private bool InputLocked => _sheetMotion.Running || _pushMotion.Running || (_veil?.Running ?? false) || Walking;
+    private bool InputLocked => _sheetMotion.Running || _pushMotion.Running || (_veil?.Running ?? false) || Walking || Crossing;
 
     private PortraitVeil? _veil;
 
@@ -57,7 +57,7 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>核对用：是否有过渡在走。</summary>
-    public bool DebugAnimating => _sheetMotion.Running || _pushMotion.Running || _tabMotion.Running || (_veil?.Running ?? false) || Walking;
+    public bool DebugAnimating => _sheetMotion.Running || _pushMotion.Running || _tabMotion.Running || (_veil?.Running ?? false) || Walking || Crossing;
 
     public override void _Process(double delta)
     {
@@ -98,6 +98,7 @@ public partial class PortraitHubScreen
 
         _veil?.Step(d);
         redraw |= StepWalk(d);
+        redraw |= StepCross(d);
         redraw |= OfferEncounter();
         redraw |= _tabMotion.Step(d);
         redraw |= _flashMotion.Step(d);

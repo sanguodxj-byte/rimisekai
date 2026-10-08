@@ -1932,9 +1932,12 @@ public sealed class ArchitectureTests
 
         hub.Enter(1);
         Assert.Equal(2, hub.CrossTargetRegion(hub.PlayerRoomId));
+        Assert.Equal(Territory.RegionDir.East, hub.CrossDir(hub.PlayerRoomId));
         Assert.True(hub.CrossTo(2));
         Assert.Equal(2, hub.RegionId);
         Assert.Equal(2, hub.PlayerRoomId);
+        // 落到东区西门：回头的通道朝西。
+        Assert.Equal(Territory.RegionDir.West, hub.CrossDir(hub.PlayerRoomId));
 
         // 北区虽然解锁了，但北区那一侧的连接点上没有房 → 过不去。
         t.SetUnlockedRegionMask(t.UnlockedRegionMask | (1 << 1));
@@ -1942,6 +1945,7 @@ public sealed class ArchitectureTests
         t.AddRoom(new Room { Id = 3, Name = "北门", RegionId = 0, X = nx, Y = ny, Open = true });
         hub.Enter(3);
         Assert.Equal(-1, hub.CrossTargetRegion(hub.PlayerRoomId));
+        Assert.Null(hub.CrossDir(hub.PlayerRoomId));
         Assert.False(hub.CrossTo(1));
 
         // 站在中间的空房里（不在任何连接点上）也不通。

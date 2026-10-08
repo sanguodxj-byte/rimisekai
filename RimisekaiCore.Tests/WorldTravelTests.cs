@@ -154,7 +154,14 @@ public sealed class WorldTravelTests
         var gate = poiRooms.First(r => hub.CrossTargetRegion(r.Id) >= 0);
         hub.Arrive(gate.Id);
         var target = hub.CrossTargetRegion(gate.Id);
+        // 每间能过界的房都推得出朝向（竖屏边框箭头画在那条边上），不能过界的房没有朝向。
+        Assert.All(poiRooms, r => Assert.Equal(hub.CrossTargetRegion(r.Id) >= 0, hub.CrossDir(r.Id) != null));
+        var dir = hub.CrossDir(gate.Id)!.Value;
         Assert.True(hub.CrossTo(target));
+        // 出去那一边的对边就是落脚房所在的边。
+        var landed = state.Territory.Room(hub.PlayerRoomId)!;
+        var (ox, oy) = Territory.RegionGate(Territory.Opposite(dir));
+        Assert.True(dir is Territory.RegionDir.East or Territory.RegionDir.West ? landed.X == ox : landed.Y == oy);
         Assert.Equal(target, hub.RegionId);
         Assert.All(hub.Map(), r => Assert.Equal(target, r.RegionId));
     }

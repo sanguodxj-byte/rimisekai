@@ -438,6 +438,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(ReopenCombatSettings);
         _steps.Enqueue(() => Shoot("combat_settings", _root.CombatView));
         _steps.Enqueue(CheckCombatLoadAndTitle);
+        EnqueueCrossChecks();
         _steps.Enqueue(Quit);
     }
 

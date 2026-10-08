@@ -22,19 +22,30 @@ public partial class PortraitHubScreen
 
     private void DrawTerritory()
     {
-        DrawLogPanel();
+        // 过界平移时网格先画、再把滑出网格的部分遮掉，日志面板须在遮罩之后画。
+        if (!Crossing)
+            DrawLogPanel();
 
-        PortraitFrame.GothicFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
-        if (WorldLayer)
-            DrawWorldMap();
+        if (Crossing)
+            DrawCrossPan();
         else
         {
-            for (var y = 0; y < PortraitLayout.GridRows; y++)
-                for (var x = 0; x < PortraitLayout.GridCols; x++)
-                    DrawCell(x, y);
-            DrawDoors(PortraitLayout.Cell, _vm.Hub.RegionId);
-            DrawWalker();
+            PortraitFrame.GothicFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
+            if (WorldLayer)
+                DrawWorldMap();
+            else
+            {
+                for (var y = 0; y < PortraitLayout.GridRows; y++)
+                    for (var x = 0; x < PortraitLayout.GridCols; x++)
+                        DrawCell(x, y, _vm.RoomAt(x, y), true);
+                DrawDoors(PortraitLayout.Cell, _vm.Hub.RegionId);
+                DrawWalker();
+                DrawCrossArrow();
+            }
         }
+
+        if (Crossing)
+            DrawLogPanel();
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
@@ -52,10 +63,10 @@ public partial class PortraitHubScreen
         _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, buildable, "建造"));
     }
 
-    private void DrawCell(int x, int y)
+    /// <summary>画一格。register＝登记命中块（过界平移时滑出的旧网格只画不登记）。</summary>
+    private void DrawCell(int x, int y, Room? room, bool register)
     {
         var r = PortraitLayout.Cell(x, y);
-        var room = _vm.RoomAt(x, y);
         var inner = r.Grow(-6f);
         var c = r.GetCenter();
 
@@ -71,7 +82,8 @@ public partial class PortraitHubScreen
         {
             InkDraw.Ink(this, RectLoop(inner), InkStyle.WoodDark, 2.5f);
             InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), room.Name, PortraitLayout.FontMeta, InkStyle.Dim);
-            _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, false, room.Name));
+            if (register)
+                _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, false, room.Name));
             return;
         }
 
@@ -100,7 +112,8 @@ public partial class PortraitHubScreen
                     InkDraw.Jewel(this, corner, 12f, InkStyle.Line);
         }
 
-        _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, true, room.Name));
+        if (register)
+            _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, true, room.Name));
     }
 
     /// <summary>
@@ -406,6 +419,9 @@ public partial class PortraitHubScreen
                 return true;
             case PortraitAction.NowPage:
                 _nowPage++;
+                return true;
+            case PortraitAction.CrossGate:
+                StartCross(w.Index);
                 return true;
             case PortraitAction.HubWorld:
                 if (hub.InQuestDungeon)

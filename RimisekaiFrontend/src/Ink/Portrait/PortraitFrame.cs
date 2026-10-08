@@ -971,22 +971,32 @@ public static class PortraitFrame
     /// </summary>
     public static void GothicFrame(CanvasItem ci, Rect2 r, Color? fill = null, bool ornate = true, bool crest = false)
     {
-        Poly(ci, ChamferPoints(r, 22f), fill ?? InkStyle.Panel, InkStyle.Line, 4f);
-        Poly(ci, ChamferPoints(r.Grow(-12f), 14f), null, InkStyle.WoodDark, 2f);
+        Poly(ci, ChamferPoints(r, 22f), fill ?? InkStyle.Panel);
+        GothicFrameLines(ci, r);
         if (!ornate)
             return;
         var k = Mathf.Min(120f, Mathf.Min(r.Size.X, r.Size.Y) * 0.26f);
         PortraitOrnaments.Corners(ci, r.Grow(-16f), k, 0.5f);
         var cx = r.GetCenter().X;
-        InkDraw.Jewel(ci, new Vector2(cx, r.End.Y), 9f, InkStyle.Line);
-        InkDraw.Jewel(ci, new Vector2(cx, r.End.Y), 4f, InkStyle.Bg);
+        FrameJewel(ci, new Vector2(cx, r.End.Y));
         if (crest)
             PortraitOrnaments.Crest(ci, new Vector2(cx, r.Position.Y), Mathf.Min(560f, r.Size.X * 0.72f), 0.9f, above: true);
         else
-        {
-            InkDraw.Jewel(ci, new Vector2(cx, r.Position.Y), 9f, InkStyle.Line);
-            InkDraw.Jewel(ci, new Vector2(cx, r.Position.Y), 4f, InkStyle.Bg);
-        }
+            FrameJewel(ci, new Vector2(cx, r.Position.Y));
+    }
+
+    /// <summary>哥特框的两道框线（外线骨白 4px 切角、内线暗木 2px）。过界平移遮边时单独重描。</summary>
+    public static void GothicFrameLines(CanvasItem ci, Rect2 r)
+    {
+        Poly(ci, ChamferPoints(r, 22f), null, InkStyle.Line, 4f);
+        Poly(ci, ChamferPoints(r.Grow(-12f), 14f), null, InkStyle.WoodDark, 2f);
+    }
+
+    /// <summary>哥特框上下缘正中的框珠：骨白菱嵌黑芯。</summary>
+    public static void FrameJewel(CanvasItem ci, Vector2 at)
+    {
+        InkDraw.Jewel(ci, at, 9f, InkStyle.Line);
+        InkDraw.Jewel(ci, at, 4f, InkStyle.Bg);
     }
 
     // ---------- 边框装裱 ----------

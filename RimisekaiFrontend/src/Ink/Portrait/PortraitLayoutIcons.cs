@@ -59,6 +59,64 @@ public static partial class PortraitLayout
     public static Rect2 TravelButton => new(Pad + 20f, TabTop - 152f, 320f, 124f);
     public static Rect2 BuildButton => new(CanvasWidth - Pad - 20f - 320f, TabTop - 152f, 320f, 124f);
 
+    // ---------- 过界：边框通道箭头 ----------
+    // 主角站在有对外通道的房间（领地连接点 / 兴趣点边界通道）时，网格外缘对着该房朝外那条边的正中开一道缺口，
+    // 缺口里一枚实心三角箭头指向外侧。只占网格与哥特框之间的边框带及其外侧空白，不进任何房间格。
+
+    /// <summary>缺口沿边的长度（盖住框线两道线与上下缘正中的框珠）。</summary>
+    public const float CrossGapSpan = 96f;
+
+    /// <summary>箭头：底边长 64、底边到尖 40；底边离网格外缘 4，尖探出框外线 20。</summary>
+    public const float CrossArrowBase = 64f;
+    public const float CrossArrowDepth = 40f;
+    public const float CrossArrowInset = 4f;
+
+    /// <summary>箭头呼吸周期（秒），与弹窗底端三角同拍。</summary>
+    public const float CrossBreath = 1.8f;
+
+    /// <summary>过界镜头平移时长（秒）：整格网格平移一屏，三次缓出。</summary>
+    public const float CrossPan = 0.4f;
+
+    /// <summary>朝外的单位向量（画布坐标，y 向下）。</summary>
+    public static Vector2 CrossOutward(Rimisekai.Housing.Territory.RegionDir dir) => dir switch
+    {
+        Rimisekai.Housing.Territory.RegionDir.North => Vector2.Up,
+        Rimisekai.Housing.Territory.RegionDir.East => Vector2.Right,
+        Rimisekai.Housing.Territory.RegionDir.South => Vector2.Down,
+        _ => Vector2.Left,
+    };
+
+    /// <summary>格朝外那条边的中点（即网格外缘上的通道口）。</summary>
+    public static Vector2 CrossMouth(Rimisekai.Housing.Territory.RegionDir dir, Rect2 cell) =>
+        cell.GetCenter() + CrossOutward(dir) * (MapCell / 2f);
+
+    /// <summary>缺口：自网格外缘外 2px 起、到哥特框外线外 3px，沿边 <see cref="CrossGapSpan"/>。</summary>
+    public static Rect2 CrossGap(Rimisekai.Housing.Territory.RegionDir dir, Rect2 cell)
+    {
+        var mouth = CrossMouth(dir, cell);
+        var near = 2f;
+        var far = MapGrid.Position.X - MapFrame.Position.X + 3f;
+        return dir switch
+        {
+            Rimisekai.Housing.Territory.RegionDir.North => new Rect2(mouth.X - CrossGapSpan / 2f, mouth.Y - far, CrossGapSpan, far - near),
+            Rimisekai.Housing.Territory.RegionDir.South => new Rect2(mouth.X - CrossGapSpan / 2f, mouth.Y + near, CrossGapSpan, far - near),
+            Rimisekai.Housing.Territory.RegionDir.East => new Rect2(mouth.X + near, mouth.Y - CrossGapSpan / 2f, far - near, CrossGapSpan),
+            _ => new Rect2(mouth.X - far, mouth.Y - CrossGapSpan / 2f, far - near, CrossGapSpan),
+        };
+    }
+
+    /// <summary>
+    /// 箭头命中块：沿边与该格等长（172），向外自网格外缘一直到最近的邻件——
+    /// 北到日志面板下沿（54）、南到「此刻」头像带上沿（102）、东西到画布边（110）。不覆盖任何房间格与邻件命中块。
+    /// </summary>
+    public static Rect2 CrossHit(Rimisekai.Housing.Territory.RegionDir dir, Rect2 cell) => dir switch
+    {
+        Rimisekai.Housing.Territory.RegionDir.North => new Rect2(cell.Position.X, LogPanel.End.Y, MapCell, MapGrid.Position.Y - LogPanel.End.Y),
+        Rimisekai.Housing.Territory.RegionDir.South => new Rect2(cell.Position.X, MapGrid.End.Y, MapCell, NowStrip.Position.Y - MapGrid.End.Y),
+        Rimisekai.Housing.Territory.RegionDir.East => new Rect2(MapGrid.End.X, cell.Position.Y, CanvasWidth - MapGrid.End.X, MapCell),
+        _ => new Rect2(0f, cell.Position.Y, MapGrid.Position.X, MapCell),
+    };
+
     // ---------- 设施抽屉 ----------
 
     public const float RoomSheetTop = 1060f;
