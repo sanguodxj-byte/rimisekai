@@ -194,7 +194,9 @@ public sealed class InkViewModel
 
     public IReadOnlyList<Room> Rooms() => Hub.Map();
 
-    public bool IsPlayerRoom(int roomId) => Hub.PlayerRoomId == roomId;
+    /// <summary>主角所在格：横版世界层是队伍脚下那间视口房，其余图层是主角所在的房间。</summary>
+    public bool IsPlayerRoom(int roomId) =>
+        Hub.Layer == MapLayer.World ? Hub.WorldPartyViewRoomId == roomId : Hub.PlayerRoomId == roomId;
 
     public bool IsOpen(Room room) => room.Open;
 

@@ -11,9 +11,6 @@ public sealed class HubSnapshot
     public int Region { get; set; }
     public int PlayerRoom { get; set; } = -1;
     public int Selected { get; set; } = -1;
-
-    /// <summary>出发去兴趣点前站的本家房间；-1 = 没出过门。</summary>
-    public int TerritoryHomeRoom { get; set; } = -1;
     public Dictionary<int, int> Presence { get; set; } = new();
     /// <summary>近期日志（两段式，最旧在前）。</summary>
     public List<LogEntryData> Log { get; set; } = new();
@@ -40,13 +37,27 @@ public sealed class LogEntryData
 
 public sealed partial class HubSession
 {
-    public HubSnapshot Snapshot() => new()
+    /// <summary>
+    /// 会话快照。读档即人在据点：人在兴趣点里或走在大地图上时，记成出发前的本家落脚点，
+    /// 落在兴趣点房里（或随主人出门）的在场记录一并改记到那里。
+    /// </summary>
+    public HubSnapshot Snapshot()
     {
-        Region = RegionId,
-        PlayerRoom = PlayerRoomId,
+        var away = Layer != MapLayer.Territory;
+        var home = away ? _territoryHomeRoomId : PlayerRoomId;
+        var homeRegion = !away ? RegionId : home >= 0 ? State.Territory.Rooms.Find(r => r.Id == home)!.RegionId : 0;
+        var presence = new Dictionary<int, int>();
+        foreach (var pair in _presence)
+            presence[pair.Key] = pair.Value >= PoiRoomIdBase || (away && pair.Value < 0) ? home : pair.Value;
+        return Build(homeRegion, home, presence);
+    }
+
+    private HubSnapshot Build(int region, int playerRoom, Dictionary<int, int> presence) => new()
+    {
+        Region = region,
+        PlayerRoom = playerRoom,
         Selected = SelectedCharacterId,
-        TerritoryHomeRoom = _territoryHomeRoomId,
-        Presence = new Dictionary<int, int>(_presence),
+        Presence = presence,
         Log = History.Select(l => new LogEntryData { Kind = l.Kind, Fact = l.Fact, Feel = l.Feel, Day = l.Day, Minutes = l.Minutes }).ToList(),
         MarketSettledDay = MarketSettledDay,
         StagedActors = CaptureStagedActors(),
@@ -54,7 +65,6 @@ public sealed partial class HubSession
 
     public void Restore(HubSnapshot snapshot)
     {
-        _territoryHomeRoomId = snapshot.TerritoryHomeRoom;
         SelectRegion(snapshot.Region);
         foreach (var pair in snapshot.Presence)
             Place(pair.Key, pair.Value);

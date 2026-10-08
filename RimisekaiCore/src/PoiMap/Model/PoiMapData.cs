@@ -59,6 +59,7 @@ public sealed class PoiMapData
 
     /// <summary>
     /// 将 POI 房间列表转换为与现存据点领地系统完全兼容的 Room 列表。
+    /// 坐标取**块内局部坐标**（0..4）：左上角网格一次画一块，多块拼合的兴趣点靠区号区分块。
     /// </summary>
     public List<Room> ExportToHousingRooms()
     {
@@ -70,8 +71,8 @@ public sealed class PoiMapData
                 Id = r.Id,
                 Name = r.Name,
                 RegionId = r.RegionId,
-                X = r.GlobalX,
-                Y = r.GlobalY,
+                X = r.LocalX,
+                Y = r.LocalY,
                 Open = r.Open,
                 OpenCost = r.OpenCost,
             };

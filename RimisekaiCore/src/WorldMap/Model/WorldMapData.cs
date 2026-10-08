@@ -160,6 +160,84 @@ public sealed class WorldMapData
 
     public WorldTile? GetTile(int x, int y) => InBounds(x, y) ? Tiles[x, y] : null;
 
+    public int IndexOf(int x, int y) => y * Width + x;
+
+    public (int x, int y) CoordOf(int index) => (index % Width, index / Width);
+
+    /// <summary>
+    /// 踏进这一格要花的分钟数：有路走路（桥也算路），否则按地貌查 map_defs.json 的 travel；0 = 不可通行。
+    /// </summary>
+    public int TravelMinutes(int x, int y)
+    {
+        var tile = Tiles[x, y];
+        var catalog = MapCatalog.Default;
+        if (tile.IsRoad)
+            return catalog.GetTravelMinutes(WorldTerrainType.Road);
+        if (tile.PoiId > 0 || (x == HomeX && y == HomeY))
+            return catalog.GetTravelMinutes(WorldTerrainType.Plains);
+        if (tile.IsRiver)
+            return catalog.GetTravelMinutes(WorldTerrainType.River);
+        return catalog.GetTravelMinutes(tile.Terrain);
+    }
+
+    public bool IsPassable(int x, int y) => InBounds(x, y) && TravelMinutes(x, y) > 0;
+
+    /// <summary>
+    /// 两格之间的最省时路线（Dijkstra，四向，代价＝踏进下一格的分钟数）。
+    /// <paramref name="allowed"/> 限定能走的格（如「已探明的格」）；起点不受限。
+    /// 返回不含起点、含终点的格序列；走不到返回 null，原地返回空表。
+    /// </summary>
+    public List<(int x, int y)>? FindRoute(int fromX, int fromY, int toX, int toY, System.Func<int, int, bool> allowed)
+    {
+        if (!InBounds(toX, toY) || !IsPassable(toX, toY) || !allowed(toX, toY))
+            return null;
+        var route = new List<(int x, int y)>();
+        if (fromX == toX && fromY == toY)
+            return route;
+
+        var size = Width * Height;
+        var cost = new int[size];
+        var prev = new int[size];
+        System.Array.Fill(cost, int.MaxValue);
+        System.Array.Fill(prev, -1);
+        var start = IndexOf(fromX, fromY);
+        var goal = IndexOf(toX, toY);
+        cost[start] = 0;
+        var queue = new PriorityQueue<int, int>();
+        queue.Enqueue(start, 0);
+        while (queue.TryDequeue(out var at, out var spent))
+        {
+            if (spent > cost[at])
+                continue;
+            if (at == goal)
+                break;
+            var (ax, ay) = CoordOf(at);
+            foreach (var (dx, dy) in Direction4Extensions.Offsets)
+            {
+                var nx = ax + dx;
+                var ny = ay + dy;
+                if (!InBounds(nx, ny) || !allowed(nx, ny))
+                    continue;
+                var step = TravelMinutes(nx, ny);
+                if (step <= 0)
+                    continue;
+                var next = IndexOf(nx, ny);
+                var total = spent + step;
+                if (total >= cost[next])
+                    continue;
+                cost[next] = total;
+                prev[next] = at;
+                queue.Enqueue(next, total);
+            }
+        }
+        if (prev[goal] < 0)
+            return null;
+        for (var at = goal; at != start; at = prev[at])
+            route.Add(CoordOf(at));
+        route.Reverse();
+        return route;
+    }
+
     /// <summary>
     /// 将大世界中以 (originX, originY) 为左上角锚点的 5x5 物理区域提取为玩家当前的 5x5 视觉视口。
     /// 视口内每个格点都对应真实的物理地貌（道路、草原、平原、森林、山脉、水系或坐落的聚落），

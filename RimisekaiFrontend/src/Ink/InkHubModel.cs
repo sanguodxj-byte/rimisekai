@@ -1231,10 +1231,8 @@ public sealed class InkHubModel
                 bool enabled;
                 if (world)
                 {
-                    // 世界层：只有落在兴趣点上的格子可点（点击进入该地点）。
-                    var name = room.Name;
-                    enabled = vm.Hub.State.World.Pois.Exists(
-                        p => p.NameZh == name || p.NameEn == name);
+                    // 世界层：探明且走得过去的格都可点（走过去；聚落进场、领地格回家）。
+                    enabled = room.Open;
                 }
                 else
                 {

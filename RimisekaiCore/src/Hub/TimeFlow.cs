@@ -90,7 +90,8 @@ public sealed partial class HubSession
     /// </summary>
     private void FlushActivities(StepContext ctx)
     {
-        if (ctx.Activity.Count == 0)
+        // 人在大地图上（身子不在任何领地房间）：家里谁在做什么一概看不见。
+        if (ctx.Activity.Count == 0 || PlayerRoomId < 0)
             return;
         // 按名册顺序输出，行序稳定，不随内部字典的插入顺序跳。
         foreach (var character in State.Roster.Members)

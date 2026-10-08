@@ -26,6 +26,10 @@ public sealed class SeekingChatState : BaseWorkerState
         if (stepCtx == null)
             return true;
 
+        // 主人出了领地：要找的人不在，作罢（不是被拒之门外，不扣心情）。
+        if (stepCtx.PlayerRoomId < 0)
+            return true;
+
         if (worker.WaitTicks <= 0)
         {
             character.Affect.AddMood(-5);

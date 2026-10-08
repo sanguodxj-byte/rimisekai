@@ -411,7 +411,7 @@ public partial class PortraitHubScreen
                 hub.ToggleWorldLayer();
                 _sheet = SheetKind.None;
                 if (WorldLayer)
-                    CenterWorldOnHome();
+                    CenterWorldOnParty();
                 return true;
             case PortraitAction.Build:
                 _push = PushPage.Build;

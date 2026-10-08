@@ -48,35 +48,79 @@ public sealed partial class HubSession
         LayerPlaceName = placeName;
     }
 
-    /// <summary>切到大世界全局地图视口。</summary>
+    /// <summary>
+    /// 兴趣点房间进领地表时的编号起点：生成器给的房号从 1 起，会撞上领地自己的房号，
+    /// 一律加上这个偏移（连线同样平移），离开即整片撤掉。
+    /// </summary>
+    public const int PoiRoomIdBase = 1_000_000;
+
+    private WorldExploration Explore => State.Exploration;
+
+    /// <summary>队伍在大地图上的格点。人在领地里时站在领地格。</summary>
+    public (int X, int Y) WorldPartyPosition => (Explore.PartyX, Explore.PartyY);
+
+    /// <summary>这一格是否已探明（迷雾外）。</summary>
+    public bool IsWorldDiscovered(int x, int y) => Explore.IsDiscovered(x, y);
+
+    /// <summary>
+    /// 出行：从领地走上大地图（队伍站在领地格），或从兴趣点走出来（队伍站在该兴趣点格）。
+    /// 走上大地图即身子离开领地的所有房间。已在大地图上则不动。
+    /// </summary>
     public void SwitchToWorld()
     {
+        if (Layer == MapLayer.World)
+            return;
+        if (Layer == MapLayer.WorldPoi)
+        {
+            var place = LayerPlaceName;
+            LeavePoi();
+            LeaveTerritoryBody();
+            SetLayer(MapLayer.World);
+            Write($"你离开了{place}。");
+            return;
+        }
+        if (PlayerRoomId >= 0)
+            _territoryHomeRoomId = PlayerRoomId;
+        LeaveTerritoryBody();
+        Explore.PlaceParty(State.World.HomeX, State.World.HomeY);
+        _worldRooms = null;
         SetLayer(MapLayer.World);
-        Write("展开了世界大地图。");
+        Write("你走出了领地。");
     }
 
     /// <summary>
-    /// 返回领地据点视口。人在兴趣点时要把人带回本家——
-    /// POI 房间挂在领地表里、编号从 <see cref="Territory.MaxTerritoryRegions"/> 起，
-    /// 只切图层不挪人，人还站在 POI 里，网格照旧画 POI 的房间。
+    /// 返回领地：人在兴趣点或大地图上时，沿已探明的格走回领地格（路上照样耗时），
+    /// 再把人送回出发前站的那间本家房间。
     /// </summary>
     public void SwitchToTerritory()
     {
+        if (Layer == MapLayer.Territory)
+            return;
+        if (Layer == MapLayer.WorldPoi)
+        {
+            LeavePoi();
+            LeaveTerritoryBody();
+            SetLayer(MapLayer.World);
+        }
+        if (!Explore.AtHome)
+        {
+            var home = State.World.FindRoute(Explore.PartyX, Explore.PartyY,
+                State.World.HomeX, State.World.HomeY, Explore.IsDiscovered)
+                ?? throw new System.InvalidOperationException("大地图上找不到回领地的路：走过的格一定连着领地。");
+            WalkWorld(home);
+        }
         SetLayer(MapLayer.Territory);
-        if (RegionId >= Territory.MaxTerritoryRegions && _territoryHomeRoomId >= 0)
+        if (_territoryHomeRoomId >= 0)
             Enter(_territoryHomeRoomId);
-        ClearPoiRooms();
-        Write("返回了领地据点。");
+        _territoryHomeRoomId = -1;
+        Write("你回到了领地。");
     }
 
     /// <summary>
-    /// 出发去兴趣点之前站的那间本家房间。回来时把人送回这里，
-    /// 而不是丢在 POI 区里。进 POI 时记录，随存档走。
+    /// 出发前站的那间本家房间。回来时把人送回这里。走出领地时记录；
+    /// 存档时人一律记回这间房（读档即人在据点，见 <see cref="Snapshot"/>）。
     /// </summary>
     private int _territoryHomeRoomId = -1;
-
-    /// <summary>出发去 POI 前的落脚点，供存档回填。</summary>
-    public int TerritoryHomeRoomId => _territoryHomeRoomId;
 
     /// <summary>在领地与大世界之间来回切换。</summary>
     public void ToggleWorldLayer()
@@ -89,66 +133,202 @@ public sealed partial class HubSession
 
     private List<Room>? _worldRooms;
 
-    /// <summary>进入世界上的某个 POI 场景（按数据表规模与分区自然开辟）。</summary>
+    /// <summary>横版世界层的 5×5 视口房编号起点（房号 = 起点 + 行×5 + 列）。</summary>
+    private const int WorldViewRoomBase = 1000;
+
+    /// <summary>
+    /// 横版世界层的 5×5 视口：以队伍为中心（贴边夹住），每走一步重建。
+    /// 迷雾里的格与走不过去的格不可点；迷雾格名字写「迷雾」。
+    /// </summary>
+    private List<Room> WorldViewRooms()
+    {
+        if (_worldRooms != null)
+            return _worldRooms;
+        var (ox, oy) = WorldViewOrigin();
+        _worldRooms = State.World.Get5x5ViewportRooms(ox, oy, WorldViewRoomBase);
+        for (var i = 0; i < _worldRooms.Count; i++)
+        {
+            var room = _worldRooms[i];
+            var (wx, wy) = (ox + room.X, oy + room.Y);
+            var seen = Explore.IsDiscovered(wx, wy);
+            if (seen && State.World.IsPassable(wx, wy))
+                continue;
+            _worldRooms[i] = new Room { Id = room.Id, Name = seen ? room.Name : "迷雾", RegionId = room.RegionId, X = room.X, Y = room.Y, Open = false };
+            _worldRooms[i].EnsureDefaultTag();
+        }
+        foreach (var room in _worldRooms)
+            room.Links.RemoveAll(id => !_worldRooms.Exists(r => r.Id == id && r.Open));
+        return _worldRooms;
+    }
+
+    private (int X, int Y) WorldViewOrigin() =>
+        (System.Math.Clamp(Explore.PartyX - 2, 0, State.World.Width - 5),
+         System.Math.Clamp(Explore.PartyY - 2, 0, State.World.Height - 5));
+
+    /// <summary>横版世界层视口房对应的大地图格点。</summary>
+    public (int X, int Y) WorldTileOfViewRoom(int roomId)
+    {
+        var (ox, oy) = WorldViewOrigin();
+        var local = roomId - WorldViewRoomBase;
+        return (ox + local % 5, oy + local / 5);
+    }
+
+    /// <summary>横版世界层：队伍脚下那间视口房。</summary>
+    public int WorldPartyViewRoomId
+    {
+        get
+        {
+            var (ox, oy) = WorldViewOrigin();
+            return WorldViewRoomBase + (Explore.PartyY - oy) * 5 + (Explore.PartyX - ox);
+        }
+    }
+
+    /// <summary>
+    /// 人走上大地图：身子离开领地的任何房间（PlayerRoomId = -1），
+    /// 家里的人不会再来找他搭话，主人的自动日程也停摆；回领地时由 <see cref="Enter"/> 落回出发前的房间。
+    /// </summary>
+    private void LeaveTerritoryBody()
+    {
+        LeaveFixture();
+        PlayerRoomId = -1;
+        State.Territory.MasterRoomId = -1;
+        var master = State.Roster.Master;
+        if (master != null)
+            _presence[master.Id] = -1;
+    }
+
+    /// <summary>
+    /// 从队伍所在格走到这一格要花多少分钟（只走已探明的格）；走不到返回 -1，原地返回 0。
+    /// </summary>
+    public int WorldTravelMinutes(int x, int y)
+    {
+        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, x, y, Explore.IsDiscovered);
+        if (route == null)
+            return -1;
+        var total = 0;
+        foreach (var (rx, ry) in route)
+            total += State.World.TravelMinutes(rx, ry);
+        return total;
+    }
+
+    /// <summary>
+    /// 大地图上前往一格：沿已探明的格走最省时的路过去（逐格推进时间、探明四周），
+    /// 到了是兴趣点就进场、是领地就回去。不在大地图上、画面被演出盖着、或走不到，返回 false。
+    /// </summary>
+    public bool TravelTo(int x, int y)
+    {
+        if (Layer != MapLayer.World || MapCovered)
+            return false;
+        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, x, y, Explore.IsDiscovered);
+        if (route == null)
+            return false;
+        if (route.Count > 0)
+            WalkWorld(route);
+        if (Explore.AtHome)
+        {
+            SwitchToTerritory();
+            return true;
+        }
+        var poi = State.World.PoiAt(Explore.PartyX, Explore.PartyY);
+        if (poi != null)
+            return EnterWorldPoi(poi.Id);
+        Write($"你来到了{State.World.TileName(Explore.PartyX, Explore.PartyY)}。");
+        return true;
+    }
+
+    /// <summary>沿路线逐格走：每进一格按地貌推进时间，再探明四周。</summary>
+    private void WalkWorld(List<(int x, int y)> route)
+    {
+        foreach (var (x, y) in route)
+        {
+            PassTime(State.World.TravelMinutes(x, y));
+            Explore.PlaceParty(x, y);
+        }
+        _worldRooms = null;
+    }
+
+    /// <summary>
+    /// 进入大地图上的某个兴趣点：按种子现生成场景（同一处每次进来都一样），
+    /// 房间以 <see cref="PoiRoomIdBase"/> 起编号装进领地表、区号从 <see cref="Territory.MaxTerritoryRegions"/> 起，
+    /// 人落在正门。只有队伍站在该兴趣点格上才进得去（正常流程由 <see cref="TravelTo"/> 走到再进）。
+    /// </summary>
     public bool EnterWorldPoi(int poiId)
+    {
+        var poi = State.World.Pois.Find(p => p.Id == poiId);
+        if (poi == null || Layer != MapLayer.World || (Explore.PartyX, Explore.PartyY) != (poi.X, poi.Y))
+            return false;
+
+        var poiMap = State.EnterPoi(poiId);
+        _unlockedBeforePoi = State.Territory.UnlockedRegions;
+        State.Territory.SetUnlockedRegions(System.Math.Max(State.Territory.UnlockedRegions,
+            Territory.MaxTerritoryRegions + poiMap.Blocks.Count));
+        foreach (var r in poiMap.ExportToHousingRooms())
+        {
+            var block = poiMap.GetBlockByRoomId(r.Id)!;
+            var room = new Room
+            {
+                Id = PoiRoomIdBase + r.Id,
+                Name = r.Name,
+                RegionId = Territory.MaxTerritoryRegions + block.RegionId,
+                X = r.X,
+                Y = r.Y,
+                Open = r.Open,
+                OpenCost = r.OpenCost,
+            };
+            foreach (var link in r.Links)
+                room.Links.Add(PoiRoomIdBase + link);
+            room.EnsureDefaultTag();
+            if (!State.Territory.AddRoom(room))
+                throw new System.InvalidOperationException($"兴趣点房 {room.Id} 装不进领地表。");
+        }
+
+        SetLayer(MapLayer.WorldPoi, poi.NameZh.Length > 0 ? poi.NameZh : poi.NameEn);
+        Enter(PoiRoomIdBase + poiMap.Blocks[0].StartRoom!.Id);
+        Write($"抵达了{MapTitle()}。");
+        return true;
+    }
+
+    /// <summary>
+    /// 调试 / 测试 / 出图入口：从当前位置把队伍直接走到某个兴趣点并进场。
+    /// 不是传送——沿最省时路线把一路的格都探明、时间照走，回程因此走得通。
+    /// </summary>
+    public bool TravelToPoiDirect(int poiId)
     {
         var poi = State.World.Pois.Find(p => p.Id == poiId);
         if (poi == null)
             return false;
-
-        // 先把上一处 POI 的房间清掉：POI 房间是临时借住领地表的，不清就会越积越多，撞上房间总上限。
-        if (RegionId >= Territory.MaxTerritoryRegions && _territoryHomeRoomId >= 0)
-            Enter(_territoryHomeRoomId);
-        ClearPoiRooms();
-        var poiMap = State.EnterPoi(poiId);
-
-        // 将 POI 房间导入领地系统，分配新 RegionId。
-        // 领地内区域占 0..8，POI 区域从 MaxTerritoryRegions 起顺延，免得撞号。
-        _unlockedBeforePoi = State.Territory.UnlockedRegions;
-        var baseRegion = System.Math.Max(State.Territory.UnlockedRegions,
-            Territory.MaxTerritoryRegions);
-        State.Territory.SetUnlockedRegions(baseRegion + poiMap.Blocks.Count);
-
-        var housingRooms = poiMap.ExportToHousingRooms();
-        foreach (var r in housingRooms)
-        {
-            r.RegionId = baseRegion + (poiMap.GetBlockByRoomId(r.Id)?.RegionId ?? 0);
-            State.Territory.AddRoom(r);
-        }
-
-        SetLayer(MapLayer.WorldPoi, poi.NameZh.Length > 0 ? poi.NameZh : poi.NameEn);
-        // 记下出发前站的本家房间：返回领地时要把人送回这里，而不是丢在 POI 区。
-        if (_territoryHomeRoomId < 0 && PlayerRoomId >= 0 && RegionId < Territory.MaxTerritoryRegions)
-            _territoryHomeRoomId = PlayerRoomId;
-        if (poiMap.Blocks.Count > 0 && poiMap.Blocks[0].StartRoom != null)
-        {
-            Enter(poiMap.Blocks[0].StartRoom!.Id);
-        }
-        Write($"抵达了{MapTitle()}。");
-        return true;
+        if (Layer != MapLayer.World)
+            SwitchToWorld();
+        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, poi.X, poi.Y, (_, _) => true);
+        if (route == null)
+            return false;
+        WalkWorld(route);
+        return EnterWorldPoi(poiId);
     }
 
     /// <summary>进 POI 前的已解锁区域数，离开时还原。-1 表示当前不在 POI。</summary>
     private int _unlockedBeforePoi = -1;
 
+    /// <summary>领地自己的已解锁区域数（人在兴趣点里时不算兴趣点临时借的区号），存档用。</summary>
+    public int TerritoryUnlockedRegions => _unlockedBeforePoi >= 0 ? _unlockedBeforePoi : State.Territory.UnlockedRegions;
+
     /// <summary>
-    /// 移除挂在领地表里的 POI 房间（编号区从 <see cref="Territory.MaxTerritoryRegions"/> 起），
-    /// 并把已解锁区域数还原到进 POI 之前。调用方先把人送回本家。
+    /// 退出当前兴趣点：人（连同跟着的人）先回到本家落脚点，兴趣点房从领地表里撤掉，
+    /// 已解锁区域数还原。图层由调用方再定。
     /// </summary>
-    private void ClearPoiRooms()
+    private void LeavePoi()
     {
-        // 没有本家落脚点可送回（空领地）时，人随房间一起离开 POI。
-        if (RegionId >= Territory.MaxTerritoryRegions)
-        {
-            RegionId = 0;
-            if (Room(PlayerRoomId)?.RegionId >= Territory.MaxTerritoryRegions)
-                PlayerRoomId = -1;
-        }
+        LeaveFixture();
+        if (_territoryHomeRoomId >= 0)
+            Enter(_territoryHomeRoomId);
         State.Territory.Rooms.RemoveAll(r => r.RegionId >= Territory.MaxTerritoryRegions);
-        if (_unlockedBeforePoi >= 0)
-            State.Territory.SetUnlockedRegions(_unlockedBeforePoi);
+        foreach (var key in new List<int>(_presence.Keys))
+            if (_presence[key] >= PoiRoomIdBase)
+                _presence[key] = PlayerRoomId;
+        State.Territory.SetUnlockedRegions(_unlockedBeforePoi);
         _unlockedBeforePoi = -1;
         State.CurrentPoi = null;
+        LayerPlaceName = "";
     }
 
     /// <summary>非领地图层的地点名（任务地点名 / POI 名）。</summary>
@@ -179,7 +359,7 @@ public sealed partial class HubSession
     public IReadOnlyList<Room> Map()
     {
         if (Layer == MapLayer.World)
-            return _worldRooms ??= State.World.ExportTo5x5WorldRooms();
+            return WorldViewRooms();
         return State.Territory.Rooms.FindAll(r => r.RegionId == RegionId);
     }
 

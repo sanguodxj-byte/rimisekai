@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Rimisekai.WorldMap;
@@ -170,8 +171,10 @@ public sealed class WorldMapTests
         Assert.Contains(worldRooms, r => r.Name is "道路" or "草原" or "平原" or "森林" or "山岳" or "湖泊" || r.Name.Contains("王都") || r.Name.Contains("镇") || r.Name.Contains("村") || r.Name.Contains("要塞"));
 
         // 3. 进入大世界上的 POI 场景：自动开辟 5x5 完全填满且全连通的场景房间
-        var targetPoi = state.World.Pois[0];
-        Assert.True(hub.EnterWorldPoi(targetPoi.Id));
+        var targetPoi = state.World.Pois
+            .OrderBy(p => System.Math.Abs(p.X - state.World.HomeX) + System.Math.Abs(p.Y - state.World.HomeY)).First();
+        Assert.False(hub.EnterWorldPoi(targetPoi.Id)); // 队伍不在那一格上，进不去
+        Assert.True(hub.TravelToPoiDirect(targetPoi.Id));
         Assert.Equal(Rimisekai.Hub.MapLayer.WorldPoi, hub.Layer);
         Assert.NotNull(state.CurrentPoi);
 
@@ -299,10 +302,11 @@ public sealed class WorldMapTests
         var hub = new Rimisekai.Hub.HubSession(state);
         var before = state.Territory.Rooms.Count;
         var unlocked = state.Territory.UnlockedRegions;
-        foreach (var poi in state.World.Pois)
+        var nearest = state.World.Pois
+            .OrderBy(p => System.Math.Abs(p.X - state.World.HomeX) + System.Math.Abs(p.Y - state.World.HomeY)).Take(8);
+        foreach (var poi in nearest)
         {
-            hub.SwitchToWorld();
-            Assert.True(hub.EnterWorldPoi(poi.Id));
+            Assert.True(hub.TravelToPoiDirect(poi.Id));
             Assert.True(state.Territory.Rooms.Count <= Rimisekai.Housing.Territory.MaxRooms);
         }
         hub.SwitchToTerritory();

@@ -25,7 +25,7 @@ public sealed partial class HubSession : IVoiceSink
     private Room? Room(int id)
     {
         if (Layer == MapLayer.World)
-            return (_worldRooms ??= State.World.ExportTo5x5WorldRooms()).Find(r => r.Id == id);
+            return WorldViewRooms().Find(r => r.Id == id);
         return State.Territory.Rooms.Find(r => r.Id == id);
     }
 

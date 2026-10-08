@@ -212,6 +212,17 @@ public sealed class TerritoryClock
             var assignment = territory.ScheduleOf(character.Id).Slots[slot];
             if (character.IsMaster)
             {
+                // 主人出了领地（人在大地图上）：领地里没有他的身子，不跑任何自动行为。
+                if (ctx != null && ctx.PlayerRoomId < 0)
+                {
+                    var awayWorker = _workers.Find(w => w.CharacterId == character.Id);
+                    if (awayWorker != null && awayWorker.Goal != ActionKind.None)
+                    {
+                        EndRoutine(awayWorker);
+                        Release(awayWorker, used);
+                    }
+                    continue;
+                }
                 // 玩家在非工作时段（空闲或娱乐）不走自动工作，保持手动自由控制
                 if (assignment.Mode != SlotMode.Work)
                 {
@@ -638,7 +649,8 @@ public sealed class TerritoryClock
                     return;
             }
         }
-        if (character.Affect.ChatDesire >= SeekThreshold(character))
+        // 主人出了领地（人在大地图上，PlayerRoomId < 0）：家里的人找不到他，不起意去搭话。
+        if (ctx.PlayerRoomId >= 0 && character.Affect.ChatDesire >= SeekThreshold(character))
         {
             StartSeek(character, worker, used);
             return;

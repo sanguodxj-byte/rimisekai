@@ -16,6 +16,7 @@ namespace Rimisekai.Portrait;
 public partial class PortraitCapture : Node
 {
     private string _prefix = "";
+    private (int X, int Y) _travelTarget;
     private string _dump = "";
     private string _blind = "";
     private SubViewport _sub = null!;
@@ -215,7 +216,7 @@ public partial class PortraitCapture : Node
             _root.HubScreen.SetProcess(true);
             _root.HubScreen.QueueRedraw();
         });
-        // 世界层：整张生成器地图，视口以领地为中心；缩小看全图；点最近的聚落弹地点抽屉。
+        // 世界层：整张生成器地图，视口以领地（队伍）为中心，四周之外是迷雾；缩小看全图；点最近的聚落（还在迷雾里）弹地点抽屉。
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -241,8 +242,8 @@ public partial class PortraitCapture : Node
             _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
         });
         _steps.Enqueue(() => Shoot("world_poi_sheet", _root.HubScreen));
-        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled),
-            "poi sheet offers travel"));
+        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && !w.Enabled && w.Label == "未探明"),
+            "fogged poi sheet offers no travel"));
         _steps.Enqueue(() =>
         {
             _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
@@ -317,6 +318,76 @@ public partial class PortraitCapture : Node
             Require(tiers.SequenceEqual(new[] { 4, 4, 3 }), "empty columns compact at battle start, blocked rear hugs blocker");
         });
         EnqueueProgressChecks();
+        // 大地图行进（放在据点各页核对之后：行进会推进时间，免得扰动前面按开局时刻写的核对）：
+        // 出行 → 点一格已探明的地看路程 → 前往（逐格耗时、迷雾退开） → 走到最近的聚落进场 → 出来站在聚落格上 → 缩小看走过的路 → 返回领地（走回去）。
+        _steps.Enqueue(() => { _root.ModalLayer.Dismiss(); _root.HubScreen.ShowTab(0); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            var world = hub.State.World;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.World && hub.WorldPartyPosition == (world.HomeX, world.HomeY) && hub.PlayerRoomId == -1,
+                "travel puts the party on the home tile, out of every territory room");
+            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            var dx = System.Math.Sign(poi.X - world.HomeX);
+            var dy = System.Math.Sign(poi.Y - world.HomeY);
+            var target = (X: world.HomeX + 2 * dx, Y: world.HomeY + 2 * dy);
+            if (hub.WorldTravelMinutes(target.X, target.Y) <= 0)
+                target = Enumerable.Range(-2, 5).SelectMany(x => Enumerable.Range(-2, 5).Select(y => (X: world.HomeX + x, Y: world.HomeY + y)))
+                    .First(t => hub.WorldTravelMinutes(t.X, t.Y) > 0 && world.PoiAt(t.X, t.Y) == null);
+            _travelTarget = target;
+            _root.HubScreen.DebugWorldTap(target.X, target.Y);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "前往"),
+                "discovered tile sheet offers travel with its journey time");
+            Shoot("world_go_sheet", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.WorldGo, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.World && hub.WorldPartyPosition == _travelTarget && !hub.MapCovered,
+                "going walks the party there with nothing popping over the map");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => Shoot("world_walked", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            var world = hub.State.World;
+            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            Require(hub.TravelToPoiDirect(poi.Id), "walk on to the nearest settlement and enter");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the settlement");
+            Shoot("world_poi_inside", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.World, "leaving the settlement stands on its tile");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => Shoot("world_poi_out", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            for (var i = 0; i < 3; i++)
+                _root.HubScreen.DebugPress(PortraitAction.WorldZoomOut, 0);
+        });
+        _steps.Enqueue(() => Shoot("world_explored", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Exploration.AtHome && hub.PlayerRoomId >= 0,
+                "return walks back home into the room left from");
+            Shoot("world_back", _root.HubScreen);
+        });
         foreach (var size in new[] { 1, 2, 3, 4 })
         {
             var capturedSize = size;

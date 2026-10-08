@@ -305,6 +305,8 @@ public sealed partial class HubSession
         var room = Room(roomId);
         if (room == null || room.X < 0 || room.Y < 0)
             return -1;
+        if (room.RegionId >= Territory.MaxTerritoryRegions)
+            return PoiCrossLink(room)?.RegionId ?? -1;
         var dir = GateDirOf(room);
         if (dir == null)
             return -1;
@@ -317,12 +319,33 @@ public sealed partial class HubSession
         return neighbor;
     }
 
+    /// <summary>兴趣点里这间房通往别的块的那间房（生成器的边界通道）；没有返回 null。</summary>
+    private Room? PoiCrossLink(Room room)
+    {
+        foreach (var id in room.Links)
+        {
+            var other = State.Territory.Rooms.Find(r => r.Id == id);
+            if (other != null && other.Open && other.RegionId != room.RegionId)
+                return other;
+        }
+        return null;
+    }
+
     /// <summary>过界：把人送到对面区域的连接点房。</summary>
     public bool CrossTo(int regionId)
     {
         var here = Room(PlayerRoomId);
         if (here == null || CrossTargetRegion(here.Id) != regionId)
             return false;
+        if (here.RegionId >= Territory.MaxTerritoryRegions)
+        {
+            // 兴趣点的块与块之间不按领地的四正连接点，而是生成器打通的边界通道：直接走过去。
+            var across = PoiCrossLink(here)!;
+            PassTime(CostMove * TerritoryClock.StepMinutes);
+            Enter(across.Id);
+            WriteArrival(across.Id);
+            return true;
+        }
         var dir = GateDirOf(here);
         if (dir == null)
             return false;

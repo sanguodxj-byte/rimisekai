@@ -55,6 +55,9 @@ public sealed class GameState
     /// <summary>当前大世界地图数据。</summary>
     public WorldMapData World { get; set; }
 
+    /// <summary>大地图行进：队伍坐标与迷雾。随 <see cref="World"/> 一起重建，探明记录随存档走。</summary>
+    public WorldExploration Exploration { get; set; }
+
     /// <summary>当前探索/驻留的 POI 场景（若有）。</summary>
     public PoiMapData? CurrentPoi { get; set; }
 
@@ -63,6 +66,7 @@ public sealed class GameState
     public GameState()
     {
         World = WorldGenerator.Generate(WorldSeed);
+        Exploration = new WorldExploration(World);
         // 开局先掷一次首日行情，否则第一天集市全数无货。
         Territory.RollMarketDay(new Random(WorldSeed));
     }
@@ -72,6 +76,7 @@ public sealed class GameState
     {
         WorldSeed = seed == 0 ? 42 : seed;
         World = WorldGenerator.Generate(WorldSeed);
+        Exploration = new WorldExploration(World);
         CurrentPoi = null;
     }
 

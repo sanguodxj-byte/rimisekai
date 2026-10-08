@@ -1051,7 +1051,10 @@ public sealed class Territory
 
     public bool AddRoom(Room room)
     {
-        if (Rooms.Count >= MaxRooms || !IsRegionUnlocked(room.RegionId))
+        // 上限只管领地自己的房；兴趣点房（区号 ≥ MaxTerritoryRegions）是进场时的临时房，不占名额。
+        if (room.RegionId < MaxTerritoryRegions && Rooms.Count(r => r.RegionId < MaxTerritoryRegions) >= MaxRooms)
+            return false;
+        if (!IsRegionUnlocked(room.RegionId))
             return false;
         if (Rooms.Exists(r => r.Id == room.Id))
             return false;

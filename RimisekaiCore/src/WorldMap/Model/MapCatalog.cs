@@ -18,6 +18,9 @@ public sealed class TerrainDefEntry
 {
     public string Type { get; set; } = "";
     public string Name { get; set; } = "";
+
+    /// <summary>大地图上穿过一格这种地貌要花的分钟数（5 的倍数）；0 = 走不过去。</summary>
+    public int Travel { get; set; }
 }
 
 public sealed class PoiSettlementDefEntry
@@ -75,6 +78,7 @@ public sealed class MapCatalog
     public static MapCatalog Default => _instance ??= CreateDefault();
 
     private readonly Dictionary<WorldTerrainType, string> _terrainNames = new();
+    private readonly Dictionary<WorldTerrainType, int> _terrainTravel = new();
     private readonly Dictionary<string, List<string>> _poiNames = new();
     private readonly Dictionary<WorldPoiType, PoiScaleDef> _poiScales = new();
     private readonly Dictionary<string, DistrictTemplateDef> _districtTemplates = new();
@@ -89,6 +93,15 @@ public sealed class MapCatalog
 
     public string GetTerrainName(WorldTerrainType terrain) =>
         _terrainNames.TryGetValue(terrain, out var name) ? name : terrain.ToString();
+
+    /// <summary>
+    /// 大地图上踏进一格这种地貌要花的分钟数；0 = 不可通行。严格由 map_defs.json 的 travel 字段驱动，
+    /// 没配就是数据表缺项，直接抛。
+    /// </summary>
+    public int GetTravelMinutes(WorldTerrainType terrain) =>
+        _terrainTravel.TryGetValue(terrain, out var minutes)
+            ? minutes
+            : throw new KeyNotFoundException($"未在 map_defs.json 中配置地貌 {terrain} 的 travel");
 
     public RoomTemplateDef GetEntranceTemplate() => _entrances[0];
 
@@ -276,7 +289,10 @@ public sealed class MapCatalog
         foreach (var t in table.Terrains)
         {
             if (Enum.TryParse<WorldTerrainType>(t.Type, ignoreCase: true, out var parsed))
+            {
                 catalog._terrainNames[parsed] = t.Name;
+                catalog._terrainTravel[parsed] = t.Travel;
+            }
         }
 
         foreach (var p in table.PoiSettlements)

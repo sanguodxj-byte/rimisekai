@@ -890,12 +890,13 @@ public partial class InkHubScreen : Control
                     break;
                 if (vm.Hub.Layer == Rimisekai.Hub.MapLayer.World)
                 {
-                    // 世界层：点兴趣点所在格进入该地点。
-                    var poi = vm.Hub.State.World.Pois.Find(p =>
-                        p.NameZh == room.Name || p.NameEn == room.Name);
-                    _ui.Notice = poi != null && vm.Hub.EnterWorldPoi(poi.Id)
-                        ? ""
-                        : "这里无法进入。";
+                    // 世界层：沿已探明的格走过去；聚落进场、领地格回家。
+                    var (tx, ty) = vm.Hub.WorldTileOfViewRoom(room.Id);
+                    var poi = vm.Hub.State.World.PoiAt(tx, ty);
+                    var done = vm.Hub.WorldPartyPosition == (tx, ty) && poi != null
+                        ? vm.Hub.EnterWorldPoi(poi.Id)
+                        : vm.Hub.TravelTo(tx, ty);
+                    _ui.Notice = done ? "" : "这里去不了。";
                 }
                 else
                 {

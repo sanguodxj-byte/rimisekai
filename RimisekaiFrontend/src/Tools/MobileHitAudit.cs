@@ -86,7 +86,7 @@ public partial class MobileHitAudit : Node
         yield return ("poi", (hub, _, _) =>
         {
             if (hub.State.World.Pois.Count > 0)
-                hub.EnterWorldPoi(hub.State.World.Pois[0].Id);
+                hub.TravelToPoiDirect(hub.State.World.Pois[0].Id);
         });
         yield return ("storage", (hub, _, _) =>
         {
