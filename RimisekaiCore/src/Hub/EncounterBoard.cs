@@ -106,7 +106,7 @@ public sealed partial class HubSession
         var from = PlayerRoomId;
         foreach (var step in State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), ignoreLocks: true))
         {
-            PassTime(CostMove * TerritoryClock.StepMinutes);
+            Walk(CostMove * TerritoryClock.StepMinutes);
             Enter(step);
             CheckDungeonRoom(from, step);
             from = step;

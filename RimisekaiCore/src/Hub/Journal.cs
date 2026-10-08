@@ -39,8 +39,8 @@ public readonly record struct LogEntry(LogKind Kind, string Fact, string Feel, i
 
 /// <summary>
 /// 日志簿：两份视图。
-/// <see cref="Operation"/>＝这一次玩家操作的输出（快照，固定排版：环境 → 场景 → 他人 → 自己；
-/// 新操作的首次写入清空旧的），供操作反馈用。
+/// <see cref="Operation"/>＝这一次玩家操作的输出（快照，按写入先后排，即按时间；
+/// 同一角色的活动只留最新一句并挪到它写下的位置；新操作的首次写入清空旧的），供操作反馈用。
 /// <see cref="History"/>＝跨操作的近期日志（按写入先后，最旧在前，上限 <see cref="HistoryLimit"/>），
 /// 供领地页签的日志面板与日志页签用。同一角色的同一句活动不重复入史。
 /// </summary>
@@ -51,10 +51,7 @@ public sealed class LogBook
 
     private readonly List<LogEntry> _operation = new();
     private readonly List<LogEntry> _history = new();
-    private readonly List<LogEntry> _env = new();
-    private readonly List<LogEntry> _scene = new();
-    private readonly Dictionary<int, LogEntry> _activity = new();
-    private readonly List<LogEntry> _player = new();
+    private readonly List<(int Who, LogEntry Entry)> _snapshot = new();
     private readonly Dictionary<int, string> _lastActivity = new();
 
     private long _opId;
@@ -72,12 +69,7 @@ public sealed class LogBook
         if (entry.Fact.Length == 0 && entry.Feel.Length == 0)
             return;
         Fresh();
-        switch (entry.Kind)
-        {
-            case LogKind.Weather: _env.Add(entry); break;
-            case LogKind.Scene: _scene.Add(entry); break;
-            default: _player.Add(entry); break;
-        }
+        _snapshot.Add((-1, entry));
         Append(entry);
         Rebuild();
     }
@@ -88,7 +80,8 @@ public sealed class LogBook
         if (entry.Fact.Length == 0 && entry.Feel.Length == 0)
             return;
         Fresh();
-        _activity[characterId] = entry;
+        _snapshot.RemoveAll(s => s.Who == characterId);
+        _snapshot.Add((characterId, entry));
         var text = entry.Text;
         if (!_lastActivity.TryGetValue(characterId, out var last) || last != text)
         {
@@ -105,10 +98,7 @@ public sealed class LogBook
         _lastActivity.Clear();
         foreach (var entry in history)
             Append(entry);
-        _env.Clear();
-        _scene.Clear();
-        _activity.Clear();
-        _player.Clear();
+        _snapshot.Clear();
         _operation.Clear();
     }
 
@@ -123,10 +113,7 @@ public sealed class LogBook
     {
         if (_writtenAt == _opId)
             return;
-        _env.Clear();
-        _scene.Clear();
-        _activity.Clear();
-        _player.Clear();
+        _snapshot.Clear();
         _operation.Clear();
         _writtenAt = _opId;
     }
@@ -134,10 +121,8 @@ public sealed class LogBook
     private void Rebuild()
     {
         _operation.Clear();
-        _operation.AddRange(_env);
-        _operation.AddRange(_scene);
-        _operation.AddRange(_activity.Values);
-        _operation.AddRange(_player);
+        foreach (var (_, entry) in _snapshot)
+            _operation.Add(entry);
         while (_operation.Count > OperationLimit)
             _operation.RemoveAt(0);
     }
@@ -176,7 +161,7 @@ public sealed partial class HubSession
 
     /// <summary>
     /// 通用写入：天气类文字进天气层，其余作为玩家行动。
-    /// 快照的呈现顺序固定：天气 → 场景 → 他人 → 自己。
+    /// 快照按写入先后排（即按时间）。
     /// </summary>
     public void Write(string fact, string feel = "")
     {

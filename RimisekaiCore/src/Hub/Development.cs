@@ -365,7 +365,7 @@ public sealed partial class HubSession
         {
             // 兴趣点的块与块之间不按领地的四正连接点，而是生成器打通的边界通道：直接走过去。
             var across = PoiCrossLink(here)!;
-            PassTime(CostMove * TerritoryClock.StepMinutes);
+            Walk(CostMove * TerritoryClock.StepMinutes);
             Enter(across.Id);
             WriteArrival(across.Id);
             CheckDungeonRoom(here.Id, across.Id);
@@ -377,9 +377,10 @@ public sealed partial class HubSession
         var other = GateRoom(regionId, Territory.Opposite(dir.Value));
         if (other == null)
             return false;
-        PassTime(CostMove * TerritoryClock.StepMinutes);
+        Walk(CostMove * TerritoryClock.StepMinutes);
         Enter(other.Id);
         Write($"你去了{Territory.RegionName(regionId)}。");
+        SeeAround();
         return true;
     }
 

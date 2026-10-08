@@ -48,7 +48,7 @@ public sealed partial class HubSession
         if (InDungeon)
             return ArriveThroughDungeon(roomId);
         var steps = State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true).Count;
-        PassTime(CostMove * steps * TerritoryClock.StepMinutes);
+        Walk(CostMove * steps * TerritoryClock.StepMinutes);
         LeaveFixture();
         Enter(roomId);
         if (PlayerRoomId != roomId)
@@ -75,6 +75,7 @@ public sealed partial class HubSession
         var desc = SceneDescription(room);
         var fact = desc.Length > 0 ? $"你来到了{room.Name}。{desc}" : $"你来到了{room.Name}。";
         WriteScene(fact, MeetReaction(roomId));
+        SeeAround();
     }
 
     /// <summary>

@@ -90,8 +90,42 @@ public sealed partial class HubSession
     /// </summary>
     private void FlushActivities(StepContext ctx)
     {
+        // 走在路上：这段时间里人还没落脚，等进了门再按新房间看（见 Walk / SeeAround）。
+        if (_walking)
+        {
+            foreach (var (id, text) in ctx.Activity)
+                _walkSeen[id] = text;
+            return;
+        }
+        WriteActivities(ctx.Activity);
+    }
+
+    private bool _walking;
+    private readonly Dictionary<int, string> _walkSeen = new();
+
+    /// <summary>
+    /// 走过去花的时间：推进时不记活动，留到落脚后由 <see cref="SeeAround"/> 按落脚那间房写，
+    /// 不会把出发那间房里的人写进来到新房间的这次日志。
+    /// </summary>
+    private void Walk(int minutes)
+    {
+        _walkSeen.Clear();
+        _walking = true;
+        PassTime(minutes);
+        _walking = false;
+    }
+
+    /// <summary>落脚后：把走路途中最后看到的活动按此刻所在房间筛一遍写入（写在场景描述之后）。</summary>
+    private void SeeAround()
+    {
+        WriteActivities(_walkSeen);
+        _walkSeen.Clear();
+    }
+
+    private void WriteActivities(IReadOnlyDictionary<int, string> activity)
+    {
         // 人在大地图上（身子不在任何领地房间）：家里谁在做什么一概看不见。
-        if (ctx.Activity.Count == 0 || PlayerRoomId < 0)
+        if (activity.Count == 0 || PlayerRoomId < 0)
             return;
         // 按名册顺序输出，行序稳定，不随内部字典的插入顺序跳。
         foreach (var character in State.Roster.Members)
@@ -107,7 +141,7 @@ public sealed partial class HubSession
             if (!isHere && !isSeekingAtDoor)
                 continue;
 
-            if (ctx.Activity.TryGetValue(character.Id, out var text))
+            if (activity.TryGetValue(character.Id, out var text))
                 WriteActivity(character.Id, text);
         }
     }

@@ -32,15 +32,16 @@ public sealed class LogBookTests
     }
 
     [Fact]
-    public void Snapshot_orders_weather_scene_activity_then_player()
+    public void Snapshot_keeps_time_order_and_moves_a_newer_activity_to_its_place()
     {
         var book = new LogBook();
-        book.Write(E(LogKind.Action, "你坐下了。"));
+        book.Write(E(LogKind.Action, "你走出了领地。"));
         book.WriteActivity(2, E(LogKind.Activity, "赛琳在桌前计算符文配比。"));
         book.Write(E(LogKind.Scene, "你来到了工坊。"));
         book.Write(E(LogKind.Weather, "天气转为雨天。"));
-        Assert.Equal(new[] { LogKind.Weather, LogKind.Scene, LogKind.Activity, LogKind.Action },
-            book.Operation.Select(l => l.Kind));
+        book.WriteActivity(2, E(LogKind.Activity, "赛琳放下了羽毛笔。"));
+        Assert.Equal(new[] { "你走出了领地。", "你来到了工坊。", "天气转为雨天。", "赛琳放下了羽毛笔。" },
+            book.Operation.Select(l => l.Text));
     }
 
     [Fact]

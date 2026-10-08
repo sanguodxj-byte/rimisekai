@@ -538,6 +538,11 @@ public partial class PortraitCapture : Node
         var room = rooms.First(r => r.Id == hub.PlayerRoomId);
         Require(hub.History.Count > 0 && hub.History[^1].Kind == LogKind.Scene && hub.History[^1].Text.StartsWith($"你来到了{room.Name}"),
             "cell tap writes a scene log entry");
+        var log = hub.Log;
+        var away = party.Where(c => !c.IsPlayer && c.RoomId != hub.PlayerRoomId).Select(c => c.Name).ToList();
+        Require(log.Zip(log.Skip(1)).All(p => (p.First.Day, p.First.Minutes).CompareTo((p.Second.Day, p.Second.Minutes)) <= 0)
+            && !log.Any(e => e.Kind == LogKind.Activity && away.Any(n => e.Text.StartsWith(n))),
+            "log snapshot runs in time order and only carries what the player's room can perceive");
         Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.Tab && w.Index == 4 && w.Rect == PortraitLayout.LogPanel),
             "log panel taps through to log tab");
         Require(PortraitLayout.LogPanel.Size.Y >= 400f && PortraitLayout.LogPanel.End.Y < PortraitLayout.MapFrame.Position.Y

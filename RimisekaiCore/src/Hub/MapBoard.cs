@@ -425,7 +425,7 @@ public sealed partial class HubSession
         var next = Room(roomId);
         if (MapCovered || PendingEncounter != null || here == null || next == null || !next.Open || !here.Links.Contains(roomId))
             return false;
-        PassTime(CostMove * TerritoryClock.StepMinutes);
+        Walk(CostMove * TerritoryClock.StepMinutes);
         LeaveFixture();
         PlayerRoomId = roomId;
         RegionId = next.RegionId;
