@@ -213,6 +213,16 @@ public partial class PortraitHubScreen
             PortraitFrame.Fade(this, new Rect2(0, 1000f, PortraitLayout.CanvasWidth, 750f), 0f, 1f);
             PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, 300f), 0.85f, 0f);
         }
+        else if (actor != null)
+        {
+            // 没有立绘：说话人站在尖拱壁龛里（大方头像），立绘位不再整片空白。
+            var top = PortraitLayout.SafeTop + 20f + PortraitLayout.TouchMin + 120f;
+            var bottom = PortraitLayout.SceneDialog(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3)).Position.Y - 170f;
+            var h = Mathf.Min(1000f, bottom - top);
+            if (h > 360f)
+                PortraitSystemArt.PortraitNiche(this, new Rect2(PortraitLayout.CanvasWidth / 2f - h * 0.36f, bottom - h, h * 0.72f, h),
+                    PortraitAvatars.Resolve(actor), actor.Name);
+        }
 
         InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad, PortraitLayout.SafeTop + 20f, 380f, PortraitLayout.TouchMin),
             hub.PlaceName(), PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");

@@ -130,7 +130,8 @@ public partial class PortraitHubScreen
             PortraitFrame.Fade(this, new Rect2(0, head.Position.Y + 250f, head.Size.X, 370f), 0f, 1f);
         }
         else
-            PortraitFrame.Avatar(this, head.GetCenter(), 200f, PortraitAvatars.Resolve(who), who.Name);
+            PortraitSystemArt.PortraitNiche(this, new Rect2(head.GetCenter().X - 230f, head.Position.Y + 50f, 460f, 570f),
+                PortraitAvatars.Resolve(who), who.Name);
 
         var segAt = y0 + 640f;
         var y = segAt + PortraitLayout.TouchMin + 48f;

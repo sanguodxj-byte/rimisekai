@@ -443,35 +443,20 @@ public partial class PortraitTitleView : Control
                 var r = new Rect2(PortraitLayout.Pad, view.Position.Y + i * SlotStep - _first, PortraitLayout.FullWidth, 230f);
                 if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                     continue;
-                PortraitFrame.Card(this, r);
-                var thumb = new Rect2(r.Position.X + 40f, r.Position.Y + 35f, 220f, 160f);
-                DrawRect(thumb, InkStyle.Bg);
-                InkDraw.Ink(this, new[] { thumb.Position, new Vector2(thumb.End.X, thumb.Position.Y), thumb.End,
-                    new Vector2(thumb.Position.X, thumb.End.Y), thumb.Position }, InkStyle.Dim, 3f);
-                PortraitGlyph.Castle(this, thumb.GetCenter().X, thumb.GetCenter().Y, 44f, InkStyle.Dim);
-                var x = thumb.End.X + 40f;
-                InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 36f, r.End.X - x - 200f, 70f), slot.TerritoryName,
-                    PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-                InkDraw.Text(this, new Vector2(r.End.X - 40f, r.Position.Y + 72f), $"第 {slot.Day} 日", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-                var time = DateTime.ParseExact(slot.Timestamp, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-                InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 130f, r.End.X - x - 40f, 60f),
-                    time.ToString("yyyy-MM-dd HH时mm分", System.Globalization.CultureInfo.InvariantCulture),
-                    PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+                PortraitSystemArt.SaveCard(this, r, slot, i == 0, PortraitFrame.IsPressed(r.Intersection(view)));
                 var shown = r.Intersection(view);
                 if (shown.Size.Y >= PortraitLayout.TouchMin)
                     _hits.Add(new PortraitWidget(shown, PortraitAction.SavePick, i, true, slot.FilePath));
             }
+            if (slots.Count == 0)
+                PortraitSystemArt.EmptySaves(this, view);
         }
         else
         {
             var y = view.Position.Y + 20f;
-            InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, y + 59f), "主音量", PortraitLayout.FontBody, InkStyle.Line, "lm");
-            var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
             var volume = InkSettings.CurrentMasterVolume;
-            PortraitFrame.Bar(this, track, volume);
-            var knob = new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y);
-            InkDraw.Jewel(this, knob, 30f, InkStyle.Line);
-            InkDraw.Jewel(this, knob, 11f, InkStyle.Bg);
+            PortraitSystemArt.Volume(this, y, volume);
+            var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
             var band = new Rect2(track.Position.X - 60f, y, track.Size.X + 120f, PortraitLayout.TouchMin);
             for (var i = 0; i <= 4; i++)
             {
@@ -479,8 +464,6 @@ public partial class PortraitTitleView : Control
                 _hits.Add(new PortraitWidget(new Rect2(cx - track.Size.X / 8f, y, track.Size.X / 4f, PortraitLayout.TouchMin).Intersection(band),
                     PortraitAction.SystemToggle, i, true, $"{i * 25}"));
             }
-            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 150f), $"{(int)(volume * 100)}",
-                PortraitLayout.FontMeta, InkStyle.Dim, "rm");
         }
 
         var top = PortraitLayout.PageTop;

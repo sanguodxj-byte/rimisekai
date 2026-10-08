@@ -464,7 +464,11 @@ public partial class PortraitHubScreen : Control
         var width = Mathf.Min(PortraitLayout.FullWidth, widest + 96f);
         var height = 48f + lines.Count * PortraitLayout.ToastLine;
         var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - height, width, height);
-        PortraitFrame.RoundRect(this, r, Mathf.Min(48f, height / 2f), new Color(InkStyle.Hover, 0.96f), InkStyle.Line, 3f);
+        // 倒角签（不用圆头药丸）：外线银白、内收一道暗线，两端各一粒小菱。
+        PortraitFrame.Bevel(this, r, 40f, new Color(InkStyle.Hover, 0.97f), InkStyle.Line, 3f);
+        PortraitFrame.Bevel(this, r.Grow(-9f), 26f, null, new Color(InkStyle.WoodDark, 0.9f), 2f);
+        foreach (var side in new[] { r.Position.X, r.End.X })
+            InkDraw.Jewel(this, new Vector2(side, r.GetCenter().Y), 9f, InkStyle.Line);
         for (var i = 0; i < lines.Count; i++)
             InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 24f + (i + 0.5f) * PortraitLayout.ToastLine), lines[i],
                 PortraitLayout.FontMeta, InkStyle.Line, "cm");

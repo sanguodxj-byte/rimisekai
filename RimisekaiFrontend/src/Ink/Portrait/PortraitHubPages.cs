@@ -410,41 +410,23 @@ public partial class PortraitHubScreen
             var r = new Rect2(PortraitLayout.Pad, add.End.Y + 20f + i * step, PortraitLayout.FullWidth, 230f);
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
-            DrawSaveCard(r, slot);
+            DrawSaveCard(r, slot, i == 0);
             AddClipped(r, view, PortraitAction.SavePick, i, true, slot.FilePath);
         }
         RegisterScroll("system", view, total, (int)view.Size.Y, offset, v => _pan["system"] = v, 1f);
     }
 
-    private void DrawSaveCard(Rect2 r, SaveSlotInfo slot)
-    {
-        PortraitFrame.Card(this, r);
-        var thumb = new Rect2(r.Position.X + 40f, r.Position.Y + 35f, 220f, 160f);
-        DrawRect(thumb, InkStyle.Bg);
-        InkDraw.Ink(this, RectLoop(thumb), InkStyle.Dim, 3f);
-        PortraitGlyph.Castle(this, thumb.GetCenter().X, thumb.GetCenter().Y, 44f, InkStyle.Dim);
-        var x = thumb.End.X + 40f;
-        InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 36f, r.End.X - x - 200f, 70f), slot.TerritoryName,
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        InkDraw.Text(this, new Vector2(r.End.X - 40f, r.Position.Y + 72f), $"第 {slot.Day} 日", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-        var time = DateTime.ParseExact(slot.Timestamp, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-        InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 130f, r.End.X - x - 40f, 60f),
-            time.ToString("yyyy-MM-dd HH时mm分", System.Globalization.CultureInfo.InvariantCulture),
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-    }
+    private void DrawSaveCard(Rect2 r, SaveSlotInfo slot, bool latest) =>
+        PortraitSystemArt.SaveCard(this, r, slot, latest, PortraitFrame.IsPressed(r));
 
     /// <summary>快速设置：主音量滑条（五档命中，画面连续）。手机上没有窗口模式与垂直同步可调。</summary>
     private void DrawSettings(Rect2 view)
     {
         InkSettings.EnsureLoaded();
         var y = view.Position.Y + 20f;
-        InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, y + 59f), "主音量", PortraitLayout.FontBody, InkStyle.Line, "lm");
-        var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
         var volume = InkSettings.CurrentMasterVolume;
-        PortraitFrame.Bar(this, track, volume);
-        var knob = new Vector2(track.Position.X + track.Size.X * volume, track.GetCenter().Y);
-        InkDraw.Jewel(this, knob, 30f, InkStyle.Line);
-        InkDraw.Jewel(this, knob, 11f, InkStyle.Bg);
+        PortraitSystemArt.Volume(this, y, volume);
+        var track = new Rect2(380f, y + 51f, PortraitLayout.CanvasWidth - 380f - PortraitLayout.Pad - 40f, 16f);
         for (var i = 0; i <= 4; i++)
         {
             var cx = track.Position.X + track.Size.X * i / 4f;
@@ -452,10 +434,6 @@ public partial class PortraitHubScreen
             _widgets.Add(new PortraitWidget(hit.Intersection(new Rect2(track.Position.X - 60f, y, track.Size.X + 120f, PortraitLayout.TouchMin)),
                 PortraitAction.VolumeSet, i, true, $"{i * 25}"));
         }
-        InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 150f), $"{(int)(volume * 100)}",
-            PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-        InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad, y + 200f), new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 200f),
-            InkStyle.Hover, 2f);
     }
 
     private void LoadSave(string path)
