@@ -105,7 +105,11 @@ public partial class PortraitHubScreen
         var nameBox = present.Length == 0 ? inner.Grow(-10f)
             : new Rect2(inner.Position.X + 10f, inner.Position.Y + 10f, inner.Size.X - 20f,
                 pieces.End.Y - PortraitLayout.PieceHeight - 6f - (inner.Position.Y + 10f));
-        InkDraw.TextStacked(this, nameBox, nameBox, room.Name, PortraitLayout.FontMeta,
+        // 有人时房名那一截只有棋子上方的高度：拆两行的名（西南庭院）字号收到两行放得下，不压到王棋的十字顶。
+        var nameSize = present.Length > 0 && InkDraw.Measure(room.Name, PortraitLayout.FontMeta).X > nameBox.Size.X
+            ? Math.Min(PortraitLayout.FontMeta, (int)(nameBox.Size.Y / 2f) - 4)
+            : PortraitLayout.FontMeta;
+        InkDraw.TextStacked(this, nameBox, nameBox, room.Name, nameSize,
             room.Vacant ? InkStyle.Dim : InkStyle.Line);
 
         DrawCellPieces(present, pieces);
