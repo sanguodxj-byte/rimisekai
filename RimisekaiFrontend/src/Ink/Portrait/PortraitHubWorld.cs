@@ -9,10 +9,9 @@ namespace Rimisekai.Portrait;
 
 /// <summary>
 /// 世界层：领地页签的地图框里换成生成器的整张大世界（默认 128×128 格），可拖动平移、滚轮 / 按钮缩放。
-/// 底图由 <see cref="PortraitWorldAtlas"/> 烘好；迷雾（<see cref="PortraitWorldFog"/>）盖住未探明的格，
-/// 聚落、领地、队伍、选中格运行时矢量绘制，迷雾里的聚落不画。
-/// 打开时视口以队伍为中心。点任一格弹出地点抽屉：已探明且走得过去的格可「前往」（沿已探明的格按地貌耗时逐格走过去），
-/// 到聚落即进场、到领地即回家；迷雾里的格只写「未探明」。
+/// 底图由 <see cref="PortraitWorldAtlas"/> 烘好；聚落、领地、队伍、选中格运行时矢量绘制。全图可见，没有迷雾。
+/// 打开时视口以队伍为中心。点任一格弹出地点抽屉：走得过去的格可「前往」（沿最省时的路按地貌耗时逐格走过去），
+/// 到聚落即进场、到领地即回家。
 /// </summary>
 public sealed partial class PortraitHubScreen
 {
@@ -104,14 +103,12 @@ public sealed partial class PortraitHubScreen
         var origin = _worldCenter - WorldSpan / 2f;
         var src = new Rect2(origin * PortraitWorldAtlas.TilePx, WorldSpan * PortraitWorldAtlas.TilePx);
         DrawTextureRectRegion(tex, grid, src);
-        // 迷雾：一格一像素的遮罩按同一视口拉伸盖上去（线性过滤，边缘自然晕开）。
-        DrawTextureRectRegion(PortraitWorldFog.Texture(map, _vm.Hub), grid, new Rect2(origin, WorldSpan));
 
         // 聚落：小的先画，王都最后画在上面；名字按缩放分级出现。
         foreach (var poi in map.Pois.OrderBy(p => -(int)p.Type))
         {
             var c = WorldToScreen(new Vector2(poi.X + 0.5f, poi.Y + 0.5f));
-            if (!grid.Grow(-6f).HasPoint(c) || !_vm.Hub.IsWorldDiscovered(poi.X, poi.Y))
+            if (!grid.Grow(-6f).HasPoint(c))
                 continue;
             DrawPoiMark(poi.Type, c);
             var major = poi.Type is WorldPoiType.Capital or WorldPoiType.Town;
@@ -336,7 +333,7 @@ public sealed partial class PortraitHubScreen
                 _sheet = SheetKind.None;
                 var poi = map.PoiAt(_worldPick.X, _worldPick.Y);
                 var standing = _vm.Hub.WorldPartyPosition == (_worldPick.X, _worldPick.Y);
-                // 已站在聚落格上＝直接进场；否则沿已探明的格走过去（到聚落进场、到领地回家）。
+                // 已站在聚落格上＝直接进场；否则沿最省时的路走过去（到聚落进场、到领地回家）。
                 var done = standing && poi != null ? _vm.Hub.EnterWorldPoi(poi.Id) : _vm.Hub.TravelTo(_worldPick.X, _worldPick.Y);
                 if (!done)
                     SetNotice("这里去不了。");
@@ -372,13 +369,11 @@ public sealed partial class PortraitHubScreen
         if (tile == null)
             return top;
         var hub = _vm.Hub;
-        var seen = hub.IsWorldDiscovered(x, y);
         var isHome = map.HasHome && x == map.HomeX && y == map.HomeY;
-        var poi = seen ? map.PoiAt(x, y) : null;
+        var poi = map.PoiAt(x, y);
         var terrain = Rimisekai.WorldMap.Generators.NameGenerator.GenerateTerrainName(tile.Terrain).zh;
-        var title = !seen ? "未探明" : isHome ? TerritoryName() : poi != null ? poi.NameZh : map.TileName(x, y);
-        var kind = !seen ? "迷雾" : isHome ? "你的领地" : poi != null ? PoiTypeName(poi.Type) : "野外";
-        var kindLine = seen ? $"{kind} · {terrain}" : kind;
+        var title = isHome ? TerritoryName() : poi != null ? poi.NameZh : map.TileName(x, y);
+        var kind = isHome ? "你的领地" : poi != null ? PoiTypeName(poi.Type) : "野外";
 
         var icon = new Rect2(PortraitLayout.Pad + 20f, top + 70f, 150f, 150f);
         DrawRect(icon, InkStyle.Bg);
@@ -387,15 +382,13 @@ public sealed partial class PortraitHubScreen
         var src = new Rect2(new Vector2(x - span / 2f + 0.5f, y - span / 2f + 0.5f) * PortraitWorldAtlas.TilePx,
             Vector2.One * span * PortraitWorldAtlas.TilePx);
         DrawTextureRectRegion(tex, icon.Grow(-6f), src);
-        DrawTextureRectRegion(PortraitWorldFog.Texture(map, hub), icon.Grow(-6f),
-            new Rect2(new Vector2(x - span / 2f + 0.5f, y - span / 2f + 0.5f), Vector2.One * span));
         var mid = new Rect2(icon.GetCenter() - Vector2.One * (icon.Size.X - 12f) / span / 2f, Vector2.One * (icon.Size.X - 12f) / span);
         InkDraw.Ink(this, RectLoop(mid), InkStyle.Line, 2.5f);
         InkDraw.Ink(this, RectLoop(icon), InkStyle.Dim, 3f);
 
         InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 76f, 620f, 76f), title,
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 156f, 620f, 56f), kindLine,
+        InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 156f, 620f, 56f), $"{kind} · {terrain}",
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
 
         var close = PortraitLayout.SheetClose(top);
@@ -406,13 +399,13 @@ public sealed partial class PortraitHubScreen
         var way = tile.IsBridge ? "桥" : tile.IsRoad ? (tile.RoadClass >= 2 ? "官道" : tile.RoadClass == 1 ? "车道" : "野径")
             : tile.IsRiver ? "河流" : "无路";
         var standing = hub.WorldPartyPosition == (x, y);
-        var minutes = seen ? hub.WorldTravelMinutes(x, y) : -1;
-        var journey = !seen ? "未探明" : standing ? "就在此处" : minutes < 0 ? (map.IsPassable(x, y) ? "无路可达" : "无法通行")
+        var minutes = hub.WorldTravelMinutes(x, y);
+        var journey = standing ? "就在此处" : minutes < 0 ? (map.IsPassable(x, y) ? "无路可达" : "无法通行")
             : minutes >= 60 ? $"{minutes / 60} 时 {minutes % 60:00} 分" : $"{minutes} 分";
         var lines = new[]
         {
-            ("地区", !seen ? "未探明" : region != null && region.NameZh.Length > 0 ? region.NameZh : "无名之地"),
-            ("道路", seen ? way : "未探明"),
+            ("地区", region != null && region.NameZh.Length > 0 ? region.NameZh : "无名之地"),
+            ("道路", way),
             ("路程", journey),
             ("距领地", map.HasHome ? $"{Math.Abs(x - map.HomeX) + Math.Abs(y - map.HomeY)} 格" : "—"),
         };
@@ -425,7 +418,7 @@ public sealed partial class PortraitHubScreen
         }
 
         var canGo = standing ? poi != null || isHome : minutes > 0;
-        var goLabel = !seen ? "未探明" : standing ? (poi != null ? "进入" : isHome ? "回到领地" : "已在此处")
+        var goLabel = standing ? (poi != null ? "进入" : isHome ? "回到领地" : "已在此处")
             : minutes < 0 ? "去不了" : isHome ? "回到领地" : "前往";
         PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "收起");
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.SheetClose, 1, true, "收起"));

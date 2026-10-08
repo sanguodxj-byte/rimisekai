@@ -890,7 +890,7 @@ public partial class InkHubScreen : Control
                     break;
                 if (vm.Hub.Layer == Rimisekai.Hub.MapLayer.World)
                 {
-                    // 世界层：沿已探明的格走过去；聚落进场、领地格回家。
+                    // 世界层：沿最省时的路走过去；聚落进场、领地格回家。
                     var (tx, ty) = vm.Hub.WorldTileOfViewRoom(room.Id);
                     var poi = vm.Hub.State.World.PoiAt(tx, ty);
                     var done = vm.Hub.WorldPartyPosition == (tx, ty) && poi != null

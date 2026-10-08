@@ -184,12 +184,11 @@ public sealed class WorldMapData
 
     /// <summary>
     /// 两格之间的最省时路线（Dijkstra，四向，代价＝踏进下一格的分钟数）。
-    /// <paramref name="allowed"/> 限定能走的格（如「已探明的格」）；起点不受限。
     /// 返回不含起点、含终点的格序列；走不到返回 null，原地返回空表。
     /// </summary>
-    public List<(int x, int y)>? FindRoute(int fromX, int fromY, int toX, int toY, System.Func<int, int, bool> allowed)
+    public List<(int x, int y)>? FindRoute(int fromX, int fromY, int toX, int toY)
     {
-        if (!InBounds(toX, toY) || !IsPassable(toX, toY) || !allowed(toX, toY))
+        if (!InBounds(toX, toY) || !IsPassable(toX, toY))
             return null;
         var route = new List<(int x, int y)>();
         if (fromX == toX && fromY == toY)
@@ -216,7 +215,7 @@ public sealed class WorldMapData
             {
                 var nx = ax + dx;
                 var ny = ay + dy;
-                if (!InBounds(nx, ny) || !allowed(nx, ny))
+                if (!InBounds(nx, ny))
                     continue;
                 var step = TravelMinutes(nx, ny);
                 if (step <= 0)

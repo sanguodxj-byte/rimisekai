@@ -9,7 +9,7 @@ using Xunit;
 namespace Rimisekai.Tests;
 
 /// <summary>
-/// 大地图行进：领地落位、迷雾、按地貌耗时的逐格行进、
+/// 大地图行进：领地落位、按地貌耗时的逐格行进、
 /// 兴趣点进出（编号不撞领地房、反复进出不叠房）、回领地要走回去、存档不留兴趣点房。
 /// </summary>
 public sealed class WorldTravelTests
@@ -29,13 +29,13 @@ public sealed class WorldTravelTests
 
     private static int Now(GameState s) => (s.Clock.Day - 1) * 24 * 60 + s.Clock.Minutes;
 
-    /// <summary>队伍四邻里一格已探明、走得过去、又不是兴趣点或领地的格。</summary>
+    /// <summary>队伍四邻里一格走得过去、又不是兴趣点或领地的格。</summary>
     private static (int X, int Y) PlainNeighbour(HubSession hub)
     {
         var w = hub.State.World;
         var (px, py) = hub.WorldPartyPosition;
         return Enumerable.Range(-2, 5).SelectMany(dx => Enumerable.Range(-2, 5).Select(dy => (X: px + dx, Y: py + dy)))
-            .Where(t => (t.X, t.Y) != (px, py) && w.InBounds(t.X, t.Y) && hub.IsWorldDiscovered(t.X, t.Y)
+            .Where(t => (t.X, t.Y) != (px, py) && w.InBounds(t.X, t.Y)
                 && w.IsPassable(t.X, t.Y) && w.PoiAt(t.X, t.Y) == null && (t.X, t.Y) != (w.HomeX, w.HomeY)
                 && hub.WorldTravelMinutes(t.X, t.Y) > 0)
             .OrderByDescending(t => System.Math.Abs(t.X - px) + System.Math.Abs(t.Y - py))
@@ -56,46 +56,30 @@ public sealed class WorldTravelTests
     }
 
     [Fact]
-    public void Going_out_puts_the_party_on_the_home_tile_with_fog_around()
+    public void Going_out_puts_the_party_on_the_home_tile()
     {
         var (hub, state) = Setup();
         hub.SwitchToWorld();
         var w = state.World;
         Assert.Equal((w.HomeX, w.HomeY), hub.WorldPartyPosition);
         Assert.Equal(-1, hub.PlayerRoomId);
-        Assert.True(hub.IsWorldDiscovered(w.HomeX + 2, w.HomeY + 2));
-        Assert.False(hub.IsWorldDiscovered(w.HomeX + 4, w.HomeY));
         // 横版视口以队伍为中心，队伍脚下那间房在里面。
         Assert.Contains(hub.Map(), r => r.Id == hub.WorldPartyViewRoomId);
         Assert.Equal((w.HomeX, w.HomeY), hub.WorldTileOfViewRoom(hub.WorldPartyViewRoomId));
     }
 
     [Fact]
-    public void Walking_spends_time_by_terrain_and_reveals_fog()
+    public void Walking_spends_time_by_terrain()
     {
         var (hub, state) = Setup();
         hub.SwitchToWorld();
         var (tx, ty) = PlainNeighbour(hub);
         var minutes = hub.WorldTravelMinutes(tx, ty);
         var before = Now(state);
-        var seenBefore = state.Exploration.DiscoveredCount;
         Assert.True(hub.TravelTo(tx, ty));
         Assert.Equal(before + minutes, Now(state));
         Assert.Equal((tx, ty), hub.WorldPartyPosition);
-        Assert.True(state.Exploration.DiscoveredCount >= seenBefore);
         Assert.Contains("你来到了", string.Join("\n", hub.History.Select(l => l.Fact)));
-    }
-
-    [Fact]
-    public void Fogged_tiles_cannot_be_targeted()
-    {
-        var (hub, state) = Setup();
-        hub.SwitchToWorld();
-        var w = state.World;
-        var far = Enumerable.Range(0, w.Width).SelectMany(x => Enumerable.Range(0, w.Height).Select(y => (x, y)))
-            .First(t => w.IsPassable(t.x, t.y) && !hub.IsWorldDiscovered(t.x, t.y));
-        Assert.Equal(-1, hub.WorldTravelMinutes(far.x, far.y));
-        Assert.False(hub.TravelTo(far.x, far.y));
     }
 
     [Fact]
@@ -109,7 +93,7 @@ public sealed class WorldTravelTests
         hub.SwitchToTerritory();
         Assert.True(Now(state) > before);
         Assert.Equal(MapLayer.Territory, hub.Layer);
-        Assert.True(state.Exploration.AtHome);
+        Assert.True(state.Party.AtHome);
         Assert.Equal(1, hub.PlayerRoomId);
     }
 
@@ -125,7 +109,7 @@ public sealed class WorldTravelTests
         Assert.Equal(MapLayer.WorldPoi, hub.Layer);
         hub.SwitchToWorld();
         Assert.Equal((poi.X, poi.Y), hub.WorldPartyPosition);
-        // 走过的路已探明：从这里点回领地格就是走回去。
+        // 从这里点回领地格就是走回去。
         Assert.True(hub.TravelTo(w.HomeX, w.HomeY));
         Assert.Equal(MapLayer.Territory, hub.Layer);
     }
@@ -176,7 +160,7 @@ public sealed class WorldTravelTests
     }
 
     [Fact]
-    public void Saving_inside_a_poi_keeps_no_poi_rooms_and_restores_home_and_fog()
+    public void Saving_inside_a_poi_keeps_no_poi_rooms_and_restores_home()
     {
         var (hub, state) = Setup();
         hub.SwitchToWorld();
@@ -184,7 +168,6 @@ public sealed class WorldTravelTests
         Assert.True(hub.TravelTo(tx, ty));
         var w = state.World;
         Assert.True(hub.TravelToPoiDirect(w.Pois.OrderBy(p => System.Math.Abs(p.X - w.HomeX) + System.Math.Abs(p.Y - w.HomeY)).First().Id));
-        var discovered = state.Exploration.DiscoveredCount;
         var unlocked = hub.TerritoryUnlockedRegions;
 
         var data = SaveSystem.Capture(state, hub);
@@ -193,8 +176,7 @@ public sealed class WorldTravelTests
         Assert.Equal(unlocked, data.Territory.UnlockedRegions);
 
         var loaded = SaveSystem.Restore(data);
-        Assert.True(loaded.Exploration.DiscoveredCount >= discovered);
-        Assert.True(loaded.Exploration.AtHome);
+        Assert.True(loaded.Party.AtHome);
     }
 
     [Fact]

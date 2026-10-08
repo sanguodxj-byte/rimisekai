@@ -243,9 +243,6 @@ public sealed class SaveData
     public int Prestige { get; set; }
     public Weather Weather { get; set; }
     public int WorldSeed { get; set; } = 42;
-
-    /// <summary>大地图已探明的格（位图 Base64，见 <c>WorldExploration.Serialize</c>）。</summary>
-    public string WorldDiscovered { get; set; } = "";
     public List<MemberData> Members { get; set; } = new();
     public TerritoryData Territory { get; set; } = new();
     public Dictionary<int, int> ClearCount { get; set; } = new();
@@ -292,7 +289,6 @@ public static class SaveSystem
             Prestige = state.Prestige,
             Weather = state.Weather,
             WorldSeed = state.WorldSeed,
-            WorldDiscovered = state.Exploration.Serialize(),
             ReturnedFromCombat = state.ReturnedFromCombat,
             Hub = hub?.Snapshot(),
         };
@@ -463,7 +459,6 @@ public static class SaveSystem
         state.Weather = data.Weather;
         if (data.WorldSeed != state.WorldSeed)
             state.RegenerateWorld(data.WorldSeed);
-        state.Exploration.Restore(data.WorldDiscovered);
         state.Territory.Name = data.Territory.Name;
         state.Territory.SetLevel(data.Territory.Level);
         state.Territory.SetUnlockedRegions(data.Territory.UnlockedRegions);

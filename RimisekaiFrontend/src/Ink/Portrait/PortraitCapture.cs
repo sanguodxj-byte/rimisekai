@@ -216,7 +216,7 @@ public partial class PortraitCapture : Node
             _root.HubScreen.SetProcess(true);
             _root.HubScreen.QueueRedraw();
         });
-        // 世界层：整张生成器地图，视口以领地（队伍）为中心，四周之外是迷雾；缩小看全图；点最近的聚落（还在迷雾里）弹地点抽屉。
+        // 世界层：整张生成器地图，视口以领地（队伍）为中心；缩小看全图；点最近的聚落弹地点抽屉。
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -242,8 +242,8 @@ public partial class PortraitCapture : Node
             _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
         });
         _steps.Enqueue(() => Shoot("world_poi_sheet", _root.HubScreen));
-        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && !w.Enabled && w.Label == "未探明"),
-            "fogged poi sheet offers no travel"));
+        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "前往"),
+            "poi sheet offers travel"));
         _steps.Enqueue(() =>
         {
             _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
@@ -319,7 +319,7 @@ public partial class PortraitCapture : Node
         });
         EnqueueProgressChecks();
         // 大地图行进（放在据点各页核对之后：行进会推进时间，免得扰动前面按开局时刻写的核对）：
-        // 出行 → 点一格已探明的地看路程 → 前往（逐格耗时、迷雾退开） → 走到最近的聚落进场 → 出来站在聚落格上 → 缩小看走过的路 → 返回领地（走回去）。
+        // 出行 → 点一格看路程 → 前往（逐格耗时） → 走到最近的聚落进场 → 出来站在聚落格上 → 缩小看走过的路 → 返回领地（走回去）。
         _steps.Enqueue(() => { _root.ModalLayer.Dismiss(); _root.HubScreen.ShowTab(0); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
@@ -341,7 +341,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "前往"),
-                "discovered tile sheet offers travel with its journey time");
+                "tile sheet offers travel with its journey time");
             Shoot("world_go_sheet", _root.HubScreen);
             _root.HubScreen.DebugPress(PortraitAction.WorldGo, 0);
         });
@@ -384,7 +384,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
-            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Exploration.AtHome && hub.PlayerRoomId >= 0,
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Party.AtHome && hub.PlayerRoomId >= 0,
                 "return walks back home into the room left from");
             Shoot("world_back", _root.HubScreen);
         });

@@ -1231,7 +1231,7 @@ public sealed class InkHubModel
                 bool enabled;
                 if (world)
                 {
-                    // 世界层：探明且走得过去的格都可点（走过去；聚落进场、领地格回家）。
+                    // 世界层：走得过去的格都可点（走过去；聚落进场、领地格回家）。
                     enabled = room.Open;
                 }
                 else

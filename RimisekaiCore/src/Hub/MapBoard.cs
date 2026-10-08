@@ -54,13 +54,10 @@ public sealed partial class HubSession
     /// </summary>
     public const int PoiRoomIdBase = 1_000_000;
 
-    private WorldExploration Explore => State.Exploration;
+    private WorldParty Trek => State.Party;
 
     /// <summary>队伍在大地图上的格点。人在领地里时站在领地格。</summary>
-    public (int X, int Y) WorldPartyPosition => (Explore.PartyX, Explore.PartyY);
-
-    /// <summary>这一格是否已探明（迷雾外）。</summary>
-    public bool IsWorldDiscovered(int x, int y) => Explore.IsDiscovered(x, y);
+    public (int X, int Y) WorldPartyPosition => (Trek.X, Trek.Y);
 
     /// <summary>
     /// 出行：从领地走上大地图（队伍站在领地格），或从兴趣点走出来（队伍站在该兴趣点格）。
@@ -82,14 +79,14 @@ public sealed partial class HubSession
         if (PlayerRoomId >= 0)
             _territoryHomeRoomId = PlayerRoomId;
         LeaveTerritoryBody();
-        Explore.PlaceParty(State.World.HomeX, State.World.HomeY);
+        Trek.MoveTo(State.World.HomeX, State.World.HomeY);
         _worldRooms = null;
         SetLayer(MapLayer.World);
         Write("你走出了领地。");
     }
 
     /// <summary>
-    /// 返回领地：人在兴趣点或大地图上时，沿已探明的格走回领地格（路上照样耗时），
+    /// 返回领地：人在兴趣点或大地图上时，沿最省时的路走回领地格（路上照样耗时），
     /// 再把人送回出发前站的那间本家房间。
     /// </summary>
     public void SwitchToTerritory()
@@ -102,11 +99,10 @@ public sealed partial class HubSession
             LeaveTerritoryBody();
             SetLayer(MapLayer.World);
         }
-        if (!Explore.AtHome)
+        if (!Trek.AtHome)
         {
-            var home = State.World.FindRoute(Explore.PartyX, Explore.PartyY,
-                State.World.HomeX, State.World.HomeY, Explore.IsDiscovered)
-                ?? throw new System.InvalidOperationException("大地图上找不到回领地的路：走过的格一定连着领地。");
+            var home = State.World.FindRoute(Trek.X, Trek.Y, State.World.HomeX, State.World.HomeY)
+                ?? throw new System.InvalidOperationException("大地图上找不到回领地的路：走得到这里就一定走得回去。");
             WalkWorld(home);
         }
         SetLayer(MapLayer.Territory);
@@ -138,7 +134,7 @@ public sealed partial class HubSession
 
     /// <summary>
     /// 横版世界层的 5×5 视口：以队伍为中心（贴边夹住），每走一步重建。
-    /// 迷雾里的格与走不过去的格不可点；迷雾格名字写「迷雾」。
+    /// 走不过去的格不可点。
     /// </summary>
     private List<Room> WorldViewRooms()
     {
@@ -149,11 +145,9 @@ public sealed partial class HubSession
         for (var i = 0; i < _worldRooms.Count; i++)
         {
             var room = _worldRooms[i];
-            var (wx, wy) = (ox + room.X, oy + room.Y);
-            var seen = Explore.IsDiscovered(wx, wy);
-            if (seen && State.World.IsPassable(wx, wy))
+            if (State.World.IsPassable(ox + room.X, oy + room.Y))
                 continue;
-            _worldRooms[i] = new Room { Id = room.Id, Name = seen ? room.Name : "迷雾", RegionId = room.RegionId, X = room.X, Y = room.Y, Open = false };
+            _worldRooms[i] = new Room { Id = room.Id, Name = room.Name, RegionId = room.RegionId, X = room.X, Y = room.Y, Open = false };
             _worldRooms[i].EnsureDefaultTag();
         }
         foreach (var room in _worldRooms)
@@ -162,8 +156,8 @@ public sealed partial class HubSession
     }
 
     private (int X, int Y) WorldViewOrigin() =>
-        (System.Math.Clamp(Explore.PartyX - 2, 0, State.World.Width - 5),
-         System.Math.Clamp(Explore.PartyY - 2, 0, State.World.Height - 5));
+        (System.Math.Clamp(Trek.X - 2, 0, State.World.Width - 5),
+         System.Math.Clamp(Trek.Y - 2, 0, State.World.Height - 5));
 
     /// <summary>横版世界层视口房对应的大地图格点。</summary>
     public (int X, int Y) WorldTileOfViewRoom(int roomId)
@@ -179,7 +173,7 @@ public sealed partial class HubSession
         get
         {
             var (ox, oy) = WorldViewOrigin();
-            return WorldViewRoomBase + (Explore.PartyY - oy) * 5 + (Explore.PartyX - ox);
+            return WorldViewRoomBase + (Trek.Y - oy) * 5 + (Trek.X - ox);
         }
     }
 
@@ -198,51 +192,57 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 从队伍所在格走到这一格要花多少分钟（只走已探明的格）；走不到返回 -1，原地返回 0。
+    /// 从队伍所在格走到这一格要花多少分钟；走不到返回 -1，原地返回 0。
+    /// 抽屉每帧都要问，按（起点, 终点）记住上一次的结果。
     /// </summary>
     public int WorldTravelMinutes(int x, int y)
     {
-        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, x, y, Explore.IsDiscovered);
-        if (route == null)
-            return -1;
-        var total = 0;
-        foreach (var (rx, ry) in route)
-            total += State.World.TravelMinutes(rx, ry);
+        var key = (Trek.X, Trek.Y, x, y);
+        if (_travelQuote.Key == key && _travelQuote.Map == State.World)
+            return _travelQuote.Minutes;
+        var route = State.World.FindRoute(Trek.X, Trek.Y, x, y);
+        var total = route == null ? -1 : 0;
+        if (route != null)
+            foreach (var (rx, ry) in route)
+                total += State.World.TravelMinutes(rx, ry);
+        _travelQuote = (key, State.World, total);
         return total;
     }
 
+    private ((int, int, int, int) Key, WorldMapData? Map, int Minutes) _travelQuote = ((-1, -1, -1, -1), null, -1);
+
     /// <summary>
-    /// 大地图上前往一格：沿已探明的格走最省时的路过去（逐格推进时间、探明四周），
+    /// 大地图上前往一格：沿最省时的路过去（逐格推进时间），
     /// 到了是兴趣点就进场、是领地就回去。不在大地图上、画面被演出盖着、或走不到，返回 false。
     /// </summary>
     public bool TravelTo(int x, int y)
     {
         if (Layer != MapLayer.World || MapCovered)
             return false;
-        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, x, y, Explore.IsDiscovered);
+        var route = State.World.FindRoute(Trek.X, Trek.Y, x, y);
         if (route == null)
             return false;
         if (route.Count > 0)
             WalkWorld(route);
-        if (Explore.AtHome)
+        if (Trek.AtHome)
         {
             SwitchToTerritory();
             return true;
         }
-        var poi = State.World.PoiAt(Explore.PartyX, Explore.PartyY);
+        var poi = State.World.PoiAt(Trek.X, Trek.Y);
         if (poi != null)
             return EnterWorldPoi(poi.Id);
-        Write($"你来到了{State.World.TileName(Explore.PartyX, Explore.PartyY)}。");
+        Write($"你来到了{State.World.TileName(Trek.X, Trek.Y)}。");
         return true;
     }
 
-    /// <summary>沿路线逐格走：每进一格按地貌推进时间，再探明四周。</summary>
+    /// <summary>沿路线逐格走：每进一格按地貌推进时间。</summary>
     private void WalkWorld(List<(int x, int y)> route)
     {
         foreach (var (x, y) in route)
         {
             PassTime(State.World.TravelMinutes(x, y));
-            Explore.PlaceParty(x, y);
+            Trek.MoveTo(x, y);
         }
         _worldRooms = null;
     }
@@ -255,7 +255,7 @@ public sealed partial class HubSession
     public bool EnterWorldPoi(int poiId)
     {
         var poi = State.World.Pois.Find(p => p.Id == poiId);
-        if (poi == null || Layer != MapLayer.World || (Explore.PartyX, Explore.PartyY) != (poi.X, poi.Y))
+        if (poi == null || Layer != MapLayer.World || (Trek.X, Trek.Y) != (poi.X, poi.Y))
             return false;
 
         var poiMap = State.EnterPoi(poiId);
@@ -290,7 +290,7 @@ public sealed partial class HubSession
 
     /// <summary>
     /// 调试 / 测试 / 出图入口：从当前位置把队伍直接走到某个兴趣点并进场。
-    /// 不是传送——沿最省时路线把一路的格都探明、时间照走，回程因此走得通。
+    /// 不是传送——沿最省时路线走过去，时间照走。
     /// </summary>
     public bool TravelToPoiDirect(int poiId)
     {
@@ -299,7 +299,7 @@ public sealed partial class HubSession
             return false;
         if (Layer != MapLayer.World)
             SwitchToWorld();
-        var route = State.World.FindRoute(Explore.PartyX, Explore.PartyY, poi.X, poi.Y, (_, _) => true);
+        var route = State.World.FindRoute(Trek.X, Trek.Y, poi.X, poi.Y);
         if (route == null)
             return false;
         WalkWorld(route);
