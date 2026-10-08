@@ -136,9 +136,9 @@ public sealed class InkViewModel
         return new[]
         {
             // 季节：删「季节」二字，保留「春季/夏季/…」这个值。
-            new InkHeaderItem("", SeasonName(h.Season)),
+            new InkHeaderItem("", HubSession.SeasonName(h.Season)),
             // 天气：同样只留数值。
-            new InkHeaderItem("", WeatherName(h.Weather)),
+            new InkHeaderItem("", HubSession.WeatherName(h.Weather)),
             // 时刻不用冒号，写成「0时00分」。
             new InkHeaderItem("", $"{h.Hour}时{h.Minute:00}分"),
             // 金钱单位 G，空格千分位分隔（如 10 000G）。
@@ -355,30 +355,5 @@ public sealed class InkViewModel
         InkPage.Trade,
         InkPage.Quest,
         InkPage.Develop,
-    };
-
-
-    /// <summary>季节值：春季 / 夏季 / 秋季 / 冬季。</summary>
-    private static string SeasonName(Season season) => season switch
-    {
-        Season.Spring => "春季",
-        Season.Summer => "夏季",
-        Season.Autumn => "秋季",
-        Season.Winter => "冬季",
-        _ => "-",
-    };
-
-    private static string WeatherName(Weather weather) => weather switch
-    {
-        Weather.Clear => "晴天",
-        Weather.Cloud => "阴天",
-        Weather.Rain => "雨天",
-        Weather.Snow => "雪天",
-        Weather.HeavyRain => "暴雨",
-        Weather.Thunder => "雷雨",
-        Weather.Wind => "大风",
-        Weather.HeavySnow => "大雪",
-        Weather.Blizzard => "暴雪",
-        _ => "-",
     };
 }
