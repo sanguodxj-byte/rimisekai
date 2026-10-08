@@ -15,6 +15,9 @@ public sealed class PoiRoom
     /// <summary>房间名称</summary>
     public string Name { get; set; } = "";
 
+    /// <summary>为区分同块重名而加方位前缀前的原名（借它查 RoomDef 场景描述与插画）；没改过名为空。</summary>
+    public string BaseName { get; set; } = "";
+
     /// <summary>物理地形形态（道路、草坪、林地、建筑等）</summary>
     public WorldTerrainType Terrain { get; set; } = WorldTerrainType.Plains;
 

@@ -168,6 +168,7 @@ public static class PoiAssemblyGenerator
                     var dx = room.LocalX - PoiBlock.Size / 2;
                     var dy = room.LocalY - PoiBlock.Size / 2;
                     var dir = (dx > 0 ? "东" : dx < 0 ? "西" : "") + (dy < 0 ? "北" : dy > 0 ? "南" : "");
+                    room.BaseName = room.Name;
                     room.Name = (dir.Length > 0 ? dir : "中") + room.Name;
                 }
                 foreach (var same in group.GroupBy(r => r.Name).Where(g => g.Count() > 1))

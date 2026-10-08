@@ -70,6 +70,7 @@ public sealed class PoiMapData
             {
                 Id = r.Id,
                 Name = r.Name,
+                BaseName = r.BaseName,
                 RegionId = r.RegionId,
                 X = r.LocalX,
                 Y = r.LocalY,

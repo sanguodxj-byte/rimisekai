@@ -38,6 +38,13 @@ public sealed class Room
 {
     public int Id { get; init; }
     public string Name { get; init; } = "";
+
+    /// <summary>生成场景里为区分重名而加了方位前缀的房间，记下原名（如「庭院」）；其余房间为空。</summary>
+    public string BaseName { get; init; } = "";
+
+    /// <summary>按名查 RoomDef（场景描述、插画）用的名字：有原名用原名，否则就是房名。</summary>
+    public string DefName => BaseName.Length > 0 ? BaseName : Name;
+
     public int RegionId { get; set; }
     public int X { get; set; }
     public int Y { get; set; }

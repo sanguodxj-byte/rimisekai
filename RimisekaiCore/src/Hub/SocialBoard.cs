@@ -152,8 +152,8 @@ public sealed partial class HubSession
             return room.Illustration;
 
         // 只按名字权威检索（DefName/Label），禁止按数值 Id 撞库——运行时自增 Id 会撞上无关定义。
-        var def = DefDatabase<RoomDef>.Get(room.Name)
-               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.Name || d.Label == room.Name);
+        var def = DefDatabase<RoomDef>.Get(room.DefName)
+               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.DefName || d.Label == room.DefName);
         if (def != null && !string.IsNullOrEmpty(def.Illustration))
             return def.Illustration;
 
