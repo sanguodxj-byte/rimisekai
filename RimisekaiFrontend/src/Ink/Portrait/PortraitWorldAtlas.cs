@@ -6,7 +6,8 @@ namespace Rimisekai.Portrait;
 
 /// <summary>
 /// 大世界底图：把生成器的整张地图（默认 128×128）烘成一张灰阶刻版风的位图，每格 <see cref="TilePx"/> 像素。
-/// 地形只用骨白—炭黑的灰阶区分（海最暗、平原中灰、雪最亮），再叠刻线纹理：水面横纹、森林点簇、山岳人字、丘陵弧、沼泽短划；
+/// 地形只用骨白—炭黑的灰阶区分（海最暗、平原中灰、雪最亮），再叠每种地貌一眼认得出的刻版图样（见 <see cref="Glyphs"/>）：
+/// 水波、树冠、针叶塔、受光背光的山峰与雪顶、丘陵弧、乱石、芦苇、沙点、裂纹等；
 /// 海岸描一道骨白线；河流是一道与海同色、带水纹的水槽，两岸各描骨白细线（与海岸同一笔法，一眼可知是水），
 /// 河宽随流水进度从源头到入海口渐宽；道路骨白线（按生成器的流向 / 连通掩码从格心连到边）。
 /// 聚落与领地标记不烘进图里，运行时按缩放矢量绘制，放大也清晰。同一份地图只烘一次。
@@ -161,89 +162,417 @@ public static class PortraitWorldAtlas
             }
     }
 
-    /// <summary>格底灰度（0 黑 → 1 骨白）。</summary>
+    /// <summary>格底灰度（0 黑 → 1 骨白）：水最暗，林地偏暗，平原中灰，山与沙偏亮，雪最亮。</summary>
     private static float Tone(WorldTerrainType t) => t switch
     {
         WorldTerrainType.DeepWater => 0.03f,
         WorldTerrainType.ShallowWater => 0.08f,
-        WorldTerrainType.Lake or WorldTerrainType.River => 0.10f,
-        WorldTerrainType.Sand => 0.42f,
-        WorldTerrainType.Plains => 0.30f,
+        WorldTerrainType.Lake => 0.10f,
+        WorldTerrainType.River => 0.10f,
+        WorldTerrainType.Sand => 0.50f,
+        WorldTerrainType.Plains => 0.32f,
         WorldTerrainType.Grassland => 0.27f,
-        WorldTerrainType.Savanna => 0.34f,
+        WorldTerrainType.Savanna => 0.38f,
         WorldTerrainType.Forest => 0.20f,
-        WorldTerrainType.DenseForest => 0.14f,
-        WorldTerrainType.Jungle => 0.16f,
+        WorldTerrainType.DenseForest => 0.12f,
+        WorldTerrainType.Jungle => 0.15f,
         WorldTerrainType.Taiga => 0.22f,
-        WorldTerrainType.Bog => 0.17f,
-        WorldTerrainType.Swamp => 0.18f,
-        WorldTerrainType.Wasteland => 0.36f,
-        WorldTerrainType.Rocky => 0.40f,
-        WorldTerrainType.Hills => 0.33f,
-        WorldTerrainType.Mountain => 0.44f,
-        WorldTerrainType.MountainSnow => 0.70f,
-        WorldTerrainType.Snow => 0.62f,
-        WorldTerrainType.Ice => 0.55f,
+        WorldTerrainType.Bog => 0.18f,
+        WorldTerrainType.Swamp => 0.16f,
+        WorldTerrainType.Wasteland => 0.40f,
+        WorldTerrainType.Rocky => 0.36f,
+        WorldTerrainType.Hills => 0.30f,
+        WorldTerrainType.Mountain => 0.40f,
+        WorldTerrainType.MountainSnow => 0.55f,
+        WorldTerrainType.Snow => 0.78f,
+        WorldTerrainType.Ice => 0.70f,
         _ => 0.30f,
     };
 
-    /// <summary>刻线纹理：在格内像素 (px,py) 上的明暗增量。图案按格坐标做哈希错位，不显得重复。</summary>
+    /// <summary>
+    /// 刻版图样在格内像素 (px,py) 上的明暗增量。每格按坐标哈希挑一式、再决定是否左右翻，连片时不显得机械重复。
+    /// 湖与河槽用浅海的水纹。
+    /// </summary>
     private static float Hatch(WorldTerrainType t, int tx, int ty, int px, int py)
     {
-        var jitter = (int)(Hash(tx, ty) % 4u);
-        switch (t)
+        if (t is WorldTerrainType.Lake or WorldTerrainType.River)
+            t = WorldTerrainType.ShallowWater;
+        if (!Glyphs.TryGetValue(t, out var styles))
+            return 0f;
+        var h = Hash(tx, ty);
+        var rows = styles[(int)((h >> 3) % (uint)styles.Length)];
+        var x = ((h >> 7) & 1u) == 1u ? TilePx - 1 - px : px;
+        return rows[py][x] switch
         {
-            case WorldTerrainType.DeepWater:
-                return (py + tx * 3) % 6 == 0 && (px + jitter) % 9 < 6 ? 0.05f : 0f;
-            case WorldTerrainType.ShallowWater:
-            case WorldTerrainType.Lake:
-            case WorldTerrainType.River:
-                return (py + jitter) % 4 == 0 && (px + ty) % 7 < 5 ? 0.08f : 0f;
-            case WorldTerrainType.Forest:
-            case WorldTerrainType.Taiga:
-            case WorldTerrainType.Jungle:
-                return Dot(px, py, 3 + jitter % 3, 4, 1.6f) || Dot(px, py, 8, 8 - jitter % 2, 1.6f) ? 0.22f : 0f;
-            case WorldTerrainType.DenseForest:
-                return Dot(px, py, 3, 3, 1.5f) || Dot(px, py, 8, 4, 1.5f) || Dot(px, py, 5, 8, 1.5f) || Dot(px, py, 10, 9, 1.4f) ? 0.20f : 0f;
-            case WorldTerrainType.Mountain:
-            case WorldTerrainType.MountainSnow:
-            {
-                // 人字山形：∧
-                var cx = 6 + (jitter % 2) - 1;
-                var top = 2;
-                var dy = py - top;
-                if (dy >= 0 && dy <= 7 && (Math.Abs(px - cx) == dy || Math.Abs(px - cx) == dy - 1))
-                    return t == WorldTerrainType.MountainSnow ? -0.30f : 0.30f;
-                return 0f;
-            }
-            case WorldTerrainType.Hills:
-            {
-                var dx = px - 6;
-                var dy = py - 8;
-                var r = Math.Sqrt(dx * dx + dy * dy);
-                return py <= 8 && Math.Abs(r - 4.2) < 0.7 ? 0.18f : 0f;
-            }
-            case WorldTerrainType.Rocky:
-                return Hash(tx * TilePx + px, ty * TilePx + py) % 23u == 0u ? 0.25f : 0f;
-            case WorldTerrainType.Swamp:
-            case WorldTerrainType.Bog:
-                return (py == 4 || py == 9) && ((px + jitter * 2) % 6) is 1 or 2 or 3 ? 0.16f : 0f;
-            case WorldTerrainType.Sand:
-            case WorldTerrainType.Wasteland:
-                return Hash(tx * TilePx + px, ty * TilePx + py) % 17u == 0u ? 0.12f : 0f;
-            case WorldTerrainType.Grassland:
-            case WorldTerrainType.Savanna:
-                return (px + jitter) % 5 == 0 && (py % 5) is 2 or 3 ? 0.08f : 0f;
-            case WorldTerrainType.Snow:
-            case WorldTerrainType.Ice:
-                return Hash(tx * TilePx + px, ty * TilePx + py) % 29u == 0u ? -0.12f : 0f;
-            default:
-                return 0f;
-        }
+            'W' => 0.36f,
+            'w' => 0.18f,
+            'k' => -0.12f,
+            'K' => -0.22f,
+            _ => 0f,
+        };
     }
 
-    private static bool Dot(int px, int py, int cx, int cy, float r) =>
-        (px - cx) * (px - cx) + (py - cy) * (py - cy) <= r * r;
+    /// <summary>各地貌的 12×12 刻版图样（每种一到两式，按格哈希挑式、左右翻）：「.」不着墨，W 亮墨、w 浅亮、k 浅影、K 深影。</summary>
+    private static readonly System.Collections.Generic.Dictionary<WorldTerrainType, string[][]> Glyphs = new()
+    {
+        [WorldTerrainType.Forest] = new[]
+        {
+            new[]
+            {
+                "............",
+                "...wWWw.....",
+                "..wWWWWw....",
+                "..WWWWWk....",
+                "..wWWWkk....",
+                "...kWkk.....",
+                "....K...wWw.",
+                "....K..wWWWw",
+                ".......WWWWk",
+                ".......wWkkk",
+                ".........K..",
+                ".........K..",
+            },
+            new[]
+            {
+                "............",
+                ".......wWw..",
+                "......wWWWw.",
+                ".wWw..WWWWk.",
+                "wWWWw.wWWkk.",
+                "WWWWk..kKk..",
+                "wWWkk....K..",
+                ".kKk.....K..",
+                "..K.........",
+                "..K.........",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.DenseForest] = new[]
+        {
+            new[]
+            {
+                ".wWw...wWw..",
+                "wWWWw.wWWWw.",
+                "WWWWkkWWWWk.",
+                "wWkkk.wWkkk.",
+                ".kKwWw.kKk..",
+                "..wWWWw..wWw",
+                "..WWWWk.wWWW",
+                "..wWkkk.WWWk",
+                "...kKk..wWkk",
+                ".wWw.K...kK.",
+                "wWWWw..wWw..",
+                "WWWWk.wWWWw.",
+            },
+        },
+        [WorldTerrainType.Jungle] = new[]
+        {
+            new[]
+            {
+                ".w..w.....w.",
+                ".Ww.WwwW.Ww.",
+                "wWWWWWWWwWWw",
+                "WWWkWWWWWWWk",
+                ".wkk.WkkkWk.",
+                "..K.wwK..K..",
+                ".wW.wWWw.w..",
+                "wWWwWWWWwWW.",
+                "WWWkWWWkWWWk",
+                ".Wkk.kk..Wk.",
+                "..K...K...K.",
+                "............",
+            },
+        },
+        [WorldTerrainType.Taiga] = new[]
+        {
+            new[]
+            {
+                "............",
+                "...W........",
+                "..wWk.......",
+                "..WWk....W..",
+                ".wWWkk..wWk.",
+                "..WWk...WWk.",
+                ".wWWWkk.wWWk",
+                "wWWWWkkwWWWk",
+                "...K..wWWWWk",
+                "...K......K.",
+                "..........K.",
+                "............",
+            },
+        },
+        [WorldTerrainType.Mountain] = new[]
+        {
+            new[]
+            {
+                "............",
+                ".....W......",
+                "....WWk.....",
+                "....WWkk....",
+                "...WWWkk....",
+                "..wWWWkkk...",
+                "..WWWWkkkk..",
+                ".wWWWWkkkkk.",
+                ".WWWWWkkkkkk",
+                "wWWWWWkkkkkk",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.MountainSnow] = new[]
+        {
+            new[]
+            {
+                "............",
+                ".....W......",
+                "....WWW.....",
+                "....WWWW....",
+                "...WWWWWW...",
+                "..wWWkWkWk..",
+                "..WWWWkkkk..",
+                ".wWWWWkkkkk.",
+                ".WWWWWkkkkkk",
+                "wWWWWWkkkkkk",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.Hills] = new[]
+        {
+            new[]
+            {
+                "............",
+                "............",
+                "....wWWw....",
+                "..wWWkkkk...",
+                ".wWkkkkkkk..",
+                ".Wkkkkkkkkk.",
+                "............",
+                ".......wWw..",
+                ".....wWkkkk.",
+                "....wWkkkkkk",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.Rocky] = new[]
+        {
+            new[]
+            {
+                "............",
+                "..wW........",
+                ".wWWk.......",
+                ".WWkk...wW..",
+                "..kK...wWkk.",
+                ".......WkkK.",
+                "...wWw..kK..",
+                "..wWWkk.....",
+                "..WWkkK.....",
+                "...kKK...wk.",
+                ".........kK.",
+                "............",
+            },
+        },
+        [WorldTerrainType.Swamp] = new[]
+        {
+            new[]
+            {
+                "..K.........",
+                "..K..K......",
+                "..K..K......",
+                "..W..K..K...",
+                "..W..W..K...",
+                "..W..W..W...",
+                ".kkkkkkkkk..",
+                "............",
+                ".......K..K.",
+                "...K...W..K.",
+                "...W...W..W.",
+                ".kkkkk.kkkkk",
+            },
+        },
+        [WorldTerrainType.Bog] = new[]
+        {
+            new[]
+            {
+                "............",
+                "............",
+                ".kkkk...kkk.",
+                "............",
+                ".....kkkkk..",
+                "..W.........",
+                ".WW.W..kkk..",
+                "..W.W.......",
+                ".kkkkk..kkkk",
+                "............",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.Grassland] = new[]
+        {
+            new[]
+            {
+                "............",
+                "..w.w.......",
+                "...w........",
+                ".........w.w",
+                "..........w.",
+                "....w.w.....",
+                ".....w......",
+                "............",
+                ".w.w.....w.w",
+                "..w.......w.",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.Savanna] = new[]
+        {
+            new[]
+            {
+                "............",
+                ".......wWWWw",
+                ".w.w...kkKkk",
+                "..w.......K.",
+                "..........K.",
+                "............",
+                "....w.w.....",
+                ".....w......",
+                "............",
+                ".w.w.....w.w",
+                "..w.......w.",
+                "............",
+            },
+        },
+        [WorldTerrainType.Plains] = new[]
+        {
+            new[]
+            {
+                "............",
+                "............",
+                "....w.......",
+                "............",
+                "............",
+                "..........w.",
+                "............",
+                "............",
+                ".....w......",
+                "............",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.Sand] = new[]
+        {
+            new[]
+            {
+                ".w....w...w.",
+                "...w......k.",
+                "w....k..w...",
+                "..w.....k..w",
+                ".....w......",
+                ".k.....w..w.",
+                "...w.k......",
+                "w......w..k.",
+                "...k..w.....",
+                ".w........w.",
+                ".....w..k...",
+                "..k.....w...",
+            },
+        },
+        [WorldTerrainType.Wasteland] = new[]
+        {
+            new[]
+            {
+                "............",
+                ".k..........",
+                "..k.....k...",
+                "..kk...k....",
+                "....k.k.....",
+                ".....k......",
+                ".....k...k..",
+                "....k...k...",
+                "...k...kk...",
+                ".......k....",
+                ".........k..",
+                "............",
+            },
+        },
+        [WorldTerrainType.Snow] = new[]
+        {
+            new[]
+            {
+                "............",
+                "..k.........",
+                "............",
+                ".......k....",
+                "............",
+                "...........k",
+                "....k.......",
+                "............",
+                ".........k..",
+                ".k..........",
+                "......k.....",
+                "............",
+            },
+        },
+        [WorldTerrainType.Ice] = new[]
+        {
+            new[]
+            {
+                "............",
+                ".k..........",
+                "..k.........",
+                "...k........",
+                "...k.k......",
+                "....k.......",
+                "....k...k...",
+                ".....k.k....",
+                ".........k..",
+                ".........k..",
+                "..........k.",
+                "............",
+            },
+        },
+        [WorldTerrainType.ShallowWater] = new[]
+        {
+            new[]
+            {
+                "............",
+                "............",
+                "..wW.wW.....",
+                ".W..W..W....",
+                "............",
+                "............",
+                ".......wW.wW",
+                "......W..W..",
+                "............",
+                "............",
+                "............",
+                "............",
+            },
+        },
+        [WorldTerrainType.DeepWater] = new[]
+        {
+            new[]
+            {
+                "............",
+                "............",
+                "............",
+                "..wWw.......",
+                ".w...w......",
+                "............",
+                "............",
+                "............",
+                ".......wWw..",
+                "......w...w.",
+                "............",
+                "............",
+            },
+        },
+    };
 
     /// <summary>从格心向掩码里的每个方向画到格边。</summary>
     private static void Strokes(byte[] data, int w, int tx, int ty, byte mask, float v, int width, bool dashed)
