@@ -6,7 +6,7 @@ namespace Rimisekai.Portrait;
 
 /// <summary>
 /// 据点界面的动效：抽屉滑入 / 收起（压暗同步淡入淡出）、推入页自右滑入 / 返回滑出、
-/// 页签药丸在页签间滑动、松手后按压浅填淡出、领地格长按。
+/// 页签尖拱窗原位升起、松手后按压浅填淡出、领地格长按。
 ///
 /// 一律 0.22 秒三次缓出，只在过渡进行中逐帧重画（对话打字机、提示签计时、星盘视角也在这里推进）。命中块始终按终态布局登记，
 /// 抽屉与推入页过渡期间不收输入（<see cref="InputLocked"/>）。收起与返回是「先演后改」：
@@ -27,7 +27,6 @@ public partial class PortraitHubScreen
     private PushPage _pushUnder;
     private bool _popping;
 
-    private float _tabFromX;
 
     private Rect2? _flashRect;
 
@@ -137,9 +136,9 @@ public partial class PortraitHubScreen
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight),
             new Color(InkStyle.Bg, PortraitFrame.ScrimAlpha * shown));
         var travel = PortraitLayout.CanvasHeight - _lastSheetTop;
-        DrawSetTransform(new Vector2(0f, (1f - shown) * travel));
+        PortraitFrame.SetLayer(this, new Vector2(0f, (1f - shown) * travel));
         _sheetTop = draw();
-        DrawSetTransform(Vector2.Zero);
+        PortraitFrame.SetLayer(this, Vector2.Zero);
         _lastSheetTop = _sheetTop;
         _widgets.Insert(0, new PortraitWidget(new Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop),
             PortraitAction.SheetClose, 0, true, "收起"));
@@ -209,34 +208,30 @@ public partial class PortraitHubScreen
         // offset：当前页右移的比例（1＝完全在屏外）。
         var offset = _popping ? _pushMotion.Eased : 1f - _pushMotion.Eased;
         var width = PortraitLayout.CanvasWidth;
-        DrawSetTransform(new Vector2(-0.3f * width * (1f - offset), 0f));
+        PortraitFrame.SetLayer(this, new Vector2(-0.3f * width * (1f - offset), 0f));
         if (_pushUnder == PushPage.None)
             DrawRootTab();
         else
             DrawPushed(_pushUnder);
-        DrawSetTransform(Vector2.Zero);
+        PortraitFrame.SetLayer(this, Vector2.Zero);
         DrawRect(new Rect2(0, 0, width, PortraitLayout.CanvasHeight), new Color(InkStyle.Bg, 0.5f * (1f - offset)));
         _widgets.Clear();
         _scrollAreas.Clear();
-        DrawSetTransform(new Vector2(width * offset, 0f));
+        PortraitFrame.SetLayer(this, new Vector2(width * offset, 0f));
         PortraitFrame.Backdrop(this);
         DrawPushed(_push);
         InkDraw.InkLine(this, Vector2.Zero, new Vector2(0f, PortraitLayout.CanvasHeight), InkStyle.WoodDark, 3f);
-        DrawSetTransform(Vector2.Zero);
+        PortraitFrame.SetLayer(this, Vector2.Zero);
     }
 
     // ---------- 页签药丸 ----------
 
+    private int _tabFrom;
+
+    /// <summary>切页签：记下旧页签，新龛的尖拱窗自下升起、旧龛的窗淡去。</summary>
     private void StartTabSlide(int from)
     {
-        _tabFromX = _tabMotion.Running ? TabPillX() : PortraitLayout.Tab(from).GetCenter().X;
+        _tabFrom = from;
         _tabMotion.Start();
-    }
-
-    /// <summary>当前页签药丸的中心 x：滑动中按缓出插值。</summary>
-    private float TabPillX()
-    {
-        var target = PortraitLayout.Tab(_tab).GetCenter().X;
-        return _tabMotion.Running ? Mathf.Lerp(_tabFromX, target, _tabMotion.Eased) : target;
     }
 }

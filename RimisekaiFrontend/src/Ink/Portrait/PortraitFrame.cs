@@ -12,6 +12,19 @@ namespace Rimisekai.Portrait;
 /// </summary>
 public static class PortraitFrame
 {
+    /// <summary>
+    /// 当前图层的平移（抽屉滑入、推入页滑入时由动效设定）。角花等需要临时改变换的饰件
+    /// 画完必须恢复到这个平移，而不是归零，否则同层其余内容会跳回终态位置，露出下层画面。
+    /// </summary>
+    public static Vector2 LayerOffset { get; private set; }
+
+    /// <summary>设定图层平移并立即生效；动效结束时以 Vector2.Zero 复位。</summary>
+    public static void SetLayer(CanvasItem ci, Vector2 offset)
+    {
+        LayerOffset = offset;
+        ci.DrawSetTransform(offset, 0f, Vector2.One);
+    }
+
     private static Rect2? _press;
 
     /// <summary>

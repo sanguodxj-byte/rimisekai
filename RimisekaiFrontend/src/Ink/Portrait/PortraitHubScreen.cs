@@ -378,7 +378,7 @@ public partial class PortraitHubScreen : Control
 
     /// <summary>
     /// 底部五页签＝一条雕花檐壁：上沿双线，五个页签各占一龛（龛与龛之间一根细柱、柱头一枚小菱），
-    /// 当前页签＝一扇骨白实心尖拱窗托住图标（图标反黑），切页签时这扇窗从旧龛滑到新龛。
+    /// 当前页签＝一扇骨白实心尖拱窗托住图标（图标反黑），切页签时新龛的窗自下升起、旧龛的窗淡去（不做横向滑动指示条）。
     /// </summary>
     private void DrawTabBar()
     {
@@ -402,18 +402,28 @@ public partial class PortraitHubScreen : Control
             if (i != _tab && PortraitFrame.IsPressed(r))
                 PortraitFrame.PressMark(this, new Rect2(cx - 70f, cy - 64f, 140f, 110f));
         }
-        // 当前页签的尖拱窗：从旧位置滑到新位置，图标在窗压住时反黑。
-        var markX = TabPillX();
-        var win = new Rect2(markX - 64f, cy - 66f, 128f, 112f);
-        PortraitFrame.Arch(this, win, 46f, InkStyle.Line);
-        PortraitFrame.Arch(this, win.Grow(8f), 52f, null, new Color(InkStyle.Line, 0.55f), 2f);
-        InkDraw.Jewel(this, new Vector2(markX, win.Position.Y - 22f), 6f, InkStyle.Line);
+        // 当前页签的尖拱窗：不横向滑动（安卓式指示条），切换时新龛里的窗自檐下升起、旧龛的窗淡去。
+        var rise = _tabMotion.Running ? _tabMotion.Eased : 1f;
+        var full = new Rect2(PortraitLayout.Tab(_tab).GetCenter().X - 64f, cy - 66f, 128f, 112f);
+        if (_tabMotion.Running && _tabFrom != _tab)
+        {
+            var old = new Rect2(PortraitLayout.Tab(_tabFrom).GetCenter().X - 64f, cy - 66f, 128f, 112f);
+            PortraitFrame.Arch(this, old, 46f, new Color(InkStyle.Line, 1f - rise));
+        }
+        var h = Mathf.Max(1f, full.Size.Y * rise);
+        var win = new Rect2(full.Position.X, full.End.Y - h, full.Size.X, h);
+        PortraitFrame.Arch(this, win, Mathf.Min(46f, h), InkStyle.Line);
+        if (rise >= 1f)
+        {
+            PortraitFrame.Arch(this, full.Grow(8f), 52f, null, new Color(InkStyle.Line, 0.55f), 2f);
+            InkDraw.Jewel(this, new Vector2(full.GetCenter().X, full.Position.Y - 22f), 6f, InkStyle.Line);
+        }
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
             var r = PortraitLayout.Tab(i);
             var on = i == _tab;
             var cx = r.GetCenter().X;
-            var covered = Mathf.Abs(markX - cx) < 50f;
+            var covered = on ? rise >= 0.6f : _tabMotion.Running && i == _tabFrom && rise < 0.4f;
             PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
             InkDraw.Text(this, new Vector2(cx, cy + 90f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
@@ -422,12 +432,12 @@ public partial class PortraitHubScreen : Control
     }
 
     /// <summary>
-    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。领地页签上若这句已是日志面板最新一条就不再弹。
+    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。这句已写进日志（日志面板 / 日志页签会显示）就不再弹，免得同一句话叠两遍。
     /// </summary>
     private void DrawToast()
     {
         if (_notice.Length == 0 || _noticeAge > 3f
-            || (_push == PushPage.None && _tab == 0 && _sheetTop < 0f && _vm.Hub.History.Count > 0 && _vm.Hub.History[^1].Text == _notice))
+            || (_vm.Hub.History.Count > 0 && _vm.Hub.History[^1].Text == _notice))
             return;
         var bottom = _sheetTop >= 0f ? _sheetTop - 30f
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;

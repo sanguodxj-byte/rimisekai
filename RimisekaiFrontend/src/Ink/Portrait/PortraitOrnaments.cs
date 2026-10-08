@@ -48,7 +48,7 @@ public static class PortraitOrnaments
         var mod = new Color(1f, 1f, 1f, alpha);
         void One(Vector2 at, float sx, float sy)
         {
-            ci.DrawSetTransform(at, 0f, new Vector2(sx, sy));
+            ci.DrawSetTransform(PortraitFrame.LayerOffset + at, 0f, new Vector2(sx, sy));
             ci.DrawTextureRect(tex, new Rect2(0, 0, size, size), false, mod);
         }
         One(r.Position, 1f, 1f);
@@ -58,7 +58,7 @@ public static class PortraitOrnaments
             One(new Vector2(r.End.X, r.End.Y), -1f, -1f);
             One(new Vector2(r.Position.X, r.End.Y), 1f, -1f);
         }
-        ci.DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        ci.DrawSetTransform(PortraitFrame.LayerOffset, 0f, Vector2.One);
     }
 
     /// <summary>

@@ -79,9 +79,9 @@ public static class GothicArt
         if (_corner == null)
             return;
         var scale = new Vector2(flipX ? -1f : 1f, flipY ? -1f : 1f);
-        ci.DrawSetTransform(at, 0f, scale);
+        ci.DrawSetTransform(PortraitFrame.LayerOffset + at, 0f, scale);
         ci.DrawTextureRect(_corner, new Rect2(0, 0, size, size), false, new Color(1f, 1f, 1f, alpha));
-        ci.DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        ci.DrawSetTransform(PortraitFrame.LayerOffset, 0f, Vector2.One);
     }
 
     /// <summary>四角灰阶角花，尺寸按框短边收敛（不外溢，最大占短边 40%）。</summary>
