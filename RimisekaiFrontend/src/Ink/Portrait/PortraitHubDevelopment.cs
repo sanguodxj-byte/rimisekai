@@ -198,7 +198,6 @@ public partial class PortraitHubScreen
                 {
                     _developmentPlacing = _developmentRoom = -1;
                     _developmentCell = -1;
-                    Notice();
                 }
             }
             else if (cell.CanDevelop)
@@ -212,7 +211,6 @@ public partial class PortraitHubScreen
                     else
                         hub.DevelopVacantCell(confirmation.RegionId, cell.X, cell.Y);
                     _developmentCell = -1;
-                    Notice();
                     QueueRedraw();
                 });
             }
@@ -241,7 +239,6 @@ public partial class PortraitHubScreen
             {
                 hub.BeginOperation();
                 hub.SetDoor(roomId, dir, !hub.State.Territory.DoorOpen(room, dir));
-                Notice();
             }
             return true;
         }
@@ -266,7 +263,6 @@ public partial class PortraitHubScreen
                     hub.BeginOperation();
                     hub.RemoveFacility(row.Index);
                     _developmentFacility = -1;
-                    Notice();
                     QueueRedraw();
                 });
                 break;
@@ -276,7 +272,6 @@ public partial class PortraitHubScreen
                     hub.BeginOperation();
                     hub.RemoveRoom(row.Index);
                     _developmentCell = _developmentFacility = -1;
-                    Notice();
                     QueueRedraw();
                 });
                 break;

@@ -45,6 +45,9 @@ public static partial class PortraitLayout
     public const int FontTitle = 60;
     public const int FontBody = 50;
     public const int FontMeta = 44;
+
+    /// <summary>提示签行距：次级字号 44 加 10。</summary>
+    public const float ToastLine = 54f;
     public const int FontPlace = 56;
     public const int FontDisplay = 110;
 

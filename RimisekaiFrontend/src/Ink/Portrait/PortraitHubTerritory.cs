@@ -432,7 +432,6 @@ public partial class PortraitHubScreen
                     Confirm(hub.TravelLabel, hub.MapTitle(), () =>
                     {
                         hub.AbandonQuestDungeon();
-                        Notice();
                         QueueRedraw();
                     });
                     return true;
@@ -457,7 +456,6 @@ public partial class PortraitHubScreen
                     hub.BeginOperation();
                     if (hub.RemoveRoom(roomId))
                         _sheet = SheetKind.None;
-                    Notice();
                     QueueRedraw();
                 });
                 return true;

@@ -147,6 +147,7 @@ public partial class PortraitHubScreen : Control
     private InkViewModel _vm = null!;
     private string _notice = "";
     private float _noticeAge;
+    private (int, PushPage) _noticeView;
     private int _tab;
     private PushPage _push;
     private SheetKind _sheet;
@@ -443,21 +444,31 @@ public partial class PortraitHubScreen : Control
     }
 
     /// <summary>
-    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。这句已写进日志（日志面板 / 日志页签会显示）就不再弹，免得同一句话叠两遍。
+    /// 操作反馈：在底部弹一枚 3 秒的浅填签，不拦输入。只弹没进日志的话（「已保存。」「这里去不了。」之类）——
+    /// 进了日志的反馈由日志面板 / 日志页签显示，一律不弹。签只属于弹出它的那一页：换页签、推入或返回即撤掉。
+    /// 字不截断不缩：一行放不下就按字宽换行，签往上长。
     /// </summary>
     private void DrawToast()
     {
-        if (_notice.Length == 0 || _noticeAge > 3f
-            || (_veil?.Running ?? false)
-            || (_push == PushPage.None && _tab == 0 && _vm.Hub.Log.Any(e => e.Text == _notice)))
+        if (_notice.Length > 0 && NoticeView != _noticeView)
+            _notice = "";
+        if (_notice.Length == 0 || _noticeAge > 3f || (_veil?.Running ?? false))
             return;
         var bottom = _sheetTop >= 0f ? _sheetTop - 30f
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;
-        var width = Mathf.Min(PortraitLayout.FullWidth, InkDraw.Measure(_notice, PortraitLayout.FontMeta).X + 96f);
-        var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - 96f, width, 96f);
-        PortraitFrame.RoundRect(this, r, 48f, new Color(InkStyle.Hover, 0.96f), InkStyle.Line, 3f);
-        InkDraw.TextBounded(this, r.Grow(-24f), _notice, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        var lines = InkDraw.WrapLines(_notice, PortraitLayout.FullWidth - 96f, PortraitLayout.FontMeta);
+        var widest = lines.Max(l => InkDraw.Measure(l, PortraitLayout.FontMeta).X);
+        var width = Mathf.Min(PortraitLayout.FullWidth, widest + 96f);
+        var height = 48f + lines.Count * PortraitLayout.ToastLine;
+        var r = new Rect2((PortraitLayout.CanvasWidth - width) / 2f, bottom - height, width, height);
+        PortraitFrame.RoundRect(this, r, Mathf.Min(48f, height / 2f), new Color(InkStyle.Hover, 0.96f), InkStyle.Line, 3f);
+        for (var i = 0; i < lines.Count; i++)
+            InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 24f + (i + 0.5f) * PortraitLayout.ToastLine), lines[i],
+                PortraitLayout.FontMeta, InkStyle.Line, "cm");
     }
+
+    /// <summary>提示签所属的页：根页签＋推入页。</summary>
+    private (int, PushPage) NoticeView => (_tab, _push);
 
     /// <summary>在滚动视口内登记命中块：只登记露在视口里的部分，露出的短边不足触控下限就不登记。</summary>
     private void AddClipped(Rect2 rect, Rect2 viewport, PortraitAction action, int index, bool enabled, string label)
@@ -538,7 +549,6 @@ public partial class PortraitHubScreen : Control
         var w = hit.Value.Widget;
         Flash(w.Rect);
         _vm.Hub.BeginOperation();
-        var before = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
         switch (w.Action)
         {
             case PortraitAction.Tab:
@@ -560,9 +570,6 @@ public partial class PortraitHubScreen : Control
                 Execute(w);
                 break;
         }
-        var after = _vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "";
-        if (after.Length > 0 && after != before)
-            SetNotice(after);
         QueueRedraw();
     }
 
@@ -615,10 +622,8 @@ public partial class PortraitHubScreen : Control
     {
         _notice = text;
         _noticeAge = 0f;
+        _noticeView = NoticeView;
     }
-
-    private void Notice() =>
-        SetNotice(_vm.Hub.Log.Count > 0 ? _vm.Hub.Log[^1].Text : "");
 
     /// <summary>领地改名：原生输入框弹窗（软键盘中文输入法只认 LineEdit）。</summary>
     private void OpenRename()

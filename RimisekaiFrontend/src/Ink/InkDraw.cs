@@ -1169,7 +1169,16 @@ public static class InkDraw
         return Measure(suffix, size).X <= width ? text + suffix : "";
     }
 
-    /// <summary>按实际字宽换行，保留换行符形成的空行。</summary>
+    /// <summary>不得出现在行首的标点（中文避头）。</summary>
+    private const string NoLineStart = "，。、；：！？）」』】》〉…—·,.;:!?)]";
+
+    /// <summary>不得留在行尾的标点（中文避尾）。</summary>
+    private const string NoLineEnd = "（「『【《〈([";
+
+    /// <summary>
+    /// 按实际字宽换行，保留换行符形成的空行。中文避头尾：要断在避头标点前时，把上一行末字一并带到下一行；
+    /// 上一行以开括号收尾时，开括号也挪到下一行。
+    /// </summary>
     public static IReadOnlyList<string> WrapLines(string text, float width, int size)
     {
         var lines = new List<string>();
@@ -1183,8 +1192,14 @@ public static class InkDraw
                 var next = line + rune;
                 if (line.Length > 0 && Measure(next, size).X > width)
                 {
+                    var carry = rune.ToString();
+                    while (line.Length > 1 && (NoLineStart.Contains(carry[0]) || NoLineEnd.Contains(line[^1])))
+                    {
+                        carry = line[^1] + carry;
+                        line = line[..^1];
+                    }
                     lines.Add(line);
-                    line = rune.ToString();
+                    line = carry;
                 }
                 else
                     line = next;
