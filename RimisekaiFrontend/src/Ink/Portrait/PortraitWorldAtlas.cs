@@ -7,7 +7,8 @@ namespace Rimisekai.Portrait;
 /// <summary>
 /// 大世界底图：把生成器的整张地图（默认 128×128）烘成一张灰阶刻版风的位图，每格 <see cref="TilePx"/> 像素。
 /// 地形只用骨白—炭黑的灰阶区分（海最暗、平原中灰、雪最亮），再叠刻线纹理：水面横纹、森林点簇、山岳人字、丘陵弧、沼泽短划；
-/// 海岸描一道骨白线；河流浅灰细线、道路骨白虚线（按生成器的流向 / 连通掩码从格心连到边）。
+/// 海岸描一道骨白线；河流是一道与海同色、带水纹的水槽，两岸各描骨白细线（与海岸同一笔法，一眼可知是水），
+/// 河宽随流水进度从源头到入海口渐宽；道路骨白线（按生成器的流向 / 连通掩码从格心连到边）。
 /// 聚落与领地标记不烘进图里，运行时按缩放矢量绘制，放大也清晰。同一份地图只烘一次。
 /// </summary>
 public static class PortraitWorldAtlas
@@ -37,14 +38,16 @@ public static class PortraitWorldAtlas
             for (var tx = 0; tx < map.Width; tx++)
             {
                 var tile = map.Tiles[tx, ty];
-                var tone = Tone(tile);
+                // 河格的底子是两岸的陆地，水槽另画。
+                var ground = tile.IsRiver ? Bank(map, tx, ty) : tile.Terrain;
+                var tone = Tone(ground);
                 for (var py = 0; py < TilePx; py++)
                 {
                     for (var px = 0; px < TilePx; px++)
                     {
-                        var v = tone + Hatch(tile.Terrain, tx, ty, px, py);
+                        var v = tone + Hatch(ground, tx, ty, px, py);
                         // 海拔明暗：微微的东南向阴影，让地势起伏可读。
-                        if (IsLand(tile.Terrain))
+                        if (IsLand(ground))
                             v += (tile.Elevation - 0.5f) * 0.10f;
                         Put(data, w, tx * TilePx + px, ty * TilePx + py, v);
                     }
@@ -79,13 +82,40 @@ public static class PortraitWorldAtlas
                 }
             }
 
-        // 河流：浅灰实线；道路：骨白虚线（桥＝河上的路，压在河线之上）。
+        // 河流：先挖水槽，再在槽外紧贴的一圈陆地像素上描岸线。
+        var channel = new bool[w * h];
         for (var ty = 0; ty < map.Height; ty++)
             for (var tx = 0; tx < map.Width; tx++)
             {
                 var tile = map.Tiles[tx, ty];
-                if (tile.IsRiver)
-                    Strokes(data, w, tx, ty, tile.RiverDirections, 0.62f, 2, dashed: false);
+                if (!tile.IsRiver)
+                    continue;
+                var half = 1 + (int)MathF.Round(Math.Clamp(tile.RiverFlowProgress, 0f, 1f) * 2f);
+                Channel(channel, w, tx, ty, tile.RiverDirections, half);
+            }
+        for (var y = 0; y < h; y++)
+            for (var x = 0; x < w; x++)
+            {
+                if (!channel[y * w + x])
+                    continue;
+                var (tx, ty) = (x / TilePx, y / TilePx);
+                Put(data, w, x, y, Tone(WorldTerrainType.ShallowWater) + Hatch(WorldTerrainType.River, tx, ty, x % TilePx, y % TilePx));
+            }
+        for (var y = 0; y < h; y++)
+            for (var x = 0; x < w; x++)
+            {
+                if (channel[y * w + x] || !IsLand(map.Tiles[x / TilePx, y / TilePx].IsRiver ? WorldTerrainType.Plains : map.Tiles[x / TilePx, y / TilePx].Terrain))
+                    continue;
+                if ((x > 0 && channel[y * w + x - 1]) || (x < w - 1 && channel[y * w + x + 1])
+                    || (y > 0 && channel[(y - 1) * w + x]) || (y < h - 1 && channel[(y + 1) * w + x]))
+                    Put(data, w, x, y, 0.80f);
+            }
+
+        // 道路：骨白线（桥＝河上的路，压在河槽之上）。
+        for (var ty = 0; ty < map.Height; ty++)
+            for (var tx = 0; tx < map.Width; tx++)
+            {
+                var tile = map.Tiles[tx, ty];
                 if (tile.IsRoad)
                     Strokes(data, w, tx, ty, tile.RoadDirections, tile.RoadClass >= 2 ? 0.95f : tile.RoadClass == 1 ? 0.86f : 0.74f,
                         tile.RoadClass >= 2 ? 2 : 1, dashed: tile.RoadClass < 2);
@@ -99,8 +129,40 @@ public static class PortraitWorldAtlas
     public static bool IsLand(WorldTerrainType t) =>
         t is not (WorldTerrainType.DeepWater or WorldTerrainType.ShallowWater or WorldTerrainType.Lake or WorldTerrainType.River);
 
+    /// <summary>河格两岸的地貌：取四邻里第一块陆地（按北东南西），四面都是水就当平原。</summary>
+    private static WorldTerrainType Bank(WorldMapData map, int tx, int ty)
+    {
+        for (var d = 0; d < 4; d++)
+        {
+            var (dx, dy) = Direction4Extensions.Offsets[d];
+            var n = map.GetTile(tx + dx, ty + dy);
+            if (n != null && !n.IsRiver && IsLand(n.Terrain))
+                return n.Terrain;
+        }
+        return WorldTerrainType.Plains;
+    }
+
+    /// <summary>河槽：格心一块 (2·half) 见方，再沿流向掩码伸到格边，宽同。</summary>
+    private static void Channel(bool[] channel, int w, int tx, int ty, byte mask, int half)
+    {
+        var c = TilePx / 2;
+        for (var py = 0; py < TilePx; py++)
+            for (var px = 0; px < TilePx; px++)
+            {
+                var inX = px >= c - half && px < c + half;
+                var inY = py >= c - half && py < c + half;
+                var hit = (inX && inY)
+                    || (inX && py < c && (mask & 1) != 0)
+                    || (inY && px >= c && (mask & 2) != 0)
+                    || (inX && py >= c && (mask & 4) != 0)
+                    || (inY && px < c && (mask & 8) != 0);
+                if (hit)
+                    channel[(ty * TilePx + py) * w + tx * TilePx + px] = true;
+            }
+    }
+
     /// <summary>格底灰度（0 黑 → 1 骨白）。</summary>
-    private static float Tone(WorldTile t) => t.Terrain switch
+    private static float Tone(WorldTerrainType t) => t switch
     {
         WorldTerrainType.DeepWater => 0.03f,
         WorldTerrainType.ShallowWater => 0.08f,
