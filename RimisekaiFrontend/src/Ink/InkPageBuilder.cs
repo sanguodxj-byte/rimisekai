@@ -642,7 +642,7 @@ public static class InkPageBuilder
     /// <summary>物品显示名。目录里没有登记时退回 Id，避免显示空白。</summary>
     private static string ItemName(InkViewModel vm, string itemId)
     {
-        var info = Rimisekai.Defs.Items.Info(vm.Hub.State.Territory.Weapons, itemId);
+        var info = Rimisekai.Defs.Items.Info(vm.Hub.State.Territory, itemId);
         if (info != null && info.Value.Label.Length > 0)
             return info.Value.Label;
         var facility = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.FacilityDef>.All

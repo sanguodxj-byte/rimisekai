@@ -30,6 +30,8 @@ public partial class PortraitHubScreen
 
     public override void _Ready()
     {
+        // 帧循环只在会话绑定后跑（Bind 里打开）：标题画面阶段没有会话，遭遇、动效、提示签都无从谈起。
+        SetProcess(false);
         // 搜索走原生 LineEdit：软键盘的中文输入法只认它。画面上的字由我们自己画，输入框本身透明。
         _searchEdit = new LineEdit { Modulate = new Color(1, 1, 1, 0f), Visible = false, MaxLength = 16 };
         AddChild(_searchEdit);
@@ -51,7 +53,7 @@ public partial class PortraitHubScreen
 
     private string ItemName(string itemId)
     {
-        var info = Items.Info(_vm.Hub.State.Territory.Weapons, itemId);
+        var info = Items.Info(_vm.Hub.State.Territory, itemId);
         return info != null && info.Value.Label.Length > 0 ? info.Value.Label : itemId;
     }
 

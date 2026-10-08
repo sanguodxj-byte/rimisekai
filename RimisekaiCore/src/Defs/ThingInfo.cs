@@ -5,7 +5,7 @@ namespace Rimisekai.Defs;
 
 /// <summary>
 /// 任何"东西"的解析结果。三种来源共用这一个形状：
-/// 独特物品（ThingDef 表）、运行时武器实例（WeaponRegistry）。
+/// 独特物品（ThingDef 表）、运行时武器实例（WeaponRegistry）、防具与饰品实例（EquipRegistry）。
 /// 界面与定价只认这一份，不用各自分辨来源。
 /// </summary>
 public readonly record struct ThingInfo(
@@ -23,6 +23,9 @@ public readonly record struct ThingInfo(
 
     public static ThingInfo Of(WeaponInstance w) => new(
         w.Id, w.Name, "Weapon", w.Value, false, FoodTier.Plain, true);
+
+    public static ThingInfo Of(EquipInstance e) => new(
+        e.Id, e.Name, e.Kind.ToString(), e.Value, false, FoodTier.Plain, false);
 }
 
 /// <summary>
@@ -66,6 +69,17 @@ public static class Items
             return ThingInfo.Of(def);
         var instance = registry?.Get(itemId);
         return instance == null ? null : ThingInfo.Of(instance);
+    }
+
+    /// <summary>
+    /// 按 Id 取统一解析结果，领地的两张实例登记表（武器、防具与饰品）都查：
+    /// 背包与仓储里的实例只记 Id（如「eqp_1」），界面显示名字一律走这里。
+    /// </summary>
+    public static ThingInfo? Info(Territory territory, string itemId)
+    {
+        if (Info(territory.Weapons, itemId) is { } info)
+            return info;
+        return territory.Equips.Get(itemId) is { } equip ? ThingInfo.Of(equip) : null;
     }
 
     /// <summary>是否已定义（独特物品或登记在册的武器实例）。</summary>

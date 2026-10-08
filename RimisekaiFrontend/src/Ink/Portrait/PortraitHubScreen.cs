@@ -184,6 +184,7 @@ public partial class PortraitHubScreen : Control
         Size = new Vector2(PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight);
         CustomMinimumSize = Size;
         MouseFilter = MouseFilterEnum.Stop;
+        SetProcess(true);
     }
 
     /// <summary>切到某个根页签：收起推入页与抽屉，离开交易段即散集。</summary>

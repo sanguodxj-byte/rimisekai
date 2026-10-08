@@ -305,7 +305,7 @@ public sealed class InkViewModel
     /// <summary>该物品的品类名（用于在存储行上标注归属）。没有定义则空串。</summary>
     public string ItemCategoryLabel(string itemId)
     {
-        var info = Rimisekai.Defs.Items.Info(Hub.State.Territory.Weapons, itemId);
+        var info = Rimisekai.Defs.Items.Info(Hub.State.Territory, itemId);
         if (info == null || string.IsNullOrEmpty(info.Value.Category))
             return "";
         var cat = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.ThingCategoryDef>.Get(info.Value.Category);

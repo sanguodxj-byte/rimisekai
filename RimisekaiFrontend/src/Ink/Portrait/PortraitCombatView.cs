@@ -542,7 +542,7 @@ public partial class PortraitCombatView : Control
 
     private string ItemLabel(string itemId)
     {
-        var info = Items.Info(_vm.Hub.State.Territory.Weapons, itemId);
+        var info = Items.Info(_vm.Hub.State.Territory, itemId);
         return info != null && info.Value.Label.Length > 0 ? info.Value.Label : itemId;
     }
 
