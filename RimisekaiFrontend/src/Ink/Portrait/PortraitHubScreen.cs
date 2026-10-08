@@ -74,6 +74,10 @@ public enum PortraitAction
     RoomDemolish,
     NowAvatar,
     NowPage,
+    WorldZoomIn,
+    WorldZoomOut,
+    WorldHome,
+    WorldGo,
     CharacterSegment,
     SkillCard,
     TraitInfo,
@@ -135,6 +139,7 @@ public partial class PortraitHubScreen : Control
         Party,
         Slot,
         Item,
+        World,
     }
 
     private readonly List<PortraitWidget> _widgets = new();
@@ -256,6 +261,8 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawSlotSheet);
         else if (_sheet == SheetKind.Item)
             OpenSheetLayer(DrawItemSheet);
+        else if (_sheet == SheetKind.World)
+            OpenSheetLayer(DrawWorldSheet);
         else
             _sheetWasOpen = false;
 
@@ -474,7 +481,7 @@ public partial class PortraitHubScreen : Control
             ResetListDrag();
             return;
         }
-        if (HandleSkillInput(e) || HandleListInput(e))
+        if (HandleWorldInput(e) || HandleSkillInput(e) || HandleListInput(e))
             return;
         if (e is InputEventMouseMotion { ButtonMask: not 0 } motion)
         {
@@ -558,7 +565,7 @@ public partial class PortraitHubScreen : Control
 
     private void Execute(PortraitWidget w)
     {
-        if (ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
+        if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
             || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w))
             return;
         switch (w.Action)

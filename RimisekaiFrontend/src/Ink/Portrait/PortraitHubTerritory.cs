@@ -25,12 +25,16 @@ public partial class PortraitHubScreen
         DrawLogPanel();
 
         PortraitFrame.GothicFrame(this, PortraitLayout.MapFrame, InkStyle.Bg);
-        for (var y = 0; y < PortraitLayout.GridRows; y++)
-            for (var x = 0; x < PortraitLayout.GridCols; x++)
-                DrawCell(x, y);
-        if (!WorldLayer)
+        if (WorldLayer)
+            DrawWorldMap();
+        else
+        {
+            for (var y = 0; y < PortraitLayout.GridRows; y++)
+                for (var x = 0; x < PortraitLayout.GridCols; x++)
+                    DrawCell(x, y);
             DrawDoors(PortraitLayout.Cell, _vm.Hub.RegionId);
-        DrawWalker();
+            DrawWalker();
+        }
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
@@ -406,6 +410,8 @@ public partial class PortraitHubScreen
             case PortraitAction.HubWorld:
                 hub.ToggleWorldLayer();
                 _sheet = SheetKind.None;
+                if (WorldLayer)
+                    CenterWorldOnHome();
                 return true;
             case PortraitAction.Build:
                 _push = PushPage.Build;

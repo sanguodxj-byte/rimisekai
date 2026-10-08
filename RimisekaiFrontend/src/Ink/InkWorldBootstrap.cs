@@ -132,10 +132,17 @@ public static class InkWorldBootstrap
 
     public static GameState Create() => Create(new ContentPack());
 
+    /// <summary>
+    /// 新开局的世界种子：为 null 时每局随机掷一个（大世界地形、聚落与领地选址随之而定）；
+    /// 截图 / 核对工具设成定值，画面可复现。
+    /// </summary>
+    public static int? WorldSeedOverride { get; set; }
+
     public static GameState Create(ContentPack pack)
     {
         ContentDefs.EnsureInitialized();
         var state = new GameState { Money = pack.Seed.Money };
+        state.RegenerateWorld(WorldSeedOverride ?? (int)(System.Random.Shared.Next(1, int.MaxValue)));
         state.Territory.Name = ContentDefs.TerritoryName;
 
         var generator = new CharacterGenerator();

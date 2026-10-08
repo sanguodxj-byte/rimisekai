@@ -452,8 +452,8 @@ public static class SaveSystem
         state.Money = data.Money;
         state.Prestige = data.Prestige;
         state.Weather = data.Weather;
-        state.WorldSeed = data.WorldSeed;
-        state.World = WorldMap.Generators.WorldGenerator.Generate(data.WorldSeed, 128, 128);
+        if (data.WorldSeed != state.WorldSeed)
+            state.RegenerateWorld(data.WorldSeed);
         state.Territory.Name = data.Territory.Name;
         state.Territory.SetLevel(data.Territory.Level);
         state.Territory.SetUnlockedRegions(data.Territory.UnlockedRegions);

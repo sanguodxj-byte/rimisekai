@@ -106,6 +106,41 @@ public sealed class WorldMapData
     public List<WorldRoad> Roads { get; } = new();
     public List<WorldPoi> Pois { get; } = new();
 
+    /// <summary>玩家领地在大世界上的格点（由 <see cref="Generators.HomesiteStage"/> 按种子选定）。</summary>
+    public int HomeX { get; private set; } = -1;
+
+    public int HomeY { get; private set; } = -1;
+
+    public bool HasHome => HomeX >= 0 && HomeY >= 0;
+
+    /// <summary>定下领地格点。</summary>
+    public void SetHome(int x, int y)
+    {
+        HomeX = x;
+        HomeY = y;
+    }
+
+    /// <summary>格点所在的地理区域（无则 null）。</summary>
+    public WorldRegion? RegionAt(int x, int y)
+    {
+        var tile = GetTile(x, y);
+        return tile == null || tile.RegionId < 0 ? null : Regions.Find(r => r.Id == tile.RegionId);
+    }
+
+    /// <summary>格点上的聚落（无则 null）。</summary>
+    public WorldPoi? PoiAt(int x, int y)
+    {
+        var tile = GetTile(x, y);
+        return tile == null || tile.PoiId <= 0 ? null : Pois.Find(p => p.Id == tile.PoiId);
+    }
+
+    /// <summary>格点的朴素地貌名：聚落名 &gt; 道路 &gt; 河流 &gt; 地形名。</summary>
+    public string TileName(int x, int y)
+    {
+        var tile = GetTile(x, y);
+        return tile == null ? "" : ResolveTilePhysicalName(tile, x, y);
+    }
+
     public WorldMapData(int width, int height, int seed)
     {
         Width = width;
@@ -208,11 +243,16 @@ public sealed class WorldMapData
     /// </summary>
     public List<Rimisekai.Housing.Room> ExportTo5x5WorldRooms(int baseRoomId = 1000, int regionId = 99)
     {
-        // 优先将视口定格在第一个重要 POI（如首都或城镇）所在的 5x5 地理区域周围
+        // 视口定格在领地周围；没有领地才退到第一个重要 POI（如首都或城镇）
         var defaultOx = Width / 2 - 2;
         var defaultOy = Height / 2 - 2;
 
-        if (Pois.Count > 0)
+        if (HasHome)
+        {
+            defaultOx = System.Math.Clamp(HomeX - 2, 0, Width - 5);
+            defaultOy = System.Math.Clamp(HomeY - 2, 0, Height - 5);
+        }
+        else if (Pois.Count > 0)
         {
             defaultOx = System.Math.Clamp(Pois[0].X - 2, 0, Width - 5);
             defaultOy = System.Math.Clamp(Pois[0].Y - 2, 0, Height - 5);

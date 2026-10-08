@@ -229,4 +229,66 @@ public sealed class WorldMapTests
             Assert.True(validSuffix, $"POI 名称 '{poi.NameZh}' 应当符合日式西幻轻小说构词规则");
         }
     }
+
+    [Theory]
+    [InlineData(42)]
+    [InlineData(7)]
+    [InlineData(2026)]
+    [InlineData(99991)]
+    public void Homesite_is_on_habitable_land_away_from_settlements_and_joined_to_roads(int seed)
+    {
+        var map = WorldGenerator.Generate(seed);
+        Assert.True(map.HasHome);
+        var home = map.Tiles[map.HomeX, map.HomeY];
+        Assert.True(home.PoiId <= 0);
+        Assert.Contains(home.Terrain, new[] { WorldTerrainType.Plains, WorldTerrainType.Grassland, WorldTerrainType.Savanna,
+            WorldTerrainType.Forest, WorldTerrainType.Hills });
+        foreach (var poi in map.Pois)
+            Assert.True(System.Math.Abs(poi.X - map.HomeX) + System.Math.Abs(poi.Y - map.HomeY) >= 6);
+        // 领地沿道路能走到至少一个聚落。
+        var seen = new HashSet<(int, int)> { (map.HomeX, map.HomeY) };
+        var queue = new Queue<(int x, int y)>();
+        queue.Enqueue((map.HomeX, map.HomeY));
+        var reached = false;
+        while (queue.Count > 0 && !reached)
+        {
+            var (x, y) = queue.Dequeue();
+            foreach (var (dx, dy) in Direction4Extensions.Offsets)
+            {
+                var t = map.GetTile(x + dx, y + dy);
+                if (t == null || !t.IsRoad || !seen.Add((t.X, t.Y)))
+                    continue;
+                if (t.PoiId > 0)
+                    reached = true;
+                queue.Enqueue((t.X, t.Y));
+            }
+        }
+        Assert.True(reached);
+    }
+
+    [Fact]
+    public void Homesite_is_deterministic_per_seed_and_varies_across_seeds()
+    {
+        var a = WorldGenerator.Generate(31337);
+        var b = WorldGenerator.Generate(31337);
+        Assert.Equal((a.HomeX, a.HomeY), (b.HomeX, b.HomeY));
+        var spots = new HashSet<(int, int)>();
+        foreach (var seed in new[] { 1, 2, 3, 4, 5 })
+        {
+            var m = WorldGenerator.Generate(seed);
+            spots.Add((m.HomeX, m.HomeY));
+        }
+        Assert.True(spots.Count >= 3);
+    }
+
+    [Fact]
+    public void Regenerated_world_survives_save_round_trip()
+    {
+        var state = new Rimisekai.Save.GameState();
+        state.RegenerateWorld(777);
+        var data = Rimisekai.Save.SaveSystem.Capture(state);
+        var restored = Rimisekai.Save.SaveSystem.Restore(data);
+        Assert.Equal(777, restored.WorldSeed);
+        Assert.Equal((state.World.HomeX, state.World.HomeY), (restored.World.HomeX, restored.World.HomeY));
+    }
 }

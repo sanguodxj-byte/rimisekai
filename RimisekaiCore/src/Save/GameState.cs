@@ -62,9 +62,17 @@ public sealed class GameState
 
     public GameState()
     {
-        World = WorldGenerator.Generate(WorldSeed, 128, 128);
+        World = WorldGenerator.Generate(WorldSeed);
         // 开局先掷一次首日行情，否则第一天集市全数无货。
         Territory.RollMarketDay(new Random(WorldSeed));
+    }
+
+    /// <summary>换一个世界种子重新生成大世界（新开局时掷一次；领地选址随之而定）。</summary>
+    public void RegenerateWorld(int seed)
+    {
+        WorldSeed = seed == 0 ? 42 : seed;
+        World = WorldGenerator.Generate(WorldSeed);
+        CurrentPoi = null;
     }
 
     /// <summary>

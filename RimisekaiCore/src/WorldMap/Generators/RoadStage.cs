@@ -139,7 +139,7 @@ public static class RoadStage
         return false;
     }
 
-    private static List<(int x, int y)> FindLowCostPath(WorldMapData map, int startX, int startY, int goalX, int goalY)
+    internal static List<(int x, int y)> FindLowCostPath(WorldMapData map, int startX, int startY, int goalX, int goalY)
     {
         var w = map.Width;
         var h = map.Height;
@@ -202,7 +202,7 @@ public static class RoadStage
         return path;
     }
 
-    private static void SetDirectionBit(WorldTile tile, int dx, int dy)
+    internal static void SetDirectionBit(WorldTile tile, int dx, int dy)
     {
         for (var dir = 0; dir < 4; dir++)
         {

@@ -45,6 +45,7 @@ public partial class PortraitCapture : Node
             return;
         // 截图与命中块核对一律取终态：动效直接跳完（CheckMotion 里临时关掉，专门核对过渡本身）。
         PortraitMotion.Instant = true;
+        InkWorldBootstrap.WorldSeedOverride = 42;
         if (_prefix.Length > 0)
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_prefix))!);
         _root = new PortraitRoot { Name = "PortraitRoot" };
@@ -213,6 +214,44 @@ public partial class PortraitCapture : Node
             PortraitMotion.Instant = true;
             _root.HubScreen.SetProcess(true);
             _root.HubScreen.QueueRedraw();
+        });
+        // 世界层：整张生成器地图，视口以领地为中心；缩小看全图；点最近的聚落弹地点抽屉。
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+            var world = hub.State.World;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.World && world.HasHome, "world layer opens with a homesite");
+            Require(world.Width >= 128 && world.Height >= 128, "world map is the full generated map, not 5x5");
+            var c = _root.HubScreen.DebugWorldCenter;
+            Require(Mathf.Abs(c.X - (world.HomeX + 0.5f)) < 20f && Mathf.Abs(c.Y - (world.HomeY + 0.5f)) < 20f, "world view centers on the territory");
+        });
+        _steps.Enqueue(() => Shoot("world", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            for (var i = 0; i < 6; i++)
+                _root.HubScreen.DebugPress(PortraitAction.WorldZoomOut, 0);
+        });
+        _steps.Enqueue(() => Shoot("world_wide", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugPress(PortraitAction.WorldHome, 0);
+            var world = _root.HubScreen.DebugHub.State.World;
+            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
+        });
+        _steps.Enqueue(() => Shoot("world_poi_sheet", _root.HubScreen));
+        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled),
+            "poi sheet offers travel"));
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.Territory, "back to territory from world");
         });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Build, 0));
         _steps.Enqueue(() => Shoot("build", _root.HubScreen));

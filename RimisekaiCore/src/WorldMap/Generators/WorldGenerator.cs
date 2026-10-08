@@ -4,7 +4,7 @@ namespace Rimisekai.WorldMap.Generators;
 
 /// <summary>
 /// 世界地图生成总控器：
-/// 调度 BaseLayer -> Biome -> Smoothing -> River -> Settlement -> Road -> Region 完整管线。
+/// 调度 BaseLayer -> Biome -> Smoothing -> River -> Settlement -> Road -> Region -> Homesite 完整管线。
 /// </summary>
 public static class WorldGenerator
 {
@@ -38,6 +38,9 @@ public static class WorldGenerator
 
         // 阶段 7：地理区域聚类与全景双语地名生成
         RegionStage.Execute(map);
+
+        // 阶段 8：玩家领地选址（边境可住地，铺野径接入路网）
+        HomesiteStage.Execute(map);
 
         return map;
     }
