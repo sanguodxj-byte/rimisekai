@@ -291,4 +291,23 @@ public sealed class WorldMapTests
         Assert.Equal(777, restored.WorldSeed);
         Assert.Equal((state.World.HomeX, state.World.HomeY), (restored.World.HomeX, restored.World.HomeY));
     }
+
+    [Fact]
+    public void Visiting_many_pois_does_not_pile_up_rooms()
+    {
+        var state = new Rimisekai.Save.GameState();
+        var hub = new Rimisekai.Hub.HubSession(state);
+        var before = state.Territory.Rooms.Count;
+        var unlocked = state.Territory.UnlockedRegions;
+        foreach (var poi in state.World.Pois)
+        {
+            hub.SwitchToWorld();
+            Assert.True(hub.EnterWorldPoi(poi.Id));
+            Assert.True(state.Territory.Rooms.Count <= Rimisekai.Housing.Territory.MaxRooms);
+        }
+        hub.SwitchToTerritory();
+        Assert.Equal(before, state.Territory.Rooms.Count);
+        Assert.Equal(unlocked, state.Territory.UnlockedRegions);
+        Assert.Null(state.CurrentPoi);
+    }
 }

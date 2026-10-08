@@ -65,6 +65,7 @@ public sealed partial class HubSession
         SetLayer(MapLayer.Territory);
         if (RegionId >= Territory.MaxTerritoryRegions && _territoryHomeRoomId >= 0)
             Enter(_territoryHomeRoomId);
+        ClearPoiRooms();
         Write("返回了领地据点。");
     }
 
@@ -95,10 +96,15 @@ public sealed partial class HubSession
         if (poi == null)
             return false;
 
+        // 先把上一处 POI 的房间清掉：POI 房间是临时借住领地表的，不清就会越积越多，撞上房间总上限。
+        if (RegionId >= Territory.MaxTerritoryRegions && _territoryHomeRoomId >= 0)
+            Enter(_territoryHomeRoomId);
+        ClearPoiRooms();
         var poiMap = State.EnterPoi(poiId);
 
         // 将 POI 房间导入领地系统，分配新 RegionId。
         // 领地内区域占 0..8，POI 区域从 MaxTerritoryRegions 起顺延，免得撞号。
+        _unlockedBeforePoi = State.Territory.UnlockedRegions;
         var baseRegion = System.Math.Max(State.Territory.UnlockedRegions,
             Territory.MaxTerritoryRegions);
         State.Territory.SetUnlockedRegions(baseRegion + poiMap.Blocks.Count);
@@ -120,6 +126,29 @@ public sealed partial class HubSession
         }
         Write($"抵达了{MapTitle()}。");
         return true;
+    }
+
+    /// <summary>进 POI 前的已解锁区域数，离开时还原。-1 表示当前不在 POI。</summary>
+    private int _unlockedBeforePoi = -1;
+
+    /// <summary>
+    /// 移除挂在领地表里的 POI 房间（编号区从 <see cref="Territory.MaxTerritoryRegions"/> 起），
+    /// 并把已解锁区域数还原到进 POI 之前。调用方先把人送回本家。
+    /// </summary>
+    private void ClearPoiRooms()
+    {
+        // 没有本家落脚点可送回（空领地）时，人随房间一起离开 POI。
+        if (RegionId >= Territory.MaxTerritoryRegions)
+        {
+            RegionId = 0;
+            if (Room(PlayerRoomId)?.RegionId >= Territory.MaxTerritoryRegions)
+                PlayerRoomId = -1;
+        }
+        State.Territory.Rooms.RemoveAll(r => r.RegionId >= Territory.MaxTerritoryRegions);
+        if (_unlockedBeforePoi >= 0)
+            State.Territory.SetUnlockedRegions(_unlockedBeforePoi);
+        _unlockedBeforePoi = -1;
+        State.CurrentPoi = null;
     }
 
     /// <summary>非领地图层的地点名（任务地点名 / POI 名）。</summary>
