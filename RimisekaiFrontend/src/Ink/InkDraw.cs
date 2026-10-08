@@ -1139,6 +1139,24 @@ public static class InkDraw
         return size;
     }
 
+    /// <summary>
+    /// 格内短名：一行放得下就按 oneLine 居中画一行；放不下就对半拆成两行，在 twoLines 里上下居中，
+    /// 字号不变（竖版下限 44 不许为塞字而缩），整名显示、不截断。
+    /// </summary>
+    public static void TextStacked(CanvasItem ci, Rect2 oneLine, Rect2 twoLines, string text, int size, Color color)
+    {
+        if (Measure(text, size).X <= oneLine.Size.X)
+        {
+            Text(ci, oneLine.GetCenter(), text, size, color, "cm");
+            return;
+        }
+        var cut = (text.Length + 1) / 2;
+        var step = size + 2f;
+        var c = twoLines.GetCenter();
+        Text(ci, c - new Vector2(0f, step / 2f), text[..cut], size, color, "cm");
+        Text(ci, c + new Vector2(0f, step / 2f), text[cut..], size, color, "cm");
+    }
+
     public static string Ellipsize(string text, float width, int size)
     {
         if (width <= 0f)

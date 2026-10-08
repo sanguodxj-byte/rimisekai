@@ -55,8 +55,8 @@ public partial class PortraitHubScreen
                     DashedLoop(inner, InkStyle.Line);
                 else
                     InkDraw.Ink(this, RectLoop(inner), cell.Vacant ? InkStyle.WoodDark : InkStyle.Dim, 3f);
-                InkDraw.TextBounded(this, inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-                    cell.Vacant ? InkStyle.Dim : InkStyle.Line, "cm");
+                InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta,
+                    cell.Vacant ? InkStyle.Dim : InkStyle.Line);
             }
             else if (cell.CanDevelop)
             {
@@ -67,7 +67,7 @@ public partial class PortraitHubScreen
                 PortraitGlyph.Plus(this, inner.GetCenter().X, inner.GetCenter().Y, 30f, InkStyle.Dim);
             }
             else if (cell.Name.Length > 0)
-                InkDraw.TextBounded(this, inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.WoodDark, "cm");
+                InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta, InkStyle.WoodDark);
             if (cell.Selected)
             {
                 InkDraw.Ink(this, RectLoop(rect.Grow(-1f)), InkStyle.Line, 7f);

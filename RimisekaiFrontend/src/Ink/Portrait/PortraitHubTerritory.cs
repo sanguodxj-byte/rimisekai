@@ -67,8 +67,7 @@ public partial class PortraitHubScreen
         if (!room.Open)
         {
             InkDraw.Ink(this, RectLoop(inner), InkStyle.WoodDark, 2.5f);
-            InkDraw.TextBounded(this, inner.Grow(-10f), room.Name, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-                InkStyle.Dim, "cm");
+            InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), room.Name, PortraitLayout.FontMeta, InkStyle.Dim);
             _widgets.Add(new PortraitWidget(r, PortraitAction.Cell, room.Id, false, room.Name));
             return;
         }
@@ -88,8 +87,10 @@ public partial class PortraitHubScreen
             for (var k = 0; k < 3; k++)
                 InkDraw.InkLine(this, new Vector2(inner.Position.X + 12f + k * 14f, inner.Position.Y + 12f),
                     new Vector2(inner.Position.X + 12f, inner.Position.Y + 12f + k * 14f), InkStyle.WoodDark, 2.5f);
-        InkDraw.TextBounded(this, new Rect2(inner.Position.X + 8f, c.Y - 46f, inner.Size.X - 16f, 64f), room.Name,
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, room.Vacant ? InkStyle.Dim : InkStyle.Line, "cm");
+        // 房名整名显示：一行放不下就拆两行，两行落在棋子带之上。
+        InkDraw.TextStacked(this, new Rect2(inner.Position.X + 8f, c.Y - 46f, inner.Size.X - 16f, 64f),
+            new Rect2(inner.Position.X + 8f, inner.Position.Y + 2f, inner.Size.X - 16f, PortraitLayout.CellPieces(r).Position.Y + 18f - inner.Position.Y - 2f),
+            room.Name, PortraitLayout.FontMeta, room.Vacant ? InkStyle.Dim : InkStyle.Line);
 
         DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id && !(card.IsPlayer && Walking)).OrderByDescending(card => card.IsPlayer).ToArray(),
             PortraitLayout.CellPieces(r));
