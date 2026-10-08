@@ -70,6 +70,7 @@ public enum PortraitAction
     Build,
     SheetClose,
     RoomGo,
+    DevelopmentDoor,
     RoomDemolish,
     NowAvatar,
     NowPage,

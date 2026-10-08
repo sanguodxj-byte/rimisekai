@@ -8,7 +8,7 @@ public sealed partial class HubSession
 {
     public const int CostDevelop = 1;
 
-    /// <summary>开发：照抄一间已有房间。花费该类型的材料，新房默认开放、无通路。</summary>
+    /// <summary>开发：照抄一间已有房间。花费该类型的材料，新房默认开放，与四面已开放的邻房开门连通。</summary>
     public bool AddRoomCopy(int sourceRoomId, int x, int y)
     {
         var source = Room(sourceRoomId);
@@ -32,6 +32,7 @@ public sealed partial class HubSession
         added.MaterialCost.AddRange(source.MaterialCost);
         if (!State.Territory.AddRoom(added))
             return false;
+        State.Territory.LinkNeighbors(added);
         Write($"新建了{added.Name}。");
         return true;
     }
@@ -74,6 +75,7 @@ public sealed partial class HubSession
             return false;
         room.X = x;
         room.Y = y;
+        State.Territory.PruneDetachedLinks(room);
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
         Write($"移动了{room.Name}。");
         return true;
@@ -152,6 +154,7 @@ public sealed partial class HubSession
             return false;
         money -= room.OpenCost;
         room.Open = true;
+        State.Territory.LinkNeighbors(room);
         State.Money = money;
         Write($"开拓了{room.Name}。");
         return true;
@@ -248,6 +251,7 @@ public sealed partial class HubSession
         added.EnsureDefaultTag();
         if (!State.Territory.AddRoom(added))
             return false;
+        State.Territory.LinkNeighbors(added);
         State.Money -= moneyCost;
         State.Territory.VacantDevelopCount++;
         Write("开拓了一间空房。");
@@ -349,6 +353,18 @@ public sealed partial class HubSession
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
         Write(linked ? $"连通了{a.Name}和{b.Name}。" : $"断开了{a.Name}和{b.Name}。");
         return true;
+    }
+
+    /// <summary>建造：开 / 封某间房某个朝向上的门（只对同区网格四邻、两边都已开放的房间）。</summary>
+    public bool SetDoor(int roomId, RoomDir dir, bool open)
+    {
+        var room = Room(roomId);
+        if (room == null || !room.Open)
+            return false;
+        var other = State.Territory.NeighborAt(room, dir);
+        if (other == null || !other.Open)
+            return false;
+        return SetLink(roomId, other.Id, open);
     }
 
     /// <summary>开发：拆除房间。玩家在里面不行；里面的人先挪走；房内设施一起拆；材料按 60% 返还。</summary>
@@ -595,6 +611,12 @@ public sealed partial class HubSession
         {
             State.Territory.Rooms.Add(vacant); // 放不回去就还原，别把空房弄丢
             return false;
+        }
+        // 门跟着格子走：空房开着的门原样过给新房。
+        foreach (var link in new List<int>(vacant.Links))
+        {
+            State.Territory.Unlink(vacant.Id, link);
+            State.Territory.Link(room.Id, link);
         }
         Write($"把{room.Name}装进了空房。");
         return true;

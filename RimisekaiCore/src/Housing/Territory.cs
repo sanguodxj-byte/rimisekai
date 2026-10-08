@@ -18,6 +18,15 @@ public enum RoomPermission
 /// 房门的锁。只有「私人空间」房间（卧室类）用得上：
 /// 自动 = 主人不在屋内或正在睡时锁；另两档是玩家手动拧的，压过自动规则。
 /// </summary>
+/// <summary>房间朝向（网格上 北＝y-1、东＝x+1、南＝y+1、西＝x-1）。</summary>
+public enum RoomDir
+{
+    North,
+    East,
+    South,
+    West,
+}
+
 public enum RoomLock
 {
     Auto = 0,
@@ -1092,7 +1101,7 @@ public sealed class Territory
     /// passable 用于"这个角色能不能进这间房"的额外判定；目标房间本身不查。
     /// 锁着的私人空间走不通：角色不会规划一条穿门上锁的私室的路。
     /// </summary>
-    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null)
+    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null, bool ignoreLocks = false)
     {
         var queue = new Queue<int>();
         var prev = new Dictionary<int, int> { [fromRoom] = -1 };
@@ -1110,7 +1119,7 @@ public sealed class Territory
                 if (prev.ContainsKey(next))
                     continue;
                 var node = Rooms.Find(r => r.Id == next);
-                if (node == null || !node.Open || IsLocked(node))
+                if (node == null || !node.Open || (!ignoreLocks && IsLocked(node)))
                     continue;
                 if (next != toRoom && passable != null && !passable(node))
                     continue;
@@ -1127,6 +1136,62 @@ public sealed class Territory
         return path;
     }
 
+
+    // ---------- 房间朝向与门 ----------
+    // 同一区域里网格四邻的两间房，共用的那条边就是一扇「门」：两房互在 Links 里＝门开（连通），否则是墙。
+    // 人只能沿连通的门走（玩家前往、NPC 寻路都走 Links），非连通域过不去。
+
+    public static readonly RoomDir[] RoomDirs = { RoomDir.North, RoomDir.East, RoomDir.South, RoomDir.West };
+
+    public static (int Dx, int Dy) DirDelta(RoomDir dir) => dir switch
+    {
+        RoomDir.North => (0, -1),
+        RoomDir.East => (1, 0),
+        RoomDir.South => (0, 1),
+        _ => (-1, 0),
+    };
+
+    public static string DirName(RoomDir dir) => dir switch
+    {
+        RoomDir.North => "北",
+        RoomDir.East => "东",
+        RoomDir.South => "南",
+        _ => "西",
+    };
+
+    /// <summary>这间房某个朝向上的邻房（同区网格四邻）；房间没上网格或那边没房间则为 null。</summary>
+    public Room? NeighborAt(Room room, RoomDir dir)
+    {
+        if (room.X < 0 || room.Y < 0)
+            return null;
+        var (dx, dy) = DirDelta(dir);
+        return RoomAt(room.RegionId, room.X + dx, room.Y + dy);
+    }
+
+    /// <summary>两间房是不是同区网格四邻。</summary>
+    public static bool Adjacent(Room a, Room b) =>
+        a.RegionId == b.RegionId && a.X >= 0 && a.Y >= 0 && b.X >= 0 && b.Y >= 0
+        && Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) == 1;
+
+    /// <summary>某朝向的门开着没有：那边有房间且两房连通。</summary>
+    public bool DoorOpen(Room room, RoomDir dir) =>
+        NeighborAt(room, dir) is { } n && room.Links.Contains(n.Id);
+
+    /// <summary>新上网格的房间：四面已开放的邻房一律开门连通（之后可在建造页里逐面改）。</summary>
+    public void LinkNeighbors(Room room)
+    {
+        foreach (var dir in RoomDirs)
+            if (NeighborAt(room, dir) is { Open: true } n)
+                Link(room.Id, n.Id);
+    }
+
+    /// <summary>房间挪位后：同区里已不相邻的旧通路拆掉（门只开在共用的边上）。</summary>
+    public void PruneDetachedLinks(Room room)
+    {
+        foreach (var id in new List<int>(room.Links))
+            if (Room(id) is { } other && other.RegionId == room.RegionId && !Adjacent(room, other))
+                Unlink(room.Id, id);
+    }
 
     public bool Link(int fromId, int toId)
     {

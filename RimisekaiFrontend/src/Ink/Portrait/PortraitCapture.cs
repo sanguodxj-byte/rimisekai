@@ -201,6 +201,25 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Build, 0));
         _steps.Enqueue(() => Shoot("build", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            // 建造页「操作」分段首几行是选中房间四面的门：点一下封墙、再点开门，Links 随之变化。
+            var screen = _root.HubScreen;
+            var door = screen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.DevelopmentDoor && w.Enabled);
+            Require(door.Rect.Size.Y >= PortraitLayout.TouchMin, "build page lists the selected room's doors");
+            _doorIndex = door.Index;
+            _linkCount = LinkCount();
+            screen.DebugPress(PortraitAction.DevelopmentDoor, _doorIndex);
+            Require(LinkCount() != _linkCount, "door row toggles the connection");
+            screen.QueueRedraw();
+        });
+        _steps.Enqueue(() => Shoot("build_door", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugPress(PortraitAction.DevelopmentDoor, _doorIndex);
+            Require(LinkCount() == _linkCount, "door row toggles back");
+            _root.HubScreen.QueueRedraw();
+        });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.OpenSystem, 0));
         _steps.Enqueue(() => Shoot("system", _root.HubScreen));
@@ -342,6 +361,11 @@ public partial class PortraitCapture : Node
         Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Title, "combat settings returns to title");
     }
 
+    private int _doorIndex;
+    private int _linkCount;
+
+    private int LinkCount() => _root.HubScreen.DebugHub.State.Territory.Rooms.Sum(r => r.Links.Count);
+
     private int _homeRoom = -1;
     private int _otherRoom = -1;
     private Vector2 _holdAt;
@@ -353,7 +377,7 @@ public partial class PortraitCapture : Node
     {
         var hub = _root.HubScreen.DebugHub;
         _homeRoom = hub.PlayerRoomId;
-        _otherRoom = hub.Map().First(r => r.Open && r.Id != _homeRoom).Id;
+        _otherRoom = hub.Map().First(r => r.Open && r.Id != _homeRoom && hub.CanReach(r.Id)).Id;
         Tap(_root.HubScreen, CellCenter(_otherRoom));
     }
 
@@ -369,7 +393,16 @@ public partial class PortraitCapture : Node
         var party = hub.Party();
         Require(screen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).All(w =>
             party.First(c => c.Id == w.Index) is var card
-            && (card.IsPlayer || rooms.Exists(r => r.Id == card.RoomId && r.RegionId == region))), "now strip lists same-area only");
+            && (card.IsPlayer || card.RoomId == hub.PlayerRoomId)), "now strip lists same-room only");
+        Require(party.Where(c => c.IsPlayer || c.RoomId == hub.PlayerRoomId).Count() >= screen.DebugWidgets.Count(w => w.Action == PortraitAction.NowAvatar)
+            && !screen.DebugWidgets.Any(w => w.Action == PortraitAction.NowAvatar && party.First(c => c.Id == w.Index).RoomId != hub.PlayerRoomId
+                && !party.First(c => c.Id == w.Index).IsPlayer), "characters in other rooms are hidden, not dimmed");
+        var sealedRoom = rooms.FirstOrDefault(r => r.Open && r.RegionId == region && r.Id != hub.PlayerRoomId && !hub.CanReach(r.Id));
+        if (sealedRoom != null)
+        {
+            var before = hub.PlayerRoomId;
+            Require(!hub.Arrive(sealedRoom.Id) && hub.PlayerRoomId == before, "unconnected room cannot be entered");
+        }
         var room = rooms.First(r => r.Id == hub.PlayerRoomId);
         Require(hub.History.Count > 0 && hub.History[^1].Kind == LogKind.Scene && hub.History[^1].Text.StartsWith($"你来到了{room.Name}"),
             "cell tap writes a scene log entry");
@@ -409,7 +442,7 @@ public partial class PortraitCapture : Node
     private int NowPages()
     {
         var hub = _root.HubScreen.DebugHub;
-        var total = hub.Party().Count(c => c.IsPlayer || hub.State.Territory.Rooms.Exists(r => r.Id == c.RoomId && r.RegionId == hub.RegionId));
+        var total = hub.Party().Count(c => c.IsPlayer || c.RoomId == hub.PlayerRoomId);
         return (total + PortraitLayout.NowPageSize - 1) / PortraitLayout.NowPageSize;
     }
 

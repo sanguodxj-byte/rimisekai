@@ -3,6 +3,7 @@ using System.Linq;
 using Rimisekai.Defs;
 using Rimisekai.Housing;
 using Rimisekai.Voice;
+using Rimisekai.Clock;
 
 namespace Rimisekai.Hub;
 
@@ -33,14 +34,31 @@ public sealed partial class HubSession
     /// 点格即前往：落位到该房间（同 <see cref="Enter"/>），并写一条场景描述日志。
     /// 已经在这间房里则什么也不写。
     /// </summary>
-    public void Arrive(int roomId)
+    /// <summary>
+    /// 前往某房间：只能沿连通的门走（<see cref="Territory.Route"/>，主人不受门锁所限），
+    /// 每过一道门花一步的时间；与这里不连通（非连通域）就去不了，返回 false 且不动。
+    /// </summary>
+    public bool Arrive(int roomId)
     {
         if (roomId == PlayerRoomId)
-            return;
+            return false;
+        var target = Room(roomId);
+        if (target == null || !target.Open || !CanReach(roomId))
+            return false;
+        var steps = State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true).Count;
+        PassTime(CostMove * steps * TerritoryClock.StepMinutes);
+        LeaveFixture();
         Enter(roomId);
-        if (PlayerRoomId == roomId)
-            WriteArrival(roomId);
+        if (PlayerRoomId != roomId)
+            return false;
+        WorldEffects.SpendMoveStamina(State.Roster.Master, State.Territory, roomId, State.Weather);
+        WriteArrival(roomId);
+        return true;
     }
+
+    /// <summary>主角眼下能不能走到这间房（沿连通的门，同一领地区内）。</summary>
+    public bool CanReach(int roomId) =>
+        roomId == PlayerRoomId || State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true).Count > 0;
 
     /// <summary>写来到某房间的场景日志：a＝「你来到了X。描述」，b＝在场者的 Meet 口上。</summary>
     private void WriteArrival(int roomId)

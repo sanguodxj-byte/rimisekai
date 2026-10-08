@@ -1709,7 +1709,7 @@ public sealed class ArchitectureTests
         Assert.True(hub.MoveRoom(2, 2, 2));
         Assert.Equal(2, state.Territory.Rooms[1].X);
 
-        Assert.True(hub.SetLink(1, 2, false));
+        // 挪到不相邻的格子：门只开在共用的边上，旧通路随之拆掉。
         Assert.Empty(state.Territory.Rooms[0].Links);
         Assert.False(hub.SetLink(1, 2, false));
         Assert.True(hub.SetLink(1, 2, true));
