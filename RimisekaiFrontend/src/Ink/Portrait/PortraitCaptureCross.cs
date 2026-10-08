@@ -9,7 +9,7 @@ namespace Rimisekai.Portrait;
 /// 过界出图（排在全部既有核对之后、回到标题再开新局，不扰动前面各页的状态与几何）：
 /// 中心区东连接点开一间空房、东区解锁并在其西连接点也开一间（两边各有房才通），主角点格走到东连接点 →
 /// 边框缺口箭头（cross_arrow）→ 点箭头，镜头平移中间帧（cross_pan_mid）→ 落到东区西门，回头箭头朝西（cross_back）；
-/// 再进最近的多块兴趣点，站到块间通道房（cross_poi）。
+/// 再进最近的多块兴趣点，站到块间通道房（cross_poi）；最后回领地，走进北连接点（cross_north）。
 /// </summary>
 public partial class PortraitCapture
 {
@@ -104,6 +104,37 @@ public partial class PortraitCapture
             CheckCrossArrow(hub.CrossTargetRegion(_crossGate));
             Shoot("cross_poi", _root.HubScreen);
         });
+        // 北向：走出兴趣点、回到领地，北区解锁并在其南连接点开一间，主角走进中心区北连接点那间（开局的卧室）。
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.World, "left the settlement onto the world map");
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.RegionId == 0, "back home in the center region");
+            var t = hub.State.Territory;
+            var (nx, ny) = Territory.RegionGate(Territory.RegionDir.North);
+            var (sx, sy) = Territory.RegionGate(Territory.RegionDir.South);
+            var gate = t.RoomAt(0, nx, ny);
+            Require(gate is { Open: true }, "north gate cell holds an open room");
+            t.SetUnlockedRegionMask(t.UnlockedRegionMask | (1 << 1));
+            AddVacant(hub, 1, sx, sy);
+            _crossGate = gate!.Id;
+            Require(hub.CrossTargetRegion(_crossGate) == 1 && hub.CrossDir(_crossGate) == Territory.RegionDir.North,
+                "north gate crosses to the north region");
+            if (hub.PlayerRoomId != _crossGate)
+                _root.HubScreen.DebugPress(PortraitAction.Cell, _crossGate);
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.PlayerRoomId == _crossGate, "walked onto the north gate");
+            CheckCrossArrow(1);
+            Shoot("cross_north", _root.HubScreen);
+        });
     }
 
     /// <summary>领地里开一间空房（与 Core 开拓空格同一造法，连上已开放的四邻）。</summary>
@@ -121,17 +152,26 @@ public partial class PortraitCapture
         return room.Id;
     }
 
-    /// <summary>箭头在、命中块落在边框带里：不碰任何房间格、日志面板与「此刻」带，指向 target 区。</summary>
+    /// <summary>
+    /// 箭头在、命中块凑足 118：外沿落在边框带及其外侧空白，往格内只伸进门房格（主人已接受与门房格重叠），
+    /// 不碰别的房间格、日志面板与「此刻」带，指向 target 区。
+    /// </summary>
     private void CheckCrossArrow(int target)
     {
         var screen = _root.HubScreen;
         var arrow = screen.DebugWidgets.Where(w => w.Action == PortraitAction.CrossGate).ToList();
         Require(screen.DebugCrossArrow && arrow.Count == 1 && arrow[0].Index == target && arrow[0].Enabled, $"border arrow to region {target}");
         var hit = arrow[0].Rect;
-        Require(!hit.Intersects(PortraitLayout.MapGrid) && !hit.Intersects(PortraitLayout.LogPanel)
+        var hub = screen.DebugHub;
+        var room = hub.State.Territory.Room(hub.PlayerRoomId)!;
+        var gateCell = PortraitLayout.Cell(room.X, room.Y);
+        Require(Mathf.Min(hit.Size.X, hit.Size.Y) >= PortraitLayout.TouchMin - 0.01f, "border arrow hit reaches the 118 touch minimum");
+        Require((!hit.Intersects(PortraitLayout.MapGrid) || gateCell.Encloses(hit.Intersection(PortraitLayout.MapGrid)))
+            && !hit.Intersects(PortraitLayout.LogPanel)
             && hit.End.Y <= PortraitLayout.NowStrip.Position.Y + 0.01f && hit.Position.X >= 0f && hit.End.X <= PortraitLayout.CanvasWidth,
-            "border arrow hit stays in the border band");
-        Require(!screen.DebugWidgets.Any(w => w.Action != PortraitAction.CrossGate && w.Rect.Intersects(hit)),
-            "border arrow hit overlaps no other target");
+            "border arrow hit stays in the border band and the gate cell");
+        Require(!screen.DebugWidgets.Any(w => w.Action != PortraitAction.CrossGate && w.Rect.Intersects(hit)
+                && !(w.Action == PortraitAction.Cell && w.Index == room.Id)),
+            "border arrow hit overlaps no target but the gate cell");
     }
 }

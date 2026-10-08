@@ -37,6 +37,31 @@ class PolygonIsolationTests(unittest.TestCase):
         right = shape([(100, 0), (200, 0), (200, 100), (100, 100)])
         self.assertFalse(checks.shape_overlap(left, right))
 
+    def test_same_vertical_span_rectangles_overlap(self):
+        cell = {"x": 798, "y": 500, "w": 172, "h": 172, "polygon": None}
+        gate = {"x": 962, "y": 500, "w": 118, "h": 172, "polygon": None}
+        self.assertTrue(checks.shape_overlap(cell, gate))
+
+    def test_same_span_polygons_overlap(self):
+        cell = shape([(798, 500), (970, 500), (970, 672), (798, 672)])
+        gate = shape([(962, 500), (1080, 500), (1080, 672), (962, 672)])
+        self.assertTrue(checks.shape_overlap(cell, gate))
+
+    def test_cross_gate_into_its_gate_cell_is_known(self):
+        cell = {"action": "Cell", "x": 454, "y": 760, "w": 172, "h": 172, "polygon": None}
+        north = {"action": "CrossGate", "x": 454, "y": 706, "w": 172, "h": 118, "polygon": None}
+        self.assertTrue(checks.known_overlap(north, cell))
+
+    def test_cross_gate_past_half_a_cell_is_not_known(self):
+        cell = {"action": "Cell", "x": 454, "y": 760, "w": 172, "h": 172, "polygon": None}
+        deep = {"action": "CrossGate", "x": 454, "y": 706, "w": 172, "h": 200, "polygon": None}
+        self.assertFalse(checks.known_overlap(deep, cell))
+
+    def test_other_overlaps_are_not_known(self):
+        a = {"action": "Cell", "x": 0, "y": 0, "w": 172, "h": 172, "polygon": None}
+        b = {"action": "Tab", "x": 0, "y": 100, "w": 172, "h": 118, "polygon": None}
+        self.assertFalse(checks.known_overlap(a, b))
+
 
 if __name__ == "__main__":
     unittest.main()

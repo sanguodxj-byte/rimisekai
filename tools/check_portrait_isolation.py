@@ -54,9 +54,18 @@ def strict_inside(p, poly):
     return inside
 
 
+def overlap_box(a, b):
+    x0, y0 = max(a["x"], b["x"]), max(a["y"], b["y"])
+    return {"x": x0, "y": y0, "w": min(right(a), right(b)) - x0, "h": min(bottom(a), bottom(b)) - y0}
+
+
 def shape_overlap(a, b):
     if not box_overlap(a, b):
         return False
+    # Two plain rectangles: a positive-area box intersection is the overlap. Edge-crossing tests alone miss
+    # rectangles that share the same span on one axis (all their edges are collinear or disjoint).
+    if not a.get("polygon") and not b.get("polygon"):
+        return True
     aa, bb = polygon(a), polygon(b)
     for p, q in zip(aa, aa[1:] + aa[:1]):
         for r, s in zip(bb, bb[1:] + bb[:1]):
@@ -70,7 +79,27 @@ def shape_overlap(a, b):
         center = (sum(p[0] for p in poly) / len(poly), sum(p[1] for p in poly) / len(poly))
         if strict_inside(center, aa) and strict_inside(center, bb):
             return True
+    # Polygons whose edges only touch or run collinear: sample the shared box interior.
+    box = overlap_box(a, b)
+    for i in range(1, 8):
+        for j in range(1, 8):
+            p = (box["x"] + box["w"] * i / 8, box["y"] + box["h"] * j / 8)
+            if strict_inside(p, aa) and strict_inside(p, bb):
+                return True
     return False
+
+
+def known_overlap(a, b):
+    """The border arrow's hit reaches into its own gate room cell to make 118px (owner-approved, 2026-10-08).
+    Allowed only against one Cell it shares a full edge with, and only as deep as the 118 minimum needs."""
+    if {a["action"], b["action"]} != {"CrossGate", "Cell"}:
+        return False
+    gate, cell = (a, b) if a["action"] == "CrossGate" else (b, a)
+    box = overlap_box(gate, cell)
+    along_x = abs(gate["w"] - cell["w"]) <= EPS and abs(gate["x"] - cell["x"]) <= EPS
+    along_y = abs(gate["h"] - cell["h"]) <= EPS and abs(gate["y"] - cell["y"]) <= EPS
+    depth = box["h"] if along_x else box["w"]
+    return (along_x or along_y) and contains(cell, box) and depth < min(cell["w"], cell["h"]) / 2
 
 
 def label(row):
@@ -116,6 +145,9 @@ def main():
                 if a["owner"] == b["owner"] == "enemies":
                     continue
                 if shape_overlap(a, b):
+                    if known_overlap(a, b):
+                        if sum(1 for c in widgets if c["action"] == "Cell" and shape_overlap(c, a if a["action"] == "CrossGate" else b)) == 1:
+                            continue
                     errors.append(f"{page}: competing targets overlap {label(a)} / {label(b)}")
         print(f"{page}: {len(regions)} regions, {len(widgets)} targets, {len(errors) - before} errors")
     for error in errors:

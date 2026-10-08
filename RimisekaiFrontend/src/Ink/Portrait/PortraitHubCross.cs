@@ -9,7 +9,7 @@ namespace Rimisekai.Portrait;
 /// <summary>
 /// 过界（2026-10-08 主人要求）：主角站在有对外通道的房间（Core <c>CrossDir</c> 非空：领地连接点、兴趣点 / 地城的块间边界通道）时，
 /// 网格外缘对着该房朝外那条边开一道缺口，缺口里一枚实心三角箭头指向外侧，透明度 1.8 秒一拍淡入淡出；
-/// 箭头与命中块只占网格与哥特框之间的边框带及其外侧空白，不进任何房间格。离开该房即不再画。
+/// 箭头只画在网格与哥特框之间的边框带及其外侧空白；命中块外沿到最近的邻件、再往门房格内伸凑足 118（只压门房格）。离开该房即不再画。
 ///
 /// 点箭头＝<c>CrossTo</c>（状态当场改好），随后镜头朝箭头方向平移一整屏：旧网格向反方向滑出、新网格自箭头一侧滑入，
 /// 两块首尾相接，像同一张大地图上推过去（0.4 秒三次缓出，与抽屉 / 行走同一套缓动）。平移只动网格里的格与门，
@@ -69,6 +69,30 @@ public partial class PortraitHubScreen
         var target = hub.CrossTargetRegion(hub.PlayerRoomId);
         _widgets.Add(new PortraitWidget(hit, PortraitAction.CrossGate, target, true, "过界"));
         _crossArrowShown = true;
+    }
+
+    /// <summary>
+    /// 南向箭头的去路：「此刻」分节线在箭头正下方让出一段（与缺口同宽，两端各收一枚小菱），
+    /// 箭头不再夹在框与分节线之间，读作一条往下走的通道。分节线正中的标题段本来就断开，落在那里时不用再让。
+    /// </summary>
+    private void DrawCrossRuleGap()
+    {
+        var hub = _vm.Hub;
+        if (Walking || hub.CrossDir(hub.PlayerRoomId) is not Territory.RegionDir.South)
+            return;
+        var room = hub.State.Territory.Room(hub.PlayerRoomId)!;
+        var mouth = PortraitLayout.CrossMouth(Territory.RegionDir.South, PortraitLayout.Cell(room.X, room.Y));
+        var y = PortraitLayout.NowRuleY;
+        var titleHalf = InkDraw.Measure("此刻", PortraitLayout.FontMeta).X / 2f + 56f;
+        var cx = PortraitLayout.CanvasWidth / 2f;
+        var half = PortraitLayout.CrossGapSpan / 2f;
+        var left = mouth.X - half;
+        var right = mouth.X + half;
+        if (right > cx - titleHalf && left < cx + titleHalf)
+            return;
+        GothicArt.BackdropPart(this, new Rect2(left, y - 4f, right - left, 8f));
+        foreach (var x in new[] { left, right })
+            InkDraw.Jewel(this, new Vector2(x, y), 6f, new Color(InkStyle.Line, 0.8f));
     }
 
     /// <summary>点箭头：先记下旧网格（地城迷雾下的格名照旧），过界，再起镜头平移。</summary>

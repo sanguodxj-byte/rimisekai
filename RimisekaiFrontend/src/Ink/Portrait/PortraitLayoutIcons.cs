@@ -106,19 +106,16 @@ public static partial class PortraitLayout
     }
 
     /// <summary>
-    /// 箭头命中块：沿边与该格等长（172），向外一直到最近的邻件——
-    /// 北到日志面板下沿（54）、南到「此刻」头像带上沿（102）、东西到画布边（110）。
-    /// 东西两向另往格内多伸 <see cref="CrossHitInset"/>（2026-10-08 主人定），长度方向凑足 118 触控下限，
-    /// 与门房格命中块重叠这 8px（主人已接受）；南北两向不进格。
+    /// 箭头命中块：沿边与该格等长（172），外沿到最近的邻件——东西到画布边、北到日志面板下沿、南到「此刻」头像带上沿；
+    /// 再自外沿往格内伸，凑足 <see cref="TouchMin"/>（118）深（2026-10-08 主人定：命中块伸进门房格，只与门房格重叠）。
+    /// 东西外伸 110 → 进格 8；南外伸 102 → 进格 16；北外伸 54 → 进格 64（不到格边长 172 的一半，只压门房格自己，不碰别的格）。
     /// </summary>
-    public const float CrossHitInset = 8f;
-
     public static Rect2 CrossHit(Rimisekai.Housing.Territory.RegionDir dir, Rect2 cell) => dir switch
     {
-        Rimisekai.Housing.Territory.RegionDir.North => new Rect2(cell.Position.X, LogPanel.End.Y, MapCell, MapGrid.Position.Y - LogPanel.End.Y),
-        Rimisekai.Housing.Territory.RegionDir.South => new Rect2(cell.Position.X, MapGrid.End.Y, MapCell, NowStrip.Position.Y - MapGrid.End.Y),
-        Rimisekai.Housing.Territory.RegionDir.East => new Rect2(MapGrid.End.X - CrossHitInset, cell.Position.Y, CanvasWidth - MapGrid.End.X + CrossHitInset, MapCell),
-        _ => new Rect2(0f, cell.Position.Y, MapGrid.Position.X + CrossHitInset, MapCell),
+        Rimisekai.Housing.Territory.RegionDir.North => new Rect2(cell.Position.X, LogPanel.End.Y, MapCell, TouchMin),
+        Rimisekai.Housing.Territory.RegionDir.South => new Rect2(cell.Position.X, NowStrip.Position.Y - TouchMin, MapCell, TouchMin),
+        Rimisekai.Housing.Territory.RegionDir.East => new Rect2(CanvasWidth - TouchMin, cell.Position.Y, TouchMin, MapCell),
+        _ => new Rect2(0f, cell.Position.Y, TouchMin, MapCell),
     };
 
     // ---------- 设施抽屉 ----------

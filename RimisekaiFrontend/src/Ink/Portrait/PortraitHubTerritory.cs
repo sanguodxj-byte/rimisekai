@@ -49,6 +49,8 @@ public partial class PortraitHubScreen
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
+        if (!Crossing && !WorldLayer)
+            DrawCrossRuleGap();
         DrawNowStrip();
 
         var travel = PortraitLayout.TravelButton;
