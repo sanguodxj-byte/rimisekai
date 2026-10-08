@@ -249,6 +249,9 @@ public sealed class SaveData
 
     /// <summary>首领已倒下的地城（兴趣点编号）。</summary>
     public List<int> DungeonsCleared { get; set; } = new();
+
+    /// <summary>遗迹里走过的石室（地城迷雾按此揭开）。</summary>
+    public List<long> DungeonVisited { get; set; } = new();
     public List<MemberData> Members { get; set; } = new();
     public TerritoryData Territory { get; set; } = new();
     public Dictionary<int, int> ClearCount { get; set; } = new();
@@ -297,6 +300,7 @@ public static class SaveSystem
             WorldSeed = state.WorldSeed,
             DungeonRooms = new List<long>(state.Dungeons.SpentRooms),
             DungeonsCleared = new List<int>(state.Dungeons.Cleared),
+            DungeonVisited = new List<long>(state.Dungeons.VisitedRooms),
             ReturnedFromCombat = state.ReturnedFromCombat,
             Hub = hub?.Snapshot(),
         };
@@ -469,6 +473,7 @@ public static class SaveSystem
             state.RegenerateWorld(data.WorldSeed);
         state.Dungeons.SpentRooms.UnionWith(data.DungeonRooms);
         state.Dungeons.Cleared.UnionWith(data.DungeonsCleared);
+        state.Dungeons.VisitedRooms.UnionWith(data.DungeonVisited);
         state.Territory.Name = data.Territory.Name;
         state.Territory.SetLevel(data.Territory.Level);
         state.Territory.SetUnlockedRegions(data.Territory.UnlockedRegions);

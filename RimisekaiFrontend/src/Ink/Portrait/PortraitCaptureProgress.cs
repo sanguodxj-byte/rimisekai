@@ -162,7 +162,7 @@ public partial class PortraitCapture
             _root.HubScreen.ShowTab(3);
         });
 
-        // 接下委托即战斗：任务页选单、点名、开打，核对真切入战斗页且 QuestRun 随行。
+        // 接下单战委托即战斗：任务页选单、点名、开打，核对真切入战斗页且 QuestRun 随行。
         _steps.Enqueue(() =>
         {
             _root.HubScreen.ShowTab(2);
@@ -171,7 +171,8 @@ public partial class PortraitCapture
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.QuestTake),
                 "quest board lists available commissions");
-            ClickHub(PortraitAction.QuestTake, 0);
+            // 单独一战的委托（对话类）：地图类委托走包接送的地城，另在大地图段核对。
+            ClickHub(PortraitAction.QuestTake, 1);
         });
         _steps.Enqueue(() =>
         {

@@ -58,9 +58,13 @@ public sealed partial class HubSession
         return true;
     }
 
-    /// <summary>主角眼下能不能走到这间房（沿连通的门，同一领地区内）。</summary>
+    /// <summary>
+    /// 主角眼下能不能走到这间房（沿连通的门，同一领地区内）。
+    /// 地城里只认看得见的房：迷雾里的去不了，也不从迷雾里抄近路。
+    /// </summary>
     public bool CanReach(int roomId) =>
-        roomId == PlayerRoomId || State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true).Count > 0;
+        roomId == PlayerRoomId || (RoomShown(roomId)
+            && State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), ignoreLocks: true).Count > 0);
 
     /// <summary>写来到某房间的场景日志：a＝「你来到了X。描述」，b＝在场者的 Meet 口上。</summary>
     private void WriteArrival(int roomId)

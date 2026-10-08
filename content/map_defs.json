@@ -382,6 +382,15 @@
     ],
     "treasure": { "title": "宝库", "text": "石箱上的封蜡早已干裂，撬开来是一捧旧币。", "moneyMin": 60, "moneyMax": 180, "acceptLabel": "收下" },
     "shrine": { "title": "古神龛", "text": "神龛前的灯不知被谁点着，众人默立片刻，像是卸下了什么。", "mood": 6, "acceptLabel": "祈祷" },
-    "clearedText": "{0}已肃清。"
+    "clearedText": "{0}已肃清。",
+    "fogName": "？",
+    "quest": {
+      "starsPerTier": 3,
+      "bossText": "委托要找的正主就在这一间，见了生人便扑了上来。",
+      "leaveLabel": "撤离",
+      "arriveText": "接下委托「{0}」，马车把众人送到了地头。",
+      "doneText": "委托「{0}」了结，马车把众人接回了领地。",
+      "abandonText": "撤出了「{0}」，马车把众人接回了领地。"
+    }
   }
 }

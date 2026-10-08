@@ -47,7 +47,7 @@ public sealed partial class HubSession
             if (!worker.FollowsPlayer)
                 continue;
             var who = State.Roster.Find(worker.CharacterId);
-            if (who == null || who.AcceptsInvite())
+            if (who == null || who.AcceptsInvite() || OnQuestParty(who.Id))
                 continue;
             EndFollow(worker);
             Write($"{who.Name}不再跟着你了。");

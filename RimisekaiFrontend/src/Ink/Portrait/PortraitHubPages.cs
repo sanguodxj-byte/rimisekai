@@ -242,8 +242,21 @@ public partial class PortraitHubScreen
             return;
         }
 
-        // 接下委托即遭遇：战斗本身就是委托入口（Encounters 起战，结算侧按 QuestRun 记通关与冷却）。
         var def = defs[_questSel];
+        // 地图类委托＝包接送的地城：马车送进地城，正主倒下即了结接回（Core 收尾）。
+        if (def.Kind != QuestKind.Dialogue)
+        {
+            if (!hub.StartQuestDungeon(run))
+            {
+                SetNotice("回到领地才能接这单。");
+                return;
+            }
+            _sheet = SheetKind.None;
+            ShowTab(0);
+            return;
+        }
+
+        // 其余委托＝单独一战：战斗本身就是委托入口（Encounters 起战，结算侧按 QuestRun 记通关与冷却）。
         var session = Encounters.Start(hub.State, def.Foes, placeName: def.Name, partyIds: deploy);
         if (session == null)
         {

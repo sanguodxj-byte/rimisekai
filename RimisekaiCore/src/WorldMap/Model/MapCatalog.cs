@@ -80,6 +80,33 @@ public sealed class DungeonDef
 
     /// <summary>首领倒下后的日志，{0} 为地城名。</summary>
     public string ClearedText { get; set; } = "";
+
+    /// <summary>迷雾里望见、还没走进去的石室，格上写这个。</summary>
+    public string FogName { get; set; } = "";
+
+    /// <summary>委托地城（包接送）。</summary>
+    public QuestDungeonDef Quest { get; set; } = new();
+}
+
+/// <summary>
+/// 委托地城：接下地图类委托，马车把编成的人送进一座现生成的地城，最深处是委托的正主；
+/// 正主倒下即委托了结、接回领地；战败或撤离同样接回，委托不算数。
+/// </summary>
+public sealed class QuestDungeonDef
+{
+    /// <summary>委托难度每这么多星，地城危险等级高一级（1–4）。</summary>
+    public double StarsPerTier { get; set; } = 1;
+
+    /// <summary>正主那一间的描写。</summary>
+    public string BossText { get; set; } = "";
+
+    /// <summary>出行钮在委托地城里换成这个字（撤离）。</summary>
+    public string LeaveLabel { get; set; } = "";
+
+    /// <summary>送到地头、了结接回、撤离接回的日志，{0} 为委托名。</summary>
+    public string ArriveText { get; set; } = "";
+    public string DoneText { get; set; } = "";
+    public string AbandonText { get; set; } = "";
 }
 
 public sealed class PoiSettlementDefEntry

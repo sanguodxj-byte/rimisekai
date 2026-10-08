@@ -26,7 +26,7 @@ public sealed class Encounter
     public EncounterSource Source { get; init; }
     public string Place { get; init; } = "";
 
-    /// <summary>地城遭遇所在的兴趣点与生成器房号；野外为 -1。</summary>
+    /// <summary>地城遭遇所在的地城编号（遗迹＝兴趣点编号）与生成器房号；野外为 -1。</summary>
     public int PoiId { get; init; } = -1;
     public int RoomId { get; init; } = -1;
 
@@ -97,10 +97,6 @@ public sealed partial class HubSession
         return System.Math.Clamp(1 + distance / 20, 1, 4);
     }
 
-    /// <summary>此刻是否身在地城（遗迹）里。</summary>
-    private bool InDungeon =>
-        _currentPoiId >= 0 && State.World.Pois.Find(p => p.Id == _currentPoiId)!.Type == WorldPoiType.Ruin;
-
     /// <summary>
     /// 地城里走远路：一间一间地走，每进一间都看有没有东西，撞上就停在那一间（返回 true，人已挪动）。
     /// </summary>
@@ -108,7 +104,7 @@ public sealed partial class HubSession
     {
         LeaveFixture();
         var from = PlayerRoomId;
-        foreach (var step in State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true))
+        foreach (var step in State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), ignoreLocks: true))
         {
             PassTime(CostMove * TerritoryClock.StepMinutes);
             Enter(step);
@@ -168,21 +164,22 @@ public sealed partial class HubSession
     {
         if (!InDungeon)
             return;
-        var poi = State.World.Pois.Find(p => p.Id == _currentPoiId)!;
+        var run = _dungeon!;
         var genId = roomId - PoiRoomIdBase;
         var room = State.CurrentPoi.GetRoom(genId)!;
-        if (room.IsStart || State.Dungeons.IsSpent(poi.Id, genId))
+        VisitDungeonRoom(roomId);
+        if (room.IsStart || run.Ledger.IsSpent(run.Key, genId))
             return;
         var dungeon = MapCatalog.Default.Dungeon;
-        var tier = DangerTier(poi.X, poi.Y);
-        var roll = Roll(poi.Id, genId, State.WorldSeed);
+        var cleared = run.Ledger.Cleared.Contains(run.Key);
+        var roll = Roll(run.Key, genId, run.Seed);
         EncounterDef? def = null;
         var source = EncounterSource.DungeonGuard;
         if (room.IsEnd)
         {
-            if (IsDungeonCleared(poi.Id))
+            if (cleared)
                 return;
-            def = PickByTier(dungeon.Bosses, tier);
+            def = run.Boss ?? PickByTier(dungeon.Bosses, run.Tier);
             source = EncounterSource.DungeonBoss;
         }
         else if (room.RoomType == PoiMap.PoiRoomType.Treasure)
@@ -195,9 +192,9 @@ public sealed partial class HubSession
             def = dungeon.Shrine;
             source = EncounterSource.DungeonShrine;
         }
-        else if (!IsDungeonCleared(poi.Id) && roll % 100 < (uint)dungeon.GuardPercent)
+        else if (!cleared && roll % 100 < (uint)dungeon.GuardPercent)
         {
-            def = PickByTier(dungeon.Guards, tier);
+            def = PickByTier(dungeon.Guards, run.Tier);
         }
         if (def == null)
             return;
@@ -207,7 +204,7 @@ public sealed partial class HubSession
             Def = def,
             Source = source,
             Place = room.Name,
-            PoiId = poi.Id,
+            PoiId = run.Key,
             RoomId = genId,
             Money = RollMoney(def, roll >> 8),
         };
@@ -228,8 +225,8 @@ public sealed partial class HubSession
         if (e.Def.Mood != 0)
             foreach (var id in WorldPartyIds())
                 State.Roster.Find(id)?.Affect.AddMood(e.Def.Mood);
-        if (e.PoiId >= 0)
-            State.Dungeons.Spend(e.PoiId, e.RoomId);
+        if (e.Source != EncounterSource.Wild)
+            _dungeon!.Ledger.Spend(e.PoiId, e.RoomId);
         Write(e.Money > 0 ? $"{e.Title}：得了 {e.Money} 金币。"
             : e.Money < 0 ? $"{e.Title}：破了 {-e.Money} 金币。"
             : $"{e.Title}。");
@@ -269,6 +266,8 @@ public sealed partial class HubSession
         var session = Encounters.Start(State, e.Def.Foes, catalog, e.Place, WorldPartyIds());
         if (session == null)
             return null;
+        if (e.Source == EncounterSource.DungeonBoss)
+            session.QuestRun = _dungeon!.Quest;
         PendingEncounter = null;
         _fighting = e;
         return session;
@@ -287,13 +286,18 @@ public sealed partial class HubSession
         switch (battle.Outcome)
         {
             case Combat.CombatOutcome.AttackerWin:
-                if (e.PoiId >= 0)
-                    State.Dungeons.Spend(e.PoiId, e.RoomId);
-                if (e.Source == EncounterSource.DungeonBoss)
+                if (e.Source == EncounterSource.Wild)
+                    break;
+                _dungeon!.Ledger.Spend(e.PoiId, e.RoomId);
+                if (e.Source != EncounterSource.DungeonBoss)
+                    break;
+                if (InQuestDungeon)
                 {
-                    State.Dungeons.Cleared.Add(e.PoiId);
-                    Write(string.Format(MapCatalog.Default.Dungeon.ClearedText, LayerPlaceName));
+                    EndQuestDungeon(string.Format(MapCatalog.Default.Dungeon.Quest.DoneText, LayerPlaceName));
+                    break;
                 }
+                _dungeon.Ledger.Cleared.Add(e.PoiId);
+                Write(string.Format(MapCatalog.Default.Dungeon.ClearedText, LayerPlaceName));
                 break;
             case Combat.CombatOutcome.DefenderWin:
                 Write($"败给了{e.Title}，众人狼狈地退回领地。");

@@ -1,8 +1,10 @@
 using System.Linq;
 using Rimisekai.Combat;
+using Rimisekai.Defs;
 using Rimisekai.Housing;
 using Rimisekai.Hub;
 using Rimisekai.PoiMap;
+using Rimisekai.Quest;
 using Rimisekai.Save;
 using Rimisekai.WorldMap;
 using Xunit;
@@ -132,7 +134,8 @@ public sealed class WorldEncounterTests
     /// <summary>从当前石室沿通路走到目标石室，遇守卫一律迎战并判胜。</summary>
     private static void WalkTo(HubSession hub, int targetRoomId)
     {
-        for (var guard = 0; guard < 200 && hub.PlayerRoomId != targetRoomId; guard++)
+        // 委托地城的正主倒下即被接回领地：走到那一步就算到了。
+        for (var guard = 0; guard < 200 && hub.PlayerRoomId != targetRoomId && hub.Layer != MapLayer.Territory; guard++)
         {
             var rooms = hub.State.Territory.Rooms;
             var prev = new System.Collections.Generic.Dictionary<int, int> { [hub.PlayerRoomId] = -1 };
@@ -159,7 +162,8 @@ public sealed class WorldEncounterTests
                 Assert.True(hub.Move(step));
             Resolve(hub);
         }
-        Assert.Equal(targetRoomId, hub.PlayerRoomId);
+        if (hub.Layer != MapLayer.Territory)
+            Assert.Equal(targetRoomId, hub.PlayerRoomId);
     }
 
     private static void Resolve(HubSession hub)
@@ -177,6 +181,7 @@ public sealed class WorldEncounterTests
             m.Hp = 0;
         session.Battle.JudgeOutcome();
         Assert.Equal(CombatOutcome.AttackerWin, session.Battle.Outcome);
+        CombatSettlement.Settle(hub.State, session.Battle, session.QuestRun);
         hub.SettleEncounterBattle(session.Battle);
     }
 
@@ -209,6 +214,9 @@ public sealed class WorldEncounterTests
         var sameBlock = state.CurrentPoi.GetBlockByRoomId(end.Id) == state.CurrentPoi.GetBlockByRoomId(start.Id);
         if (!sameBlock)
             return;
+        // 远路只走看得见的房：先把迷雾全揭开。
+        foreach (var r in state.CurrentPoi.AllRooms)
+            state.Dungeons.Visit(ruin.Id, r.Id);
         for (var guard = 0; guard < 50 && hub.PlayerRoomId != endId; guard++)
         {
             Assert.True(hub.Arrive(endId));
@@ -247,5 +255,100 @@ public sealed class WorldEncounterTests
         var sizes = state.World.Pois.Where(p => p.Type == WorldPoiType.Ruin)
             .Select(p => state.EnterPoi(p.Id).Blocks.Count).Distinct().Count();
         Assert.True(sizes > 1);
+    }
+
+    [Fact]
+    public void Dungeon_fog_shows_walked_rooms_and_glimpses_their_neighbours()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var ruin = EnterRuin(hub, state);
+        var fog = MapCatalog.Default.Dungeon.FogName;
+        var here = state.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId);
+        var shown = hub.Map();
+        Assert.Contains(shown, r => r.Id == here.Id && r.Name == here.Name);
+        var sameBlock = here.Links.Where(id => state.Territory.Rooms.First(r => r.Id == id).RegionId == here.RegionId).ToList();
+        foreach (var id in sameBlock)
+            Assert.Contains(shown, r => r.Id == id && r.Name == fog);
+        var block = state.Territory.Rooms.Where(r => r.RegionId == here.RegionId && r.Open).ToList();
+        var dark = block.First(r => r.Id != here.Id && !here.Links.Contains(r.Id) && !hub.RoomShown(r.Id));
+        Assert.DoesNotContain(shown, r => r.Id == dark.Id);
+        Assert.False(hub.CanReach(dark.Id));
+        Assert.False(hub.Arrive(dark.Id));
+
+        // 走进望见的那间，它就亮了。
+        var next = sameBlock[0];
+        Assert.True(hub.Move(next));
+        Assert.Contains(hub.Map(), r => r.Id == next && r.Name != fog);
+        Assert.True(state.Dungeons.IsVisited(ruin.Id, next - HubSession.PoiRoomIdBase));
+
+        var loaded = SaveSystem.Restore(SaveSystem.Capture(state, hub));
+        Assert.True(loaded.Dungeons.IsVisited(ruin.Id, next - HubSession.PoiRoomIdBase));
+    }
+
+    private static QuestRun MapQuest(GameState state, params int[] party)
+    {
+        var def = new QuestDef
+        {
+            DefName = "Quest_DungeonTest",
+            Id = 9001,
+            Label = "测试矿道",
+            Kind = QuestKind.Map,
+            Difficulty = 3.5,
+            CooldownDays = 1,
+            MaxPartySize = 4,
+            Foes = { new Catalog.EnemyDef { Id = "boss", Name = "矿道之主", MaxHp = 30, Attack = 2, Speed = 5, ThreatTier = 1, Column = 1 } },
+        };
+        return state.Quests.Start(def, party)!;
+    }
+
+    [Fact]
+    public void Map_quests_are_dungeons_with_a_ride_there_and_back()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var mate = state.Roster.Add("同伴");
+        var run = MapQuest(state, state.Roster.Master!.Id, mate.Id);
+        Assert.True(hub.StartQuestDungeon(run));
+        Assert.Equal(MapLayer.QuestPlace, hub.Layer);
+        Assert.Equal("测试矿道", hub.MapTitle());
+        Assert.True(hub.InQuestDungeon);
+        Assert.Contains(mate.Id, hub.WorldPartyIds());
+        Assert.Equal(MapCatalog.Default.Dungeon.Quest.LeaveLabel, hub.TravelLabel);
+
+        // 一路打到最深处：正主就是委托的敌人，倒下即了结，马车接回领地。
+        var end = state.CurrentPoi!.AllRooms.First(r => r.IsEnd);
+        var endId = HubSession.PoiRoomIdBase + end.Id;
+        var boss = MapCatalog.Default.Dungeon.Quest;
+        WalkTo(hub, endId);
+        Assert.Contains(hub.History, h => h.Text.Contains(string.Format(boss.DoneText, "测试矿道")));
+        Assert.Equal(MapLayer.Territory, hub.Layer);
+        Assert.Equal(1, hub.PlayerRoomId);
+        Assert.Equal(1, state.Quests.ClearCount[run.QuestId]);
+        Assert.DoesNotContain(state.Territory.Rooms, r => r.Id >= HubSession.PoiRoomIdBase);
+        Assert.False(hub.IsFollowing(mate.Id));
+    }
+
+    [Fact]
+    public void Leaving_a_quest_dungeon_rides_home_without_clearing_it()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var mate = state.Roster.Add("同伴");
+        var run = MapQuest(state, state.Roster.Master!.Id, mate.Id);
+        Assert.True(hub.StartQuestDungeon(run));
+        hub.SwitchToWorld();
+        Assert.Equal(MapLayer.Territory, hub.Layer);
+        Assert.Equal(1, hub.PlayerRoomId);
+        Assert.False(state.Quests.ClearCount.ContainsKey(run.QuestId));
+        Assert.True(state.Quests.IsAvailable(run.QuestId));
+        Assert.False(hub.IsFollowing(mate.Id));
+        Assert.True(state.Party.AtHome);
+    }
+
+    [Fact]
+    public void Quest_dungeons_start_only_from_home()
+    {
+        var (hub, state) = Setup(rate: 0);
+        hub.SwitchToWorld();
+        Assert.False(hub.StartQuestDungeon(MapQuest(state, state.Roster.Master!.Id)));
+        Assert.Equal(MapLayer.World, hub.Layer);
     }
 }

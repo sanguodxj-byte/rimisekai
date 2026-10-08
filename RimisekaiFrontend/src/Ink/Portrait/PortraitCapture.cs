@@ -816,14 +816,23 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the dungeon");
-            Shoot("dungeon_inside", _root.HubScreen);
-            // 朝本块最远的那间走：一路上第一间有东西的石室会把人截住。
             var hub = _root.HubScreen.DebugHub;
-            var here = hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId);
-            var far = hub.State.Territory.Rooms.Where(r => r.RegionId == here.RegionId && r.Open)
-                .OrderByDescending(r => hub.State.Territory.Route(here.Id, r.Id, ignoreLocks: true).Count).First();
-            Require(hub.Arrive(far.Id), "walk deep into the dungeon");
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the dungeon");
+            // 迷雾：进门只看得见入口与有门相通的几间（写「？」），其余漆黑、去不了。
+            var fog = Rimisekai.WorldMap.MapCatalog.Default.Dungeon.FogName;
+            var block = hub.State.Territory.Rooms.Count(r => r.RegionId == hub.RegionId && r.Open);
+            Require(hub.Map().Count < block && hub.Map().Any(r => r.Name == fog), "dungeon fog hides all but the entrance and its neighbours");
+            Require(hub.State.Territory.Rooms.Where(r => r.RegionId == hub.RegionId && r.Open).Any(r => !hub.CanReach(r.Id)),
+                "rooms in the dark cannot be walked to");
+            Shoot("dungeon_inside", _root.HubScreen);
+            // 一间一间往雾里走：第一间有东西的石室会把人截住。
+            for (var i = 0; i < 40 && hub.PendingEncounter == null; i++)
+            {
+                var ahead = hub.Map().FirstOrDefault(r => r.Name == fog && hub.CanReach(r.Id));
+                if (ahead == null)
+                    break;
+                Require(hub.Arrive(ahead.Id), "step into a glimpsed room");
+            }
             _root.HubScreen.QueueRedraw();
         });
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
@@ -849,6 +858,38 @@ public partial class PortraitCapture : Node
         {
             var hub = _root.HubScreen.DebugHub;
             Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Party.AtHome, "back home from the dungeon");
+            _root.HubScreen.ShowTab(2);
+        });
+        // 地图类委托＝包接送的地城：接单、点名、出发即被送进地城（有迷雾），撤离即接回领地。
+        _steps.Enqueue(() => ClickHub(PortraitAction.QuestTake, 0));
+        _steps.Enqueue(() =>
+        {
+            var member = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.PartyPick && w.Enabled);
+            ClickHub(member.Action, member.Index);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.QuestStart, 0));
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Hub && hub.Layer == Rimisekai.Hub.MapLayer.QuestPlace
+                && hub.InQuestDungeon, "a map commission rides the party into its dungeon");
+            Require(_root.HubScreen.DebugTab == 0, "the hub shows the dungeon map after setting out");
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.HubWorld && w.Label == hub.TravelLabel)
+                && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Build && !w.Enabled),
+                "in a commission dungeon the travel button reads leave and building is off");
+            Shoot("quest_dungeon", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.IsActive, "leaving a commission dungeon asks first");
+            _root.ModalLayer.Choose("confirm");
+        });
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && !hub.InQuestDungeon, "leaving rides the party home");
         });
     }
 

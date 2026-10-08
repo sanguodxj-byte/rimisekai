@@ -41,12 +41,15 @@ public partial class PortraitHubScreen
         DrawNowStrip();
 
         var travel = PortraitLayout.TravelButton;
-        var travelLabel = WorldLayer ? "返回领地" : "出行";
-        PortraitFrame.Plaque(this, travel, travelLabel, glyph: WorldLayer ? PortraitGlyph.Castle : PortraitGlyph.Map);
+        var travelLabel = _vm.Hub.TravelLabel;
+        var homeward = WorldLayer || _vm.Hub.InQuestDungeon;
+        PortraitFrame.Plaque(this, travel, travelLabel, glyph: homeward ? PortraitGlyph.Castle : PortraitGlyph.Map);
         _widgets.Add(new PortraitWidget(travel, PortraitAction.HubWorld, 0, true, travelLabel));
+        // 只有领地里能建造：大地图、兴趣点、地城里都不行。
+        var buildable = _vm.Hub.Layer == MapLayer.Territory;
         var build = PortraitLayout.BuildButton;
-        PortraitFrame.Plaque(this, build, "建造", primary: true, enabled: !WorldLayer, glyph: PortraitGlyph.Hammer);
-        _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, !WorldLayer, "建造"));
+        PortraitFrame.Plaque(this, build, "建造", primary: true, enabled: buildable, glyph: PortraitGlyph.Hammer);
+        _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, buildable, "建造"));
     }
 
     private void DrawCell(int x, int y)
@@ -182,7 +185,8 @@ public partial class PortraitHubScreen
                 continue;
             foreach (var dir in new[] { RoomDir.East, RoomDir.South })
             {
-                if (territory.NeighborAt(room, dir) is not { Open: true } other || !room.Links.Contains(other.Id))
+                if (territory.NeighborAt(room, dir) is not { Open: true } other || !room.Links.Contains(other.Id)
+                    || !_vm.Hub.DoorShown(room.Id, other.Id))
                     continue;
                 var a = cellRect(room.X, room.Y);
                 if (dir == RoomDir.East)
@@ -404,6 +408,17 @@ public partial class PortraitHubScreen
                 _nowPage++;
                 return true;
             case PortraitAction.HubWorld:
+                if (hub.InQuestDungeon)
+                {
+                    // 撤离委托地城：委托不算数，先问一声。
+                    Confirm(hub.TravelLabel, hub.MapTitle(), () =>
+                    {
+                        hub.AbandonQuestDungeon();
+                        Notice();
+                        QueueRedraw();
+                    });
+                    return true;
+                }
                 hub.ToggleWorldLayer();
                 _sheet = SheetKind.None;
                 if (WorldLayer)

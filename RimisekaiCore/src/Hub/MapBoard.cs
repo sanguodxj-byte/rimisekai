@@ -67,6 +67,11 @@ public sealed partial class HubSession
     {
         if (Layer == MapLayer.World)
             return;
+        if (Layer == MapLayer.QuestPlace)
+        {
+            AbandonQuestDungeon();
+            return;
+        }
         if (Layer == MapLayer.WorldPoi)
         {
             var place = LayerPlaceName;
@@ -94,6 +99,11 @@ public sealed partial class HubSession
     {
         if (Layer == MapLayer.Territory)
             return;
+        if (Layer == MapLayer.QuestPlace)
+        {
+            EndQuestDungeon("");
+            return;
+        }
         if (Layer == MapLayer.WorldPoi)
         {
             LeavePoi();
@@ -266,33 +276,21 @@ public sealed partial class HubSession
         if (poi == null || Layer != MapLayer.World || (Trek.X, Trek.Y) != (poi.X, poi.Y))
             return false;
 
-        var poiMap = State.EnterPoi(poiId);
         _currentPoiId = poiId;
-        _unlockedBeforePoi = State.Territory.UnlockedRegions;
-        State.Territory.SetUnlockedRegions(System.Math.Max(State.Territory.UnlockedRegions,
-            Territory.MaxTerritoryRegions + poiMap.Blocks.Count));
-        foreach (var r in poiMap.ExportToHousingRooms())
-        {
-            var block = poiMap.GetBlockByRoomId(r.Id)!;
-            var room = new Room
+        var start = ImportScene(State.EnterPoi(poiId));
+        if (poi.Type == WorldPoiType.Ruin)
+            _dungeon = new DungeonRun
             {
-                Id = PoiRoomIdBase + r.Id,
-                Name = r.Name,
-                RegionId = Territory.MaxTerritoryRegions + block.RegionId,
-                X = r.X,
-                Y = r.Y,
-                Open = r.Open,
-                OpenCost = r.OpenCost,
+                Key = poi.Id,
+                Seed = State.WorldSeed,
+                Tier = DangerTier(poi.X, poi.Y),
+                Ledger = State.Dungeons,
             };
-            foreach (var link in r.Links)
-                room.Links.Add(PoiRoomIdBase + link);
-            room.EnsureDefaultTag();
-            if (!State.Territory.AddRoom(room))
-                throw new System.InvalidOperationException($"兴趣点房 {room.Id} 装不进领地表。");
-        }
 
         SetLayer(MapLayer.WorldPoi, poi.NameZh.Length > 0 ? poi.NameZh : poi.NameEn);
-        Enter(PoiRoomIdBase + poiMap.Blocks[0].StartRoom!.Id);
+        Enter(start);
+        if (InDungeon)
+            VisitDungeonRoom(start);
         Write($"抵达了{MapTitle()}。");
         return true;
     }
@@ -325,7 +323,7 @@ public sealed partial class HubSession
     public int TerritoryUnlockedRegions => _unlockedBeforePoi >= 0 ? _unlockedBeforePoi : State.Territory.UnlockedRegions;
 
     /// <summary>
-    /// 退出当前兴趣点：人（连同跟着的人）先回到本家落脚点，兴趣点房从领地表里撤掉，
+    /// 退出当前兴趣点或委托地城：人（连同跟着的人）先回到本家落脚点，兴趣点房从领地表里撤掉，
     /// 已解锁区域数还原。图层由调用方再定。
     /// </summary>
     private void LeavePoi()
@@ -341,6 +339,8 @@ public sealed partial class HubSession
         _unlockedBeforePoi = -1;
         State.CurrentPoi = null;
         _currentPoiId = -1;
+        _dungeon = null;
+        _fogRooms = null;
         LayerPlaceName = "";
     }
 
@@ -373,6 +373,8 @@ public sealed partial class HubSession
     {
         if (Layer == MapLayer.World)
             return WorldViewRooms();
+        if (InDungeon)
+            return FogRooms();
         return State.Territory.Rooms.FindAll(r => r.RegionId == RegionId);
     }
 

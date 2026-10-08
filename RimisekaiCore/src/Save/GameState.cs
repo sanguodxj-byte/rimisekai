@@ -100,7 +100,14 @@ public sealed class GameState
         return poiMap;
     }
 
-    /// <summary>地城：按兴趣点种子从数据表的块拼法里挑一式，每块都是遗迹地牢。</summary>
+    /// <summary>委托地城：按种子现生成一座地城，作为当前场景。</summary>
+    public PoiMapData EnterQuestDungeon(int seed)
+    {
+        CurrentPoi = GenerateDungeon(seed);
+        return CurrentPoi;
+    }
+
+    /// <summary>地城：按种子从数据表的块拼法里挑一式，每块都是遗迹地牢。</summary>
     private static PoiMapData GenerateDungeon(int poiSeed)
     {
         var (_, _, districts) = MapCatalog.Default.GetPoiScale(WorldPoiType.Ruin);
