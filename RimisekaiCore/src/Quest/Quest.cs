@@ -61,13 +61,13 @@ public sealed class QuestDef : Def, IIdentifiedDef
     /// <summary>接下委托即遭遇的敌人阵容（玩家可见的敌人名权威在此）。</summary>
     public List<EnemyDef> Foes { get; init; } = new();
 
-    /// <summary>难度显示：实心为整星，镂空 ☆ 为半星；超过 10 星改为 ★x数量。</summary>
+    /// <summary>难度显示：实心为整星，镂空 ☆ 为半星；超过 10 星改为 ★×数量。</summary>
     public string DifficultyText
     {
         get
         {
             if (Difficulty > 10)
-                return $"★x{(int)Math.Ceiling(Difficulty)}";
+                return $"★×{(int)Math.Ceiling(Difficulty)}";
             var half = (int)Math.Round(Difficulty * 2);
             var text = new string('★', half / 2);
             if (half % 2 == 1)

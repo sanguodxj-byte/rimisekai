@@ -1186,6 +1186,7 @@ public static class InkDraw
             return lines;
         foreach (var paragraph in text.Replace("\r", "").Split('\n'))
         {
+            var start = lines.Count;
             var line = "";
             foreach (var rune in paragraph.EnumerateRunes())
             {
@@ -1203,6 +1204,13 @@ public static class InkDraw
                 }
                 else
                     line = next;
+            }
+            // 段末不留孤字：末行只剩一个字（标点不算）时，从上一行再带一个字下来（「结算伤 / 害。」→「结算 / 伤害。」）。
+            if (lines.Count > start && line.TrimEnd(NoLineStart.ToCharArray()).Length == 1 && lines[^1].Length > 2
+                && !NoLineStart.Contains(lines[^1][^1]))
+            {
+                line = lines[^1][^1] + line;
+                lines[^1] = lines[^1][..^1];
             }
             lines.Add(line);
         }

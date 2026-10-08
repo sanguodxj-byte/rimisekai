@@ -28,8 +28,8 @@ public sealed class QuestTests
     [InlineData(2, "★★")]
     [InlineData(3.5, "★★★☆")]
     [InlineData(10, "★★★★★★★★★★")]
-    [InlineData(12, "★x12")]
-    [InlineData(10.5, "★x11")]
+    [InlineData(12, "★×12")]
+    [InlineData(10.5, "★×11")]
     public void Difficulty_DisplaysHalfStarsAndCountBeyondTen(double difficulty, string expected)
     {
         Assert.Equal(expected, Def(difficulty).DifficultyText);
@@ -57,7 +57,7 @@ public sealed class QuestTests
         Assert.Equal(new[] { "金币 x10" }, a.Rewards);
         Assert.Equal(4, a.MaxPartySize);
         Assert.Equal("★★★☆", a.DifficultyText);
-        Assert.Equal("★x12", DefDatabase<QuestDef>.All.Single(d => d.DefName == "Quest_B").DifficultyText);
+        Assert.Equal("★×12", DefDatabase<QuestDef>.All.Single(d => d.DefName == "Quest_B").DifficultyText);
     }
 
     [Fact]

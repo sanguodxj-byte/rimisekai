@@ -529,7 +529,7 @@ public static class PortraitFrame
         GradLine(ci, cx + w / 2f + 56f, x2, y, 3f, new Color(InkStyle.Line, 0.8f), new Color(InkStyle.Line, 0f));
     }
 
-    /// <summary>菱形刻度：n 枚，前 k 枚实心银白，其余暗铜小菱。half 表示第 k+1 枚画成半亮。</summary>
+    /// <summary>菱形刻度：n 枚，一律实心——前 k 枚实心银白（不挖芯），其余实心暗铜；k 带小数时第 k+1 枚左半银白右半暗铜。</summary>
     public static void Ticks(CanvasItem ci, float x, float y, int n, float k, float size = 30f, float gap = 20f)
     {
         for (var i = 0; i < n; i++)
@@ -537,10 +537,7 @@ public static class PortraitFrame
             var cx = x + i * (size + gap) + size / 2f;
             var c = new Vector2(cx, y);
             if (i + 1 <= k)
-            {
                 InkDraw.Jewel(ci, c, size / 2f, InkStyle.Line);
-                InkDraw.Jewel(ci, c, size / 5f, InkStyle.Bg);
-            }
             else if (i < k)
             {
                 InkDraw.Jewel(ci, c, size / 2f, InkStyle.WoodDark);

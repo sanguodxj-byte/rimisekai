@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Rimisekai.Defs;
 using Rimisekai.Flow;
@@ -712,24 +713,6 @@ public partial class PortraitModalLayer : Control
         QueueRedraw();
     }
 
-    private static List<string> Wrap(string text, float width, int size)
-    {
-        var lines = new List<string>();
-        foreach (var hard in text.Split('\n'))
-        {
-            var run = "";
-            foreach (var ch in hard)
-            {
-                if (InkDraw.Measure(run + ch, size).X > width && run.Length > 0)
-                {
-                    lines.Add(run);
-                    run = ch.ToString();
-                }
-                else
-                    run += ch;
-            }
-            lines.Add(run);
-        }
-        return lines;
-    }
+    /// <summary>与全局同一套换行（含中文避头尾）。</summary>
+    private static List<string> Wrap(string text, float width, int size) => InkDraw.WrapLines(text, width, size).ToList();
 }

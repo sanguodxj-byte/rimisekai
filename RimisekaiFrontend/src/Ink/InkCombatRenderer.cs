@@ -214,7 +214,7 @@ public static class InkCombatRenderer
         for (var i = start; i < lines.Count; i++)
         {
             var isLatest = i == lines.Count - 1;
-            var isRound = lines[i].StartsWith("— 第 ") && lines[i].EndsWith(" 轮 —");
+            var isRound = lines[i].StartsWith("— 第 ") && lines[i].EndsWith(" 回合 —");
 
             Color col;
             if (isRound)
@@ -248,7 +248,7 @@ public static class InkCombatRenderer
             switch (ev.Kind)
             {
                 case CombatEventKind.Round:
-                    result.Add($"— 第 {ev.Round} 轮 —");
+                    result.Add($"— 第 {ev.Round} 回合 —");
                     break;
                 case CombatEventKind.Hit:
                 {

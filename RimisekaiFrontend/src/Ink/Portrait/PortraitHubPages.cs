@@ -70,18 +70,55 @@ public partial class PortraitHubScreen
     private static string FoesOf(QuestDef def) => string.Join(" · ", def.Foes.GroupBy(f => f.Name)
         .Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key));
 
+    /// <summary>
+    /// 委托卡的版式（自上而下）：名字行、难度行（敌方放得下就跟在菱形后，放不下就自下一行起按字宽换行）、
+    /// 整段描述（按字宽换行，不截断）、分隔线、报酬行（放不下就换行）＋「接取」。
+    /// 内容放得下时与原版一致（560 高）；放不下就往下长，不截「…」。
+    /// </summary>
+    private readonly record struct QuestCardLayout(bool FoesInline, IReadOnlyList<string> Foes, IReadOnlyList<string> Body,
+        float DividerY, IReadOnlyList<string> Rewards, float Height);
+
+    private const float QuestLineStep = 66f;
+    private const float QuestRewardStep = 54f;
+
+    private static float QuestFoesX(QuestDef def, float x) =>
+        x + 130f + Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty))) * 44f;
+
+    private static QuestCardLayout LayoutQuest(QuestDef def, Rect2 r)
+    {
+        var x = r.Position.X + 50f;
+        var foes = FoesOf(def);
+        var foesInline = InkDraw.Measure(foes, PortraitLayout.FontMeta).X <= r.End.X - 50f - QuestFoesX(def, x);
+        var foeLines = foesInline ? (IReadOnlyList<string>)Array.Empty<string>() : InkDraw.WrapLines(foes, r.Size.X - 100f, PortraitLayout.FontMeta);
+        var body = def.Description.Length > 0 ? def.Description : def.Rumor.Length > 0 ? $"「{def.Rumor}」" : "";
+        var bodyLines = InkDraw.WrapLines(body, r.Size.X - 100f, PortraitLayout.FontMeta);
+        var lastLine = 150f + (foeLines.Count + bodyLines.Count) * QuestLineStep;
+        var divider = Math.Max(420f, lastLine + 68f);
+        var take = QuestTakeRect(r, divider, 0f);
+        var rewards = InkDraw.WrapLines(string.Join(" · ", def.Rewards), take.Position.X - x - 74f, PortraitLayout.FontMeta);
+        var band = Math.Max(PortraitLayout.TouchMin, rewards.Count * QuestRewardStep + 10f);
+        return new QuestCardLayout(foesInline, foeLines, bodyLines, divider, rewards, divider + 12f + band + 10f);
+    }
+
+    /// <summary>「接取」：报酬带右端，在报酬带里上下居中。</summary>
+    private static Rect2 QuestTakeRect(Rect2 r, float divider, float band) =>
+        new(r.End.X - 40f - 240f, r.Position.Y + divider + 12f + Math.Max(0f, band - PortraitLayout.TouchMin) / 2f, 240f, PortraitLayout.TouchMin);
+
     private void DrawQuestBoard()
     {
         var view = PortraitLayout.QuestView;
         var defs = AvailableQuests();
-        var step = PortraitLayout.QuestCardHeight + PortraitLayout.QuestCardGap;
-        var total = (int)(defs.Count * step);
+        var probe = new Rect2(PortraitLayout.Pad, 0f, PortraitLayout.FullWidth, PortraitLayout.QuestCardHeight);
+        var layouts = defs.Select(d => LayoutQuest(d, probe)).ToList();
+        var total = (int)layouts.Sum(l => l.Height + PortraitLayout.QuestCardGap);
         var offset = Pan("quests", total, (int)view.Size.Y);
+        var top = view.Position.Y + 16f - offset;
         for (var i = 0; i < defs.Count; i++)
         {
             var def = defs[i];
-            var r = new Rect2(PortraitLayout.Pad, view.Position.Y + 16f + i * step - offset, PortraitLayout.FullWidth,
-                PortraitLayout.QuestCardHeight);
+            var lay = layouts[i];
+            var r = new Rect2(PortraitLayout.Pad, top, PortraitLayout.FullWidth, lay.Height);
+            top += lay.Height + PortraitLayout.QuestCardGap;
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
             PortraitFrame.GothicFrame(this, r);
@@ -99,22 +136,23 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, new Vector2(x, r.Position.Y + 150f), "难度", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             var stars = Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty)));
             PortraitFrame.Ticks(this, x + 110f, r.Position.Y + 150f, stars, (float)def.Difficulty, 30f, 14f);
-            var foesX = x + 130f + stars * 44f;
-            InkDraw.TextBounded(this, new Rect2(foesX, r.Position.Y + 120f, r.End.X - 50f - foesX, 60f), FoesOf(def),
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-            var body = def.Description.Length > 0 ? def.Description : def.Rumor.Length > 0 ? $"「{def.Rumor}」" : "";
-            var lines = InkDraw.WrapLines(body, r.Size.X - 100f, PortraitLayout.FontMeta);
-            for (var k = 0; k < lines.Count && k < 3; k++)
-                InkDraw.Text(this, new Vector2(x, r.Position.Y + 220f + k * 66f),
-                    k == 2 && lines.Count > 3 ? InkDraw.Ellipsize(lines[k] + "…", r.Size.X - 100f, PortraitLayout.FontMeta) : lines[k],
+            if (lay.FoesInline)
+                InkDraw.Text(this, new Vector2(QuestFoesX(def, x), r.Position.Y + 150f), FoesOf(def), PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            var lineY = r.Position.Y + 150f;
+            foreach (var line in lay.Foes)
+                InkDraw.Text(this, new Vector2(x, lineY += QuestLineStep), line, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            foreach (var line in lay.Body)
+                InkDraw.Text(this, new Vector2(x, lineY += QuestLineStep), line,
                     PortraitLayout.FontMeta, def.Description.Length > 0 ? InkStyle.Line : InkStyle.Dim, "lm");
-            InkDraw.InkLine(this, new Vector2(r.Position.X + 30f, r.Position.Y + 420f), new Vector2(r.End.X - 30f, r.Position.Y + 420f),
-                InkStyle.WoodDark, 2f);
-            var take = new Rect2(r.End.X - 40f - 240f, r.Position.Y + 432f, 240f, PortraitLayout.TouchMin);
-            PortraitGlyph.Coin(this, x + 18f, take.GetCenter().Y, 18f, InkStyle.Dim);
-            InkDraw.TextBounded(this, new Rect2(x + 54f, take.Position.Y, take.Position.X - x - 74f, take.Size.Y),
-                string.Join(" · ", def.Rewards), PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Plaque(this, take, "接取", primary: true);
+            var dividerY = r.Position.Y + lay.DividerY;
+            InkDraw.InkLine(this, new Vector2(r.Position.X + 30f, dividerY), new Vector2(r.End.X - 30f, dividerY), InkStyle.WoodDark, 2f);
+            var band = lay.Height - lay.DividerY - 22f;
+            var take = QuestTakeRect(r, lay.DividerY, band);
+            var rewardTop = dividerY + 12f + band / 2f - (lay.Rewards.Count - 1) * QuestRewardStep / 2f;
+            PortraitGlyph.Coin(this, x + 18f, rewardTop, 18f, InkStyle.Dim);
+            for (var k = 0; k < lay.Rewards.Count; k++)
+                InkDraw.Text(this, new Vector2(x + 54f, rewardTop + k * QuestRewardStep), lay.Rewards[k], PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            PortraitFrame.Plaque(this, take, "接取");
             AddClipped(take, view, PortraitAction.QuestTake, i, true, def.Id.ToString());
         }
         if (defs.Count == 0)

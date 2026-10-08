@@ -155,7 +155,7 @@ public partial class PortraitHubScreen
             {
                 var br = PortraitLayout.StorageButton(rect, b);
                 var enabled = b == 0 ? row.InBag > 0 : row.InStorage > 0;
-                PortraitFrame.Plaque(this, br, b == 0 ? "放入" : "取出", primary: b == 1, enabled: enabled);
+                PortraitFrame.Plaque(this, br, b == 0 ? "放入" : "取出", enabled: enabled);
                 _widgets.Add(new PortraitWidget(br, b == 0 ? PortraitAction.StoreIn : PortraitAction.StoreOut, at, enabled, row.ItemId));
             }
         }

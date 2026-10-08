@@ -20,8 +20,10 @@ public static partial class PortraitLayout
     public const float StorageSheetTop = 760f;
     public static Rect2 StorageRow(int i) => new(Pad, StorageSheetTop + SheetContentOffset + 40f + i * SheetRowStep, FullWidth, 124f);
     public static int StorageRows => (int)((CanvasHeight - 60f - StorageRow(0).Position.Y) / SheetRowStep);
+    /// <summary>存取行的「放入 / 取出」：各 190 宽，两钮相隔 30（原 10，太挤易误触）；「取出」贴行右缘不动，「放入」左移 20。</summary>
     public static Rect2 StorageButton(Rect2 row, int b) =>
-        new(row.End.X - (2 - b) * 200f + 10f, row.Position.Y + 3f, 190f, TouchMin);
+        new(row.End.X - 190f - (1 - b) * (190f + StorageButtonGap), row.Position.Y + 3f, 190f, TouchMin);
+    public const float StorageButtonGap = 30f;
 
     // ---------- 对话整屏 ----------
 

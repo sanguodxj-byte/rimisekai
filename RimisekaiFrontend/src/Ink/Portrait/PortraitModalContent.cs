@@ -142,7 +142,7 @@ public partial class PortraitModalLayer
         InkDraw.TextBounded(this, new Rect2(_modalPanel.Position.X + 60f, y - 70f, _modalPanel.Size.X - 120f, 140f), page.Title,
             PortraitLayout.FontDisplay, PortraitLayout.FontTitle, InkStyle.Line, "cm");
         PortraitFrame.FadingRule(this, _modalPanel.Position.X + 140f, _modalPanel.End.X - 140f, y + 90f);
-        InkDraw.Text(this, new Vector2(cx, y + 150f), $"历经 {data.Rounds} 轮", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        InkDraw.Text(this, new Vector2(cx, y + 150f), $"历经 {data.Rounds} 回合", PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         y += 230f;
         var left = _modalPanel.Position.X + 60f;
         var right = _modalPanel.End.X - 60f;

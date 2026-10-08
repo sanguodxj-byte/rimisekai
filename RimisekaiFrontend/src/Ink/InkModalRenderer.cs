@@ -34,7 +34,7 @@ public static class InkModalRenderer
             {
                 var centerX = layout.PanelRect.GetCenter().X;
                 InkDraw.Text(ci, new Vector2(centerX, layout.RuleY + 20f),
-                    $"历经 {page.Settlement.Rounds} 轮战斗", 22, InkStyle.Dim, "cm");
+                    $"历经 {page.Settlement.Rounds} 回合战斗", 22, InkStyle.Dim, "cm");
             }
         }
 

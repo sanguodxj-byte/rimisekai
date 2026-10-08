@@ -460,7 +460,7 @@ public static class InkCharacterPageBuilder
         sb.Append($"\n射程　{InkText.SkillRange(skill.Range)}");
 
         if (skill.ChantRounds > 0)
-            sb.Append($"\n咏唱　{skill.ChantRounds} 轮");
+            sb.Append($"\n咏唱　{skill.ChantRounds} 回合");
         if (skill.Control)
             sb.Append("\n控制　打断目标咏唱");
 
@@ -469,11 +469,11 @@ public static class InkCharacterPageBuilder
             sb.Append("\n附加状态　" + skill.Status.Value switch
             {
                 StatusKind.StatMod =>
-                    $"{InkText.StatusStat(skill.StatusStat)} {(skill.StatusPercent > 0 ? "+" : "")}{skill.StatusPercent}%，持续 {skill.StatusRounds} 轮",
+                    $"{InkText.StatusStat(skill.StatusStat)} {(skill.StatusPercent > 0 ? "+" : "")}{skill.StatusPercent}%，持续 {skill.StatusRounds} 回合",
                 StatusKind.Dot =>
-                    $"每轮 {skill.StatusPower} 点伤害，持续 {skill.StatusRounds} 轮",
+                    $"每回合 {skill.StatusPower} 点伤害，持续 {skill.StatusRounds} 回合",
                 StatusKind.Points =>
-                    $"点数护盾 {skill.StatusPower} 点，持续 {skill.StatusRounds} 轮",
+                    $"点数护盾 {skill.StatusPower} 点，持续 {skill.StatusRounds} 回合",
                 _ => "",
             });
         }
@@ -506,7 +506,7 @@ public static class InkCharacterPageBuilder
 
             case SkillKind.Spell:
                 clauses.Add(skill.ChantRounds > 0
-                    ? $"咏唱 {skill.ChantRounds} 轮后放出法术"
+                    ? $"咏唱 {skill.ChantRounds} 回合后放出法术"
                     : "立即放出法术");
                 clauses.Add(skill.Target switch
                 {
@@ -555,11 +555,11 @@ public static class InkCharacterPageBuilder
             StatusKind.StatMod =>
                 $"让{subject}的{InkText.StatusStat(skill.StatusStat)}" +
                 $"{(skill.StatusPercent >= 0 ? "提高" : "降低")} " +
-                $"{System.Math.Abs(skill.StatusPercent)}%，持续 {skill.StatusRounds} 轮",
+                $"{System.Math.Abs(skill.StatusPercent)}%，持续 {skill.StatusRounds} 回合",
             StatusKind.Dot =>
-                $"使{subject}每轮流失 {skill.StatusPower} 点体力，持续 {skill.StatusRounds} 轮",
+                $"使{subject}每回合流失 {skill.StatusPower} 点体力，持续 {skill.StatusRounds} 回合",
             StatusKind.Points =>
-                $"为{subject}张开 {skill.StatusPower} 点的护盾，持续 {skill.StatusRounds} 轮",
+                $"为{subject}张开 {skill.StatusPower} 点的护盾，持续 {skill.StatusRounds} 回合",
             _ => "",
         };
     }
