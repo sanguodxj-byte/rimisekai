@@ -161,7 +161,9 @@ public partial class PortraitHubScreen
             new Color(InkStyle.Bg, PortraitFrame.ScrimAlpha * shown));
         var travel = PortraitLayout.CanvasHeight - _lastSheetTop;
         PortraitFrame.SetLayer(this, new Vector2(0f, (1f - shown) * travel));
+        PortraitFrame.SetSheetScrim(shown);
         _sheetTop = draw();
+        PortraitFrame.SetSheetScrim(1f);
         PortraitFrame.SetLayer(this, Vector2.Zero);
         _lastSheetTop = _sheetTop;
         _widgets.Insert(0, new PortraitWidget(new Rect2(0, 0, PortraitLayout.CanvasWidth, _sheetTop),

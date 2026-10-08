@@ -87,19 +87,22 @@ public partial class PortraitHubScreen
         var top = PortraitLayout.InteractionSheetTop(rows.Count);
         PortraitFrame.Sheet(this, top);
         var title = _giftOpen ? "赠礼" : _vm.ShowSocial ? _vm.SocialTitle() : _vm.CurrentFixtureName();
+        // 退一级（赠礼 / 交流子类）：返回钮与推入页同在左上，抬头整体右移让位；顶层：右上 × 收起。
+        var nested = _giftOpen || _socialCategory >= 0;
+        var lead = nested ? PortraitLayout.TouchMin : 0f;
         if (_vm.ShowSocial && !_giftOpen)
         {
             var who = _vm.Selected();
             if (who != null)
-                PortraitFrame.Avatar(this, new Vector2(PortraitLayout.Pad + 70f, top + PortraitLayout.SheetTitleOffset), 48f,
+                PortraitFrame.Avatar(this, new Vector2(PortraitLayout.Pad + 70f + lead, top + PortraitLayout.SheetTitleOffset), 48f,
                     PortraitAvatars.Resolve(_vm.FindById(who.Value.Id)), who.Value.Name);
         }
-        var titleX = _vm.ShowSocial && !_giftOpen ? PortraitLayout.Pad + 150f : PortraitLayout.Pad + 20f;
+        var titleX = (_vm.ShowSocial && !_giftOpen ? PortraitLayout.Pad + 150f : PortraitLayout.Pad + 20f) + lead;
         InkDraw.TextBounded(this, new Rect2(titleX, top + PortraitLayout.SheetTitleOffset - 40f, 700f, 80f), title,
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        var close = PortraitLayout.SheetClose(top);
-        if (_giftOpen || _socialCategory >= 0)
-            PortraitGlyph.Back(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
+        var close = nested ? PortraitLayout.SheetBack(top) : PortraitLayout.SheetClose(top);
+        if (nested)
+            PortraitGlyph.Back(this, close.GetCenter().X, close.GetCenter().Y, 30f, InkStyle.Line);
         else
             PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
         _widgets.Add(new PortraitWidget(close, PortraitAction.InteractionBack, 0, true, "返回"));

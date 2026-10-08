@@ -475,9 +475,16 @@ public static class PortraitFrame
     /// 底部抽屉：先把上方整幅压暗（下层画面仍可见、但已不可点——命中块由调用方移除），
     /// 再铺一块平顶的暗纹石板：顶沿银白双线、两上角银白角花、正中银白徽饰（取代安卓把手）。返回面板矩形。
     /// </summary>
+    /// <summary>抽屉滑入/收起过程中面板上方压暗的进度（0..1），由抽屉层逐帧设、画完复位为 1。</summary>
+    private static float _sheetScrim = 1f;
+
+    public static void SetSheetScrim(float shown) => _sheetScrim = shown;
+
     public static Rect2 Sheet(CanvasItem ci, float top)
     {
-        ci.DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top), new Color(InkStyle.Bg, 0.72f));
+        // 面板上方的压暗一直铺到画布顶外：滑入时整层下移，压暗也不会在中途露出一道硬边；浓度随滑入进度淡入。
+        ci.DrawRect(new Rect2(0, -PortraitLayout.CanvasHeight, PortraitLayout.CanvasWidth, top + PortraitLayout.CanvasHeight),
+            new Color(InkStyle.Bg, 0.72f * _sheetScrim));
         var r = new Rect2(0, top, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - top);
         ci.DrawRect(r, InkStyle.Panel);
         GothicArt.Tile(ci, r, 0.85f);

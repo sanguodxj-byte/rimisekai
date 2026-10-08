@@ -127,7 +127,12 @@ public partial class PortraitCapture
             _crossGate = gate!.Id;
             Require(hub.CrossTargetRegion(_crossGate) == 1 && hub.CrossDir(_crossGate) == Territory.RegionDir.North,
                 "north gate crosses to the north region");
-            if (hub.PlayerRoomId != _crossGate)
+            _root.HubScreen.QueueRedraw();
+        });
+        // 过界后先重画一帧，中心区的格子才登记成命中块，再点北门那一格。
+        _steps.Enqueue(() =>
+        {
+            if (_root.HubScreen.DebugHub.PlayerRoomId != _crossGate)
                 _root.HubScreen.DebugPress(PortraitAction.Cell, _crossGate);
             _root.HubScreen.QueueRedraw();
         });

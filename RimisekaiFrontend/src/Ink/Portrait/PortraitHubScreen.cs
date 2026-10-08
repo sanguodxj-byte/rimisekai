@@ -234,6 +234,8 @@ public partial class PortraitHubScreen : Control
         _scrollAreas.Clear();
         _sheetTop = -1f;
         _crossArrowShown = false;
+        // 日志、对白等折行时人名不从中间断开。
+        InkDraw.SetUnbreakable(_vm.Hub.State.Roster.Members.Select(m => m.Name));
         // 触摸没有悬停：按下当场把那一块画成选中态，松开才派发（之后浅填淡出）。
         ApplyPress();
         PortraitFrame.Backdrop(this);

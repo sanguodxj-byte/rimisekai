@@ -121,6 +121,9 @@ public static partial class PortraitLayout
         (FullWidth - 24f) / 2f, SheetFooter.Size.Y);
     public static Rect2 SheetClose(float top) => new(CanvasWidth - Pad - TouchMin, top + 50f, TouchMin, TouchMin);
 
+    /// <summary>抽屉退一级的返回钮：左上，与推入页顶栏返回同侧（抽屉抬头随之右移一个触控宽）。</summary>
+    public static Rect2 SheetBack(float top) => new(Pad, top + 50f, TouchMin, TouchMin);
+
     // ---------- 标题画面 ----------
 
     // 只取参考图中的标志，不把其中的横屏按钮再画一遍。

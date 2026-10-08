@@ -1175,9 +1175,15 @@ public static class InkDraw
     /// <summary>不得留在行尾的标点（中文避尾）。</summary>
     private const string NoLineEnd = "（「『【《〈([";
 
+    /// <summary>换行时不拆开的词（人名）：由据点画面按名册设。</summary>
+    private static string[] _unbreakable = Array.Empty<string>();
+
+    public static void SetUnbreakable(IEnumerable<string> words) =>
+        _unbreakable = words.Where(w => w.Length > 1).ToArray();
+
     /// <summary>
     /// 按实际字宽换行，保留换行符形成的空行。中文避头尾：要断在避头标点前时，把上一行末字一并带到下一行；
-    /// 上一行以开括号收尾时，开括号也挪到下一行。
+    /// 上一行以开括号收尾时，开括号也挪到下一行。人名（<see cref="SetUnbreakable"/>）不在中间断开，整名挪到下一行。
     /// </summary>
     public static IReadOnlyList<string> WrapLines(string text, float width, int size)
     {
@@ -1188,12 +1194,26 @@ public static class InkDraw
         {
             var start = lines.Count;
             var line = "";
+            // wordStart[i]＝在第 i 个字符前断行会拆开的那个人名的起点；不拆名为 -1。
+            var wordStart = new int[paragraph.Length + 1];
+            Array.Fill(wordStart, -1);
+            foreach (var word in _unbreakable)
+                for (var at = paragraph.IndexOf(word, StringComparison.Ordinal); at >= 0; at = paragraph.IndexOf(word, at + 1, StringComparison.Ordinal))
+                    for (var i = at + 1; i < at + word.Length; i++)
+                        wordStart[i] = at;
+            var pos = 0;
             foreach (var rune in paragraph.EnumerateRunes())
             {
                 var next = line + rune;
                 if (line.Length > 0 && Measure(next, size).X > width)
                 {
                     var carry = rune.ToString();
+                    var cut = wordStart[pos];
+                    if (cut > pos - line.Length)
+                    {
+                        carry = line[(line.Length - (pos - cut))..] + carry;
+                        line = line[..(line.Length - (pos - cut))];
+                    }
                     while (line.Length > 1 && (NoLineStart.Contains(carry[0]) || NoLineEnd.Contains(line[^1])))
                     {
                         carry = line[^1] + carry;
@@ -1204,10 +1224,11 @@ public static class InkDraw
                 }
                 else
                     line = next;
+                pos += rune.Utf16SequenceLength;
             }
             // 段末不留孤字：末行只剩一个字（标点不算）时，从上一行再带一个字下来（「结算伤 / 害。」→「结算 / 伤害。」）。
             if (lines.Count > start && line.TrimEnd(NoLineStart.ToCharArray()).Length == 1 && lines[^1].Length > 2
-                && !NoLineStart.Contains(lines[^1][^1]))
+                && !NoLineStart.Contains(lines[^1][^1]) && wordStart[paragraph.Length - line.Length - 1] < 0)
             {
                 line = lines[^1][^1] + line;
                 lines[^1] = lines[^1][..^1];

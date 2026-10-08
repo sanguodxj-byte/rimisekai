@@ -99,12 +99,16 @@ public partial class PortraitHubScreen
             PortraitFrame.Fade(this, new Rect2(inner.Position.X, c.Y - 30f, inner.Size.X, inner.End.Y - c.Y + 30f), 0f, 0.85f);
         }
         InkDraw.Ink(this, RectLoop(inner), room.Vacant ? InkStyle.WoodDark : InkStyle.Dim, room.Vacant ? 2.5f : 3.5f);
-        // 房名整名显示、在格内居中：一行放不下就拆两行。
-        InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), room.Name, PortraitLayout.FontMeta,
+        // 房名整名显示：一行放不下就拆两行。格里有人时房名上移到棋子上方那一截里居中，不与棋子相压；没人时在格内居中。
+        var present = _vm.Cards().Where(card => card.RoomId == room.Id && !(card.IsPlayer && Walking)).OrderByDescending(card => card.IsPlayer).ToArray();
+        var pieces = PortraitLayout.CellPieces(r);
+        var nameBox = present.Length == 0 ? inner.Grow(-10f)
+            : new Rect2(inner.Position.X + 10f, inner.Position.Y + 10f, inner.Size.X - 20f,
+                pieces.End.Y - PortraitLayout.PieceHeight - 6f - (inner.Position.Y + 10f));
+        InkDraw.TextStacked(this, nameBox, nameBox, room.Name, PortraitLayout.FontMeta,
             room.Vacant ? InkStyle.Dim : InkStyle.Line);
 
-        DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id && !(card.IsPlayer && Walking)).OrderByDescending(card => card.IsPlayer).ToArray(),
-            PortraitLayout.CellPieces(r));
+        DrawCellPieces(present, pieces);
 
         if (picked || _vm.IsPlayerRoom(room.Id))
         {
