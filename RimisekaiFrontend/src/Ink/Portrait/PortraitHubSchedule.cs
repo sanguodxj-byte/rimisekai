@@ -119,6 +119,7 @@ public partial class PortraitHubScreen
             AddClipped(r, chips, PortraitAction.ScheduleRoom, room.Id, true, room.Name);
             x += widths[i] + 16f;
         }
+        PortraitFrame.ScrollEdges(this, chips, offset, total);
         RegisterScroll("slot_rooms", chips, total, (int)chips.Size.X, offset, v => _pan["slot_rooms"] = v, 1f, horizontal: true);
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, chips.End.Y + 50f, "设施");

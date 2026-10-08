@@ -654,6 +654,26 @@ public static class PortraitFrame
                 new Color(InkStyle.Bg, botAlpha), new Color(InkStyle.Bg, botAlpha) });
     }
 
+    /// <summary>
+    /// 横拖行的可滚动暗示：左边还有被拖出去的内容就在左缘压一道向内渐隐的暗带，右边还有就在右缘压一道，
+    /// 截在边上的签读作「后面还有」，而不是被裁坏了。只是画面表现，不登记命中块。
+    /// </summary>
+    public static void ScrollEdges(CanvasItem ci, Rect2 row, float offset, float total)
+    {
+        const float band = 140f;
+        void Band(float x0, float x1)
+        {
+            var solid = new Color(InkStyle.Bg, 0.95f);
+            var clear = new Color(InkStyle.Bg, 0f);
+            ci.DrawPolygon(new[] { new Vector2(x0, row.Position.Y), new Vector2(x1, row.Position.Y), new Vector2(x1, row.End.Y), new Vector2(x0, row.End.Y) },
+                new[] { solid, clear, clear, solid });
+        }
+        if (offset > 0.5f)
+            Band(row.Position.X, row.Position.X + band);
+        if (offset < total - row.Size.X - 0.5f)
+            Band(row.End.X, row.End.X - band);
+    }
+
     /// <summary>贴图按覆盖方式铺进矩形（anchorY＝竖向取景位置 0 顶 1 底），超出部分裁掉。</summary>
     public static void Cover(CanvasItem ci, Texture2D tex, Rect2 r, float anchorY = 0f)
     {

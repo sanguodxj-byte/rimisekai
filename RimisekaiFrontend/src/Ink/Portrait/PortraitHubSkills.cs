@@ -187,13 +187,54 @@ public partial class PortraitHubScreen
                 disc.SectorLabels[disc.FocusedSector], PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "lm");
             PortraitFrame.Plaque(this, PortraitLayout.SkillResetButton, "全盘视角", glyph: PortraitGlyph.Back);
             _widgets.Add(new PortraitWidget(PortraitLayout.SkillResetButton, PortraitAction.SkillReset, 0, true, "‹ 全盘视角"));
-            DrawTextureRect(ResourceLoader.Load<Texture2D>("res://assets/disc_nav_button.svg"),
-                PortraitLayout.SkillNavigation, false);
+            DrawSkillNavigation(PortraitLayout.SkillNavigation);
             var canNavigate = SkillTiles(disc).Length > 0;
             AddSkillPolygon(PortraitAction.SkillPrevious, 0, "", PortraitLayout.SkillNavigationPolygon(true), canNavigate);
             AddSkillPolygon(PortraitAction.SkillNext, 0, "", PortraitLayout.SkillNavigationPolygon(false), canNavigate);
         }
         DrawSkillDetails(page);
+    }
+
+    /// <summary>
+    /// 星盘右上角翻瓦片钮（原 disc_nav_button.svg 的同一几何，改为代码绘制）：正方形削去一段与星盘外弧同心的弧，
+    /// 沿对角线切成两翼，各一圈骨白外框＋银灰内框，左上翼一枚 ◤、右下翼一枚 ◢ 实心三角。坐标沿用原稿 254 见方的视框。
+    /// </summary>
+    private void DrawSkillNavigation(Rect2 rect)
+    {
+        var k = rect.Size / 254f;
+        Vector2 P(float x, float y) => rect.Position + new Vector2(x - 650f, y - 174f) * k;
+        // 两翼外框 / 内框：直角三边＋一段半径 R 的弧（弧心在左下方，与星盘同侧）。
+        Vector2[] Wing(Vector2 a, Vector2 b, Vector2 c, float radius)
+        {
+            var points = new List<Vector2> { a, b, c };
+            var mid = (c + a) / 2f;
+            var half = c.DistanceTo(a) / 2f;
+            var normal = (a - c).Normalized().Orthogonal();
+            var h = Mathf.Sqrt(radius * radius - half * half);
+            var o1 = mid + normal * h;
+            var o2 = mid - normal * h;
+            var center = o1.Y - o1.X > o2.Y - o2.X ? o1 : o2;
+            var a0 = (c - center).Angle();
+            var a1 = (a - center).Angle();
+            var span = Mathf.Wrap(a1 - a0, -Mathf.Pi, Mathf.Pi);
+            for (var i = 1; i < 12; i++)
+                points.Add(center + Vector2.FromAngle(a0 + span * i / 12f) * radius);
+            return points.ToArray();
+        }
+        var scale = k.X;
+        var outerUpper = Wing(P(678f, 178f), P(898f, 178f), P(796f, 280f), 1018f * scale);
+        var innerUpper = Wing(P(696f, 184f), P(884f, 184f), P(796f, 272f), 1024f * scale);
+        var outerLower = Wing(P(902f, 402f), P(902f, 182f), P(800f, 284f), 1018f * scale);
+        var innerLower = Wing(P(896f, 384f), P(896f, 196f), P(808f, 284f), 1024f * scale);
+        foreach (var (outer, inner) in new[] { (outerUpper, innerUpper), (outerLower, innerLower) })
+        {
+            DrawColoredPolygon(outer, InkStyle.Bg);
+            InkDraw.Ink(this, outer.Append(outer[0]).ToArray(), InkStyle.Line, 2.5f * scale);
+            DrawColoredPolygon(inner, InkStyle.Panel);
+            InkDraw.Ink(this, inner.Append(inner[0]).ToArray(), InkStyle.Dim, 1.4f * scale);
+        }
+        DrawColoredPolygon(new[] { P(776f, 196f), P(824f, 196f), P(776f, 244f) }, InkStyle.Line);
+        DrawColoredPolygon(new[] { P(884f, 304f), P(884f, 256f), P(836f, 304f) }, InkStyle.Line);
     }
 
     private void DrawSkillOverviewText(InkSkillDiscModel disc)

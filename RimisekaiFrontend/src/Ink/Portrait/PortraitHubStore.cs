@@ -164,6 +164,7 @@ public partial class PortraitHubScreen
             AddClipped(r, row, action, i, true, labels[i]);
             x += widths[i] + 20f;
         }
+        PortraitFrame.ScrollEdges(this, row, offset, total);
         RegisterScroll(id, row, total, (int)row.Size.X, offset, v => _pan[id] = v, 1f, horizontal: true);
     }
 

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Rimisekai.PoiMap;
@@ -9,6 +10,18 @@ namespace Rimisekai.Tests;
 
 public sealed class PoiMapTests
 {
+    [Theory]
+    [InlineData(Rimisekai.WorldMap.WorldPoiType.Fortress, 11)]
+    [InlineData(Rimisekai.WorldMap.WorldPoiType.Capital, 22)]
+    [InlineData(Rimisekai.WorldMap.WorldPoiType.Ruin, 33)]
+    public void Room_names_are_unique_within_each_block(Rimisekai.WorldMap.WorldPoiType type, int seed)
+    {
+        var map = PoiAssemblyGenerator.GenerateForPoi(type, seed);
+        foreach (var block in map.Blocks)
+            Assert.Equal(block.Rooms.Count, block.Rooms.Select(r => r.Name).Distinct().Count());
+        Assert.Equal("大门", map.Blocks[0].StartRoom!.Name);
+    }
+
     [Fact]
     public void PoiBlock_generates_connected_rooms_and_end_on_edge()
     {
