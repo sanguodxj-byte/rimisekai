@@ -66,9 +66,14 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(2)));
         _steps.Enqueue(() => CheckTitlePage("settings", InkSystemScreen.PageSettings));
         _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
-        _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(1)));
-        _steps.Enqueue(() => CheckTitlePage("load", InkSystemScreen.PageLoad));
-        _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
+        // 还没有存档：「继续」压暗不可点，按了不进读档页。
+        _steps.Enqueue(() =>
+        {
+            Require(_root.TitleView.DebugWidgets.Any(w => w.Index == 1 && !w.Enabled)
+                && _root.TitleView.DebugWidgets.Where(w => w.Index != 1).All(w => w.Enabled), "continue is disabled without saves");
+            PressTitle(PortraitLayout.TitleButton(1));
+        });
+        _steps.Enqueue(() => Require(_root.TitleView.DebugSystemPage == "", "disabled continue does nothing"));
         _steps.Enqueue(() => PressTitle(PortraitLayout.TitleButton(0)));
         _steps.Enqueue(PrepareRosterAndIcons);
         for (var tab = 0; tab < PortraitLayout.TabCount; tab++)
@@ -438,6 +443,15 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(ReopenCombatSettings);
         _steps.Enqueue(() => Shoot("combat_settings", _root.CombatView));
         _steps.Enqueue(CheckCombatLoadAndTitle);
+        // 战斗里存过档：回到标题后「继续」可点，进读档页列出存档。
+        _steps.Enqueue(() => _root.TitleView.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            Require(_root.TitleView.DebugWidgets.Any(w => w.Index == 1 && w.Enabled), "continue is enabled once a save exists");
+            PressTitle(PortraitLayout.TitleButton(1));
+        });
+        _steps.Enqueue(() => CheckTitlePage("load", InkSystemScreen.PageLoad));
+        _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
         EnqueueCrossChecks();
         _steps.Enqueue(Quit);
     }

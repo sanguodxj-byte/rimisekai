@@ -66,6 +66,9 @@ public sealed partial class HubSession
         roomId == PlayerRoomId || (RoomShown(roomId)
             && State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), ignoreLocks: true).Count > 0);
 
+    /// <summary>新开局：主角落脚的那间房照常写一条场景描述（与走进房间同一句），日志不从空白开始。</summary>
+    public void WriteOpening() => WriteArrival(PlayerRoomId);
+
     /// <summary>写来到某房间的场景日志：a＝「你来到了X。描述」，b＝在场者的 Meet 口上。</summary>
     private void WriteArrival(int roomId)
     {

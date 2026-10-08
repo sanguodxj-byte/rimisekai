@@ -85,9 +85,9 @@ public partial class PortraitHubScreen
         }
         if (options.Count == 0)
         {
-            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth / 2f, y + 60f), "背包里没有能换的",
+            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth / 2f, y + 34f), "背包里没有能换的",
                 PortraitLayout.FontMeta, InkStyle.Dim, "cm");
-            y += 120f;
+            y += 68f;
         }
 
         var total = (int)(y + offset - view.Position.Y);

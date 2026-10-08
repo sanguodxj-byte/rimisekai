@@ -41,6 +41,8 @@ public partial class PortraitHubScreen
             InkDraw.InkLine(this, new Vector2(136f, hy), new Vector2(170f, hy), InkStyle.WoodDark, 2f);
         }
         InkDraw.InkLine(this, new Vector2(152f, top), new Vector2(152f, top + 24 * HourPitch), InkStyle.WoodDark, 3f);
+        // 时段块里两行字所占的横带（x0, x1, y0, y1）：「此刻」线落在带里就在字两侧断开，不穿字。
+        var textBands = new List<(float X0, float X1, float Y0, float Y1)>();
 
         for (var slot = 0; slot < WorkSlot.Count; slot++)
         {
@@ -57,16 +59,28 @@ public partial class PortraitHubScreen
             var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}"
                 : fun ? $"娱乐 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
             var ink = work ? InkStyle.Bg : fun ? InkStyle.Line : InkStyle.Dim;
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 40f, r.Size.X - 80f, 70f), label,
+            var labelSize = InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 40f, r.Size.X - 80f, 70f), label,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, ink, "lm");
             InkDraw.Text(this, new Vector2(r.Position.X + 40f, r.End.Y - 50f), SlotRange(slot), PortraitLayout.FontMeta,
                 work ? InkStyle.WoodDark : InkStyle.Dim, "lm");
+            var labelW = Mathf.Min(InkDraw.Measure(label, labelSize).X, r.Size.X - 80f);
+            textBands.Add((r.Position.X + 40f, r.Position.X + 40f + labelW, r.Position.Y + 75f - labelSize * 0.7f, r.Position.Y + 75f + labelSize * 0.7f));
+            var rangeW = InkDraw.Measure(SlotRange(slot), PortraitLayout.FontMeta).X;
+            textBands.Add((r.Position.X + 40f, r.Position.X + 40f + rangeW, r.End.Y - 50f - PortraitLayout.FontMeta * 0.7f, r.End.Y - 50f + PortraitLayout.FontMeta * 0.7f));
             AddClipped(r, view, PortraitAction.ScheduleSlot, slot, true, SlotRange(slot));
         }
 
         var header = _vm.Hub.Header();
         var ny = top + (header.Hour + header.Minute / 60f) * HourPitch;
-        InkDraw.InkLine(this, new Vector2(152f, ny), new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, ny), InkStyle.Line, 4f);
+        var lineEnd = PortraitLayout.CanvasWidth - PortraitLayout.Pad;
+        var cut = textBands.FirstOrDefault(b => ny >= b.Y0 && ny <= b.Y1);
+        if (cut.X1 > cut.X0)
+        {
+            InkDraw.InkLine(this, new Vector2(152f, ny), new Vector2(cut.X0 - 16f, ny), InkStyle.Line, 4f);
+            InkDraw.InkLine(this, new Vector2(cut.X1 + 16f, ny), new Vector2(lineEnd, ny), InkStyle.Line, 4f);
+        }
+        else
+            InkDraw.InkLine(this, new Vector2(152f, ny), new Vector2(lineEnd, ny), InkStyle.Line, 4f);
         InkDraw.Jewel(this, new Vector2(152f, ny), 14f, InkStyle.Line);
         return top + 24 * HourPitch + 40f;
     }

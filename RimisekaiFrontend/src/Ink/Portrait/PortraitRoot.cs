@@ -154,6 +154,7 @@ public partial class PortraitRoot : Control
         _hub = null;
         var state = InkWorldBootstrap.Create(_pack);
         PrepareHub(state);
+        _hub!.WriteOpening();
         _flow.Start(state);
     }
 
@@ -403,8 +404,10 @@ public partial class PortraitTitleView : Control
         for (var i = 0; i < labels.Length; i++)
         {
             var r = PortraitLayout.TitleButton(i);
-            var enabled = true;
-            PortraitFrame.Plaque(this, r, labels[i], primary: i == 1, enabled: enabled, sub: i == 1 ? latest : "",
+            // 没有存档：「继续」压暗不可点，实心主钮让给「新的开始」（一屏只留一个实心主钮）。
+            var enabled = i != 1 || saves.Count > 0;
+            var primary = i == (saves.Count > 0 ? 1 : 0);
+            PortraitFrame.Plaque(this, r, labels[i], primary: primary, enabled: enabled, sub: i == 1 ? latest : "",
                 size: i == 1 ? 56 : PortraitLayout.FontBody);
             _hits.Add(new PortraitWidget(r, PortraitAction.Tab, i, enabled, labels[i]));
         }
