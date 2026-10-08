@@ -112,13 +112,16 @@ public static class PortraitWorldAtlas
                     Put(data, w, x, y, 0.80f);
             }
 
-        // 道路：骨白线（桥＝河上的路，压在河槽之上）。
+        // 道路：炭黑描边的骨白线（桥＝河上的路，压在河槽之上）。
         for (var ty = 0; ty < map.Height; ty++)
             for (var tx = 0; tx < map.Width; tx++)
             {
                 var tile = map.Tiles[tx, ty];
-                if (tile.IsRoad)
-                    Strokes(data, w, tx, ty, tile.RoadDirections, tile.RoadClass >= 2 ? 0.95f : tile.RoadClass == 1 ? 0.86f : 0.74f,
+                if (!tile.IsRoad)
+                    continue;
+                // 先压一道炭黑底边，亮地貌（沙、雪、山）上的白路也看得见。
+                Strokes(data, w, tx, ty, tile.RoadDirections, 0.06f, tile.RoadClass >= 2 ? 4 : 3, dashed: false);
+                Strokes(data, w, tx, ty, tile.RoadDirections, tile.RoadClass >= 2 ? 0.95f : tile.RoadClass == 1 ? 0.86f : 0.74f,
                         tile.RoadClass >= 2 ? 2 : 1, dashed: tile.RoadClass < 2);
             }
 
@@ -162,30 +165,33 @@ public static class PortraitWorldAtlas
             }
     }
 
-    /// <summary>格底灰度（0 黑 → 1 骨白）：水最暗，林地偏暗，平原中灰，山与沙偏亮，雪最亮。</summary>
+    /// <summary>
+    /// 格底灰度（0 黑 → 1 骨白），按大类拉开阶梯，缩到全图、图样看不清时也能靠明暗分区：
+    /// 水 &lt;0.11 ＜ 林地与沼泽 0.13–0.27 ＜ 草原平原 0.36–0.50 ＜ 丘陵荒地乱石沙 0.55–0.66 ＜ 山 0.70 ＜ 雪山冰雪 0.80–0.90。
+    /// </summary>
     private static float Tone(WorldTerrainType t) => t switch
     {
         WorldTerrainType.DeepWater => 0.03f,
         WorldTerrainType.ShallowWater => 0.08f,
         WorldTerrainType.Lake => 0.10f,
         WorldTerrainType.River => 0.10f,
-        WorldTerrainType.Sand => 0.50f,
-        WorldTerrainType.Plains => 0.32f,
-        WorldTerrainType.Grassland => 0.27f,
-        WorldTerrainType.Savanna => 0.38f,
-        WorldTerrainType.Forest => 0.20f,
-        WorldTerrainType.DenseForest => 0.12f,
-        WorldTerrainType.Jungle => 0.15f,
-        WorldTerrainType.Taiga => 0.22f,
-        WorldTerrainType.Bog => 0.18f,
-        WorldTerrainType.Swamp => 0.16f,
-        WorldTerrainType.Wasteland => 0.40f,
-        WorldTerrainType.Rocky => 0.36f,
-        WorldTerrainType.Hills => 0.30f,
-        WorldTerrainType.Mountain => 0.40f,
-        WorldTerrainType.MountainSnow => 0.55f,
-        WorldTerrainType.Snow => 0.78f,
-        WorldTerrainType.Ice => 0.70f,
+        WorldTerrainType.DenseForest => 0.13f,
+        WorldTerrainType.Jungle => 0.16f,
+        WorldTerrainType.Bog => 0.20f,
+        WorldTerrainType.Swamp => 0.18f,
+        WorldTerrainType.Forest => 0.22f,
+        WorldTerrainType.Taiga => 0.27f,
+        WorldTerrainType.Grassland => 0.36f,
+        WorldTerrainType.Plains => 0.44f,
+        WorldTerrainType.Savanna => 0.50f,
+        WorldTerrainType.Hills => 0.55f,
+        WorldTerrainType.Wasteland => 0.58f,
+        WorldTerrainType.Rocky => 0.62f,
+        WorldTerrainType.Sand => 0.66f,
+        WorldTerrainType.Mountain => 0.70f,
+        WorldTerrainType.MountainSnow => 0.80f,
+        WorldTerrainType.Ice => 0.84f,
+        WorldTerrainType.Snow => 0.90f,
         _ => 0.30f,
     };
 
