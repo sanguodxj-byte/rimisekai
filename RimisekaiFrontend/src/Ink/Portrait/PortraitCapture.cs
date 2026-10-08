@@ -195,22 +195,20 @@ public partial class PortraitCapture : Node
         {
             _root.HubScreen._Process(1);
             Require(!_root.HubScreen.DebugAnimating && _root.HubScreen.DebugTab == 0, "motion settles back on territory");
-            // 移动过渡：点一间连通的别房，状态当场改好，磨砂遮罩＋脚印图标盖住画面。
+            // 移动：点一间连通的别房，状态当场改好，王棋沿门一格格走过去；不盖遮罩。
             var hub = _root.HubScreen.DebugHub;
             _veilFrom = hub.PlayerRoomId;
             var target = hub.Map().First(r => r.Open && r.Id != _veilFrom && hub.CanReach(r.Id)).Id;
             _root.HubScreen.DebugPress(PortraitAction.Cell, target);
-            Require(hub.PlayerRoomId == target && _root.HubScreen.DebugVeil is { Running: true, Icon: VeilIcon.Move },
-                "moving plays the frosted veil with the move icon");
-            _root.HubScreen.DebugVeil!.Step(0.4f);
-            _root.HubScreen.QueueRedraw();
+            Require(hub.PlayerRoomId == target && _root.HubScreen.DebugWalking && !(_root.HubScreen.DebugVeil?.Running ?? false),
+                "moving walks the king piece without the veil");
+            _root.HubScreen._Process(0.14);
         });
-        _steps.Enqueue(() => Shoot("veil_move_mid", _root.HubScreen));
+        _steps.Enqueue(() => Shoot("walk_mid", _root.HubScreen));
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugAnimating, "veil locks input while playing");
             _root.HubScreen._Process(2);
-            Require(!(_root.HubScreen.DebugVeil?.Running ?? false), "veil clears after its run");
+            Require(!_root.HubScreen.DebugWalking, "walk settles in the target cell");
             _root.HubScreen.DebugHub.Arrive(_veilFrom);
             PortraitMotion.Instant = true;
             _root.HubScreen.SetProcess(true);

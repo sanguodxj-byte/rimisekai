@@ -5,17 +5,16 @@ using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
-/// <summary>过渡遮罩的中心图标：前往＝穿拱门的脚印，劳作＝锤与砧，歇息＝新月与烛，其余＝沙漏。</summary>
+/// <summary>过渡遮罩的中心图标：劳作＝锤与砧，歇息＝新月与烛，其余＝沙漏。</summary>
 public enum VeilIcon
 {
-    Move,
     Work,
     Rest,
     Wait,
 }
 
 /// <summary>
-/// 过渡遮罩：角色移动、设施操作时全屏盖一层半透明的磨砂黑（开演当帧画面缩糊后压暗，再叠黑），中心一枚灰阶图标做小动画
+/// 过渡遮罩（移动不用，走王棋行走动画）：设施操作时全屏盖一层半透明的磨砂黑（开演当帧画面缩糊后压暗，再叠黑），中心一枚灰阶图标做小动画
 /// （缓缓放大落定、呼吸、外圈一环小菱绕行），图标下一行说明。状态在开演前就已改好，遮罩褪去即露出新画面。
 /// 只是表现层：不注册命中块，遮罩期间由 <see cref="PortraitHubScreen"/> 锁输入。
 /// </summary>
@@ -26,7 +25,7 @@ public sealed partial class PortraitVeil : Control
     private const float FadeIn = 0.18f;
     private const float FadeOut = 0.24f;
 
-    private static readonly Texture2D?[] Icons = new Texture2D?[4];
+    private static readonly Texture2D?[] Icons = new Texture2D?[3];
     private static bool _loaded;
 
     /// <summary>开演那一刻整屏的磨砂底：截下当帧画面，两级缩到 1/16 再拉回全屏（双线性），即一层柔糊。</summary>
@@ -142,7 +141,7 @@ public sealed partial class PortraitVeil : Control
         if (_loaded)
             return;
         _loaded = true;
-        var names = new[] { "tr_move.png", "tr_work.png", "tr_rest.png", "tr_hourglass.png" };
+        var names = new[] { "tr_work.png", "tr_rest.png", "tr_hourglass.png" };
         for (var i = 0; i < names.Length; i++)
         {
             var path = "res://RimisekaiFrontend/ui/gothic/" + names[i];

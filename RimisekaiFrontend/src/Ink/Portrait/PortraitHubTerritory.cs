@@ -30,6 +30,7 @@ public partial class PortraitHubScreen
                 DrawCell(x, y);
         if (!WorldLayer)
             DrawDoors(PortraitLayout.Cell, _vm.Hub.RegionId);
+        DrawWalker();
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
@@ -86,7 +87,7 @@ public partial class PortraitHubScreen
         InkDraw.TextBounded(this, new Rect2(inner.Position.X + 8f, c.Y - 46f, inner.Size.X - 16f, 64f), room.Name,
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, room.Vacant ? InkStyle.Dim : InkStyle.Line, "cm");
 
-        DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id).OrderByDescending(card => card.IsPlayer).ToArray(),
+        DrawCellPieces(_vm.Cards().Where(card => card.RoomId == room.Id && !(card.IsPlayer && Walking)).OrderByDescending(card => card.IsPlayer).ToArray(),
             PortraitLayout.CellPieces(r));
 
         if (picked || _vm.IsPlayerRoom(room.Id))
@@ -160,8 +161,10 @@ public partial class PortraitHubScreen
     /// <summary>前往某房间：只能沿连通的门走；与这里不连通就原地不动，弹一句提示。</summary>
     private void GoTo(int roomId)
     {
+        var from = _vm.Hub.PlayerRoomId;
+        var path = _vm.Hub.State.Territory.Route(from, roomId, ignoreLocks: true);
         if (_vm.Hub.Arrive(roomId))
-            PlayVeil(VeilIcon.Move, $"前往{RoomNameOf(roomId)}");
+            StartWalk(from, path);
         else
             SetNotice($"{RoomNameOf(roomId)}与这里不连通，过不去。");
     }
@@ -427,12 +430,11 @@ public partial class PortraitHubScreen
                 var fixture = hub.State.Territory.Facilities.Find(f => f.Id == w.Index);
                 if (fixture == null)
                     return true;
-                var moved = fixture.RoomId != hub.PlayerRoomId;
-                if (moved)
+                if (fixture.RoomId != hub.PlayerRoomId)
                     hub.Enter(fixture.RoomId);
                 if (hub.Use(w.Index))
                 {
-                    PlayVeil(moved ? VeilIcon.Move : VeilIcon.Wait, $"走向{fixture.Name}");
+                    PlayVeil(VeilIcon.Wait, fixture.Name);
                     hub.ClearSelection();
                     _sheet = SheetKind.None;
                     OpenInteraction();

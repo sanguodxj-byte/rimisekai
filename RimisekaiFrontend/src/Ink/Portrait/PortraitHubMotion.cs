@@ -34,7 +34,7 @@ public partial class PortraitHubScreen
     private float _pressHeld;
 
     /// <summary>抽屉或推入页正在过渡：不收输入，免得点到半路上的东西。</summary>
-    private bool InputLocked => _sheetMotion.Running || _pushMotion.Running || (_veil?.Running ?? false);
+    private bool InputLocked => _sheetMotion.Running || _pushMotion.Running || (_veil?.Running ?? false) || Walking;
 
     private PortraitVeil? _veil;
 
@@ -42,7 +42,7 @@ public partial class PortraitHubScreen
     public PortraitVeil? DebugVeil => _veil;
 
     /// <summary>
-    /// 角色移动、设施操作的过渡：全屏磨砂黑遮罩＋中心图标小动画。状态已在调用前改好，遮罩褪去露出新画面。
+    /// 设施操作的过渡（移动不用，走王棋行走动画）：全屏磨砂黑遮罩＋中心图标小动画。状态已在调用前改好，遮罩褪去露出新画面。
     /// 遮罩挂在本节点最上层，期间锁输入。
     /// </summary>
     private void PlayVeil(VeilIcon icon, string caption)
@@ -57,7 +57,7 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>核对用：是否有过渡在走。</summary>
-    public bool DebugAnimating => _sheetMotion.Running || _pushMotion.Running || _tabMotion.Running || (_veil?.Running ?? false);
+    public bool DebugAnimating => _sheetMotion.Running || _pushMotion.Running || _tabMotion.Running || (_veil?.Running ?? false) || Walking;
 
     public override void _Process(double delta)
     {
@@ -97,6 +97,7 @@ public partial class PortraitHubScreen
         }
 
         _veil?.Step(d);
+        redraw |= StepWalk(d);
         redraw |= _tabMotion.Step(d);
         redraw |= _flashMotion.Step(d);
         redraw |= StepLongPress(d);
