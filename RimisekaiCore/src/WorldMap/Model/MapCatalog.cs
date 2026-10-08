@@ -21,6 +21,65 @@ public sealed class TerrainDefEntry
 
     /// <summary>大地图上穿过一格这种地貌要花的分钟数（5 的倍数）；0 = 走不过去。</summary>
     public int Travel { get; set; }
+
+    /// <summary>每踏进一格这种地貌撞上野外遭遇的千分率。</summary>
+    public int Encounter { get; set; }
+}
+
+/// <summary>
+/// 一条遭遇：有敌人＝战斗（可迎战、可绕开），没有敌人＝事件（一枚钮收下结果）。
+/// 结果按字段落账：钱（可负）、额外耗时、同行者心情。
+/// </summary>
+public sealed class EncounterDef
+{
+    public string Id { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Text { get; set; } = "";
+
+    /// <summary>出现在哪些地貌；空表示任何地貌。</summary>
+    public List<string> Terrains { get; set; } = new();
+    public int Weight { get; set; } = 1;
+
+    /// <summary>危险等级下限：离领地越远等级越高（见 <c>HubSession.DangerTier</c>）。</summary>
+    public int MinTier { get; set; } = 1;
+    public List<Rimisekai.Catalog.EnemyDef> Foes { get; set; } = new();
+
+    /// <summary>战斗遭遇选择绕开时多花的分钟数。</summary>
+    public int DetourMinutes { get; set; }
+    public int Money { get; set; }
+    public int MoneyMin { get; set; }
+    public int MoneyMax { get; set; }
+    public int Minutes { get; set; }
+    public int Mood { get; set; }
+
+    /// <summary>事件的那枚钮写什么。</summary>
+    public string AcceptLabel { get; set; } = "";
+}
+
+public sealed class WildsDef
+{
+    /// <summary>走在路上时遭遇率打的折扣（百分比）。</summary>
+    public int RoadPercent { get; set; } = 100;
+
+    /// <summary>领地周围这么多格内不起遭遇。</summary>
+    public int SafeRadius { get; set; }
+    public List<EncounterDef> Events { get; set; } = new();
+}
+
+public sealed class DungeonDef
+{
+    /// <summary>地城的块拼法：每式是一组 5×5 块坐标（单块、横两块、竖两块、L 形、一字三块……），按兴趣点种子挑一式。</summary>
+    public List<List<List<int>>> Layouts { get; set; } = new();
+
+    /// <summary>地城里普通石室有守卫的百分率。</summary>
+    public int GuardPercent { get; set; }
+    public List<EncounterDef> Guards { get; set; } = new();
+    public List<EncounterDef> Bosses { get; set; } = new();
+    public EncounterDef Treasure { get; set; } = new();
+    public EncounterDef Shrine { get; set; } = new();
+
+    /// <summary>首领倒下后的日志，{0} 为地城名。</summary>
+    public string ClearedText { get; set; } = "";
 }
 
 public sealed class PoiSettlementDefEntry
@@ -66,6 +125,8 @@ public sealed class MapDefsTable
     public List<PoiScaleDef> PoiScales { get; set; } = new();
     public List<DistrictTemplateDef> DistrictTemplates { get; set; } = new();
     public SettlementGrammarDef? SettlementGrammar { get; set; }
+    public WildsDef Wilds { get; set; } = new();
+    public DungeonDef Dungeon { get; set; } = new();
 }
 
 /// <summary>
@@ -79,6 +140,19 @@ public sealed class MapCatalog
 
     private readonly Dictionary<WorldTerrainType, string> _terrainNames = new();
     private readonly Dictionary<WorldTerrainType, int> _terrainTravel = new();
+    private readonly Dictionary<WorldTerrainType, int> _terrainEncounter = new();
+
+    /// <summary>野外遭遇表。</summary>
+    public WildsDef Wilds { get; private set; } = new();
+
+    /// <summary>地城内容表：守卫、首领、宝库、神龛。</summary>
+    public DungeonDef Dungeon { get; private set; } = new();
+
+    /// <summary>踏进一格这种地貌撞上野外遭遇的千分率；没配就是数据表缺项，直接抛。</summary>
+    public int GetEncounterPermille(WorldTerrainType terrain) =>
+        _terrainEncounter.TryGetValue(terrain, out var permille)
+            ? permille
+            : throw new KeyNotFoundException($"未在 map_defs.json 中配置地貌 {terrain} 的 encounter");
     private readonly Dictionary<string, List<string>> _poiNames = new();
     private readonly Dictionary<WorldPoiType, PoiScaleDef> _poiScales = new();
     private readonly Dictionary<string, DistrictTemplateDef> _districtTemplates = new();
@@ -284,7 +358,7 @@ public sealed class MapCatalog
 
     private static MapCatalog BuildFromTable(MapDefsTable table)
     {
-        var catalog = new MapCatalog();
+        var catalog = new MapCatalog { Wilds = table.Wilds, Dungeon = table.Dungeon };
 
         foreach (var t in table.Terrains)
         {
@@ -292,6 +366,7 @@ public sealed class MapCatalog
             {
                 catalog._terrainNames[parsed] = t.Name;
                 catalog._terrainTravel[parsed] = t.Travel;
+                catalog._terrainEncounter[parsed] = t.Encounter;
             }
         }
 

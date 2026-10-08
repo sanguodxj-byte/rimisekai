@@ -87,9 +87,10 @@ public sealed partial class HubSession
 
     /// <summary>
     /// 返回领地：人在兴趣点或大地图上时，沿最省时的路走回领地格（路上照样耗时），
-    /// 再把人送回出发前站的那间本家房间。
+    /// 再把人送回出发前站的那间本家房间。路上撞上遭遇就停在那一格（仍在大地图上）；
+    /// <paramref name="safe"/>＝战败被抬回去，一路不起遭遇。
     /// </summary>
-    public void SwitchToTerritory()
+    public void SwitchToTerritory(bool safe = false)
     {
         if (Layer == MapLayer.Territory)
             return;
@@ -103,7 +104,8 @@ public sealed partial class HubSession
         {
             var home = State.World.FindRoute(Trek.X, Trek.Y, State.World.HomeX, State.World.HomeY)
                 ?? throw new System.InvalidOperationException("大地图上找不到回领地的路：走得到这里就一定走得回去。");
-            WalkWorld(home);
+            if (WalkWorld(home, roll: !safe))
+                return;
         }
         SetLayer(MapLayer.Territory);
         if (_territoryHomeRoomId >= 0)
@@ -217,13 +219,13 @@ public sealed partial class HubSession
     /// </summary>
     public bool TravelTo(int x, int y)
     {
-        if (Layer != MapLayer.World || MapCovered)
+        if (Layer != MapLayer.World || MapCovered || PendingEncounter != null)
             return false;
         var route = State.World.FindRoute(Trek.X, Trek.Y, x, y);
         if (route == null)
             return false;
-        if (route.Count > 0)
-            WalkWorld(route);
+        if (route.Count > 0 && WalkWorld(route, roll: true))
+            return true;
         if (Trek.AtHome)
         {
             SwitchToTerritory();
@@ -236,15 +238,21 @@ public sealed partial class HubSession
         return true;
     }
 
-    /// <summary>沿路线逐格走：每进一格按地貌推进时间。</summary>
-    private void WalkWorld(List<(int x, int y)> route)
+    /// <summary>
+    /// 沿路线逐格走：每进一格按地貌推进时间；<paramref name="roll"/> 时每格掷野外遭遇，
+    /// 撞上就停在那一格，返回 true。
+    /// </summary>
+    private bool WalkWorld(List<(int x, int y)> route, bool roll)
     {
+        _worldRooms = null;
         foreach (var (x, y) in route)
         {
             PassTime(State.World.TravelMinutes(x, y));
             Trek.MoveTo(x, y);
+            if (roll && RollWildEncounter(x, y))
+                return true;
         }
-        _worldRooms = null;
+        return false;
     }
 
     /// <summary>
@@ -259,6 +267,7 @@ public sealed partial class HubSession
             return false;
 
         var poiMap = State.EnterPoi(poiId);
+        _currentPoiId = poiId;
         _unlockedBeforePoi = State.Territory.UnlockedRegions;
         State.Territory.SetUnlockedRegions(System.Math.Max(State.Territory.UnlockedRegions,
             Territory.MaxTerritoryRegions + poiMap.Blocks.Count));
@@ -302,9 +311,12 @@ public sealed partial class HubSession
         var route = State.World.FindRoute(Trek.X, Trek.Y, poi.X, poi.Y);
         if (route == null)
             return false;
-        WalkWorld(route);
+        WalkWorld(route, roll: false);
         return EnterWorldPoi(poiId);
     }
+
+    /// <summary>此刻身在的兴趣点编号；-1 表示不在兴趣点里。</summary>
+    private int _currentPoiId = -1;
 
     /// <summary>进 POI 前的已解锁区域数，离开时还原。-1 表示当前不在 POI。</summary>
     private int _unlockedBeforePoi = -1;
@@ -328,6 +340,7 @@ public sealed partial class HubSession
         State.Territory.SetUnlockedRegions(_unlockedBeforePoi);
         _unlockedBeforePoi = -1;
         State.CurrentPoi = null;
+        _currentPoiId = -1;
         LayerPlaceName = "";
     }
 
@@ -408,7 +421,7 @@ public sealed partial class HubSession
     {
         var here = Room(PlayerRoomId);
         var next = Room(roomId);
-        if (MapCovered || here == null || next == null || !next.Open || !here.Links.Contains(roomId))
+        if (MapCovered || PendingEncounter != null || here == null || next == null || !next.Open || !here.Links.Contains(roomId))
             return false;
         PassTime(CostMove * TerritoryClock.StepMinutes);
         LeaveFixture();
@@ -422,6 +435,7 @@ public sealed partial class HubSession
         WorldEffects.SpendMoveStamina(master, State.Territory, roomId, State.Weather);
         WriteArrival(roomId);
         DropSelectionIfGone();
+        CheckDungeonRoom(here.Id, roomId);
         return true;
     }
 

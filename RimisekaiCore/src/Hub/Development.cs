@@ -335,7 +335,7 @@ public sealed partial class HubSession
     public bool CrossTo(int regionId)
     {
         var here = Room(PlayerRoomId);
-        if (here == null || CrossTargetRegion(here.Id) != regionId)
+        if (here == null || PendingEncounter != null || CrossTargetRegion(here.Id) != regionId)
             return false;
         if (here.RegionId >= Territory.MaxTerritoryRegions)
         {
@@ -344,6 +344,7 @@ public sealed partial class HubSession
             PassTime(CostMove * TerritoryClock.StepMinutes);
             Enter(across.Id);
             WriteArrival(across.Id);
+            CheckDungeonRoom(here.Id, across.Id);
             return true;
         }
         var dir = GateDirOf(here);

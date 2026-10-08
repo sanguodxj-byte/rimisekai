@@ -22,7 +22,7 @@ public sealed class WorldTravelTests
         state.Territory.AddRoom(new Room { Id = 2, Name = "卧室", Open = true });
         state.Territory.Link(1, 2);
         state.Clock.SetTime(1, 9 * 60);
-        var hub = new HubSession(state);
+        var hub = new HubSession(state) { EncounterRate = 0 };
         hub.Enter(1);
         return (hub, state);
     }

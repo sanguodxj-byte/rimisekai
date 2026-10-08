@@ -43,8 +43,10 @@ public sealed partial class HubSession
         if (roomId == PlayerRoomId)
             return false;
         var target = Room(roomId);
-        if (target == null || !target.Open || !CanReach(roomId))
+        if (target == null || !target.Open || PendingEncounter != null || !CanReach(roomId))
             return false;
+        if (InDungeon)
+            return ArriveThroughDungeon(roomId);
         var steps = State.Territory.Route(PlayerRoomId, roomId, ignoreLocks: true).Count;
         PassTime(CostMove * steps * TerritoryClock.StepMinutes);
         LeaveFixture();

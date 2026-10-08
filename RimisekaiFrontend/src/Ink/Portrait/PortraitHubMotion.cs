@@ -98,6 +98,7 @@ public partial class PortraitHubScreen
 
         _veil?.Step(d);
         redraw |= StepWalk(d);
+        redraw |= OfferEncounter();
         redraw |= _tabMotion.Step(d);
         redraw |= _flashMotion.Step(d);
         redraw |= StepLongPress(d);

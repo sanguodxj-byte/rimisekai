@@ -374,6 +374,8 @@ public sealed partial class PortraitHubScreen
         var terrain = Rimisekai.WorldMap.Generators.NameGenerator.GenerateTerrainName(tile.Terrain).zh;
         var title = isHome ? TerritoryName() : poi != null ? poi.NameZh : map.TileName(x, y);
         var kind = isHome ? "你的领地" : poi != null ? PoiTypeName(poi.Type) : "野外";
+        if (poi != null && hub.IsDungeonCleared(poi.Id))
+            kind += " · 已肃清";
 
         var icon = new Rect2(PortraitLayout.Pad + 20f, top + 70f, 150f, 150f);
         DrawRect(icon, InkStyle.Bg);

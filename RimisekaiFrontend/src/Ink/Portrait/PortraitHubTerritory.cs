@@ -168,7 +168,8 @@ public partial class PortraitHubScreen
         var from = _vm.Hub.PlayerRoomId;
         var path = _vm.Hub.State.Territory.Route(from, roomId, ignoreLocks: true);
         if (_vm.Hub.Arrive(roomId))
-            StartWalk(from, path);
+            // 地城里半路撞上东西会停在那一间：棋子只走到人实际站的地方。
+            StartWalk(from, path.Take(path.IndexOf(_vm.Hub.PlayerRoomId) + 1).ToList());
         else
             SetNotice($"{RoomNameOf(roomId)}与这里不连通，过不去。");
     }

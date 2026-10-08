@@ -336,6 +336,8 @@ public partial class PortraitRoot : Control
 
     private void OnCombatFinished()
     {
+        if (_vm?.Combat != null)
+            _vm.Hub.SettleEncounterBattle(_vm.Combat.Battle);
         if (_vm != null)
             _vm.Combat = null;
         _hubScreen.RefreshAfterCombat();

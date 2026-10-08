@@ -1,27 +1,27 @@
 {
   "terrains": [
-    { "type": "Road", "name": "道路", "travel": 30 },
-    { "type": "Grassland", "name": "草原", "travel": 60 },
-    { "type": "Plains", "name": "平原", "travel": 60 },
-    { "type": "Forest", "name": "森林", "travel": 90 },
-    { "type": "DenseForest", "name": "密林", "travel": 150 },
-    { "type": "Jungle", "name": "树林", "travel": 120 },
-    { "type": "Taiga", "name": "针叶林", "travel": 90 },
-    { "type": "Mountain", "name": "山岳", "travel": 240 },
-    { "type": "MountainSnow", "name": "雪峰", "travel": 0 },
-    { "type": "Hills", "name": "丘陵", "travel": 120 },
-    { "type": "Rocky", "name": "岩地", "travel": 120 },
-    { "type": "River", "name": "河流", "travel": 120 },
-    { "type": "Lake", "name": "湖泊", "travel": 0 },
-    { "type": "ShallowWater", "name": "浅滩", "travel": 180 },
-    { "type": "DeepWater", "name": "大海", "travel": 0 },
-    { "type": "Sand", "name": "荒漠", "travel": 120 },
-    { "type": "Snow", "name": "雪原", "travel": 150 },
-    { "type": "Ice", "name": "冰原", "travel": 180 },
-    { "type": "Swamp", "name": "沼泽", "travel": 180 },
-    { "type": "Bog", "name": "泥沼", "travel": 210 },
-    { "type": "Savanna", "name": "稀树草地", "travel": 60 },
-    { "type": "Wasteland", "name": "荒原", "travel": 90 }
+    { "type": "Road", "name": "道路", "travel": 30, "encounter": 15 },
+    { "type": "Grassland", "name": "草原", "travel": 60, "encounter": 30 },
+    { "type": "Plains", "name": "平原", "travel": 60, "encounter": 30 },
+    { "type": "Forest", "name": "森林", "travel": 90, "encounter": 60 },
+    { "type": "DenseForest", "name": "密林", "travel": 150, "encounter": 90 },
+    { "type": "Jungle", "name": "树林", "travel": 120, "encounter": 90 },
+    { "type": "Taiga", "name": "针叶林", "travel": 90, "encounter": 60 },
+    { "type": "Mountain", "name": "山岳", "travel": 240, "encounter": 80 },
+    { "type": "MountainSnow", "name": "雪峰", "travel": 0, "encounter": 0 },
+    { "type": "Hills", "name": "丘陵", "travel": 120, "encounter": 50 },
+    { "type": "Rocky", "name": "岩地", "travel": 120, "encounter": 50 },
+    { "type": "River", "name": "河流", "travel": 120, "encounter": 30 },
+    { "type": "Lake", "name": "湖泊", "travel": 0, "encounter": 0 },
+    { "type": "ShallowWater", "name": "浅滩", "travel": 180, "encounter": 30 },
+    { "type": "DeepWater", "name": "大海", "travel": 0, "encounter": 0 },
+    { "type": "Sand", "name": "荒漠", "travel": 120, "encounter": 40 },
+    { "type": "Snow", "name": "雪原", "travel": 150, "encounter": 60 },
+    { "type": "Ice", "name": "冰原", "travel": 180, "encounter": 60 },
+    { "type": "Swamp", "name": "沼泽", "travel": 180, "encounter": 80 },
+    { "type": "Bog", "name": "泥沼", "travel": 210, "encounter": 80 },
+    { "type": "Savanna", "name": "稀树草地", "travel": 60, "encounter": 35 },
+    { "type": "Wasteland", "name": "荒原", "travel": 90, "encounter": 70 }
   ],
   "settlementGrammar": {
     "syllablePrefixes": ["艾尔", "贝尔", "鲁米", "阿斯特", "诺亚", "法尔", "卡尔", "塞莉", "达尔", "罗恩", "米拉", "维尔", "索尔", "梅尔", "雷恩", "库尔"],
@@ -239,5 +239,149 @@
         { "name": "钟楼", "terrain": "Plains" }
       ]
     }
-  ]
+  ],
+  "wilds": {
+    "roadPercent": 40,
+    "safeRadius": 3,
+    "events": [
+      {
+        "id": "wolves",
+        "title": "狼群",
+        "text": "林间窜出几条饿狼，绕着队伍打转，低吼声越收越紧。",
+        "terrains": ["Forest", "DenseForest", "Taiga", "Hills", "Grassland", "Plains", "Snow"],
+        "weight": 30,
+        "minTier": 1,
+        "foes": [
+          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 1, "money": 8 },
+          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "maxHp": 40, "attack": 4, "speed": 10, "threatTier": 2, "column": 2, "money": 14 },
+          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 3, "money": 8 }
+        ],
+        "detourMinutes": 90
+      },
+      {
+        "id": "bandits",
+        "title": "拦路匪",
+        "text": "路边石后站起一伙蒙面人，刀已出鞘：「留下钱袋，人可以走。」",
+        "terrains": [],
+        "weight": 20,
+        "minTier": 2,
+        "foes": [
+          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "maxHp": 34, "attack": 4, "speed": 10, "threatTier": 1, "column": 1, "money": 20 },
+          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "maxHp": 48, "attack": 5, "speed": 9, "threatTier": 2, "column": 2, "money": 40 },
+          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "maxHp": 34, "attack": 4, "speed": 10, "threatTier": 1, "column": 3, "money": 20 }
+        ],
+        "detourMinutes": 120
+      },
+      {
+        "id": "rats",
+        "title": "巨鼠",
+        "text": "烂泥里拱出一窝巨鼠，牙齿磨得咯吱作响。",
+        "terrains": ["Swamp", "Bog", "River", "Wasteland"],
+        "weight": 25,
+        "minTier": 1,
+        "foes": [
+          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 18, "attack": 2, "speed": 12, "threatTier": 1, "column": 1, "money": 4 },
+          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 18, "attack": 2, "speed": 12, "threatTier": 1, "column": 2, "money": 4 }
+        ],
+        "detourMinutes": 60
+      },
+      {
+        "id": "abandoned_pack",
+        "title": "遗落的行囊",
+        "text": "草丛里半埋着一只旧行囊，主人不知去向，里头还剩些铜板。",
+        "terrains": [],
+        "weight": 18,
+        "minTier": 1,
+        "money": 40,
+        "acceptLabel": "收下"
+      },
+      {
+        "id": "lost_way",
+        "title": "迷路",
+        "text": "雾气漫上来，四下的地貌都变得陌生，绕了好一阵才找回方向。",
+        "terrains": ["Forest", "DenseForest", "Jungle", "Swamp", "Bog", "Snow", "Mountain"],
+        "weight": 16,
+        "minTier": 1,
+        "minutes": 120,
+        "acceptLabel": "继续赶路"
+      },
+      {
+        "id": "wayside_shrine",
+        "title": "路边小祠",
+        "text": "一座无人照看的小祠，石台上还留着前人供的花。众人歇了歇脚，心头松快了些。",
+        "terrains": [],
+        "weight": 12,
+        "minTier": 1,
+        "minutes": 30,
+        "mood": 4,
+        "acceptLabel": "歇一会儿"
+      },
+      {
+        "id": "toll",
+        "title": "私设关卡",
+        "text": "几个兵痞横了根木杆在路上，说是领主的关税，不给就不放行。",
+        "terrains": [],
+        "weight": 10,
+        "minTier": 2,
+        "money": -30,
+        "acceptLabel": "破财消灾"
+      }
+    ]
+  },
+  "dungeon": {
+    "layouts": [
+      [[0, 0]],
+      [[0, 0], [1, 0]],
+      [[0, 0], [0, 1]],
+      [[0, 0], [1, 0], [1, 1]],
+      [[0, 0], [0, 1], [1, 1]],
+      [[0, 0], [1, 0], [2, 0]]
+    ],
+    "guardPercent": 35,
+    "guards": [
+      {
+        "minTier": 1,
+        "title": "石室守卫",
+        "text": "黑暗里亮起几对眼睛，盘踞此处的东西被惊醒了。",
+        "foes": [
+          { "id": "dg_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 20, "attack": 2, "speed": 12, "threatTier": 1, "column": 1, "money": 5 },
+          { "id": "dg_rat_b", "portrait": "monster_giant_rat", "name": "鼠王", "maxHp": 30, "attack": 3, "speed": 12, "threatTier": 2, "column": 2, "money": 12, "size": 2 },
+          { "id": "dg_rat_c", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 20, "attack": 2, "speed": 12, "threatTier": 1, "column": 3, "money": 5 }
+        ]
+      },
+      {
+        "minTier": 2,
+        "title": "石室守卫",
+        "text": "几具披甲骸骨从壁龛里站起，锈剑在石地上拖出火星。",
+        "foes": [
+          { "id": "dg_skel_a", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 1, "money": 12, "defence": 2 },
+          { "id": "dg_skel_b", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 2, "money": 12, "defence": 2 },
+          { "id": "dg_skel_c", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 3, "money": 12, "defence": 2 }
+        ]
+      }
+    ],
+    "bosses": [
+      {
+        "minTier": 1,
+        "title": "遗迹之主",
+        "text": "最深处的石座上，一头庞然的东西缓缓抬起头来。",
+        "foes": [
+          { "id": "dg_boss_wolf", "portrait": "monster_dire_wolf", "name": "洞穴魔狼", "maxHp": 90, "attack": 6, "speed": 10, "threatTier": 3, "column": 1, "money": 80, "size": 2 },
+          { "id": "dg_boss_add", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 3, "money": 8 }
+        ]
+      },
+      {
+        "minTier": 3,
+        "title": "遗迹之主",
+        "text": "尘封的王座上坐着一具戴冠的骸骨，眼窝里燃起幽火。",
+        "foes": [
+          { "id": "dg_boss_lich", "portrait": "", "name": "骸骨王", "maxHp": 140, "attack": 8, "speed": 9, "threatTier": 4, "column": 1, "money": 160, "size": 2, "defence": 3 },
+          { "id": "dg_boss_guard", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 3, "money": 12, "defence": 2 }
+        ]
+      }
+    ],
+    "treasure": { "title": "宝库", "text": "石箱上的封蜡早已干裂，撬开来是一捧旧币。", "moneyMin": 60, "moneyMax": 180, "acceptLabel": "收下" },
+    "shrine": { "title": "古神龛", "text": "神龛前的灯不知被谁点着，众人默立片刻，像是卸下了什么。", "mood": 6, "acceptLabel": "祈祷" },
+    "clearedText": "{0}已肃清。"
+  }
 }

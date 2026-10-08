@@ -323,7 +323,8 @@ public partial class PortraitCapture : Node
         EnqueueProgressChecks();
         // 大地图行进（放在据点各页核对之后：行进会推进时间，免得扰动前面按开局时刻写的核对）：
         // 出行 → 点一格看路程 → 前往（逐格耗时） → 走到最近的聚落进场 → 出来站在聚落格上 → 缩小看走过的路 → 返回领地（走回去）。
-        _steps.Enqueue(() => { _root.ModalLayer.Dismiss(); _root.HubScreen.ShowTab(0); });
+        // 野外遭遇按此刻掷骰：出图关掉，免得行进被随机打断；遭遇另行摆出来核对。
+        _steps.Enqueue(() => { _root.ModalLayer.Dismiss(); _root.HubScreen.ShowTab(0); _root.HubScreen.DebugHub.EncounterRate = 0; });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
         {
@@ -391,6 +392,7 @@ public partial class PortraitCapture : Node
                 "return walks back home into the room left from");
             Shoot("world_back", _root.HubScreen);
         });
+        EnqueueEncounterChecks();
         foreach (var size in new[] { 1, 2, 3, 4 })
         {
             var capturedSize = size;
@@ -779,6 +781,77 @@ public partial class PortraitCapture : Node
                 return;
             }
     }
+    /// <summary>
+    /// 世界探索遭遇：出行 → 脚下摆一群狼 → 弹窗（迎战 / 绕开）→ 绕开 →
+    /// 走进最近的遗迹 → 朝最深处走，半路撞上的东西弹窗 → 处理掉 → 回领地。
+    /// </summary>
+    private void EnqueueEncounterChecks()
+    {
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugHub.ForceWildEncounter("wolves");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            var page = _root.ModalLayer.Current;
+            Require(_root.ModalLayer.IsActive && page?.Title == "狼群" && page.Choices.Count == 2
+                && page.Choices[0].Label == "迎战" && page.Choices[1].Label == "绕开",
+                "a wild encounter pops a modal offering fight or detour");
+            Shoot("world_encounter", _root.HubScreen);
+            _root.ModalLayer.Choose("avoid");
+        });
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.PendingEncounter == null && !_root.ModalLayer.IsActive, "taking the detour settles the encounter");
+            var world = hub.State.World;
+            var ruin = world.Pois.Where(p => p.Type == Rimisekai.WorldMap.WorldPoiType.Ruin)
+                .OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            Require(hub.TravelToPoiDirect(ruin.Id), "walk to the nearest ruin and go in");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the dungeon");
+            Shoot("dungeon_inside", _root.HubScreen);
+            // 朝本块最远的那间走：一路上第一间有东西的石室会把人截住。
+            var hub = _root.HubScreen.DebugHub;
+            var here = hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId);
+            var far = hub.State.Territory.Rooms.Where(r => r.RegionId == here.RegionId && r.Open)
+                .OrderByDescending(r => hub.State.Territory.Route(here.Id, r.Id, ignoreLocks: true).Count).First();
+            Require(hub.Arrive(far.Id), "walk deep into the dungeon");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            if (hub.PendingEncounter != null)
+            {
+                Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title == hub.PendingEncounter.Title,
+                    "a dungeon room with something in it stops the walk and pops its modal");
+                Shoot("dungeon_encounter", _root.HubScreen);
+                _root.ModalLayer.Choose(hub.PendingEncounter.IsBattle ? "avoid" : "accept");
+            }
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.PendingEncounter == null, "the dungeon encounter is settled");
+            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Party.AtHome, "back home from the dungeon");
+        });
+    }
+
     private void BeginBattleProbe(int size)
     {
         var hub = _root.HubScreen.DebugHub;

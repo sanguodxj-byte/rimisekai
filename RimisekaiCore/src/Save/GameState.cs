@@ -58,6 +58,9 @@ public sealed class GameState
     /// <summary>大地图行进：队伍此刻站的格。随 <see cref="World"/> 一起重建，不进存档。</summary>
     public WorldParty Party { get; set; }
 
+    /// <summary>地城进度：守卫、宝库、神龛与首领的了结记录。随存档走，换世界即清空。</summary>
+    public DungeonLedger Dungeons { get; private set; } = new();
+
     /// <summary>当前探索/驻留的 POI 场景（若有）。</summary>
     public PoiMapData? CurrentPoi { get; set; }
 
@@ -77,6 +80,7 @@ public sealed class GameState
         WorldSeed = seed == 0 ? 42 : seed;
         World = WorldGenerator.Generate(WorldSeed);
         Party = new WorldParty(World);
+        Dungeons = new DungeonLedger();
         CurrentPoi = null;
     }
 
@@ -87,11 +91,29 @@ public sealed class GameState
     {
         var poiSeed = WorldSeed ^ (poiId * 31337);
         var poi = World.Pois.Find(p => p.Id == poiId);
-        var poiMap = (poi != null && blocksW == 0 && blocksH == 0)
-            ? PoiAssemblyGenerator.GenerateForPoi(poi.Type, poiSeed)
-            : PoiAssemblyGenerator.GenerateGrid(poiSeed, blocksW > 0 ? blocksW : 1, blocksH > 0 ? blocksH : 1);
+        var poiMap = poi is { Type: WorldPoiType.Ruin } && blocksW == 0 && blocksH == 0
+            ? GenerateDungeon(poiSeed)
+            : (poi != null && blocksW == 0 && blocksH == 0)
+                ? PoiAssemblyGenerator.GenerateForPoi(poi.Type, poiSeed)
+                : PoiAssemblyGenerator.GenerateGrid(poiSeed, blocksW > 0 ? blocksW : 1, blocksH > 0 ? blocksH : 1);
         CurrentPoi = poiMap;
         return poiMap;
+    }
+
+    /// <summary>地城：按兴趣点种子从数据表的块拼法里挑一式，每块都是遗迹地牢。</summary>
+    private static PoiMapData GenerateDungeon(int poiSeed)
+    {
+        var (_, _, districts) = MapCatalog.Default.GetPoiScale(WorldPoiType.Ruin);
+        var layouts = MapCatalog.Default.Dungeon.Layouts;
+        var layout = layouts[(int)((uint)poiSeed % (uint)layouts.Count)];
+        var blocks = new List<(int bx, int by)>();
+        var names = new List<string>();
+        foreach (var cell in layout)
+        {
+            blocks.Add((cell[0], cell[1]));
+            names.Add(districts[0]);
+        }
+        return PoiAssemblyGenerator.GenerateCustom(poiSeed, blocks, districts: names);
     }
 
     /// <summary>
