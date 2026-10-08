@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Character;
 using Rimisekai.Clock;
 using Rimisekai.Housing;
@@ -359,6 +360,47 @@ public sealed partial class HubSession
             LayerPlaceName.Length > 0 ? LayerPlaceName : "未知地点",
         _ => State.Territory.Name.Length > 0 ? State.Territory.Name : "领地",
     };
+
+    /// <summary>
+    /// 顶栏左上角的地名：兴趣点/地城由多个 5×5 块拼成时写「地名·方位」（罗恩要塞·东），
+    /// 方位是玩家所在块在整张拼图里的相对位置（见 <see cref="BlockDirection"/>），跨块即变；
+    /// 只有一个块的场景、领地与世界地图只写 <see cref="MapTitle"/>。
+    /// </summary>
+    public string HudTitle()
+    {
+        var direction = BlockDirection();
+        return direction.Length > 0 ? $"{MapTitle()}·{direction}" : MapTitle();
+    }
+
+    /// <summary>
+    /// 玩家所在 5×5 块在整张拼图中的方位（规则见 <see cref="DirectionOf"/>）。
+    /// 不在兴趣点/地城里、或拼图只有一个块时为空串。
+    /// </summary>
+    public string BlockDirection()
+    {
+        if (Layer is not (MapLayer.WorldPoi or MapLayer.QuestPlace) || State.CurrentPoi!.Blocks.Count == 1)
+            return "";
+        return DirectionOf(State.CurrentPoi.Blocks, State.CurrentPoi.GetBlockByRoomId(PlayerRoomId - PoiRoomIdBase)!);
+    }
+
+    /// <summary>
+    /// 某块在拼图中的方位：按全部块的外接矩形，东西、南北各分三段（块心落在前三分之一＝西/北、
+    /// 后三分之一＝东/南、中段不写），两轴合成东北/西北/东南/西南，两轴都不写＝中央；
+    /// 某轴只有一块宽则该轴不写。2×1＝西/东，1×2＝北/南，3×1＝西/中央/东，3×3 正中＝中央，
+    /// L 形三块＝西北/东北/东南。
+    /// </summary>
+    public static string DirectionOf(IReadOnlyList<PoiMap.PoiBlock> blocks, PoiMap.PoiBlock here)
+    {
+        var minX = blocks.Min(b => b.BlockX);
+        var minY = blocks.Min(b => b.BlockY);
+        var direction = Third(here.BlockX - minX, blocks.Max(b => b.BlockX) - minX + 1, "西", "东")
+            + Third(here.BlockY - minY, blocks.Max(b => b.BlockY) - minY + 1, "北", "南");
+        return direction.Length > 0 ? direction : "中央";
+
+        // 第 k 块（共 n 块）的块心在 (2k+1)/(2n)：前三分之一取 low、后三分之一取 high、中段不写。
+        static string Third(int k, int n, string low, string high) =>
+            3 * (2 * k + 1) < 2 * n ? low : 3 * (2 * k + 1) > 4 * n ? high : "";
+    }
 
     /// <summary>
     /// 当前所在的房间名。严禁拼接子一级地区概念。

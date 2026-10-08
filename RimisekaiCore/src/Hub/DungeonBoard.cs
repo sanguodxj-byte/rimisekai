@@ -118,7 +118,6 @@ public sealed partial class HubSession
             {
                 Id = PoiRoomIdBase + r.Id,
                 Name = r.Name,
-                BaseName = r.BaseName,
                 RegionId = Territory.MaxTerritoryRegions + block.RegionId,
                 X = r.X,
                 Y = r.Y,

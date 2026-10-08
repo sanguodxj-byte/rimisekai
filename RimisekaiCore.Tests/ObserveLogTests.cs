@@ -36,20 +36,6 @@ public sealed class ObserveLogTests
     }
 
     [Fact]
-    public void Renamed_scene_room_keeps_its_base_room_description()
-    {
-        DefLoader.EnsureInitialized();
-        var state = new GameState();
-        state.Roster.Add("领主", master: true);
-        state.Territory.AddRoom(new Room { Id = 1, Name = "西庭院", BaseName = "庭院", Open = true });
-        var hub = new HubSession(state);
-        hub.Enter(1);
-
-        Assert.Equal(hub.SceneDescription(new Room { Name = "庭院" }), hub.SceneDescription(state.Territory.Room(1)!));
-        Assert.NotEmpty(hub.SceneDescription(state.Territory.Room(1)!));
-    }
-
-    [Fact]
     public void Observe_without_matching_def_writes_only_the_glance_line_with_comma()
     {
         var hub = NewHub("无名屋");

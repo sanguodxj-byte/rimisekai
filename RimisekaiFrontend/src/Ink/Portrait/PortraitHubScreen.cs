@@ -347,7 +347,7 @@ public partial class PortraitHubScreen : Control
         var place = PortraitLayout.HudPlace;
         if (PortraitFrame.IsPressed(place))
             PortraitFrame.PressMark(this, place);
-        var title = _vm.MapTitle();
+        var title = header.Place;
         var money = items[3].Value;
         var moneyWidth = InkDraw.Measure(money, PortraitLayout.FontMeta).X + 120f;
         var titleMax = PortraitLayout.CanvasWidth - PortraitLayout.Pad * 2f - moneyWidth - 90f;

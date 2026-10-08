@@ -10,7 +10,7 @@ public sealed partial class HubSession
 
     public HubHeader Header()
     {
-        var place = MapTitle();
+        var place = HudTitle();
         return new HubHeader(place, State.Clock.Season, Weather, State.Clock.Minutes / 60, State.Clock.Minutes % 60, State.Money);
     }
 

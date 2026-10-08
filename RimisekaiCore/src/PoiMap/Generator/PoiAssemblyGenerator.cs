@@ -1,4 +1,3 @@
-using System.Linq;
 using System;
 using System.Collections.Generic;
 using Rimisekai.WorldMap;
@@ -147,38 +146,7 @@ public static class PoiAssemblyGenerator
             }
         }
 
-        DistinguishNames(map);
         return map;
-    }
-
-    private static readonly string[] Ordinals = { "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
-
-    /// <summary>
-    /// 同一块里重名的房间按块内方位加前缀（以块心为准：东北草地、西庭院；正中写「中」），
-    /// 同方位仍重名的再按生成顺序接序号（东北草地一、东北草地二）。不重名的房间保持原名。
-    /// </summary>
-    private static void DistinguishNames(PoiMapData map)
-    {
-        foreach (var block in map.Blocks)
-        {
-            foreach (var group in block.Rooms.GroupBy(r => r.Name).Where(g => g.Count() > 1).ToList())
-            {
-                foreach (var room in group)
-                {
-                    var dx = room.LocalX - PoiBlock.Size / 2;
-                    var dy = room.LocalY - PoiBlock.Size / 2;
-                    var dir = (dx > 0 ? "东" : dx < 0 ? "西" : "") + (dy < 0 ? "北" : dy > 0 ? "南" : "");
-                    room.BaseName = room.Name;
-                    room.Name = (dir.Length > 0 ? dir : "中") + room.Name;
-                }
-                foreach (var same in group.GroupBy(r => r.Name).Where(g => g.Count() > 1))
-                {
-                    var n = 0;
-                    foreach (var room in same)
-                        room.Name += Ordinals[n++];
-                }
-            }
-        }
     }
 
     private static void ConnectAdjacentBlocks(PoiMapData map, SeededRng rng, ref int nextRoomId)

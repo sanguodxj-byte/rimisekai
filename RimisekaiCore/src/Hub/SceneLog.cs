@@ -20,8 +20,8 @@ public sealed partial class HubSession
     /// </summary>
     public string SceneDescription(Room room)
     {
-        var def = DefDatabase<RoomDef>.Get(room.DefName)
-               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.DefName || d.Label == room.DefName);
+        var def = DefDatabase<RoomDef>.Get(room.Name)
+               ?? DefDatabase<RoomDef>.All.FirstOrDefault(d => d.Name == room.Name || d.Label == room.Name);
         var desc = def != null && def.Description.Length > 0 ? def.Description : "";
         if ((room.Name.Contains("卧") || room.HasTag("卧室")) && (State.Clock.Hour < 6 || State.Clock.Hour >= 20))
             desc = "月光透过尖拱石窗斜洒在木床上，床幔半掩，粗石壁炉前留有一层静寂的灰烬。";

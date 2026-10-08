@@ -150,6 +150,12 @@ public sealed class WorldTravelTests
         Assert.All(poiRooms, r => Assert.True(r.X is >= 0 and < 5 && r.Y is >= 0 and < 5));
         Assert.Equal(25, hub.Map().Count);
 
+        // 顶栏地名带上所在块的方位，过界后随之换。
+        string Expected() => $"{hub.MapTitle()}·{HubSession.DirectionOf(state.CurrentPoi!.Blocks, state.CurrentPoi.Blocks[hub.RegionId - Territory.MaxTerritoryRegions])}";
+        Assert.Equal(Expected(), hub.HudTitle());
+        Assert.Equal(hub.HudTitle(), hub.Header().Place);
+        var before = hub.HudTitle();
+
         // 找一间通往别的块的房：站上去就能过界，过去后网格换成那一块。
         var gate = poiRooms.First(r => hub.CrossTargetRegion(r.Id) >= 0);
         hub.Arrive(gate.Id);
@@ -164,6 +170,40 @@ public sealed class WorldTravelTests
         Assert.True(dir is Territory.RegionDir.East or Territory.RegionDir.West ? landed.X == ox : landed.Y == oy);
         Assert.Equal(target, hub.RegionId);
         Assert.All(hub.Map(), r => Assert.Equal(target, r.RegionId));
+        Assert.Equal(Expected(), hub.HudTitle());
+        Assert.NotEqual(before, hub.HudTitle());
+    }
+
+    [Fact]
+    public void Single_block_poi_title_has_no_direction()
+    {
+        var (hub, state) = Setup();
+        var w = state.World;
+        var village = w.Pois.Where(p => p.Type is WorldPoiType.Village or WorldPoiType.Monastery)
+            .OrderBy(p => System.Math.Abs(p.X - w.HomeX) + System.Math.Abs(p.Y - w.HomeY)).First();
+        Assert.True(hub.TravelToPoiDirect(village.Id));
+        Assert.Single(state.CurrentPoi!.Blocks);
+        Assert.Equal("", hub.BlockDirection());
+        Assert.Equal(hub.MapTitle(), hub.HudTitle());
+    }
+
+    [Theory]
+    [InlineData(3, 3, "西北,北,东北,西,中央,东,西南,南,东南")]
+    [InlineData(2, 1, "西,东")]
+    [InlineData(1, 2, "北,南")]
+    [InlineData(3, 1, "西,中央,东")]
+    [InlineData(2, 2, "西北,东北,西南,东南")]
+    public void Block_direction_is_relative_position_in_the_assembly(int w, int h, string expected)
+    {
+        var blocks = Enumerable.Range(0, w * h).Select(i => new Rimisekai.PoiMap.PoiBlock(i % w, i / w, i)).ToList();
+        Assert.Equal(expected, string.Join(",", blocks.Select(b => HubSession.DirectionOf(blocks, b))));
+    }
+
+    [Fact]
+    public void L_shaped_dungeon_blocks_take_corner_directions()
+    {
+        var blocks = new[] { (0, 0), (1, 0), (1, 1) }.Select((c, i) => new Rimisekai.PoiMap.PoiBlock(c.Item1, c.Item2, i)).ToList();
+        Assert.Equal("西北,东北,东南", string.Join(",", blocks.Select(b => HubSession.DirectionOf(blocks, b))));
     }
 
     [Fact]

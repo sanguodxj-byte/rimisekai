@@ -10,20 +10,6 @@ namespace Rimisekai.Tests;
 
 public sealed class PoiMapTests
 {
-    [Theory]
-    [InlineData(Rimisekai.WorldMap.WorldPoiType.Fortress, 11)]
-    [InlineData(Rimisekai.WorldMap.WorldPoiType.Capital, 22)]
-    [InlineData(Rimisekai.WorldMap.WorldPoiType.Ruin, 33)]
-    public void Room_names_are_unique_within_each_block(Rimisekai.WorldMap.WorldPoiType type, int seed)
-    {
-        var map = PoiAssemblyGenerator.GenerateForPoi(type, seed);
-        foreach (var block in map.Blocks)
-            Assert.Equal(block.Rooms.Count, block.Rooms.Select(r => r.Name).Distinct().Count());
-        // 改过名的房间记着原名（借它查 RoomDef 场景描述），原名是新名去掉方位前缀与序号的那一段。
-        Assert.All(map.AllRooms.Where(r => r.BaseName.Length > 0), r => Assert.Contains(r.BaseName, r.Name));
-        Assert.Equal("大门", map.Blocks[0].StartRoom!.Name);
-    }
-
     [Fact]
     public void PoiBlock_generates_connected_rooms_and_end_on_edge()
     {
