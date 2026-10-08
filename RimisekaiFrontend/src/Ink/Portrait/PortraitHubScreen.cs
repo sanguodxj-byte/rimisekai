@@ -438,7 +438,8 @@ public partial class PortraitHubScreen : Control
     private void DrawToast()
     {
         if (_notice.Length == 0 || _noticeAge > 3f
-            || (_vm.Hub.History.Count > 0 && _vm.Hub.History[^1].Text == _notice))
+            || (_veil?.Running ?? false)
+            || (_push == PushPage.None && _tab == 0 && _vm.Hub.Log.Any(e => e.Text == _notice)))
             return;
         var bottom = _sheetTop >= 0f ? _sheetTop - 30f
             : _push == PushPage.None ? PortraitLayout.TabTop - 24f : PortraitLayout.CanvasHeight - 80f;

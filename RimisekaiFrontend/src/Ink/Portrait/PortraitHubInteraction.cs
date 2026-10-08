@@ -304,7 +304,9 @@ public partial class PortraitHubScreen
                 _giftOpen = false;
                 return true;
             case PortraitAction.FixtureRun:
-                hub.ActAtFixture(_vm.FixtureActions()[widget.Index]);
+                var act = _vm.FixtureActions()[widget.Index];
+                if (hub.ActAtFixture(act))
+                    PlayVeil(PortraitVeil.IconFor(act), Rimisekai.Housing.ActionKindMap.LabelOf(act));
                 return true;
             case PortraitAction.ObserveRoom:
                 if (hub.Act(InkViewModel.PlaceActions[widget.Index].Action))

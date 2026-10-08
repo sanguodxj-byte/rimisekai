@@ -195,6 +195,23 @@ public partial class PortraitCapture : Node
         {
             _root.HubScreen._Process(1);
             Require(!_root.HubScreen.DebugAnimating && _root.HubScreen.DebugTab == 0, "motion settles back on territory");
+            // 移动过渡：点一间连通的别房，状态当场改好，磨砂遮罩＋脚印图标盖住画面。
+            var hub = _root.HubScreen.DebugHub;
+            _veilFrom = hub.PlayerRoomId;
+            var target = hub.Map().First(r => r.Open && r.Id != _veilFrom && hub.CanReach(r.Id)).Id;
+            _root.HubScreen.DebugPress(PortraitAction.Cell, target);
+            Require(hub.PlayerRoomId == target && _root.HubScreen.DebugVeil is { Running: true, Icon: VeilIcon.Move },
+                "moving plays the frosted veil with the move icon");
+            _root.HubScreen.DebugVeil!.Step(0.4f);
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => Shoot("veil_move_mid", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugAnimating, "veil locks input while playing");
+            _root.HubScreen._Process(2);
+            Require(!(_root.HubScreen.DebugVeil?.Running ?? false), "veil clears after its run");
+            _root.HubScreen.DebugHub.Arrive(_veilFrom);
             PortraitMotion.Instant = true;
             _root.HubScreen.SetProcess(true);
             _root.HubScreen.QueueRedraw();
@@ -361,6 +378,7 @@ public partial class PortraitCapture : Node
         Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Title, "combat settings returns to title");
     }
 
+    private int _veilFrom;
     private int _doorIndex;
     private int _linkCount;
 

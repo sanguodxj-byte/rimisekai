@@ -9,7 +9,7 @@ using Rimisekai.Ink;
 namespace Rimisekai.Portrait;
 
 /// <summary>
-/// 领地页签：日志面板（近期两段式日志「a，b」，点一下进日志页签）、5×5 领地网格（格底棋子＝在场的人，至多 4 枚）、
+/// 领地页签：日志面板（本次操作的日志快照，每次操作清空换新，点一下进日志页签）、5×5 领地网格（格底棋子＝在场的人，至多 4 枚）、
 /// 「此刻」头像带（只列与主角同房的人，每页 4 人，三角钮翻页）、出行 / 建造两枚浮动药丸。
 /// 点房间格＝沿连通的门前往（不连通则不动并提示）；格与格共用边上的门洞＝连通；再点主角所在的格、或长按任一房间格，弹设施抽屉（设施、在场的人、拆除）。
 /// 世界层（出行后）网格换成兴趣点格，点格即进入该地点。
@@ -160,7 +160,9 @@ public partial class PortraitHubScreen
     /// <summary>前往某房间：只能沿连通的门走；与这里不连通就原地不动，弹一句提示。</summary>
     private void GoTo(int roomId)
     {
-        if (!_vm.Hub.Arrive(roomId))
+        if (_vm.Hub.Arrive(roomId))
+            PlayVeil(VeilIcon.Move, $"前往{RoomNameOf(roomId)}");
+        else
             SetNotice($"{RoomNameOf(roomId)}与这里不连通，过不去。");
     }
 
@@ -243,10 +245,10 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>
-    /// 日志面板：近期日志（Core 的 <c>HubSession.History</c>，最旧在前）自下而上排，最新一条贴底。
-    /// 每条是一句「a，b」（<see cref="LogEntry.Text"/>）；本次操作写下的几条骨白，更早的压暗。
-    /// 字号自 50 往下收到恰好放下最近 <see cref="PortraitLayout.LogFitEntries"/> 条，不低于 44；
-    /// 收到 44 仍放不下，最旧的整条不画，不溢出。整块点一下即进日志页签（那里可滚动看全部）。
+    /// 日志面板＝本次操作的快照（Core 的 <c>HubSession.Log</c>，固定排版 环境 → 场景 → 他人 → 自己）：
+    /// 每次有新输出的操作都整份清空换新，不与旧日志混排。每条一句「a，b」，自上而下排，全部骨白。
+    /// 字号自 50 往下收到恰好放下，不低于 44；收到 44 仍放不下，末尾放不下的整条不画，不溢出。
+    /// 整块点一下即进日志页签（那里按时间看全部历史）。
     /// </summary>
     private void DrawLogPanel()
     {
@@ -258,43 +260,37 @@ public partial class PortraitHubScreen
             PortraitFrame.PressMark(this, panel);
         _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
         var area = PortraitLayout.LogPanelText;
-        var history = _vm.Hub.History;
-        if (history.Count == 0)
+        var entries = _vm.Hub.Log;
+        if (entries.Count == 0)
             return;
-        var current = new HashSet<LogEntry>(_vm.Hub.Log);
         var gap = 12f;
         var size = PortraitLayout.LogFontMin;
-        var fit = Math.Min(history.Count, PortraitLayout.LogFitEntries);
-        for (var s = PortraitLayout.LogFontMax; s >= PortraitLayout.LogFontMin; s -= 2)
+        for (var fs = PortraitLayout.LogFontMax; fs >= PortraitLayout.LogFontMin; fs -= 2)
         {
             var need = 0f;
-            for (var i = history.Count - fit; i < history.Count; i++)
-                need += InkDraw.WrapLines(history[i].Text, area.Size.X, s).Count * LogLineHeight(s) + gap;
+            foreach (var e in entries)
+                need += InkDraw.WrapLines(e.Text, area.Size.X, fs).Count * LogLineHeight(fs) + gap;
             if (need - gap <= area.Size.Y)
             {
-                size = s;
+                size = fs;
                 break;
             }
         }
         var lineH = LogLineHeight(size);
-        var bottom = area.End.Y;
-        for (var i = history.Count - 1; i >= 0; i--)
+        var top = area.Position.Y;
+        foreach (var e in entries)
         {
-            var lines = InkDraw.WrapLines(history[i].Text, area.Size.X, size);
-            var height = lines.Count * lineH;
-            // 放不下的旧条目整条不画（最新一条除外：它只裁掉开头放不下的行），不溢出、不露半句。
-            if (bottom - height < area.Position.Y - 0.5f && i != history.Count - 1)
+            var lines = InkDraw.WrapLines(e.Text, area.Size.X, size);
+            if (top + lines.Count * lineH > area.End.Y + 0.5f && top > area.Position.Y)
                 break;
-            var color = current.Contains(history[i]) ? InkStyle.Line : InkStyle.Dim;
-            for (var k = lines.Count - 1; k >= 0; k--)
+            foreach (var line in lines)
             {
-                var top = bottom - lineH;
-                if (top < area.Position.Y - 0.5f)
+                if (top + lineH > area.End.Y + 0.5f)
                     break;
-                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), lines[k], size, color, "lm");
-                bottom = top;
+                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), line, size, InkStyle.Line, "lm");
+                top += lineH;
             }
-            bottom -= gap;
+            top += gap;
         }
     }
 
@@ -431,10 +427,12 @@ public partial class PortraitHubScreen
                 var fixture = hub.State.Territory.Facilities.Find(f => f.Id == w.Index);
                 if (fixture == null)
                     return true;
-                if (fixture.RoomId != hub.PlayerRoomId)
+                var moved = fixture.RoomId != hub.PlayerRoomId;
+                if (moved)
                     hub.Enter(fixture.RoomId);
                 if (hub.Use(w.Index))
                 {
+                    PlayVeil(moved ? VeilIcon.Move : VeilIcon.Wait, $"走向{fixture.Name}");
                     hub.ClearSelection();
                     _sheet = SheetKind.None;
                     OpenInteraction();
