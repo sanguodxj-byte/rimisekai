@@ -4,6 +4,8 @@ shader_type canvas_item;
 uniform float progress : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 color_beam : source_color = vec4(1.0, 0.85, 0.2, 1.0);
 uniform float angle : hint_range(-3.1416, 3.1416) = 0.0;
+// 光束粗细按 300px 方块标定；方块变大时按比例收细，保持屏幕上的粗细不变。
+uniform float width_scale = 1.0;
 
 void fragment() {
     vec2 uv = UV - vec2(0.5);
@@ -21,7 +23,7 @@ void fragment() {
     }
 
     float trail = 1.0 - (dist_from_head / 0.48);
-    float beam_w = 0.035 * trail + 0.006;
+    float beam_w = (0.035 * trail + 0.006) * width_scale;
     float dist_y = abs(r_uv.y) / beam_w;
 
     if (dist_y > 2.6) {

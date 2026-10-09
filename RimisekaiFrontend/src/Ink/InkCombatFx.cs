@@ -466,12 +466,16 @@ public partial class InkCombatFxLayer : Control
         var len = dir.Length();
         var angle = Mathf.Atan2(dir.Y, dir.X);
 
-        var size = new Vector2(Mathf.Max(300f, len * 1.2f), 140f);
+        // 方形光效块：Shader 在 UV 里按角度旋转，块不是正方形时斜向 / 竖向的弹道会被压扁成一个小点
+        // （竖屏里我方在下、敌在上，几乎每一箭都是竖着飞，此前只看得到一粒光点）。
+        var side = Mathf.Max(300f, len * 1.2f);
+        var size = new Vector2(side, side);
         quad.Position = (start + target) / 2f - size / 2f;
         quad.Size = size;
 
         var mat = (ShaderMaterial)quad.Material;
         mat.SetShaderParameter("color_beam", color);
+        mat.SetShaderParameter("width_scale", 300f / side);
         mat.SetShaderParameter("angle", angle);
         mat.SetShaderParameter("progress", 0.0f);
 
