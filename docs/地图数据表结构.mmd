@@ -5,5 +5,6 @@ flowchart LR
     R[room_defs.json<br/>房间模板]
     F[facility_defs.json<br/>设施模板]
     P -->|districts: 分区 ID| D
-    D -->|roomIds| R
-    D -->|facilityIds| F
+    D -->|roomIds：分区可用房间| R
+    D -->|facilityIds：分区可用设施| F
+    F -->|roomIds：绑定房间| R

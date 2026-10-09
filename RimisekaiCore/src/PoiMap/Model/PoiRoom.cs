@@ -15,6 +15,12 @@ public sealed class PoiRoom
     /// <summary>房间名称</summary>
     public string Name { get; set; } = "";
 
+    /// <summary>来源房间模板 ID；设施通过该模板 ID 绑定到房间。</summary>
+    public int? RoomTemplateId { get; set; }
+
+    /// <summary>绑定到此房间实例的设施模板 ID。</summary>
+    public List<int> FacilityIds { get; } = new();
+
     /// <summary>物理地形形态（道路、草坪、林地、建筑等）</summary>
     public WorldTerrainType Terrain { get; set; } = WorldTerrainType.Plains;
 

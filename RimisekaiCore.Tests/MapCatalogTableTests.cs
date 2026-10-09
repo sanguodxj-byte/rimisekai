@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Rimisekai.PoiMap.Generator;
 using Rimisekai.WorldMap;
 using Xunit;
 
@@ -24,17 +25,30 @@ public sealed class MapCatalogTableTests
 
         var roomIds = rooms.RootElement.GetProperty("rooms").EnumerateArray()
             .Select(row => row.GetProperty("id").GetInt32()).ToHashSet();
-        var facilityIds = facilities.RootElement.GetProperty("facilities").EnumerateArray()
-            .Select(row => row.GetProperty("id").GetInt32()).ToHashSet();
+        var facilityRows = facilities.RootElement.GetProperty("facilities").EnumerateArray()
+            .ToDictionary(row => row.GetProperty("id").GetInt32());
+        var facilityIds = facilityRows.Keys.ToHashSet();
         var districts = pois.RootElement.GetProperty("districts").EnumerateArray().ToArray();
         var districtIds = districts.Select(district => district.GetProperty("id").GetString()!).ToHashSet(StringComparer.Ordinal);
 
         Assert.Equal(rooms.RootElement.GetProperty("rooms").GetArrayLength(), roomIds.Count);
         Assert.Equal(facilities.RootElement.GetProperty("facilities").GetArrayLength(), facilityIds.Count);
+        foreach (var facility in facilityRows.Values)
+        {
+            var boundRoomIds = facility.GetProperty("roomIds").EnumerateArray().Select(id => id.GetInt32()).ToArray();
+            Assert.NotEmpty(boundRoomIds);
+            Assert.All(boundRoomIds, id => Assert.Contains(id, roomIds));
+        }
         foreach (var district in districts)
         {
             Assert.All(district.GetProperty("roomIds").EnumerateArray(), id => Assert.Contains(id.GetInt32(), roomIds));
             Assert.All(district.GetProperty("facilityIds").EnumerateArray(), id => Assert.Contains(id.GetInt32(), facilityIds));
+            var districtRoomIds = district.GetProperty("roomIds").EnumerateArray().Select(id => id.GetInt32()).ToHashSet();
+            foreach (var id in district.GetProperty("facilityIds").EnumerateArray().Select(id => id.GetInt32()))
+            {
+                var facilityRoomIds = facilityRows[id].GetProperty("roomIds").EnumerateArray().Select(roomId => roomId.GetInt32());
+                Assert.Contains(facilityRoomIds, districtRoomIds.Contains);
+            }
         }
         foreach (var poi in pois.RootElement.GetProperty("pois").EnumerateArray())
             Assert.All(poi.GetProperty("districts").EnumerateArray(), id => Assert.Contains(id.GetString()!, districtIds));
@@ -48,8 +62,22 @@ public sealed class MapCatalogTableTests
         Assert.True(villageDistrict.GetProperty("facilityIds").GetArrayLength() > 0);
 
         var catalog = MapCatalog.Default;
-        Assert.Equal("Nature", catalog.GetDistrictRoomTemplate(villageDistrictId, 0).Category);
-        Assert.Equal("Facility", catalog.GetDistrictRoomTemplate(villageDistrictId, roomCount).Category);
+        var villageRoom = catalog.GetDistrictRoomTemplate(villageDistrictId, 0);
+        Assert.Equal("Nature", villageRoom.Category);
+        Assert.Equal(villageRoom.Id, catalog.GetDistrictRoomTemplate(villageDistrictId, roomCount).Id);
+        var boundFacility = catalog.GetDistrictFacilityTemplate(villageDistrictId, villageRoom.Id, 0);
+        Assert.NotNull(boundFacility);
+        Assert.Contains(villageRoom.Id, boundFacility!.RoomIds);
+
+        var generatedVillage = PoiAssemblyGenerator.GenerateForPoi(WorldPoiType.Village, seed: 789);
+        var roomsWithFacilities = generatedVillage.AllRooms.Where(room => room.FacilityIds.Count > 0).ToArray();
+        Assert.NotEmpty(roomsWithFacilities);
+        foreach (var room in roomsWithFacilities)
+        {
+            Assert.NotNull(room.RoomTemplateId);
+            Assert.All(room.FacilityIds, id =>
+                Assert.Contains(room.RoomTemplateId!.Value, catalog.GetFacilityById(id).RoomIds));
+        }
         Assert.Equal(2, catalog.GetPoiScale(WorldPoiType.Capital).blocksW);
     }
 

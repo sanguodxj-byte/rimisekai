@@ -21,14 +21,7 @@ public sealed class FacilityTemplateDef
     public string Name { get; set; } = "";
     public string Terrain { get; set; } = "Plains";
     public bool DefaultPool { get; set; } = true;
-
-    public RoomTemplateDef AsRoomTemplate() => new()
-    {
-        Id = Id,
-        Category = "Facility",
-        Name = Name,
-        Terrain = Terrain,
-    };
+    public List<int> RoomIds { get; set; } = new();
 }
 
 public sealed class TerrainDefEntry
@@ -209,7 +202,8 @@ public sealed class MapCatalog
     private readonly List<RoomTemplateDef> _exits = new();
     private readonly List<RoomTemplateDef> _roads = new();
     private readonly List<RoomTemplateDef> _openSpaces = new();
-    private readonly List<RoomTemplateDef> _facilityRoomPool = new();
+    private readonly List<RoomTemplateDef> _defaultRoomPool = new();
+    private readonly List<FacilityTemplateDef> _defaultFacilityPool = new();
     private readonly List<RoomTemplateDef> _treasures = new();
     private readonly List<RoomTemplateDef> _shrines = new();
 
@@ -252,25 +246,42 @@ public sealed class MapCatalog
     /// </summary>
     public RoomTemplateDef GetDistrictRoomTemplate(string districtId, int index)
     {
-        if (!_districts.TryGetValue(districtId, out var district))
-            return GetFacilityTemplate(index);
-        var count = district.RoomIds.Count + district.FacilityIds.Count;
-        if (count == 0)
-            return GetFacilityTemplate(index);
-
-        var selected = (int)((uint)index % (uint)count);
-        if (selected < district.RoomIds.Count)
-            return _roomsById[district.RoomIds[selected]];
-        return _facilitiesById[district.FacilityIds[selected - district.RoomIds.Count]].AsRoomTemplate();
+        if (!_districts.TryGetValue(districtId, out var district) || district.RoomIds.Count == 0)
+            return GetDefaultRoomTemplate(index);
+        return _roomsById[district.RoomIds[(int)((uint)index % (uint)district.RoomIds.Count)]];
     }
 
-    public RoomTemplateDef GetFacilityTemplate(int index)
+    public FacilityTemplateDef GetFacilityById(int id) => _facilitiesById[id];
+
+    public FacilityTemplateDef? GetDistrictFacilityTemplate(string districtId, int roomTemplateId, int index)
+    {
+        var pool = new List<FacilityTemplateDef>();
+        if (_districts.TryGetValue(districtId, out var district))
+        {
+            foreach (var id in district.FacilityIds)
+            {
+                var facility = _facilitiesById[id];
+                if (facility.RoomIds.Contains(roomTemplateId))
+                    pool.Add(facility);
+            }
+        }
+        else
+        {
+            foreach (var facility in _defaultFacilityPool)
+                if (facility.RoomIds.Contains(roomTemplateId))
+                    pool.Add(facility);
+        }
+
+        return pool.Count == 0 ? null : pool[(int)((uint)index % (uint)pool.Count)];
+    }
+
+    private RoomTemplateDef GetDefaultRoomTemplate(int index)
     {
         var pool = new List<RoomTemplateDef>();
         pool.AddRange(_openSpaces);
-        pool.AddRange(_facilityRoomPool);
+        pool.AddRange(_defaultRoomPool);
         if (pool.Count == 0)
-            throw new InvalidOperationException("room_defs.json 与 facility_defs.json 中没有可用的 POI 房间模板");
+            throw new InvalidOperationException("room_defs.json 中没有可用的 POI 房间模板");
         return pool[(int)((uint)index % (uint)pool.Count)];
     }
 
@@ -429,7 +440,7 @@ public sealed class MapCatalog
                     break;
                 case "nature":
                     if (room.DefaultPool)
-                        catalog._facilityRoomPool.Add(room);
+                        catalog._defaultRoomPool.Add(room);
                     break;
                 case "treasure":
                     catalog._treasures.Add(room);
@@ -439,7 +450,7 @@ public sealed class MapCatalog
                     break;
                 default:
                     if (room.DefaultPool)
-                        catalog._facilityRoomPool.Add(room);
+                        catalog._defaultRoomPool.Add(room);
                     break;
             }
         }
@@ -448,7 +459,7 @@ public sealed class MapCatalog
         {
             catalog._facilitiesById.Add(facility.Id, facility);
             if (facility.DefaultPool)
-                catalog._facilityRoomPool.Add(facility.AsRoomTemplate());
+                catalog._defaultFacilityPool.Add(facility);
         }
 
         foreach (var scale in poi.Pois)
@@ -466,6 +477,30 @@ public sealed class MapCatalog
             catalog.Grammar.FeaturePrefixes.Add(pair.Key, new List<string>(pair.Value));
         foreach (var pair in poi.SettlementGrammar.TypeSuffixes)
             catalog.Grammar.TypeSuffixes.Add(pair.Key, new List<string>(pair.Value));
+
+        foreach (var facility in facilities.Facilities)
+        {
+            if (facility.RoomIds.Count == 0)
+                throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 未绑定房间模板");
+            foreach (var roomId in facility.RoomIds)
+                if (!catalog._roomsById.ContainsKey(roomId))
+                    throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 引用了不存在的 roomId {roomId}");
+        }
+        foreach (var district in poi.Districts)
+        {
+            foreach (var roomId in district.RoomIds)
+                if (!catalog._roomsById.ContainsKey(roomId))
+                    throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 引用了不存在的 roomId {roomId}");
+            foreach (var facilityId in district.FacilityIds)
+            {
+                if (!catalog._facilitiesById.ContainsKey(facilityId))
+                    throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 引用了不存在的 facilityId {facilityId}");
+                var facility = catalog._facilitiesById[facilityId];
+                if (!district.RoomIds.Exists(facility.RoomIds.Contains))
+                    throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 的设施 {facilityId} 未绑定到分区内任何房间");
+            }
+        }
+
         return catalog;
     }
 }
