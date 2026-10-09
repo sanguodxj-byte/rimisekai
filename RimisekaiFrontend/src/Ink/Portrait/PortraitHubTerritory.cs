@@ -82,8 +82,10 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>
-    /// 场景内的主动对话：半透明黑底气泡盖住地图网格下半部分，白字；底边伸出一道尖角指向「此刻」里说话人的头像。
-    /// 左上写说话人，正文折行；右下一枚小三角提示点按。整只气泡是一个命中块：点一下推进一句，说完收起。
+    /// 场景内的主动对话：半透明黑底气泡盖住地图网格下半部分，白字。
+    /// 气泡是一整条圆角轮廓，底边顺势收出一道尖角指向「此刻」里说话人的头像（轮廓与尖角同一笔，不断线）；
+    /// 内缘一道淡细线作衬框。顶上说话人名牌：菱珠＋名字＋向右淡出的细线；正文白字折行；
+    /// 右下一枚呼吸的下指折角提示点按，多句时左下以菱珠记第几句。整只气泡是一个命中块：点一下推进一句，说完收起。
     /// </summary>
     private void DrawChatter()
     {
@@ -93,36 +95,87 @@ public partial class PortraitHubScreen
         if (at < 0)
             return;
         var grid = PortraitLayout.MapGrid;
-        var bubble = new Rect2(grid.Position.X + 12f, grid.GetCenter().Y, grid.Size.X - 24f, grid.Size.Y / 2f - 12f);
-        var fill = new Color(0f, 0f, 0f, 0.78f);
+        var bubble = new Rect2(grid.Position.X + 18f, grid.GetCenter().Y + 6f, grid.Size.X - 36f, grid.Size.Y / 2f - 30f);
         var white = new Color(1f, 1f, 1f);
+        var fill = new Color(0.02f, 0.02f, 0.03f, 0.9f);
 
-        // 尖角：从气泡底边（对准头像的横坐标，夹在气泡左右圆角之内）伸到头像框顶上。
         var card = PortraitLayout.NowCard(at % PortraitLayout.NowPageSize);
         var tipX = card.GetCenter().X;
-        var baseX = Math.Clamp(tipX, bubble.Position.X + 70f, bubble.End.X - 70f);
-        var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 10f);
-        var tail = new[]
-        {
-            new Vector2(baseX - 34f, bubble.End.Y - 1f),
-            tip,
-            new Vector2(baseX + 34f, bubble.End.Y - 1f),
-        };
-        DrawColoredPolygon(tail, fill);
-        DrawRect(bubble, fill);
-        DrawRect(bubble, new Color(white, 0.55f), false, 2f);
-        DrawLine(tail[0], tip, new Color(white, 0.55f), 2f);
-        DrawLine(tip, tail[2], new Color(white, 0.55f), 2f);
+        var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 14f);
+        var outline = BubblePath(bubble, 28f, tip, 26f);
+        DrawColoredPolygon(outline, fill);
+        var loop = new Vector2[outline.Length + 1];
+        outline.CopyTo(loop, 0);
+        loop[^1] = outline[0];
+        DrawPolyline(loop, new Color(white, 0.62f), 2.5f, true);
+        var inner = BubblePath(bubble.Grow(-12f), 18f, null, 0f);
+        var innerLoop = new Vector2[inner.Length + 1];
+        inner.CopyTo(innerLoop, 0);
+        innerLoop[^1] = inner[0];
+        DrawPolyline(innerLoop, new Color(white, 0.16f), 1.5f, true);
 
-        var pad = 36f;
-        InkDraw.Text(this, new Vector2(bubble.Position.X + pad, bubble.Position.Y + 30f), chat.Speaker.Name,
-            PortraitLayout.FontMeta, new Color(white, 0.7f));
-        InkDraw.Wrapped(this, new Rect2(bubble.Position.X + pad, bubble.Position.Y + 100f, bubble.Size.X - pad * 2f, bubble.Size.Y - 150f),
-            chat.Text, PortraitLayout.FontBody, white, PortraitLayout.FontBody * 1.5f);
-        var mark = new Vector2(bubble.End.X - 40f, bubble.End.Y - 34f);
-        DrawColoredPolygon(new[] { mark + new Vector2(-14f, -8f), mark + new Vector2(14f, -8f), mark + new Vector2(0f, 10f) }, white);
+        var pad = 54f;
+        var nameAt = new Vector2(bubble.Position.X + pad, bubble.Position.Y + 58f);
+        InkDraw.Jewel(this, nameAt, 9f, white);
+        InkDraw.Text(this, nameAt + new Vector2(26f, 0f), chat.Speaker.Name, PortraitLayout.FontMeta, white, "lm");
+        var nameEnd = nameAt.X + 26f + InkDraw.Measure(chat.Speaker.Name, PortraitLayout.FontMeta).X + 22f;
+        PortraitFrame.GradLine(this, nameEnd, bubble.End.X - pad, nameAt.Y, 2f, new Color(white, 0.45f), new Color(white, 0f));
+
+        var body = new Rect2(bubble.Position.X + pad, bubble.Position.Y + 112f, bubble.Size.X - pad * 2f, bubble.Size.Y - 112f - 70f);
+        InkDraw.Wrapped(this, body, chat.Text, PortraitLayout.FontBody, white, PortraitLayout.FontBody * 1.6f);
+
+        // 多句：左下菱珠记第几句（说过的实心、未说的空心）。
+        if (chat.Lines.Count > 1)
+            for (var k = 0; k < chat.Lines.Count; k++)
+            {
+                var c = new Vector2(bubble.Position.X + pad + 8f + k * 34f, bubble.End.Y - 42f);
+                InkDraw.Jewel(this, c, 9f, new Color(white, k <= chat.Index ? 0.9f : 0.35f));
+                if (k > chat.Index)
+                    InkDraw.Jewel(this, c, 4.5f, fill);
+            }
+
+        // 右下的下指折角，上下轻轻浮动提示「点一下」。
+        var bob = (float)Math.Sin(Time.GetTicksMsec() / 260.0) * 5f;
+        var m = new Vector2(bubble.End.X - pad, bubble.End.Y - 46f + bob);
+        DrawPolyline(new[] { m + new Vector2(-15f, -8f), m + new Vector2(0f, 6f), m + new Vector2(15f, -8f) }, white, 3f, true);
 
         _widgets.Add(new PortraitWidget(bubble, PortraitAction.ChatterAdvance, chat.Speaker.Id, true, chat.Text));
+    }
+
+    /// <summary>
+    /// 圆角矩形的轮廓点（顺时针）。给了尖点就在底边对准尖点横坐标处收出一道尖角（两侧以弧线过渡进底边），
+    /// 尖角根部夹在两侧圆角之内。
+    /// </summary>
+    private static Vector2[] BubblePath(Rect2 r, float radius, Vector2? tip, float halfBase)
+    {
+        var pts = new List<Vector2>();
+        void Arc(Vector2 c, float from, float to)
+        {
+            const int steps = 8;
+            for (var k = 0; k <= steps; k++)
+            {
+                var a = Mathf.Lerp(from, to, k / (float)steps);
+                pts.Add(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius);
+            }
+        }
+        Arc(new Vector2(r.Position.X + radius, r.Position.Y + radius), Mathf.Pi, Mathf.Pi * 1.5f);
+        Arc(new Vector2(r.End.X - radius, r.Position.Y + radius), Mathf.Pi * 1.5f, Mathf.Pi * 2f);
+        Arc(new Vector2(r.End.X - radius, r.End.Y - radius), 0f, Mathf.Pi * 0.5f);
+        if (tip is { } t)
+        {
+            var bx = Math.Clamp(t.X, r.Position.X + radius + halfBase + 12f, r.End.X - radius - halfBase - 12f);
+            var y = r.End.Y;
+            // 右侧：底边→弧线收向尖点；左侧对称。用二次贝塞尔让根部圆润。
+            Vector2 Q(Vector2 a, Vector2 c, Vector2 b, float u) => a * (1 - u) * (1 - u) + c * 2 * u * (1 - u) + b * u * u;
+            var right = new Vector2(bx + halfBase, y);
+            var left = new Vector2(bx - halfBase, y);
+            for (var k = 0; k <= 6; k++)
+                pts.Add(Q(right, new Vector2(bx + halfBase * 0.25f, y + 4f), t, k / 6f));
+            for (var k = 1; k <= 6; k++)
+                pts.Add(Q(t, new Vector2(bx - halfBase * 0.25f, y + 4f), left, k / 6f));
+        }
+        Arc(new Vector2(r.Position.X + radius, r.End.Y - radius), Mathf.Pi * 0.5f, Mathf.Pi);
+        return pts.ToArray();
     }
 
     /// <summary>画一格。register＝登记命中块（过界平移时滑出的旧网格只画不登记）。</summary>
