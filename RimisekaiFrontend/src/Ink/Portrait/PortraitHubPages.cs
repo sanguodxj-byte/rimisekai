@@ -60,15 +60,7 @@ public partial class PortraitHubScreen
     /// <summary>调试：委托板上第一个满足条件的委托排第几（找不到为 -1）。</summary>
     public int DebugQuestIndex(Func<QuestDef, bool> pick) => AvailableQuests().FindIndex(d => pick(d));
 
-    private List<QuestDef> AvailableQuests()
-    {
-        var list = new List<QuestDef>();
-        foreach (var def in DefDatabase<QuestDef>.All)
-            if (_vm.Hub.State.Quests.IsAvailable(def.Id))
-                list.Add(def);
-        list.Sort((a, b) => a.Id.CompareTo(b.Id));
-        return list;
-    }
+    private List<QuestDef> AvailableQuests() => QuestBoard.Open(_vm.Hub.State);
 
     /// <summary>委托的敌人一行：同名合并计数；连战把各波都算上。</summary>
     private static string FoesOf(QuestDef def) => string.Join(" · ", def.Foes.Concat(def.Waves.SelectMany(w => w))

@@ -328,6 +328,50 @@ public sealed class WorldEncounterTests
     }
 
     [Fact]
+    public void Board_posts_generated_dungeon_quests_that_pay_once_and_come_off_the_board()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var board = MapCatalog.Default.Dungeon.Quest.Board;
+        var posted = QuestBoard.Open(state).Where(q => q.Generated).ToList();
+        Assert.Equal(board.PerDay * board.LifeDays, posted.Count);
+        foreach (var q in posted)
+        {
+            Assert.Equal(QuestKind.Dungeon, q.Kind);
+            Assert.InRange(q.Difficulty, board.StarsMin, board.StarsEarly);
+            Assert.Contains(board.Sites, s => s.Name == q.Name);
+            Assert.DoesNotContain("{", q.Description);
+            Assert.Contains(MapCatalog.Default.Dungeon.Bosses, b => b.Foes == q.Foes && b.MinTier <= QuestBoard.TierOf(q.Difficulty));
+            Assert.Equal(string.Format(board.RewardText, q.RewardMoney), q.Rewards.Single());
+            Assert.True(q.RewardMoney > 0);
+        }
+        Assert.Equal(posted.Count, posted.Select(q => q.Name).Distinct().Count());
+        // 同一局同一张永远一样。
+        Assert.Equal(posted.Select(q => (q.Id, q.Name, q.Difficulty)), QuestBoard.Open(state).Where(q => q.Generated).Select(q => (q.Id, q.Name, q.Difficulty)));
+
+        // 接下最早那张，一路打到正主：酬金到手，板上撕下。
+        var def = posted[0];
+        var run = state.Quests.Start(def, new[] { state.Roster.Master!.Id })!;
+        Assert.True(hub.StartQuestDungeon(run));
+        Assert.Equal(def.Name, hub.MapTitle());
+        var endId = HubSession.PoiRoomIdBase + state.CurrentPoi!.AllRooms.First(r => r.IsEnd).Id;
+        var before = state.Money;
+        WalkTo(hub, endId);
+        Assert.Equal(MapLayer.Territory, hub.Layer);
+        Assert.True(state.Money >= before + def.RewardMoney);
+        Assert.DoesNotContain(QuestBoard.Open(state), q => q.Id == def.Id);
+
+        // 挂满 lifeDays 天就撤下，新的一天贴新的一张。
+        state.Clock.SetTime(1 + board.LifeDays, 9 * 60);
+        var later = QuestBoard.Open(state).Where(q => q.Generated).ToList();
+        Assert.DoesNotContain(later, q => posted.Any(p => p.Id == q.Id));
+        Assert.Equal(board.PerDay * board.LifeDays, later.Count);
+
+        // 日子久了星数上限涨满，高难的委托才挂出来。
+        Assert.Contains(Enumerable.Range(board.RampDays, 40).SelectMany(d => Enumerable.Range(0, board.PerDay).Select(k => QuestBoard.Posting(state, d, k))),
+            q => q.Difficulty > board.StarsEarly);
+    }
+
+    [Fact]
     public void Leaving_a_quest_dungeon_rides_home_without_clearing_it()
     {
         var (hub, state) = Setup(rate: 0);

@@ -144,7 +144,7 @@ public sealed partial class HubSession
         var def = run.Def;
         var quest = MapCatalog.Default.Dungeon.Quest;
         var seed = State.WorldSeed ^ (def.Id * 7919) ^ (State.Quests.ClearCount.GetValueOrDefault(def.Id) * 104729);
-        var tier = System.Math.Clamp(1 + (int)(def.Difficulty / quest.StarsPerTier), 1, 4);
+        var tier = QuestBoard.TierOf(def.Difficulty);
         _dungeon = new DungeonRun
         {
             Key = QuestDungeonKey,

@@ -397,7 +397,8 @@ public partial class PortraitHubScreen
             visible * 140f), fixtures.Count, visible, first, v => _pan["room_fixtures"] = v, 140f);
 
         var reachable = here || WorldLayer || _vm.Hub.CanReach(room.Id);
-        var canDemolish = !WorldLayer && !here;
+        // 只有自家领地的房能拆：兴趣点与地城（含委托地城）的石室不归你。
+        var canDemolish = _vm.Hub.Layer == MapLayer.Territory && !here;
         PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomDemolish, room.Id, canDemolish, "拆除"));
         var goLabel = here ? "已在此处" : reachable ? "前往" : "不连通";

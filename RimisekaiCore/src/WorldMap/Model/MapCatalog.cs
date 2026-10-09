@@ -107,6 +107,46 @@ public sealed class QuestDungeonDef
     public string ArriveText { get; set; } = "";
     public string DoneText { get; set; } = "";
     public string AbandonText { get; set; } = "";
+
+    /// <summary>委托板上按日现生成的地城探索委托（见 <see cref="Rimisekai.Quest.QuestBoard"/>）。</summary>
+    public QuestBoardDef Board { get; set; } = new();
+}
+
+/// <summary>
+/// 委托板现生成地城探索委托：每天张贴 <see cref="PerDay"/> 张，每张挂 <see cref="LifeDays"/> 天，了结即撕下；
+/// 地点按张贴顺序轮转 <see cref="Sites"/>，发单的聚落取世界上的一处聚落，难度在星数区间里按半星掷，
+/// 正主从 <c>dungeon.bosses</c> 里按危险等级挑，酬金＝<see cref="MoneyBase"/>＋<see cref="MoneyPerStar"/>×星数（取整到十）。
+/// </summary>
+public sealed class QuestBoardDef
+{
+    public int PerDay { get; set; }
+    public int LifeDays { get; set; }
+
+    /// <summary>生成委托的编号从这里起，不与 quests.json 的编号相撞。</summary>
+    public int IdBase { get; set; }
+    public double StarsMin { get; set; }
+    public double StarsMax { get; set; }
+
+    /// <summary>开局时的星数上限，<see cref="RampDays"/> 天里线性涨到 <see cref="StarsMax"/>。</summary>
+    public double StarsEarly { get; set; }
+    public int RampDays { get; set; }
+    public int MoneyBase { get; set; }
+    public int MoneyPerStar { get; set; }
+
+    /// <summary>奖励行，{0} 为金币数。</summary>
+    public string RewardText { get; set; } = "";
+
+    /// <summary>人数上限＝此数＋危险等级。</summary>
+    public int PartyBase { get; set; }
+    public List<QuestSiteDef> Sites { get; set; } = new();
+}
+
+/// <summary>委托地点：名称即委托名；描述里 {0} 为发单的聚落名；传言任挑一条。</summary>
+public sealed class QuestSiteDef
+{
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public List<string> Rumors { get; set; } = new();
 }
 
 public sealed class PoiSettlementDefEntry

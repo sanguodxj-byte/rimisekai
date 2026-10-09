@@ -11,6 +11,7 @@
       "difficulty": 2,
       "cooldownDays": 2,
       "maxPartySize": 3,
+      "rewardMoney": 60,
       "rewards": [
         "金币 ×60",
         "干粮 ×2"
@@ -64,6 +65,7 @@
       "difficulty": 12,
       "cooldownDays": 5,
       "maxPartySize": 6,
+      "rewardMoney": 800,
       "rewards": [
         "金币 ×800",
         "铁矿石 ×10",
@@ -133,6 +135,7 @@
       "difficulty": 5,
       "cooldownDays": 3,
       "maxPartySize": 4,
+      "rewardMoney": 200,
       "rewards": [
         "金币 ×200",
         "兽皮 ×2"
@@ -189,6 +192,7 @@
       "difficulty": 6.5,
       "cooldownDays": 3,
       "maxPartySize": 4,
+      "rewardMoney": 320,
       "rewards": [
         "金币 ×320",
         "兽皮 ×4"

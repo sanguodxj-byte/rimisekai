@@ -22,6 +22,9 @@ public partial class PortraitPlaytest : Node
     private string _out = "";
     private int _seed = 42;
     private int _monkeySteps = 1500;
+
+    /// <summary>只跑这些目标（<c>--pgoals=开局,探索委托</c>）；空＝全跑。</summary>
+    private HashSet<string> _only = new();
     private SubViewport _sub = null!;
     private PortraitRoot _root = null!;
     private readonly List<string> _log = new();
@@ -42,6 +45,7 @@ public partial class PortraitPlaytest : Node
             if (arg.StartsWith("--pplay=")) _out = arg["--pplay=".Length..];
             if (arg.StartsWith("--pseed=")) _seed = int.Parse(arg["--pseed=".Length..]);
             if (arg.StartsWith("--psteps=")) _monkeySteps = int.Parse(arg["--psteps=".Length..]);
+            if (arg.StartsWith("--pgoals=")) _only = arg["--pgoals=".Length..].Split(',').ToHashSet();
         }
         if (_out.Length == 0)
             return;
@@ -147,8 +151,9 @@ public partial class PortraitPlaytest : Node
     {
         Push(new InputEventMouseMotion { Position = p, GlobalPosition = p });
         Push(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = p, GlobalPosition = p });
-        await Frames(2);
+        // 按下与松开同帧送出：软渲染下一帧可达数百毫秒（再乘 TimeScale），隔帧松开会被当成长按。
         Push(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = p, GlobalPosition = p });
+        await Frames(2);
         _taps++;
         await Settle();
     }
@@ -421,6 +426,103 @@ public partial class PortraitPlaytest : Node
         Goal("委托出发并打完", started && fought && await GoHubRoot("委托收尾"));
     }
 
+    /// <summary>
+    /// 探索类委托：在委托板上挑一张现生成的地城探索委托，编满人出发，逐间揭雾（先走「？」，再走去得最少的），
+    /// 守卫照打，打到正主倒下被接回领地。核对：通关记账、酬金到账、板上撕下。另记走了几间、打了几场、耗时多少。
+    /// </summary>
+    private async Task GoalDungeonQuest()
+    {
+        const string name = "探索委托打通";
+        await GoHubRoot("探索委托");
+        await TapAction(PortraitAction.Tab, "quest tab", w => w.Index == 2);
+        var hub = _root.DebugVm!.Hub;
+        var idx = _root.HubScreen.DebugQuestIndex(d => d.Generated);
+        var def = idx >= 0 ? Rimisekai.Quest.QuestBoard.Open(hub.State)[idx] : null;
+        // 生成的委托排在固定委托之后，多半在可见区外：像人一样往上拖卡片流，直到它的「接取」露出来。
+        for (var k = 0; k < 8 && def != null && !Widgets().Any(w => w.Action == PortraitAction.QuestTake && w.Index == idx); k++)
+            await Drag(new Vector2(540f, 1800f), new Vector2(540f, 900f));
+        Shoot("dq_board");
+        if (def == null || !await TapAction(PortraitAction.QuestTake, "take dungeon quest", w => w.Index == idx))
+        {
+            Goal(name, false);
+            return;
+        }
+        foreach (var w in Widgets().Where(w => w.Action == PortraitAction.PartyPick && w.Enabled).Take(4).ToList())
+            await Tap(w, "party pick");
+        var money = hub.State.Money;
+        var minutes = hub.State.Clock.TotalMinutes;
+        var started = await TapAction(PortraitAction.QuestStart, "quest start") && hub.InQuestDungeon;
+        Shoot("dq_arrive");
+        var visits = new Dictionary<int, int>();
+        var fights = 0;
+        var walks = 0;
+        var crosses = 0;
+        var regionVisits = new Dictionary<int, int>();
+        for (var i = 0; i < 400 && started; i++)
+        {
+            if (_root.CombatView.Visible)
+            {
+                fights++;
+                if (fights == 1) Shoot("dq_fight");
+                await FinishCombat(name);
+                continue;
+            }
+            if (ModalOn)
+            {
+                // 遭遇弹窗：迎战 / 收下 / 祈祷，不撤退。
+                if (!await TapAction(PortraitAction.ModalChoice, "dq encounter", w => w.Label is "fight" or "accept") && !await Escape()) break;
+                continue;
+            }
+            if (!hub.InQuestDungeon) break;
+            if (Find(PortraitAction.SheetClose) != null)
+            {
+                Break("dungeon", Surface(), "[探索委托] 点格弹出了房间抽屉");
+                await TapAction(PortraitAction.SheetClose, "dq close sheet");
+                continue;
+            }
+            var cells = Widgets().Where(w => w.Action == PortraitAction.Cell && w.Enabled && w.Index != CurrentCellIndex() && w.Label.Length > 0).ToList();
+            // 本块的雾揭完了：去别的块。读画面上各格通向哪一块（只读），挑去得最少的那一块：
+            // 人正站在通往它的口子上就过界，否则先走到那个口子的房间。
+            if (!cells.Any(w => w.Label is "？" or "?"))
+            {
+                regionVisits[hub.RegionId] = regionVisits.GetValueOrDefault(hub.RegionId);
+                var exits = Widgets().Where(w => w.Action == PortraitAction.Cell && w.Enabled && hub.CrossTargetRegion(w.Index) >= 0)
+                    .Select(w => (Cell: w, To: hub.CrossTargetRegion(w.Index))).ToList();
+                if (exits.Count > 0)
+                {
+                    var goal = exits.OrderBy(e => regionVisits.GetValueOrDefault(e.To)).First();
+                    if (goal.Cell.Index == CurrentCellIndex())
+                    {
+                        if (await TapAction(PortraitAction.CrossGate, "dq gate"))
+                        {
+                            crosses++;
+                            regionVisits[hub.RegionId] = regionVisits.GetValueOrDefault(hub.RegionId) + 1;
+                        }
+                        continue;
+                    }
+                    walks++;
+                    await Tap(goal.Cell, "dq to gate");
+                    continue;
+                }
+            }
+            var next = cells.OrderBy(w => (w.Label is "？" or "?") ? -1 : visits.GetValueOrDefault(w.Index)).Cast<PortraitWidget?>().FirstOrDefault();
+            if (next == null)
+                break;
+            visits[next.Value.Index] = visits.GetValueOrDefault(next.Value.Index) + 1;
+            walks++;
+            if (walks == 12) Shoot("dq_fog");
+            await Tap(next.Value, "dq walk");
+        }
+        await Settle();
+        Shoot("dq_done");
+        var cleared = hub.State.Quests.ClearCount.GetValueOrDefault(def.Id) > 0;
+        var paid = hub.State.Money - money;
+        var off = !Rimisekai.Quest.QuestBoard.Open(hub.State).Any(q => q.Id == def.Id);
+        _log.Add($"[探索委托] {def.Name} {def.Difficulty}星 正主={string.Join("、", def.Foes.Select(f => f.Name))} 酬金={def.RewardMoney} " +
+                 $"走={walks} 过界={crosses} 战={fights} 耗时={hub.State.Clock.TotalMinutes - minutes}分 进账={paid} 通关={cleared} 撕下={off} 在地城={hub.InQuestDungeon}");
+        Goal(name, started && cleared && off && paid >= def.RewardMoney && await GoHubRoot("探索委托收尾"));
+    }
+
     private int CurrentCellIndex() => _root.DebugVm?.Hub.PlayerRoomId ?? -1;
 
     private async Task GoalTalk()
@@ -589,10 +691,11 @@ public partial class PortraitPlaytest : Node
         var steps = new (string, Func<Task>)[]
         {
             ("开局", GoalStart), ("页签", GoalTabs), ("对话", GoalTalk), ("交易", GoalTrade),
-            ("建造", GoalBuild), ("委托", GoalQuest), ("出行", GoalWorld), ("存读档", GoalSaveLoad),
+            ("建造", GoalBuild), ("委托", GoalQuest), ("探索委托", GoalDungeonQuest), ("出行", GoalWorld), ("存读档", GoalSaveLoad),
         };
         foreach (var (name, step) in steps)
         {
+            if (_only.Count > 0 && !_only.Contains(name)) continue;
             try { await step(); }
             catch (Exception ex) { Break("exception", Surface(), $"[{name}] {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}"); }
         }
