@@ -46,7 +46,7 @@ public sealed class ObserveLogTests
     }
 
     [Fact]
-    public void Log_snapshot_follows_write_order()
+    public void Log_snapshot_puts_action_then_environment_then_characters()
     {
         var hub = NewHub("庭院");
 
@@ -55,7 +55,8 @@ public sealed class ObserveLogTests
         hub.WriteActivity(2, "赛琳在厨房做饭。"); // 其他角色行动
         hub.WriteEnvironment("天气转为暴雨。"); // 环境变化
 
-        Assert.Equal(new[] { "你打量着庭院，家门口的院子。", "赛琳在厨房做饭。", "天气转为暴雨。" },
+        // 2026-10-09 主人定：玩家行动 → 环境变化 → 在场角色，与写入先后无关。
+        Assert.Equal(new[] { "你打量着庭院，家门口的院子。", "天气转为暴雨。", "赛琳在厨房做饭。" },
             hub.Log.Select(l => l.Text));
     }
 }

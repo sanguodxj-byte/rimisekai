@@ -39,7 +39,7 @@ public readonly record struct LogEntry(LogKind Kind, string Fact, string Feel, i
 
 /// <summary>
 /// 日志簿：两份视图。
-/// <see cref="Operation"/>＝这一次玩家操作的输出（快照，按写入先后排，即按时间；
+/// <see cref="Operation"/>＝这一次玩家操作的输出（快照，先按 <see cref="Rank"/> 分档：玩家行动 → 环境变化 → 在场角色，档内按写入先后；
 /// 同一角色的活动只留最新一句并挪到它写下的位置；新操作的首次写入清空旧的），供操作反馈用。
 /// <see cref="History"/>＝跨操作的近期日志（按写入先后，最旧在前，上限 <see cref="HistoryLimit"/>），
 /// 供领地页签的日志面板与日志页签用。同一角色的同一句活动不重复入史。
@@ -57,11 +57,25 @@ public sealed class LogBook
     private long _opId;
     private long _writtenAt = -1;
 
+    /// <summary>本次操作的第一条在历史里的位置（之前的历史不参与重排）。</summary>
+    private int _opHistoryStart;
+
     public IReadOnlyList<LogEntry> Operation => _operation;
     public IReadOnlyList<LogEntry> History => _history;
 
     /// <summary>标记一次玩家操作开始。</summary>
     public void BeginOperation() => _opId++;
+
+    /// <summary>
+    /// 一次操作里各类日志的先后（2026-10-09 主人定）：先写玩家自己做了什么（来到哪里、和谁交流…），
+    /// 再写环境变化（季节、天气，可空），最后写在场角色的行为或对话。同一档里仍按写入先后。
+    /// </summary>
+    public static int Rank(LogKind kind) => kind switch
+    {
+        LogKind.Weather => 1,
+        LogKind.Activity => 2,
+        _ => 0,
+    };
 
     /// <summary>写一条非角色活动的日志。</summary>
     public void Write(LogEntry entry)
@@ -69,7 +83,7 @@ public sealed class LogBook
         if (entry.Fact.Length == 0 && entry.Feel.Length == 0)
             return;
         Fresh();
-        _snapshot.Add((-1, entry));
+        InsertSnapshot(-1, entry);
         Append(entry);
         Rebuild();
     }
@@ -81,7 +95,7 @@ public sealed class LogBook
             return;
         Fresh();
         _snapshot.RemoveAll(s => s.Who == characterId);
-        _snapshot.Add((characterId, entry));
+        InsertSnapshot(characterId, entry);
         var text = entry.Text;
         if (!_lastActivity.TryGetValue(characterId, out var last) || last != text)
         {
@@ -96,17 +110,39 @@ public sealed class LogBook
     {
         _history.Clear();
         _lastActivity.Clear();
+        _opHistoryStart = 0;
         foreach (var entry in history)
-            Append(entry);
+        {
+            _history.Add(entry);
+            while (_history.Count > HistoryLimit)
+                _history.RemoveAt(0);
+        }
+        _opHistoryStart = _history.Count;
         _snapshot.Clear();
         _operation.Clear();
     }
 
+    /// <summary>按 <see cref="Rank"/> 插到同档最后一条之后（不打乱同档的时间先后）。</summary>
+    private void InsertSnapshot(int who, LogEntry entry)
+    {
+        var at = _snapshot.Count;
+        while (at > 0 && Rank(_snapshot[at - 1].Entry.Kind) > Rank(entry.Kind))
+            at--;
+        _snapshot.Insert(at, (who, entry));
+    }
+
+    /// <summary>入史：本次操作写下的几条同样按 <see cref="Rank"/> 排，之前操作的历史不动。</summary>
     private void Append(LogEntry entry)
     {
-        _history.Add(entry);
+        var at = _history.Count;
+        while (at > _opHistoryStart && Rank(_history[at - 1].Kind) > Rank(entry.Kind))
+            at--;
+        _history.Insert(at, entry);
         while (_history.Count > HistoryLimit)
+        {
             _history.RemoveAt(0);
+            _opHistoryStart = System.Math.Max(0, _opHistoryStart - 1);
+        }
     }
 
     private void Fresh()
@@ -116,6 +152,7 @@ public sealed class LogBook
         _snapshot.Clear();
         _operation.Clear();
         _writtenAt = _opId;
+        _opHistoryStart = _history.Count;
     }
 
     private void Rebuild()

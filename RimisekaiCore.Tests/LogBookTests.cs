@@ -45,6 +45,21 @@ public sealed class LogBookTests
     }
 
     [Fact]
+    public void Arrival_snapshot_and_history_rank_action_environment_characters()
+    {
+        var book = new LogBook();
+        book.Write(E(LogKind.Action, "上一次操作。"));
+        book.BeginOperation();
+        book.Write(E(LogKind.Weather, "天气转为雨天。"));
+        book.WriteActivity(2, E(LogKind.Activity, "赛琳在桌前计算符文配比。"));
+        book.Write(E(LogKind.Scene, "你来到了工坊。"));
+        book.WriteActivity(2, E(LogKind.Activity, "赛琳说「欢迎回来。」"));
+        Assert.Equal(new[] { "你来到了工坊。", "天气转为雨天。", "赛琳说「欢迎回来。」" }, book.Operation.Select(l => l.Text));
+        Assert.Equal(new[] { "上一次操作。", "你来到了工坊。", "天气转为雨天。", "赛琳在桌前计算符文配比。", "赛琳说「欢迎回来。」" },
+            book.History.Select(l => l.Text));
+    }
+
+    [Fact]
     public void Repeated_activity_is_not_appended_to_history_twice()
     {
         var book = new LogBook();

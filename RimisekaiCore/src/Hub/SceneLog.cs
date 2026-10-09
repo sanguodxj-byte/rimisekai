@@ -8,9 +8,8 @@ using Rimisekai.Clock;
 namespace Rimisekai.Hub;
 
 /// <summary>
-/// 场景描述日志：玩家来到一处地方时写一条「a，b」。
-/// a＝来到哪里＋该房间定义里的描述原文（RoomDef.Description）；
-/// b＝在场角色对玩家的反应（该角色台词包里的 Meet 口上，挑不出就空着——不编兜底句）。
+/// 场景日志：玩家来到一处地方时只写「你来到了X。」；房间定义里的描述原文（RoomDef.Description）
+/// 只在「观察四周」时写出。在场角色对玩家的反应（Meet 口上，挑不出就不写——不编兜底句）单独成行，排在角色档。
 /// </summary>
 public sealed partial class HubSession
 {
@@ -69,23 +68,26 @@ public sealed partial class HubSession
     /// <summary>新开局：主角落脚的那间房照常写一条场景描述（与走进房间同一句），日志不从空白开始。</summary>
     public void WriteOpening() => WriteArrival(PlayerRoomId);
 
-    /// <summary>写来到某房间的场景日志：a＝「你来到了X。描述」，b＝在场者的 Meet 口上。</summary>
+    /// <summary>
+    /// 来到某房间的日志（2026-10-09 主人改）：只写「你来到了X。」——房间的详细描述改由「观察四周」写出；
+    /// 环境变化照常插在其后；在场角色这一档写他们在做什么，有人对你开口（Meet 口上）就以那句话代替他的行为。
+    /// </summary>
     private void WriteArrival(int roomId)
     {
         var room = Room(roomId);
         if (room == null)
             return;
-        var desc = SceneDescription(room);
-        var fact = desc.Length > 0 ? $"你来到了{room.Name}。{desc}" : $"你来到了{room.Name}。";
-        WriteScene(fact, MeetReaction(roomId));
+        WriteScene($"你来到了{room.Name}。");
         SeeAround();
+        if (MeetReaction(roomId) is { } meet)
+            WriteActivity(meet.Who, meet.Line);
     }
 
     /// <summary>
     /// 在场角色对玩家到来的反应：按名册顺序找第一个挑得出 Meet 口上的人，
-    /// 写成「某某说「……」」。谁都没有就返回空串。
+    /// 写成「某某说「……」」。谁都没有就返回 null。
     /// </summary>
-    private string MeetReaction(int roomId)
+    private (int Who, string Line)? MeetReaction(int roomId)
     {
         foreach (var who in State.Roster.Members)
         {
@@ -94,8 +96,8 @@ public sealed partial class HubSession
             var utterance = PickVoice(who, VoiceTrigger.Meet, kind: VoiceKind.Speech);
             if (utterance == null || utterance.Value.Lines.Count == 0)
                 continue;
-            return $"{utterance.Value.Speaker}说「{string.Join("", utterance.Value.Lines)}」";
+            return (who.Id, $"{utterance.Value.Speaker}说「{string.Join("", utterance.Value.Lines)}」");
         }
-        return "";
+        return null;
     }
 }
