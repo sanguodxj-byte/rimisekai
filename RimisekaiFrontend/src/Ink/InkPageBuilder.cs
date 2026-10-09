@@ -503,7 +503,8 @@ public static class InkPageBuilder
                 Enabled = territory.CanPayWith(payer, def.MaterialCost),
             });
         }
-        // 建造设施：直接建进当前选中的房间（没选房间就点不动）。
+        // 建造设施：直接建进当前选中的房间（没选房间、或房里已摆满 Room.MaxFacilities 件就点不动）。
+        var roomHasSlot = pickedRoom != null && territory.HasFacilitySlot(pickedRoom.Id);
         foreach (var def in DefDatabase<FacilityDef>.All)
         {
             if (!def.Buildable)
@@ -512,7 +513,7 @@ public static class InkPageBuilder
             {
                 Name = def.Name, Prefix = "设",
                 Action = InkAction.DevBuildFacility, Index = def.Id,
-                Enabled = pickedRoom != null && territory.CanPayWith(payer, def.MaterialCost),
+                Enabled = roomHasSlot && territory.CanPayWith(payer, def.MaterialCost),
             });
         }
         // 建成却还没安装的设施（老存档可能留下）：选中房间后可以直接安置。
@@ -524,7 +525,7 @@ public static class InkPageBuilder
             {
                 Name = f.Name, Prefix = "安",
                 Action = InkAction.DevPlaceFacility, Index = f.Id,
-                Enabled = pickedRoom != null,
+                Enabled = roomHasSlot,
             });
         }
 

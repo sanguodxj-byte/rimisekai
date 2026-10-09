@@ -335,8 +335,14 @@ public static class DefLoader
             }
             // 开局摆位：不是定义，不进 DefDatabase，只进开局布局表。
             case "AreaFacilityDef":
-                _areaFacilities.Add(JsonSerializer.Deserialize<AreaFacilityDef>(raw, Options)!);
+            {
+                var a = JsonSerializer.Deserialize<AreaFacilityDef>(raw, Options)!;
+                if (_areaFacilities.FindAll(x => x.RoomId == a.RoomId).Count >= Rimisekai.Housing.Room.MaxFacilities)
+                    throw new InvalidDataException(
+                        $"开局摆位：房间 {a.RoomId} 的设施超过上限 {Rimisekai.Housing.Room.MaxFacilities} 件（{a.FacilityDefName}）。");
+                _areaFacilities.Add(a);
                 return true;
+            }
             case "AreaLinkDef":
             {
                 var l = JsonSerializer.Deserialize<AreaLinkDef>(raw, Options);

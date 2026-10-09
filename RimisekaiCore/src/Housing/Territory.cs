@@ -36,6 +36,12 @@ public enum RoomLock
 
 public sealed class Room
 {
+    /// <summary>
+    /// 一间房最多摆几件设施。来自界面：地图与「此刻」之间的设施牌一排三块（约 300×120，手机上点得准），
+    /// 不分页、不滚动，所以界面摆得下几块，房间表就只许放几件。改这个数要先改设施牌的排版。
+    /// </summary>
+    public const int MaxFacilities = 3;
+
     public int Id { get; init; }
     public string Name { get; init; } = "";
     public int RegionId { get; set; }
@@ -1284,9 +1290,17 @@ public sealed class Territory
         return true;
     }
 
+    /// <summary>这间房里已摆的设施件数。</summary>
+    public int FacilityCount(int roomId) => Facilities.FindAll(f => f.RoomId == roomId).Count;
+
+    /// <summary>这间房还摆不摆得下一件设施（上限见 <see cref="Room.MaxFacilities"/>）。</summary>
+    public bool HasFacilitySlot(int roomId) => FacilityCount(roomId) < Housing.Room.MaxFacilities;
+
     public bool AddFacility(Facility facility)
     {
         if (Rooms.Find(r => r.Id == facility.RoomId) == null)
+            return false;
+        if (!HasFacilitySlot(facility.RoomId))
             return false;
         if (Facilities.Exists(f => f.Id == facility.Id))
             return false;
@@ -1351,7 +1365,7 @@ public sealed class Territory
     public bool PlaceFacility(int roomId, Facility facility)
     {
         var room = Rooms.Find(r => r.Id == roomId);
-        if (room == null || !room.Open || facility.RoomId >= 0)
+        if (room == null || !room.Open || facility.RoomId >= 0 || !HasFacilitySlot(roomId))
             return false;
         facility.RoomId = roomId;
         RegisterEffect(facility, +1);

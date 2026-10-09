@@ -528,10 +528,11 @@ public static class SaveSystem
             foreach (var entry in f.StorageFilter)
                 facility.StorageFilter.Add(entry);
             // 未放置的设施（RoomId=-1）走专用入口，AddFacility 会因找不到房间而拒绝。
+            // 旧存档里超过 Room.MaxFacilities 的那几件，退回未放置，东西不丢。
+            if (facility.RoomId >= 0 && !state.Territory.AddFacility(facility))
+                facility.RoomId = -1;
             if (facility.RoomId < 0)
                 state.Territory.AddUnplacedFacility(facility);
-            else
-                state.Territory.AddFacility(facility);
         }
         foreach (var r in data.Territory.Recipes)
         {

@@ -86,7 +86,8 @@ public partial class PortraitCapture
             var hub = _root.HubScreen.DebugHub;
             var template = DefDatabase<FacilityDef>.All.First(def => def.Actions.Count > 0);
             var id = hub.State.Territory.Facilities.Max(f => f.Id);
-            for (var i = 0; i < 5; i++)
+            // 摆满到房间上限，第 MaxFacilities+1 件必须被拒。
+            while (hub.State.Territory.HasFacilitySlot(hub.PlayerRoomId))
             {
                 var fixture = template.ToRuntime();
                 fixture.Id = ++id;
@@ -95,6 +96,11 @@ public partial class PortraitCapture
                 Require(hub.State.Territory.AddFacility(fixture), "fixture list probe setup");
             }
             _facilityProbeLast = id;
+            var extra = template.ToRuntime();
+            extra.Id = id + 1;
+            extra.RoomId = hub.PlayerRoomId;
+            extra.Built = true;
+            Require(!hub.State.Territory.AddFacility(extra), "room refuses facility past Room.MaxFacilities");
             _root.HubScreen.QueueRedraw();
         });
         _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
@@ -103,7 +109,7 @@ public partial class PortraitCapture
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Fixture && w.Index == _facilityProbeLast),
-                "fixture scrollbar reaches last facility");
+                "room sheet reaches last facility");
             Shoot("fixtures_scrolled", _root.HubScreen);
             ClickHub(PortraitAction.Fixture, _facilityProbeLast);
         });

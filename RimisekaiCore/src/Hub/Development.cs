@@ -42,7 +42,8 @@ public sealed partial class HubSession
     {
         var source = Fixture(sourceFacilityId);
         var room = Room(roomId);
-        if (source == null || !source.Buildable || room == null || !room.Open)
+        if (source == null || !source.Buildable || room == null || !room.Open
+            || !State.Territory.HasFacilitySlot(roomId))
             return false;
         if (!State.Territory.CanPayWith(State.Roster.Master, source.MaterialCost))
             return false;
@@ -86,7 +87,8 @@ public sealed partial class HubSession
     {
         var facility = Fixture(facilityId);
         var room = Room(roomId);
-        if (facility == null || room == null || !room.Open || facility.RoomId == roomId)
+        if (facility == null || room == null || !room.Open || facility.RoomId == roomId
+            || !State.Territory.HasFacilitySlot(roomId))
             return false;
         facility.RoomId = roomId;
         ResetFacilityWorkers(facilityId);
@@ -622,6 +624,10 @@ public sealed partial class HubSession
 
     public bool BuildFacilityDef(int defId, int roomId)
     {
+        // 先验房里有没有空位，满了就不扣料——否则建出来放不进去，只能堆在未放置里。
+        var room = Room(roomId);
+        if (room == null || !room.Open || !State.Territory.HasFacilitySlot(roomId))
+            return false;
         if (!BuildFacilityDef(defId))
             return false;
         var last = State.Territory.Facilities[^1];

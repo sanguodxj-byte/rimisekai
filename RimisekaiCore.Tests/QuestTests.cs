@@ -9,8 +9,24 @@ namespace Rimisekai.Tests;
 /// <summary>
 /// 任务：难度星显示（半星镂空、超十星计数）、内容表装载、进度记录的可用性/冷却。
 /// </summary>
-public sealed class QuestTests
+public sealed class QuestTests : IDisposable
 {
+    // 测完把内置委托表原样放回，后面读内置表的测试才看得到真内容。
+    private readonly QuestDef[] _shipped;
+
+    public QuestTests()
+    {
+        DefaultDefs.EnsureInitialized();
+        _shipped = DefDatabase<QuestDef>.All.ToArray();
+    }
+
+    public void Dispose()
+    {
+        DefDatabase<QuestDef>.Clear();
+        foreach (var def in _shipped)
+            DefDatabase<QuestDef>.Register(def);
+    }
+
     private static QuestDef Def(double difficulty) => new()
     {
         DefName = "Quest_T",

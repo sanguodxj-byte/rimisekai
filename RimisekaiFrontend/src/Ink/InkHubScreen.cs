@@ -1501,6 +1501,11 @@ public partial class InkHubScreen : Control
                             _ui.Notice = "先在上面网格里选一间房。";
                             break;
                         }
+                        if (!vm.Hub.State.Territory.HasFacilitySlot(dev.RoomId))
+                        {
+                            _ui.Notice = $"这间房的设施已满（{Rimisekai.Housing.Room.MaxFacilities} 件）。";
+                            break;
+                        }
                         _ui.Notice = vm.Hub.BuildFacilityDef(row.Index, dev.RoomId)
                             ? $"把{row.Name}建进了这间房。"
                             : "材料不够。";
@@ -1524,6 +1529,11 @@ public partial class InkHubScreen : Control
                         if (dev.RoomId < 0)
                         {
                             _ui.Notice = "先在上面网格里选一间房。";
+                            break;
+                        }
+                        if (!vm.Hub.State.Territory.HasFacilitySlot(dev.RoomId))
+                        {
+                            _ui.Notice = $"这间房的设施已满（{Rimisekai.Housing.Room.MaxFacilities} 件）。";
                             break;
                         }
                         _ui.Notice = vm.Hub.PlaceFacility(row.Index, dev.RoomId)
