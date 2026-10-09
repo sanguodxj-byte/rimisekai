@@ -488,8 +488,11 @@ public partial class PortraitCombatView : Control
             if (enabled)
                 PortraitFrame.RoundRect(this, rect.Grow(-9f), 19f, null, new Color(InkStyle.Dim, 0.6f), 2f);
             var ink = enabled ? InkStyle.Line : InkStyle.Dim;
-            OpGlyphs[slot](this, rect.Position.X + 80f, rect.GetCenter().Y, 34f, ink);
-            InkDraw.Text(this, new Vector2(rect.Position.X + 150f, rect.GetCenter().Y), OpLabels[slot], PortraitLayout.FontTitle, ink, "lm");
+            // 图标＋字作为一组在钮内居中（2026-10-10 主人定）。
+            var groupW = 68f + 36f + InkDraw.Measure(OpLabels[slot], PortraitLayout.FontTitle).X;
+            var gx = rect.GetCenter().X - groupW / 2f;
+            OpGlyphs[slot](this, gx + 34f, rect.GetCenter().Y, 34f, ink);
+            InkDraw.Text(this, new Vector2(gx + 104f, rect.GetCenter().Y), OpLabels[slot], PortraitLayout.FontTitle, ink, "lm");
             if (armed)
                 InkDraw.Jewel(this, new Vector2(rect.End.X - 50f, rect.GetCenter().Y), 10f, InkStyle.Line);
             _hits.Add(new PortraitWidget(rect, PortraitAction.CombatMenu, slot, enabled, OpLabels[slot]));

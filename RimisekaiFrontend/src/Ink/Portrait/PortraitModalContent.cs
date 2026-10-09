@@ -153,7 +153,10 @@ public partial class PortraitModalLayer
             var cell = (right - left) / 4f;
             for (var i = 0; i < loot.Count; i++)
             {
-                var c = new Vector2(left + (i % 4 + 0.5f) * cell, y + i / 4 * 260f + 70f);
+                // 每行按件数居中（末行不满 4 件时也对称）。
+                var inRow = Math.Min(4, loot.Count - i / 4 * 4);
+                var rowLeft = (left + right) / 2f - inRow * cell / 2f;
+                var c = new Vector2(rowLeft + (i % 4 + 0.5f) * cell, y + i / 4 * 260f + 70f);
                 InkDraw.Jewel(this, c, 60f, InkStyle.Line);
                 InkDraw.Jewel(this, c, 55f, InkStyle.Bg);
                 InkDraw.Text(this, c, loot[i].Glyph, PortraitLayout.FontBody, InkStyle.Line, "cm");

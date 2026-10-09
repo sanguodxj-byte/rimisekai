@@ -213,9 +213,11 @@ public partial class PortraitHubScreen
         var slotY = top + PortraitLayout.SheetContentOffset;
         var w = (PortraitLayout.FullWidth - 60f) / 4f;
         // 队位只画到人数上限：上限 3 就只有三格，不留一格压暗的空框。
+        // 队位整排居中（2026-10-10 主人定）。
+        var slotsLeft = PortraitLayout.CanvasWidth / 2f - (cap * w + (cap - 1) * 20f) / 2f;
         for (var i = 0; i < cap; i++)
         {
-            var r = new Rect2(PortraitLayout.Pad + i * (w + 20f), slotY, w, 320f);
+            var r = new Rect2(slotsLeft + i * (w + 20f), slotY, w, 320f);
             if (i < members.Count)
             {
                 var who = members[i];

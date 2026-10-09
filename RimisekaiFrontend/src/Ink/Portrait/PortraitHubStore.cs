@@ -126,8 +126,9 @@ public partial class PortraitHubScreen
             InkDraw.Jewel(this, c, 54f, InkStyle.Dim);
             InkDraw.Jewel(this, c, 50f, InkStyle.Bg);
             InkDraw.Text(this, c, item.Name[..1], PortraitLayout.FontBody, InkStyle.Line, "cm");
+            // 物名居中对准上方菱形（2026-10-10 主人定：能对称居中的尽量居中）。
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 24f, r.Position.Y + 176f, r.Size.X - 48f, 60f), item.Name,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
             InkDraw.Text(this, new Vector2(r.End.X - 24f, r.Position.Y + 140f), $"×{item.Count}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
             AddClipped(r, view, PortraitAction.StockItem, all.IndexOf(item), true, item.Id);
         }

@@ -92,6 +92,19 @@ public partial class PortraitHubScreen
         return list.ToArray();
     }
 
+    /// <summary>
+    /// 「此刻」第 i 格：要翻页时照固定 4 格＋右侧三角钮排；一页放得下时，这一页的几格整排居中（2026-10-10 主人定）。
+    /// </summary>
+    private Rect2 NowSlot(int i, int count)
+    {
+        var fixedRect = PortraitLayout.NowCard(i);
+        if (NowPages() > 1)
+            return fixedRect;
+        var rowW = count * PortraitLayout.NowSlot - 16f;
+        var left = PortraitLayout.CanvasWidth / 2f - rowW / 2f;
+        return new Rect2(left + i * PortraitLayout.NowSlot, fixedRect.Position.Y, fixedRect.Size.X, fixedRect.Size.Y);
+    }
+
     /// <summary>有人主动开口时，「此刻」翻到说话人那一页，气泡才指得到她的头像。</summary>
     private void ShowChatterSpeakerPage()
     {
@@ -120,7 +133,7 @@ public partial class PortraitHubScreen
         var white = new Color(1f, 1f, 1f);
         var fill = new Color(0.02f, 0.02f, 0.03f, 0.9f);
 
-        var card = PortraitLayout.NowCard(at);
+        var card = NowSlot(at, NowPageCards().Length);
         var tipX = card.GetCenter().X;
         var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 14f);
         var outline = BubblePath(bubble, 28f, tip, 26f);
@@ -382,7 +395,7 @@ public partial class PortraitHubScreen
         for (var i = 0; i < cards.Length; i++)
         {
             var card = cards[i];
-            var r = PortraitLayout.NowCard(i);
+            var r = NowSlot(i, cards.Length);
             var cx = r.GetCenter().X;
             if (PortraitFrame.IsPressed(r))
                 PortraitFrame.PressMark(this, r);
@@ -580,8 +593,11 @@ public partial class PortraitHubScreen
         _widgets.Add(new PortraitWidget(close, PortraitAction.SheetClose, 0, true, "收起"));
 
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, top + 290f, "在场");
-        for (var i = 0; i < people.Length && i < 7; i++)
-            PortraitFrame.Avatar(this, new Vector2(PortraitLayout.Pad + 70f + i * 136f, top + 382f), 46f,
+        // 在场头像整排居中（间距 136）。
+        var avatarCount = Math.Min(people.Length, 7);
+        var avatarStart = PortraitLayout.CanvasWidth / 2f - (avatarCount - 1) * 136f / 2f;
+        for (var i = 0; i < avatarCount; i++)
+            PortraitFrame.Avatar(this, new Vector2(avatarStart + i * 136f, top + 382f), 46f,
                 PortraitAvatars.Resolve(_vm.FindById(people[i].Id)), people[i].Name);
         if (people.Length > 7)
             InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, top + 382f),

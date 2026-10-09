@@ -209,20 +209,37 @@ public partial class PortraitHubScreen
             PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "特质");
             y += 50f;
             // 特质签可点（弹窗看说明）：命中块 118 高、画出来的签 80 高居中，行距 128 免得上下命中块相叠。
-            float x = PortraitLayout.Pad;
+            // 先按宽度分好行，每行整体居中（2026-10-10 主人定：能对称居中的尽量居中）。
+            const float chipGap = 20f;
+            var span = PortraitLayout.CanvasWidth - PortraitLayout.Pad * 2f;
+            var rows = new List<List<int>> { new() };
+            var rowW = 0f;
             for (var i = 0; i < traits.Count; i++)
             {
-                var trait = traits[i];
-                var w = Mathf.Max(PortraitLayout.TouchMin, PortraitFrame.ChipWidth(trait) - 16f);
-                if (x + w > PortraitLayout.CanvasWidth - PortraitLayout.Pad)
+                var w = Mathf.Max(PortraitLayout.TouchMin, PortraitFrame.ChipWidth(traits[i]) - 16f);
+                if (rows[^1].Count > 0 && rowW + chipGap + w > span)
                 {
-                    x = PortraitLayout.Pad;
-                    y += 128f;
+                    rows.Add(new List<int>());
+                    rowW = 0f;
                 }
-                var r = new Rect2(x, y + 40f - PortraitLayout.TouchMin / 2f, w, PortraitLayout.TouchMin);
-                PortraitFrame.Chip(this, r, trait, false, 80f);
-                AddClipped(r, view, PortraitAction.TraitInfo, i, true, trait);
-                x += w + 20f;
+                rowW += (rows[^1].Count > 0 ? chipGap : 0f) + w;
+                rows[^1].Add(i);
+            }
+            for (var row = 0; row < rows.Count; row++)
+            {
+                if (row > 0)
+                    y += 128f;
+                var widths = rows[row].Select(i => Mathf.Max(PortraitLayout.TouchMin, PortraitFrame.ChipWidth(traits[i]) - 16f)).ToList();
+                var total = widths.Sum() + chipGap * (widths.Count - 1);
+                var x = PortraitLayout.CanvasWidth / 2f - total / 2f;
+                for (var k = 0; k < rows[row].Count; k++)
+                {
+                    var i = rows[row][k];
+                    var r = new Rect2(x, y + 40f - PortraitLayout.TouchMin / 2f, widths[k], PortraitLayout.TouchMin);
+                    PortraitFrame.Chip(this, r, traits[i], false, 80f);
+                    AddClipped(r, view, PortraitAction.TraitInfo, i, true, traits[i]);
+                    x += widths[k] + chipGap;
+                }
             }
             y += 140f;
         }

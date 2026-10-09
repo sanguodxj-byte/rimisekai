@@ -395,18 +395,19 @@ public partial class PortraitHubScreen : Control
             widths[i] = glyphSpan + InkDraw.Measure(segments[i].Text, PortraitLayout.FontMeta).X;
             used += widths[i];
         }
-        var gap = System.Math.Max(40f, (right - left - used) / (segments.Length - 1));
-        var x = left;
+        // 2026-10-10 主人定：状态行对称——中段（天气）正对画面中线、与上下两道缎带线的菱形对齐；
+        // 首段贴左、末段贴系统钮，两枚隔菱各落在相邻两段空隙的正中。
+        var xs = new float[segments.Length];
+        xs[0] = left;
+        xs[^1] = right - widths[^1];
+        if (segments.Length == 3)
+            xs[1] = PortraitLayout.CanvasWidth / 2f - widths[1] / 2f;
         for (var i = 0; i < segments.Length; i++)
         {
-            segments[i].Glyph(x + 18f);
-            InkDraw.Text(this, new Vector2(x + glyphSpan, y), segments[i].Text, PortraitLayout.FontMeta, segments[i].Color, "lm");
-            x += widths[i];
+            segments[i].Glyph(xs[i] + 18f);
+            InkDraw.Text(this, new Vector2(xs[i] + glyphSpan, y), segments[i].Text, PortraitLayout.FontMeta, segments[i].Color, "lm");
             if (i < segments.Length - 1)
-            {
-                InkDraw.Jewel(this, new Vector2(x + gap / 2f, y), 5f, new Color(InkStyle.Dim, 0.9f));
-                x += gap;
-            }
+                InkDraw.Jewel(this, new Vector2((xs[i] + widths[i] + xs[i + 1]) / 2f, y), 5f, new Color(InkStyle.Dim, 0.9f));
         }
         // 缎带上沿一道淡出细线，把状态行和地名行分开。
         // 两端对称，菱形落在画面正中（2026-10-10 主人定）。
