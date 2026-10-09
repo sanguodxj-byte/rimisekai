@@ -124,6 +124,15 @@ public partial class PortraitCombatView : Control
                 Finished?.Invoke();
             return;
         }
+        // 连战补给回合：时间轴停住，弹补给框；框被关掉也会再弹，直到玩家迎下一波或撤退。
+        if (battle.SupplyRound)
+        {
+            _actor = null;
+            if (!_modal.IsActive)
+                ShowSupplyPopup(battle);
+            QueueRedraw();
+            return;
+        }
         // PendingActor 会自动执行 AI，禁止在绘制/命中构建中调用。
         _tick += (float)delta;
         if (_tick >= 0.35f)
@@ -134,6 +143,23 @@ public partial class PortraitCombatView : Control
             RefreshMenu();
         }
         QueueRedraw();
+    }
+
+    /// <summary>连战补给回合：报清掉的波次、补给内容与下一波来敌；迎下一波或见好就收。</summary>
+    private void ShowSupplyPopup(Battle battle)
+    {
+        var next = string.Join(" · ", battle.NextWave.GroupBy(f => f.Name)
+            .Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key));
+        _modal.Show(new InkModalPage
+        {
+            Title = "补给回合",
+            Body = $"第 {battle.WaveIndex}/{battle.WaveTotal} 波已清。\n同伴回复 {BattleRules.SupplyHealPercent}% 生命、解除状态。\n下一波：{next}",
+            Choices = new List<InkModalChoice>
+            {
+                new() { Id = "next", Label = "迎战下一波", OnSelected = () => { battle.Resupply(); RefreshMenu(); } },
+                new() { Id = "leave", Label = "撤退", OnSelected = () => battle.Withdraw() },
+            },
+        });
     }
 
     /// <summary>捕获战斗新产生的战况事件，激活斩击光弧、受击震颤、卡片斩裂与伤害飘字。</summary>
@@ -183,7 +209,7 @@ public partial class PortraitCombatView : Control
         DrawSettingsGear();
     }
 
-    /// <summary>顶栏：左战场名、中回合数（右侧是设置齿轮）。</summary>
+    /// <summary>顶栏：左战场名、中回合数、右侧连战波次与设置齿轮。</summary>
     private void DrawTopBar(Battle battle)
     {
         // 顶栏容器一行：左上「地名」（直角括号）、正中回合数、右上设置齿轮（齿轮另画）。
@@ -191,6 +217,10 @@ public partial class PortraitCombatView : Control
         var cx = PortraitLayout.CanvasWidth / 2f;
         var cy = top.GetCenter().Y;
         InkDraw.Text(this, new Vector2(cx, cy), $"第 {battle.Round} 回合", PortraitLayout.FontBody, InkStyle.Line, "cm");
+        // 连战：波次靠右、贴在设置齿轮左边。
+        if (battle.WaveTotal > 1)
+            InkDraw.Text(this, new Vector2(PortraitLayout.CombatGearHit.Position.X - 16f, cy),
+                $"第 {battle.WaveIndex}/{battle.WaveTotal} 波", PortraitLayout.FontMeta, InkStyle.Line, "rm");
         InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad, cy - 30f, cx - 120f - PortraitLayout.Pad, 60f),
             $"「{battle.PlaceName}」", PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
     }

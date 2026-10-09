@@ -881,8 +881,9 @@ public partial class PortraitCapture : Node
             Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Party.AtHome, "back home from the dungeon");
             _root.HubScreen.ShowTab(2);
         });
-        // 地图类委托＝包接送的地城：接单、点名、出发即被送进地城（有迷雾），撤离即接回领地。
-        _steps.Enqueue(() => ClickHub(PortraitAction.QuestTake, 0));
+        // 地城探索委托＝包接送的地城：接单、点名、出发即被送进地城（有迷雾），撤离即接回领地。
+        _steps.Enqueue(() => ClickHub(PortraitAction.QuestTake,
+            _root.HubScreen.DebugQuestIndex(d => d.Kind == Rimisekai.Quest.QuestKind.Dungeon)));
         _steps.Enqueue(() =>
         {
             var member = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.PartyPick && w.Enabled);
@@ -894,7 +895,7 @@ public partial class PortraitCapture : Node
         {
             var hub = _root.HubScreen.DebugHub;
             Require(_root.DebugPhase == Rimisekai.Flow.FlowPhase.Hub && hub.Layer == Rimisekai.Hub.MapLayer.QuestPlace
-                && hub.InQuestDungeon, "a map commission rides the party into its dungeon");
+                && hub.InQuestDungeon, "a dungeon commission rides the party into its dungeon");
             Require(_root.HubScreen.DebugTab == 0, "the hub shows the dungeon map after setting out");
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.HubWorld && w.Label == hub.TravelLabel)
                 && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.Build && !w.Enabled),

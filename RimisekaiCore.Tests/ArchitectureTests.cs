@@ -47,7 +47,7 @@ public sealed class ArchitectureTests
     public void Quest_move_requires_a_link()
     {
         var record = new QuestRecord();
-        record.Register(new QuestDef { Id = 1, Name = "q", Kind = QuestKind.Map, CooldownDays = 1 });
+        record.Register(new QuestDef { Id = 1, Name = "q", Kind = QuestKind.Dungeon, CooldownDays = 1 });
         var run = record.Start(1, new[] { 1 });
         Assert.NotNull(run);
 
@@ -1394,7 +1394,7 @@ public sealed class ArchitectureTests
         var a = roster.Add("甲");
         a.Affect.Mood = 20;
         var record = new QuestRecord();
-        record.Register(new QuestDef { Id = 1, Name = "讨伐", Kind = QuestKind.Map });
+        record.Register(new QuestDef { Id = 1, Name = "讨伐", Kind = QuestKind.Dungeon });
         var run = record.Start(1, new[] { a.Id });
         Assert.NotNull(run);
         record.Complete(run, roster);

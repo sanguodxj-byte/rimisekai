@@ -26,10 +26,12 @@ public static class Encounters
     /// 返回战斗会话（前端据此切入战斗页）；敌人清单为空或没有可用成员返回 null。
     /// <paramref name="partyIds"/> 传任务编成时，只让名单里的人上阵（玩家本人始终随行）；
     /// 不传或为空则按名册全员出动（据点遭遇战用）。
+    /// <paramref name="waves"/> 为连战在首波之后依次补上的各波（每清一波有补给回合）；不传即一波打完。
     /// </summary>
     public static BattleSession? Start(
         GameState state, IReadOnlyList<EnemyDef> enemies, GameCatalog? catalog = null,
-        string placeName = "迷宫地下城", IReadOnlyList<int>? partyIds = null)
+        string placeName = "迷宫地下城", IReadOnlyList<int>? partyIds = null,
+        IReadOnlyList<IReadOnlyList<EnemyDef>>? waves = null)
     {
         if (enemies.Count == 0)
             return null;
@@ -71,6 +73,9 @@ public static class Encounters
 
         foreach (var def in enemies)
             battle.Add(Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender));
+        if (waves != null)
+            foreach (var wave in waves)
+                battle.QueueWave(wave.Select(def => Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender)).ToList());
 
         battle.StartBattle();
         return new BattleSession(state.Roster, battle);

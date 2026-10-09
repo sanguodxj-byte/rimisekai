@@ -375,8 +375,9 @@ public partial class PortraitPlaytest : Node
     {
         await GoHubRoot("委托");
         await TapAction(PortraitAction.Tab, "quest tab", w => w.Index == 2);
-        // 优先挑战斗类委托（标签带「战」或说明里有鼠/狼），否则第一个。
-        var took = await TapAction(PortraitAction.QuestTake, "take quest", w => w.Index == 1)
+        // 优先挑普通战斗委托，否则第一个。
+        var normal = _root.HubScreen.DebugQuestIndex(d => d.Kind == Rimisekai.Quest.QuestKind.Battle && d.Battle == Rimisekai.Quest.QuestBattle.Normal);
+        var took = await TapAction(PortraitAction.QuestTake, "take quest", w => w.Index == normal)
             || await TapAction(PortraitAction.QuestTake, "take quest");
         if (!took) { Goal("委托出发并打完", false); return; }
         Shoot("quest_sheet");

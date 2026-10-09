@@ -57,6 +57,9 @@ public partial class PortraitHubScreen
 
     // ---------- 委托板 ----------
 
+    /// <summary>调试：委托板上第一个满足条件的委托排第几（找不到为 -1）。</summary>
+    public int DebugQuestIndex(Func<QuestDef, bool> pick) => AvailableQuests().FindIndex(d => pick(d));
+
     private List<QuestDef> AvailableQuests()
     {
         var list = new List<QuestDef>();
@@ -67,8 +70,9 @@ public partial class PortraitHubScreen
         return list;
     }
 
-    private static string FoesOf(QuestDef def) => string.Join(" · ", def.Foes.GroupBy(f => f.Name)
-        .Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key));
+    /// <summary>委托的敌人一行：同名合并计数；连战把各波都算上。</summary>
+    private static string FoesOf(QuestDef def) => string.Join(" · ", def.Foes.Concat(def.Waves.SelectMany(w => w))
+        .GroupBy(f => f.Name).Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key));
 
     /// <summary>
     /// 委托卡的版式（自上而下）：名字行、难度行（敌方放得下就跟在菱形后，放不下就自下一行起按字宽换行）、
@@ -147,7 +151,7 @@ public partial class PortraitHubScreen
                 continue;
             PortraitFrame.GothicFrame(this, r);
             var x = r.Position.X + 50f;
-            var size = def.MaxPartySize > 0 ? $"{def.MaxPartySize} 人" : "";
+            var size = def.MaxPartySize > 0 ? $"{def.KindText} · {def.MaxPartySize} 人" : def.KindText;
             var pillW = size.Length > 0 ? InkDraw.Measure(size, PortraitLayout.FontMeta).X + 56f : 0f;
             InkDraw.TextBounded(this, new Rect2(x, r.Position.Y + 36f, r.Size.X - 140f - pillW, 80f), def.Name,
                 PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
@@ -303,8 +307,8 @@ public partial class PortraitHubScreen
         }
 
         var def = defs[_questSel];
-        // 地图类委托＝包接送的地城：马车送进地城，正主倒下即了结接回（Core 收尾）。
-        if (def.Kind != QuestKind.Dialogue)
+        // 地城探索委托＝包接送的地城：马车送进地城，正主倒下即了结接回（Core 收尾）。
+        if (def.Kind == QuestKind.Dungeon)
         {
             if (!hub.StartQuestDungeon(run))
             {
@@ -316,8 +320,10 @@ public partial class PortraitHubScreen
             return;
         }
 
-        // 其余委托＝单独一战：战斗本身就是委托入口（Encounters 起战，结算侧按 QuestRun 记通关与冷却）。
-        var session = Encounters.Start(hub.State, def.Foes, placeName: def.Name, partyIds: deploy);
+        // 战斗委托：接下即开打（普通战斗 / 首领战一波打完；连战首波之后依次补上各波，清一波一个补给回合）。
+        // 结算侧按 QuestRun 记通关与冷却。
+        var session = Encounters.Start(hub.State, def.Foes, placeName: def.Name, partyIds: deploy,
+            waves: def.Battle == QuestBattle.Waves ? def.Waves : null);
         if (session == null)
         {
             SetNotice("这单现在接不了。");

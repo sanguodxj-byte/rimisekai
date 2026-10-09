@@ -43,6 +43,12 @@ public enum CombatEventKind
     /// <summary>咏唱被控制打断，法术作废。</summary>
     Interrupt,
     End,
+    /// <summary>连战清掉一波，进入补给回合。Amount 记清掉的是第几波。</summary>
+    WaveCleared,
+    /// <summary>补给回合的回复，ActorId 为受补给者，Amount 记回复量。</summary>
+    Supply,
+    /// <summary>连战下一波敌人补上。Amount 记这是第几波。</summary>
+    WaveArrived,
 }
 
 /// <summary>战斗里的一次结算记录。只带 Id 与数字，文案由 UI 侧拼。</summary>
@@ -202,6 +208,8 @@ public static class BattleRules
     public const int MinDamage = 1;
     /// <summary>回合上限，打满判 Draw。</summary>
     public const int RoundLimit = 30;
+    /// <summary>连战补给回合：在场我方各回复最大生命的百分比。</summary>
+    public const int SupplyHealPercent = 30;
     /// <summary>防御架势：防御提升幅度（基础值百分比）。</summary>
     public const int GuardPercent = 50;
     /// <summary>逃跑基准率，按双方均躲闪差修正，夹在 FleeMin~FleeMax。</summary>
@@ -339,7 +347,7 @@ public sealed class Battle
     public bool StepTurn(out Combatant? actedUnit)
     {
         actedUnit = null;
-        if (Outcome != CombatOutcome.Ongoing)
+        if (Outcome != CombatOutcome.Ongoing || SupplyRound)
             return false;
 
         if (!_started)
@@ -405,11 +413,11 @@ public sealed class Battle
     {
         get
         {
-            if (Outcome != CombatOutcome.Ongoing)
+            if (Outcome != CombatOutcome.Ongoing || SupplyRound)
                 return null;
             if (!_started)
                 StartBattle();
-            while (Outcome == CombatOutcome.Ongoing)
+            while (Outcome == CombatOutcome.Ongoing && !SupplyRound)
             {
                 var nextAct = Members.Where(m => m.Alive && m.Chanting == null)
                     .Select(m => m.NextActAt).DefaultIfEmpty(long.MaxValue).Min();
@@ -634,7 +642,7 @@ public sealed class Battle
             // 咏唱完成由时间轴驱动（Clock 跨过 ChantFireAt 时施放），此处不处理。
         }
         Round++;
-        if (Round > BattleRules.RoundLimit)
+        if (Round - _waveStartRound > BattleRules.RoundLimit)
             SetOutcome(CombatOutcome.Draw);
     }
 
@@ -1073,7 +1081,92 @@ public sealed class Battle
                        || Reserves.Exists(r => r.Side == CombatSide.Defender);
         if (atkAlive && defAlive)
             return;
+        // 连战：这一波清了、后面还有波次，就进补给回合而不是收场。
+        if (atkAlive && _waves.Count > 0)
+        {
+            if (!SupplyRound)
+            {
+                SupplyRound = true;
+                Events.Add(new BattleEvent { Kind = CombatEventKind.WaveCleared, Round = Round, Amount = WaveIndex });
+            }
+            return;
+        }
         SetOutcome(atkAlive ? CombatOutcome.AttackerWin : CombatOutcome.DefenderWin);
+    }
+
+    // ---- 连战 ----
+
+    private readonly List<List<Combatant>> _waves = new();
+    private int _waveStartRound;
+
+    /// <summary>此刻是第几波（从 1 起）。</summary>
+    public int WaveIndex { get; private set; } = 1;
+
+    /// <summary>总波数；非连战为 1。</summary>
+    public int WaveTotal => WaveIndex + _waves.Count;
+
+    /// <summary>下一波的敌人（补给回合里给 UI 预告用）；没有下一波为空。</summary>
+    public IReadOnlyList<Combatant> NextWave => _waves.Count > 0 ? _waves[0] : System.Array.Empty<Combatant>();
+
+    /// <summary>
+    /// 补给回合：一波清完、下一波还没上。期间时间轴停住，没有人行动，
+    /// 等玩家 <see cref="Resupply"/> 迎下一波，或 <see cref="Withdraw"/> 见好就收。
+    /// </summary>
+    public bool SupplyRound { get; private set; }
+
+    /// <summary>排上一波连战敌人（按排队先后依次补上）。开打前、开打后都可排。</summary>
+    public void QueueWave(List<Combatant> foes)
+    {
+        if (foes.Count > 0)
+            _waves.Add(foes);
+    }
+
+    /// <summary>
+    /// 结束补给回合：在场我方各回复 <see cref="BattleRules.SupplyHealPercent"/>% 最大生命、清掉身上状态、咏唱作废，
+    /// 然后下一波敌人上阵，双方从此刻重新排时间轴；回合上限按新一波重新计。不在补给回合返回 false。
+    /// </summary>
+    public bool Resupply()
+    {
+        if (!SupplyRound || Outcome != CombatOutcome.Ongoing || _waves.Count == 0)
+            return false;
+        SupplyRound = false;
+        foreach (var m in Members.Where(m => m.Alive && m.Side == _controlled))
+        {
+            var before = m.Hp;
+            m.Hp = Math.Min(m.MaxHp, m.Hp + Math.Max(1, m.MaxHp * BattleRules.SupplyHealPercent / 100));
+            m.Statuses.Clear();
+            m.Chanting = null;
+            m.ChantFireAt = -1;
+            m.NextActAt = _time + m.ActInterval;
+            Events.Add(new BattleEvent
+            {
+                Kind = CombatEventKind.Supply, Round = Round, ActorId = m.Id, TargetId = m.Id,
+                Amount = m.Hp - before, HpAfter = m.Hp,
+            });
+        }
+        var wave = _waves[0];
+        _waves.RemoveAt(0);
+        WaveIndex++;
+        foreach (var f in wave)
+        {
+            // 倒下的敌人留在名单里（掉落与战绩从他们身上算），新一波不受人数上限卡。
+            Members.Add(f);
+            f.NextActAt = _time + f.ActInterval;
+        }
+        AdvanceEnemyFormation();
+        _waveStartRound = Round - 1;
+        Events.Add(new BattleEvent { Kind = CombatEventKind.WaveArrived, Round = Round, Amount = WaveIndex });
+        return true;
+    }
+
+    /// <summary>补给回合里见好就收：场上已无敌人，必定撤成，按 Fled 收场（已倒敌人的掉落照拿）。</summary>
+    public bool Withdraw()
+    {
+        if (!SupplyRound || Outcome != CombatOutcome.Ongoing)
+            return false;
+        SupplyRound = false;
+        SetOutcome(CombatOutcome.Fled);
+        return true;
     }
 
     private void SetOutcome(CombatOutcome outcome)

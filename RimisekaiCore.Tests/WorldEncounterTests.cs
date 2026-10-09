@@ -292,7 +292,7 @@ public sealed class WorldEncounterTests
             DefName = "Quest_DungeonTest",
             Id = 9001,
             Label = "测试矿道",
-            Kind = QuestKind.Map,
+            Kind = QuestKind.Dungeon,
             Difficulty = 3.5,
             CooldownDays = 1,
             MaxPartySize = 4,

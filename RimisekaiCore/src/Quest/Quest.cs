@@ -7,13 +7,24 @@ using Rimisekai.Defs;
 namespace Rimisekai.Quest;
 
 /// <summary>
-/// 任务形态。MAP/GMAP 进地图探索会话，Dialogue 只跑一段事件后返回。
+/// 委托只有两类：纯战斗（接下即开打，细分见 <see cref="QuestBattle"/>）与地城探索（马车送进一座现生成的地城，最深处是正主）。
+/// 采集、送货一类不做委托。
 /// </summary>
 public enum QuestKind
 {
-    Map,
-    GraphicalMap,
-    Dialogue,
+    Battle,
+    Dungeon,
+}
+
+/// <summary>
+/// 战斗委托的打法：普通战斗；首领战（阵中有一名占多格的首领）；
+/// 连战（首波之后一波接一波补上来，每清一波有一个补给回合）。
+/// </summary>
+public enum QuestBattle
+{
+    Normal,
+    Boss,
+    Waves,
 }
 
 /// <summary>
@@ -44,6 +55,23 @@ public sealed class QuestDef : Def, IIdentifiedDef
         }
     }
     public QuestKind Kind { get; init; }
+
+    /// <summary>战斗委托的打法；地城委托不看。</summary>
+    public QuestBattle Battle { get; init; }
+
+    /// <summary>连战在首波（<see cref="Foes"/>）之后依次补上的各波敌人；非连战为空。</summary>
+    public List<List<EnemyDef>> Waves { get; init; } = new();
+
+    /// <summary>委托卡上的类别字：普通战斗 / 首领战 / 连战 N 波 / 地城探索。</summary>
+    public string KindText => Kind == QuestKind.Dungeon
+        ? "地城探索"
+        : Battle switch
+        {
+            QuestBattle.Boss => "首领战",
+            QuestBattle.Waves => $"连战 {1 + Waves.Count} 波",
+            _ => "普通战斗",
+        };
+
     public int CooldownDays { get; init; }
 
     /// <summary>难度，按星计，半星用 0.5 表达。</summary>
@@ -58,7 +86,7 @@ public sealed class QuestDef : Def, IIdentifiedDef
     /// <summary>传言，展示时包在直角括号里以暗色显示。</summary>
     public string Rumor { get; init; } = "";
 
-    /// <summary>接下委托即遭遇的敌人阵容（玩家可见的敌人名权威在此）。</summary>
+    /// <summary>战斗委托的首波阵容；地城委托为最深处的正主（玩家可见的敌人名权威在此）。</summary>
     public List<EnemyDef> Foes { get; init; } = new();
 
     /// <summary>难度显示：实心为整星，镂空 ☆ 为半星；超过 10 星改为 ★×数量。</summary>

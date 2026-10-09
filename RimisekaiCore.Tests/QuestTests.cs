@@ -17,7 +17,7 @@ public sealed class QuestTests
         Id = 1,
         Label = "测试委托",
         Description = "描述",
-        Kind = QuestKind.Map,
+        Kind = QuestKind.Dungeon,
         Difficulty = difficulty,
         MaxPartySize = 4,
     };
@@ -41,9 +41,9 @@ public sealed class QuestTests
         DefDatabase<QuestDef>.Clear();
         var count = DefLoader.LoadJson("""
             { "defType": "QuestDef", "defs": [
-                { "defName": "Quest_A", "id": 1, "label": "委托A", "kind": "map", "difficulty": 3.5,
+                { "defName": "Quest_A", "id": 1, "label": "委托A", "kind": "dungeon", "difficulty": 3.5,
                   "maxPartySize": 4, "rewards": ["金币 x10"], "rumor": "传言A" },
-                { "defName": "Quest_B", "id": 2, "label": "委托B", "kind": "dialogue", "difficulty": 12,
+                { "defName": "Quest_B", "id": 2, "label": "委托B", "kind": "battle", "difficulty": 12,
                   "maxPartySize": 6 }
             ] }
             """);
@@ -51,7 +51,7 @@ public sealed class QuestTests
         Assert.Equal(2, count);
         var a = DefDatabase<QuestDef>.All.Single(d => d.DefName == "Quest_A");
         Assert.Equal("委托A", a.Label);
-        Assert.Equal(QuestKind.Map, a.Kind);
+        Assert.Equal(QuestKind.Dungeon, a.Kind);
         Assert.Equal(3.5, a.Difficulty);
         Assert.Equal("传言A", a.Rumor);
         Assert.Equal(new[] { "金币 x10" }, a.Rewards);
@@ -66,7 +66,7 @@ public sealed class QuestTests
         DefDatabase<QuestDef>.Clear();
         DefLoader.LoadJson("""
             { "defType": "QuestDef", "defs": [
-                { "defName": "Quest_C", "id": 7, "label": "委托C", "kind": "dialogue",
+                { "defName": "Quest_C", "id": 7, "label": "委托C", "kind": "battle",
                   "cooldownDays": 2, "difficulty": 1, "maxPartySize": 3 }
             ] }
             """);

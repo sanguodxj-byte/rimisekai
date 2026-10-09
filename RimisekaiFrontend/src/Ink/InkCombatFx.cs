@@ -287,6 +287,7 @@ public partial class InkCombatFxLayer : Control
             }
 
             case CombatEventKind.Heal:
+            case CombatEventKind.Supply:
             {
                 // 治疗全彩圣光升腾 Shader
                 SpawnBarrierShaderEffect(targetPos, isHeal: true, new Color("#76FF03"));

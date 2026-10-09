@@ -171,8 +171,9 @@ public partial class PortraitCapture
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.QuestTake),
                 "quest board lists available commissions");
-            // 单独一战的委托（对话类）：地图类委托走包接送的地城，另在大地图段核对。
-            ClickHub(PortraitAction.QuestTake, 1);
+            // 普通战斗委托：地城探索委托走包接送的地城，另在大地图段核对。
+            ClickHub(PortraitAction.QuestTake, _root.HubScreen.DebugQuestIndex(
+                d => d.Kind == Rimisekai.Quest.QuestKind.Battle && d.Battle == Rimisekai.Quest.QuestBattle.Normal));
         });
         _steps.Enqueue(() =>
         {
