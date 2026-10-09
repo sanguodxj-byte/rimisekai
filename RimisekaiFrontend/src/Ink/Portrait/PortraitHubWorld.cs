@@ -191,39 +191,63 @@ public sealed partial class PortraitHubScreen
     }
 
     /// <summary>
-    /// 方向键（2026-10-09 主人要求，同日改大）：哥特框四条边的正中各一枚骑在框线上的大按钮
-    /// （南北 260×130、东西 130×260，黑底骨白框，内一枚大实心三角朝外），点一下队伍朝那边走一格。
-    /// 北钮上沿贴日志面板下沿，南钮下沿让开「此刻」分节线，东西钮外沿离画布边 8；
-    /// 都不碰右侧放大 / 缩小 / 领地三钮。那边走不过去（出界、湖海雪峰）或遭遇未了结时暗掉、不可点。
+    /// 方向键（2026-10-09 主人要求；同日改大、再改回融进地图的画法）：与领地过界箭头同一套语汇——
+    /// 哥特框四边正中各开一道缺口（沿边 <see cref="StepGap"/>），缺口两端各一道骨白门槛、门槛外端各收一枚小菱；
+    /// 缺口里一枚大实心三角朝外，三角底边压进地图 <see cref="StepArrowInset"/>，尖越过框线，读作「从这道门出去」。
+    /// 三角先描一圈黑边再填骨白，压在任何地貌上都看得清。没有底板，命中块（<see cref="StepRect"/>）是看不见的大块。
+    /// 那边走不过去或遭遇未了结时三角与门槛换暗色、不可点。按下时缺口里亮一层按压色。
     /// </summary>
     private void DrawWorldSteps()
     {
         var hub = _vm.Hub;
         var map = World;
+        var grid = PortraitLayout.MapGrid;
+        var band = grid.Position.X - PortraitLayout.MapFrame.Position.X + 3f;
         var (px, py) = hub.WorldPartyPosition;
         var busy = hub.PendingEncounter != null;
         foreach (var dir in new[] { Territory.RegionDir.North, Territory.RegionDir.East, Territory.RegionDir.South, Territory.RegionDir.West })
         {
             var (dx, dy) = StepDelta(dir);
             var enabled = !busy && map.IsPassable(px + dx, py + dy);
-            var r = StepRect(dir);
+            var hit = StepRect(dir);
             var outward = PortraitLayout.CrossOutward(dir);
             var along = new Vector2(-outward.Y, outward.X);
+            var mouth = grid.GetCenter() + outward * (outward.X != 0f ? grid.Size.X : grid.Size.Y) / 2f;
             var ink = enabled ? InkStyle.Line : InkStyle.WoodDark;
-            var pressed = enabled && PortraitFrame.IsPressed(r);
-            DrawRect(r, pressed ? PortraitFrame.PressFill : new Color(0f, 0f, 0f, 0.82f));
-            InkDraw.Ink(this, RectLoop(r.Grow(-2f)), ink, 3f);
-            InkDraw.Ink(this, RectLoop(r.Grow(-9f)), enabled ? InkStyle.Dim : InkStyle.WoodDark, 1.5f);
-            var c = r.GetCenter() - outward * 22f;
-            DrawColoredPolygon(new[]
+
+            // 缺口：抹掉框带（底色），按下时叠一层按压色。
+            var a = mouth + outward * 2f - along * StepGap / 2f;
+            var b = mouth + outward * band + along * StepGap / 2f;
+            var gap = new Rect2(new Vector2(Mathf.Min(a.X, b.X), Mathf.Min(a.Y, b.Y)), (b - a).Abs());
+            DrawRect(gap, InkStyle.Bg);
+            if (enabled && PortraitFrame.IsPressed(hit))
+                DrawRect(gap, PortraitFrame.PressFill);
+            foreach (var side in new[] { -1f, 1f })
             {
-                c + along * 46f,
-                c + outward * 50f,
-                c - along * 46f,
-            }, ink);
-            _widgets.Add(new PortraitWidget(r, PortraitAction.WorldStep, (int)dir, enabled, StepName(dir)));
+                var shift = along * (side * StepGap / 2f);
+                DrawLine(mouth + outward * 2f + shift, mouth + outward * band + shift, ink, 3f);
+                InkDraw.Jewel(this, mouth + outward * band + shift, 6f, ink);
+            }
+
+            var foot = mouth - outward * StepArrowInset;
+            var tri = new[]
+            {
+                foot + along * (StepArrowBase / 2f),
+                foot + outward * StepArrowDepth,
+                foot - along * (StepArrowBase / 2f),
+            };
+            var pressed = enabled && PortraitFrame.IsPressed(hit);
+            DrawPolyline(new[] { tri[0], tri[1], tri[2], tri[0], tri[1] }, new Color(0f, 0f, 0f, 0.85f), 10f, true);
+            DrawColoredPolygon(tri, pressed ? InkStyle.Dim : ink);
+            _widgets.Add(new PortraitWidget(hit, PortraitAction.WorldStep, (int)dir, enabled, StepName(dir)));
         }
     }
+
+    /// <summary>缺口沿边长、三角底宽 / 高、三角底边压进地图的深度。</summary>
+    private const float StepGap = 180f;
+    private const float StepArrowBase = 112f;
+    private const float StepArrowDepth = 62f;
+    private const float StepArrowInset = 26f;
 
     private const float StepLong = 260f;
     private const float StepDeep = 130f;
