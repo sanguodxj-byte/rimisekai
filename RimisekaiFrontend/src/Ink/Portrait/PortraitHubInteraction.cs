@@ -244,23 +244,27 @@ public partial class PortraitHubScreen
         var visibleChoices = Math.Min(choices.Length, 3);
         var dialog = PortraitLayout.SceneDialog(visibleChoices);
 
-        if (actor != null)
-        {
-            var nameY = dialog.Position.Y - 70f;
-            InkDraw.Text(this, new Vector2(60f, nameY), actor.Name, 72, InkStyle.Line, "lm");
-            // 好感标签压在立绘上：垫半透明暗底 + 细描边，文字提到正文色，浅色衣服上也读得清。
-            var bond = InkText.Bond(actor.Condition.Bond);
-            var bondSize = InkDraw.Measure(bond, PortraitLayout.FontMeta);
-            var bondRect = new Rect2(60f + InkDraw.Measure(actor.Name, 72).X + 24f, nameY + 6f - bondSize.Y / 2f - 8f,
-                bondSize.X + 28f, bondSize.Y + 16f);
-            DrawRect(bondRect, new Color(InkStyle.Bg, 0.78f));
-            DrawRect(bondRect, new Color(InkStyle.Dim, 0.9f), false, 2f);
-            InkDraw.Text(this, new Vector2(bondRect.Position.X + 14f, nameY + 6f), bond, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        }
-        else
-            InkDraw.Text(this, new Vector2(60f, dialog.Position.Y - 70f), speaker, PortraitLayout.FontTitle, InkStyle.Line, "lm");
-
         PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, art != null ? 0.6f : 0.92f));
+        // 名牌收进对白框内左上：名字 + 好感签同一行，下方一道细分隔线，再接正文。
+        if (actor != null || !string.IsNullOrEmpty(speaker))
+        {
+            var nameY = PortraitLayout.SceneNameY(dialog);
+            var nameX = dialog.Position.X + 60f;
+            const int nameSize = 52;
+            var name = actor?.Name ?? speaker;
+            InkDraw.Text(this, new Vector2(nameX, nameY), name, nameSize, InkStyle.Line, "lm");
+            if (actor != null)
+            {
+                var bond = InkText.Bond(actor.Condition.Bond);
+                var bondSize = InkDraw.Measure(bond, PortraitLayout.FontMeta);
+                var bondRect = new Rect2(nameX + InkDraw.Measure(name, nameSize).X + 24f, nameY - bondSize.Y / 2f - 6f,
+                    bondSize.X + 28f, bondSize.Y + 12f);
+                DrawRect(bondRect, new Color(InkStyle.Dim, 0.9f), false, 2f);
+                InkDraw.Text(this, new Vector2(bondRect.Position.X + 14f, nameY), bond, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            }
+            var rule = PortraitLayout.SceneNameRule(dialog);
+            DrawLine(new Vector2(nameX, rule), new Vector2(dialog.End.X - 60f, rule), new Color(InkStyle.Dim, 0.7f), 2f);
+        }
         var textArea = PortraitLayout.SceneText(dialog);
         var shown = text[..Math.Min(text.Length, (int)_conversationReveal)];
         var lines = InkDraw.WrapLines(shown, textArea.Size.X - 20f, PortraitLayout.FontBody);

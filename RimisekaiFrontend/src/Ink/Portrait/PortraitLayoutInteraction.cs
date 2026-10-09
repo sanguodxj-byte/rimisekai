@@ -34,8 +34,14 @@ public static partial class PortraitLayout
     public static Rect2 SceneChoice(int visible, int i) =>
         new(60f, CanvasHeight - 40f - visible * SceneChoiceStep + i * SceneChoiceStep, CanvasWidth - 120f, 120f);
     public static Rect2 SceneDialog(int visibleChoices) =>
-        new(30f, CanvasHeight - 40f - visibleChoices * SceneChoiceStep - 24f - 470f, CanvasWidth - 60f, 470f);
-    public static Rect2 SceneText(Rect2 dialog) => new(dialog.Position.X + 60f, dialog.Position.Y + 50f, dialog.Size.X - 120f, 400f);
+        new(30f, CanvasHeight - 40f - visibleChoices * SceneChoiceStep - 24f - SceneDialogHeight, CanvasWidth - 60f, SceneDialogHeight);
+    /// <summary>对白框高：顶部名牌行 + 分隔线 + 5 行正文。</summary>
+    public const float SceneDialogHeight = 560f;
+    /// <summary>名牌行（框内左上）：说话人名字 + 好感签，竖向中线。</summary>
+    public static float SceneNameY(Rect2 dialog) => dialog.Position.Y + 62f;
+    /// <summary>名牌行下的分隔线 y。</summary>
+    public static float SceneNameRule(Rect2 dialog) => dialog.Position.Y + 108f;
+    public static Rect2 SceneText(Rect2 dialog) => new(dialog.Position.X + 60f, dialog.Position.Y + 130f, dialog.Size.X - 120f, 400f);
     public const float SceneLineHeight = 80f;
     public const int SceneVisibleLines = 5;
 }
