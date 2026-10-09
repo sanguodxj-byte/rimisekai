@@ -250,6 +250,26 @@ public sealed partial class HubSession
     }
 
     /// <summary>
+    /// 方向键走一格：从队伍脚下往 (<paramref name="dx"/>, <paramref name="dy"/>) 挪到相邻格。
+    /// 与 <see cref="TravelTo"/> 同账——按地貌推进时间、掷野外遭遇；走不过去（出界、雪峰湖海）不动、返回 false。
+    /// 只挪不进：踩到聚落或领地格上也不自动进场，由玩家在地点抽屉里点「进入」「回到领地」。
+    /// </summary>
+    public bool StepWorld(int dx, int dy)
+    {
+        if (Layer != MapLayer.World || MapCovered || PendingEncounter != null)
+            return false;
+        if (System.Math.Abs(dx) + System.Math.Abs(dy) != 1)
+            return false;
+        var x = Trek.X + dx;
+        var y = Trek.Y + dy;
+        if (!State.World.IsPassable(x, y))
+            return false;
+        // 一格一步不写日志（连按会刷屏）；撞上遭遇由遭遇自己报。
+        WalkWorld(new List<(int x, int y)> { (x, y) }, roll: true);
+        return true;
+    }
+
+    /// <summary>
     /// 沿路线逐格走：每进一格按地貌推进时间；<paramref name="roll"/> 时每格掷野外遭遇，
     /// 撞上就停在那一格，返回 true。
     /// </summary>

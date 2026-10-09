@@ -78,6 +78,7 @@ public enum PortraitAction
     WorldZoomOut,
     WorldHome,
     WorldGo,
+    WorldStep,
     CharacterSegment,
     SkillCard,
     TraitInfo,

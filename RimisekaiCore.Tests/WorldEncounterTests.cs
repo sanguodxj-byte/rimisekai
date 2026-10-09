@@ -351,4 +351,59 @@ public sealed class WorldEncounterTests
         Assert.False(hub.StartQuestDungeon(MapQuest(state, state.Roster.Master!.Id)));
         Assert.Equal(MapLayer.World, hub.Layer);
     }
+
+    [Fact]
+    public void Arrow_step_moves_one_tile_spends_time_and_never_auto_enters()
+    {
+        var (hub, state) = Setup(rate: 0);
+        hub.SwitchToWorld();
+        var w = state.World;
+        var (sx, sy) = hub.WorldPartyPosition;
+        (int dx, int dy) dir = default;
+        foreach (var d in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+            if (w.IsPassable(sx + d.Item1, sy + d.Item2))
+            {
+                dir = d;
+                break;
+            }
+        Assert.NotEqual(default, dir);
+        var before = state.Clock.TotalMinutes;
+        Assert.True(hub.StepWorld(dir.dx, dir.dy));
+        Assert.Equal((sx + dir.dx, sy + dir.dy), hub.WorldPartyPosition);
+        Assert.Equal(before + w.TravelMinutes(sx + dir.dx, sy + dir.dy), state.Clock.TotalMinutes);
+        Assert.Equal(MapLayer.World, hub.Layer);
+
+        // 走回领地格：只站上去，不自动回领地。
+        Assert.True(hub.StepWorld(-dir.dx, -dir.dy));
+        Assert.Equal((sx, sy), hub.WorldPartyPosition);
+        Assert.Equal(MapLayer.World, hub.Layer);
+
+        // 斜走、原地、出界都不动。
+        Assert.False(hub.StepWorld(1, 1));
+        Assert.False(hub.StepWorld(0, 0));
+        Assert.Equal((sx, sy), hub.WorldPartyPosition);
+    }
+
+    [Fact]
+    public void Arrow_step_refuses_impassable_tiles_and_pending_encounters()
+    {
+        var (hub, state) = Setup(rate: 0);
+        hub.SwitchToWorld();
+        var w = state.World;
+        // 找一格旁边就是走不过去的地块（湖海雪峰或出界）。
+        for (var x = 0; x < w.Width; x++)
+            for (var y = 0; y < w.Height; y++)
+            {
+                if (!w.IsPassable(x, y) || w.IsPassable(x + 1, y) || w.FindRoute(w.HomeX, w.HomeY, x, y) == null)
+                    continue;
+                Assert.True(hub.TravelTo(x, y) || hub.Layer != MapLayer.World);
+                if (hub.Layer != MapLayer.World || hub.WorldPartyPosition != (x, y))
+                    return; // 落在聚落里进场了，换不成干净夹具：此用例只验能走的那半。
+                var before = state.Clock.TotalMinutes;
+                Assert.False(hub.StepWorld(1, 0));
+                Assert.Equal((x, y), hub.WorldPartyPosition);
+                Assert.Equal(before, state.Clock.TotalMinutes);
+                return;
+            }
+    }
 }

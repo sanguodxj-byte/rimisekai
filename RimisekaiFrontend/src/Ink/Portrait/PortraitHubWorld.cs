@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Rimisekai.Housing;
 using Rimisekai.Hub;
 using Rimisekai.Ink;
 using Rimisekai.WorldMap;
@@ -185,7 +186,119 @@ public sealed partial class PortraitHubScreen
         WorldButton(zout, PortraitAction.WorldZoomOut, "缩小", _worldZoom > Math.Max(WorldZoomMin, grid.Size.X / map.Width) + 0.01f,
             (x, y) => PortraitGlyph.Minus(this, x, y, 22f, InkStyle.Line));
         WorldButton(home, PortraitAction.WorldHome, "领地", map.HasHome, (x, y) => PortraitGlyph.Castle(this, x, y, 26f, InkStyle.Line));
+        DrawWorldSteps();
 
+    }
+
+    /// <summary>
+    /// 方向键（2026-10-09 主人要求）：哥特框四条边的正中各开一道缺口，缺口里一枚实心三角朝外，
+    /// 点一下队伍朝那边走一格（不用去点小格子）。画法与领地过界箭头同一套：缺口、两道骨白门槛、三角；
+    /// 命中块也同过界箭头（沿边 172、外沿到最近邻件、往网格里伸凑足 118）。
+    /// 那边走不过去（出界、湖海雪峰）时三角换暗色、不登记可点。遭遇未了结时整组暗掉。
+    /// </summary>
+    private void DrawWorldSteps()
+    {
+        var hub = _vm.Hub;
+        var map = World;
+        var (px, py) = hub.WorldPartyPosition;
+        var mid = PortraitLayout.GridCols / 2;
+        var busy = hub.PendingEncounter != null;
+        foreach (var dir in new[] { Territory.RegionDir.North, Territory.RegionDir.East, Territory.RegionDir.South, Territory.RegionDir.West })
+        {
+            var (dx, dy) = StepDelta(dir);
+            var cell = dir switch
+            {
+                Territory.RegionDir.North => PortraitLayout.Cell(mid, 0),
+                Territory.RegionDir.South => PortraitLayout.Cell(mid, PortraitLayout.GridRows - 1),
+                Territory.RegionDir.East => PortraitLayout.Cell(PortraitLayout.GridCols - 1, PortraitLayout.GridRows / 2),
+                _ => PortraitLayout.Cell(0, PortraitLayout.GridRows / 2),
+            };
+            var enabled = !busy && map.IsPassable(px + dx, py + dy);
+            var gap = PortraitLayout.CrossGap(dir, cell);
+            var hit = PortraitLayout.CrossHit(dir, cell);
+            var outward = PortraitLayout.CrossOutward(dir);
+            var along = new Vector2(-outward.Y, outward.X);
+            var mouth = PortraitLayout.CrossMouth(dir, cell);
+            var ink = enabled ? InkStyle.Line : InkStyle.WoodDark;
+
+            if (enabled && PortraitFrame.IsPressed(hit))
+                PortraitFrame.PressMark(this, hit);
+            DrawRect(gap, InkStyle.Bg);
+            var near = mouth + outward * 2f;
+            var far = mouth + outward * (PortraitLayout.MapGrid.Position.X - PortraitLayout.MapFrame.Position.X + 3f);
+            foreach (var side in new[] { -1f, 1f })
+            {
+                var shift = along * (side * PortraitLayout.CrossGapSpan / 2f);
+                DrawLine(near + shift, far + shift, ink, 3f);
+            }
+            var foot = mouth + outward * PortraitLayout.CrossArrowInset;
+            DrawColoredPolygon(new[]
+            {
+                foot + along * (PortraitLayout.CrossArrowBase / 2f),
+                foot + outward * PortraitLayout.CrossArrowDepth,
+                foot - along * (PortraitLayout.CrossArrowBase / 2f),
+            }, ink);
+            _widgets.Add(new PortraitWidget(hit, PortraitAction.WorldStep, (int)dir, enabled, StepName(dir)));
+        }
+    }
+
+    private static (int Dx, int Dy) StepDelta(Territory.RegionDir dir) => dir switch
+    {
+        Territory.RegionDir.North => (0, -1),
+        Territory.RegionDir.East => (1, 0),
+        Territory.RegionDir.South => (0, 1),
+        _ => (-1, 0),
+    };
+
+    private static string StepName(Territory.RegionDir dir) => dir switch
+    {
+        Territory.RegionDir.North => "向北",
+        Territory.RegionDir.East => "向东",
+        Territory.RegionDir.South => "向南",
+        _ => "向西",
+    };
+
+    /// <summary>
+    /// 走一格：队伍挪过去，视口跟着队伍走（缩放不变）。踩上聚落或领地就把那格的地点抽屉拉出来，
+    /// 「进入」「回到领地」一按即到；撞上遭遇由遭遇弹窗接手。
+    /// </summary>
+    private void StepWorld(Territory.RegionDir dir)
+    {
+        var hub = _vm.Hub;
+        var (dx, dy) = StepDelta(dir);
+        if (!hub.StepWorld(dx, dy))
+        {
+            SetNotice("那边走不过去。");
+            return;
+        }
+        var (px, py) = hub.WorldPartyPosition;
+        _worldCenter = new Vector2(px + 0.5f, py + 0.5f);
+        _worldPick = new Vector2I(-1, -1);
+        ClampWorldView();
+        var map = World;
+        var atHome = map.HasHome && px == map.HomeX && py == map.HomeY;
+        if (hub.PendingEncounter == null && (atHome || map.PoiAt(px, py) != null))
+            PickWorldTile(new Vector2I(px, py));
+    }
+
+    /// <summary>键盘也能走：方向键 / WASD，只在世界地图开着、没有抽屉弹窗时生效。</summary>
+    public override void _UnhandledKeyInput(InputEvent e)
+    {
+        if (e is not InputEventKey { Pressed: true } key || !WorldMapActive || InputLocked)
+            return;
+        Territory.RegionDir? dir = key.Keycode switch
+        {
+            Key.Up or Key.W => Territory.RegionDir.North,
+            Key.Right or Key.D => Territory.RegionDir.East,
+            Key.Down or Key.S => Territory.RegionDir.South,
+            Key.Left or Key.A => Territory.RegionDir.West,
+            _ => null,
+        };
+        if (dir == null)
+            return;
+        StepWorld(dir.Value);
+        QueueRedraw();
+        GetViewport().SetInputAsHandled();
     }
 
     private void WorldButton(Rect2 r, PortraitAction action, string label, bool enabled, Action<float, float> glyph)
@@ -354,6 +467,9 @@ public sealed partial class PortraitHubScreen
                 return true;
             case PortraitAction.WorldHome:
                 CenterWorldOnHome();
+                return true;
+            case PortraitAction.WorldStep:
+                StepWorld((Territory.RegionDir)w.Index);
                 return true;
             case PortraitAction.WorldGo:
                 var map = World;
