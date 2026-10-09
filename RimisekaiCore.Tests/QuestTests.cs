@@ -9,6 +9,7 @@ namespace Rimisekai.Tests;
 /// <summary>
 /// 任务：难度星显示（半星镂空、超十星计数）、内容表装载、进度记录的可用性/冷却。
 /// </summary>
+[Collection("Quest definition state")]
 public sealed class QuestTests
 {
     private static QuestDef Def(double difficulty) => new()

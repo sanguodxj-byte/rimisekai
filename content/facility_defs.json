@@ -1,0 +1,232 @@
+{
+  "facilities": [
+    {
+      "id": 8,
+      "name": "工坊",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 9,
+      "name": "仓库",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 10,
+      "name": "酒馆",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 11,
+      "name": "旅馆",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 12,
+      "name": "教会",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 13,
+      "name": "马厩",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 14,
+      "name": "后院",
+      "terrain": "Grassland",
+      "defaultPool": true
+    },
+    {
+      "id": 15,
+      "name": "兵营",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 16,
+      "name": "训练场",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 17,
+      "name": "图书室",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 18,
+      "name": "炼金室",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 19,
+      "name": "哨所",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 20,
+      "name": "铁匠房",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 21,
+      "name": "磨坊",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 22,
+      "name": "菜园",
+      "terrain": "Grassland",
+      "defaultPool": true
+    },
+    {
+      "id": 23,
+      "name": "蓄水池",
+      "terrain": "Lake",
+      "defaultPool": true
+    },
+    {
+      "id": 1023,
+      "name": "水车",
+      "terrain": "River",
+      "defaultPool": false
+    },
+    {
+      "id": 1024,
+      "name": "军械库",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1025,
+      "name": "谒见厅",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1026,
+      "name": "关卡哨所",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1027,
+      "name": "军粮库",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1028,
+      "name": "卫戍哨所",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1029,
+      "name": "行旅驿馆",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1030,
+      "name": "皇家马厩",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1031,
+      "name": "大酒馆",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1032,
+      "name": "商会",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1033,
+      "name": "铁匠工坊",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1034,
+      "name": "大仓库",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1035,
+      "name": "炼金工坊",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1036,
+      "name": "水车磨坊",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1037,
+      "name": "大教会",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1038,
+      "name": "王家图书室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1039,
+      "name": "圣所水池",
+      "terrain": "Lake",
+      "defaultPool": false
+    },
+    {
+      "id": 1040,
+      "name": "破败祭坛",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1041,
+      "name": "崩塌回廊",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1042,
+      "name": "大殿堂",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1043,
+      "name": "经阁",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1044,
+      "name": "钟楼",
+      "terrain": "Plains",
+      "defaultPool": false
+    }
+  ]
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Rimisekai.Catalog;
+using Rimisekai.Character;
 using Rimisekai.Defs;
 using Rimisekai.Ink;
 using Rimisekai.Quest;
@@ -82,7 +83,7 @@ public partial class PortraitHubScreen
             .Select(group =>
             {
                 var variants = group.ToArray();
-                var summary = $"血量 {Range(variants.Select(enemy => enemy.MaxHp))} · 攻击 {Range(variants.Select(enemy => enemy.Attack))}";
+                var summary = $"武器 {Range(variants.Select(enemy => WeaponName(enemy.Weapon)))} · 属性池 {Range(variants.Select(enemy => enemy.CorePool))} · 经验池 {Range(variants.Select(enemy => enemy.ExpPool))}";
                 var skills = variants.SelectMany(enemy => enemy.Skills).Distinct(StringComparer.Ordinal)
                     .Select(id => DefDatabase<SkillDef>.Get(id)!.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray();
                 var loot = variants.SelectMany(enemy => enemy.Loot).GroupBy(drop => drop.ItemId)
@@ -103,12 +104,14 @@ public partial class PortraitHubScreen
                     RecordCount = variants.Length,
                     Attributes = new List<InkModalMonsterCodexData.Metric>
                     {
-                        new() { Label = "血量", Value = Range(variants.Select(enemy => enemy.MaxHp)) },
-                        new() { Label = "攻击", Value = Range(variants.Select(enemy => enemy.Attack)) },
-                        new() { Label = "防御", Value = Range(variants.Select(enemy => enemy.Defence)) },
-                        new() { Label = "闪避", Value = Range(variants.Select(enemy => enemy.Dodge)) },
-                        new() { Label = "法强", Value = Range(variants.Select(enemy => enemy.SpellPower)) },
-                        new() { Label = "速度", Value = Range(variants.Select(enemy => enemy.Speed)) },
+                        new() { Label = "武器", Value = Range(variants.Select(enemy => WeaponName(enemy.Weapon))) },
+                        new() { Label = "主天资", Value = Range(variants.Select(enemy => StatName(enemy.Primary))) },
+                        new() { Label = "副天资", Value = Range(variants.Select(enemy => StatName(enemy.Secondary))) },
+                        new() { Label = "属性池", Value = $"{Range(variants.Select(enemy => enemy.CorePool))} 点" },
+                        new() { Label = "经验池", Value = $"{Range(variants.Select(enemy => enemy.ExpPool))} 点" },
+                        new() { Label = "威胁层", Value = Range(variants.Select(enemy => enemy.ThreatTier)) },
+                        new() { Label = "站位列", Value = Range(variants.Select(enemy => enemy.Column)) },
+                        new() { Label = "占格", Value = Range(variants.Select(enemy => enemy.Size)) },
                         new() { Label = "护甲", Value = Range(variants.Select(enemy => enemy.Armour)) },
                         new() { Label = "行动点", Value = Range(variants.Select(enemy => enemy.ActionPoints)) },
                         new() { Label = "金币", Value = $"{Range(variants.Select(enemy => enemy.Money))} G" },
@@ -117,6 +120,38 @@ public partial class PortraitHubScreen
                     Drops = drops.ToList(),
                 });
             }).ToArray();
+    }
+
+    private static string WeaponName(WeaponType? weapon) => weapon switch
+    {
+        null or WeaponType.Unarmed => "徒手",
+        WeaponType.Sword => "剑",
+        WeaponType.Axe => "斧",
+        WeaponType.Spear => "枪",
+        WeaponType.Bow => "弓",
+        WeaponType.Staff => "法杖",
+        WeaponType.Dagger => "匕首",
+        WeaponType.Crossbow => "弩",
+        _ => weapon.Value.ToString(),
+    };
+
+    private static string StatName(CoreStat? stat) => stat switch
+    {
+        null => "随机",
+        CoreStat.Constitution => "体质",
+        CoreStat.Dexterity => "灵巧",
+        CoreStat.Intellect => "智力",
+        CoreStat.Charm => "魅力",
+        CoreStat.Perception => "感知",
+        CoreStat.Strength => "力量",
+        CoreStat.Speed => "速度",
+        _ => stat.Value.ToString(),
+    };
+
+    private static string Range(IEnumerable<string> values)
+    {
+        var sorted = values.Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        return sorted.Length == 1 ? sorted[0] : string.Join(" / ", sorted);
     }
 
     private static string Range(IEnumerable<int> values) => Range(values.Select(value => (long)value));

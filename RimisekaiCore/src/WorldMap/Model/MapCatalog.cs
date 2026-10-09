@@ -12,6 +12,23 @@ public sealed class RoomTemplateDef
     public string Category { get; set; } = "";
     public string Name { get; set; } = "";
     public string Terrain { get; set; } = "Plains";
+    public bool DefaultPool { get; set; } = true;
+}
+
+public sealed class FacilityTemplateDef
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Terrain { get; set; } = "Plains";
+    public bool DefaultPool { get; set; } = true;
+
+    public RoomTemplateDef AsRoomTemplate() => new()
+    {
+        Id = Id,
+        Category = "Facility",
+        Name = Name,
+        Terrain = Terrain,
+    };
 }
 
 public sealed class TerrainDefEntry
@@ -109,12 +126,6 @@ public sealed class QuestDungeonDef
     public string AbandonText { get; set; } = "";
 }
 
-public sealed class PoiSettlementDefEntry
-{
-    public string Type { get; set; } = "";
-    public List<string> Names { get; set; } = new();
-}
-
 public sealed class PoiScaleDef
 {
     public string Type { get; set; } = "";
@@ -123,17 +134,11 @@ public sealed class PoiScaleDef
     public List<string> Districts { get; set; } = new();
 }
 
-public sealed class DistrictItemDef
+public sealed class PoiDistrictDef
 {
-    public string Name { get; set; } = "";
-    public string Terrain { get; set; } = "Plains";
-}
-
-public sealed class DistrictTemplateDef
-{
-    public string Name { get; set; } = "";
-    public List<DistrictItemDef> PreferredNature { get; set; } = new();
-    public List<DistrictItemDef> Facilities { get; set; } = new();
+    public string Id { get; set; } = "";
+    public List<int> RoomIds { get; set; } = new();
+    public List<int> FacilityIds { get; set; } = new();
 }
 
 public sealed class SettlementGrammarDef
@@ -147,18 +152,30 @@ public sealed class SettlementGrammarDef
 public sealed class MapDefsTable
 {
     public List<TerrainDefEntry> Terrains { get; set; } = new();
-    public List<PoiSettlementDefEntry> PoiSettlements { get; set; } = new();
-    public List<RoomTemplateDef> PoiRoomTemplates { get; set; } = new();
-    public List<PoiScaleDef> PoiScales { get; set; } = new();
-    public List<DistrictTemplateDef> DistrictTemplates { get; set; } = new();
-    public SettlementGrammarDef? SettlementGrammar { get; set; }
     public WildsDef Wilds { get; set; } = new();
     public DungeonDef Dungeon { get; set; } = new();
 }
 
+public sealed class RoomDefsTable
+{
+    public List<RoomTemplateDef> Rooms { get; set; } = new();
+}
+
+public sealed class FacilityDefsTable
+{
+    public List<FacilityTemplateDef> Facilities { get; set; } = new();
+}
+
+public sealed class PoiDefsTable
+{
+    public List<PoiScaleDef> Pois { get; set; } = new();
+    public List<PoiDistrictDef> Districts { get; set; } = new();
+    public SettlementGrammarDef SettlementGrammar { get; set; } = new();
+}
+
 /// <summary>
-/// 地图与房间定义数据表目录：
-/// 驱动全部地貌、POI 与房间模板的生成，支持外部数据表扩充成百上千种房间。
+/// 组合地图、房间、设施与 POI 数据表。地图表只描述大地图地貌和遭遇；
+/// 地点生成所需的房间、设施和 POI 规则分别由独立表提供。
 /// </summary>
 public sealed class MapCatalog
 {
@@ -168,6 +185,9 @@ public sealed class MapCatalog
     private readonly Dictionary<WorldTerrainType, string> _terrainNames = new();
     private readonly Dictionary<WorldTerrainType, int> _terrainTravel = new();
     private readonly Dictionary<WorldTerrainType, int> _terrainEncounter = new();
+    private readonly Dictionary<int, RoomTemplateDef> _roomsById = new();
+    private readonly Dictionary<int, FacilityTemplateDef> _facilitiesById = new();
+    private readonly Dictionary<string, PoiDistrictDef> _districts = new();
 
     /// <summary>野外遭遇表。</summary>
     public WildsDef Wilds { get; private set; } = new();
@@ -175,20 +195,21 @@ public sealed class MapCatalog
     /// <summary>地城内容表：守卫、首领、宝库、神龛。</summary>
     public DungeonDef Dungeon { get; private set; } = new();
 
+    /// <summary>外部内容包读取器。参数为 content 下的文件名。</summary>
+    public static Func<string, string?>? CustomJsonProvider { get; set; }
+
     /// <summary>踏进一格这种地貌撞上野外遭遇的千分率；没配就是数据表缺项，直接抛。</summary>
     public int GetEncounterPermille(WorldTerrainType terrain) =>
         _terrainEncounter.TryGetValue(terrain, out var permille)
             ? permille
             : throw new KeyNotFoundException($"未在 map_defs.json 中配置地貌 {terrain} 的 encounter");
-    private readonly Dictionary<string, List<string>> _poiNames = new();
     private readonly Dictionary<WorldPoiType, PoiScaleDef> _poiScales = new();
-    private readonly Dictionary<string, DistrictTemplateDef> _districtTemplates = new();
 
     private readonly List<RoomTemplateDef> _entrances = new();
     private readonly List<RoomTemplateDef> _exits = new();
     private readonly List<RoomTemplateDef> _roads = new();
     private readonly List<RoomTemplateDef> _openSpaces = new();
-    private readonly List<RoomTemplateDef> _facilities = new();
+    private readonly List<RoomTemplateDef> _facilityRoomPool = new();
     private readonly List<RoomTemplateDef> _treasures = new();
     private readonly List<RoomTemplateDef> _shrines = new();
 
@@ -215,46 +236,41 @@ public sealed class MapCatalog
     public RoomTemplateDef GetShrineTemplate() => _shrines[0];
 
     /// <summary>
-    /// 根据 POI 类型获取推荐拼接规模 (blocksW, blocksH) 与各 5x5 块的分区主题列表。
-    /// 严格由 map_defs.json 驱动。
+    /// 根据 POI 类型获取拼接规模与各 5x5 块的分区 ID。
+    /// 规模和分区关联由 poi_defs.json 驱动。
     /// </summary>
     public (int blocksW, int blocksH, IReadOnlyList<string> districts) GetPoiScale(WorldPoiType type)
     {
         if (_poiScales.TryGetValue(type, out var scale) && scale.BlocksW > 0 && scale.BlocksH > 0)
             return (scale.BlocksW, scale.BlocksH, scale.Districts);
 
-        throw new KeyNotFoundException($"未在 map_defs.json 中配置 POI 类型 {type} 的规模");
+        throw new KeyNotFoundException($"未在 poi_defs.json 中配置 POI 类型 {type} 的规模");
     }
 
     /// <summary>
     /// 根据分区主题提供房间定义。优先保证自然开阔的草坪、庭院、道路，绝不硬塞一堆功能设施。
     /// </summary>
-    public RoomTemplateDef GetDistrictRoomTemplate(string districtName, int index)
+    public RoomTemplateDef GetDistrictRoomTemplate(string districtId, int index)
     {
-        if (_districtTemplates.TryGetValue(districtName, out var dist))
-        {
-            var pool = new List<RoomTemplateDef>();
-            // 自然地貌占多数比例（留足草坪、庭院、林地、道路）
-            foreach (var n in dist.PreferredNature)
-                pool.Add(new RoomTemplateDef { Name = n.Name, Category = "Nature", Terrain = n.Terrain });
-            // 少量专属功能设施
-            foreach (var f in dist.Facilities)
-                pool.Add(new RoomTemplateDef { Name = f.Name, Category = "Facility", Terrain = f.Terrain });
+        if (!_districts.TryGetValue(districtId, out var district))
+            return GetFacilityTemplate(index);
+        var count = district.RoomIds.Count + district.FacilityIds.Count;
+        if (count == 0)
+            return GetFacilityTemplate(index);
 
-            if (pool.Count > 0)
-                return pool[(int)((uint)index % (uint)pool.Count)];
-        }
-
-        return GetFacilityTemplate(index);
+        var selected = (int)((uint)index % (uint)count);
+        if (selected < district.RoomIds.Count)
+            return _roomsById[district.RoomIds[selected]];
+        return _facilitiesById[district.FacilityIds[selected - district.RoomIds.Count]].AsRoomTemplate();
     }
 
     public RoomTemplateDef GetFacilityTemplate(int index)
     {
         var pool = new List<RoomTemplateDef>();
         pool.AddRange(_openSpaces);
-        pool.AddRange(_facilities);
+        pool.AddRange(_facilityRoomPool);
         if (pool.Count == 0)
-            throw new InvalidOperationException("map_defs.json 中缺少 OpenSpace 或 Facility 房间模板");
+            throw new InvalidOperationException("room_defs.json 与 facility_defs.json 中没有可用的 POI 房间模板");
         return pool[(int)((uint)index % (uint)pool.Count)];
     }
 
@@ -338,129 +354,118 @@ public sealed class MapCatalog
     public string GetPoiSettlementName(WorldPoiType type, int index) =>
         GenerateSettlementName(type, 42, index);
 
-    public static MapCatalog LoadFromJson(string json)
+    public static MapCatalog LoadFromJson(string mapJson, string roomJson, string facilityJson, string poiJson)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            // 敌人行的武器、天资属性写成字串（"unarmed"、"speed"）。
             Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
         };
-        var table = JsonSerializer.Deserialize<MapDefsTable>(json, options) ?? new MapDefsTable();
-        return BuildFromTable(table);
+        var mapTable = JsonSerializer.Deserialize<MapDefsTable>(mapJson, options)!;
+        var roomTable = JsonSerializer.Deserialize<RoomDefsTable>(roomJson, options)!;
+        var facilityTable = JsonSerializer.Deserialize<FacilityDefsTable>(facilityJson, options)!;
+        var poiTable = JsonSerializer.Deserialize<PoiDefsTable>(poiJson, options)!;
+        return BuildFromTables(mapTable, roomTable, facilityTable, poiTable);
     }
-
-    public static MapCatalog LoadFromFile(string filePath)
-    {
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException($"地图定义文件不存在: {filePath}");
-        var json = File.ReadAllText(filePath);
-        return LoadFromJson(json);
-    }
-
-    /// <summary>外部提供的地图配置读取委托（如 Godot 虚拟文件系统 res://content/map_defs.json）。</summary>
-    public static Func<string?>? CustomJsonProvider { get; set; }
 
     public static MapCatalog CreateDefault()
     {
-        if (CustomJsonProvider != null)
-        {
-            var customJson = CustomJsonProvider();
-            if (!string.IsNullOrEmpty(customJson))
-                return LoadFromJson(customJson);
-        }
-
-        // 严格从数据表 content/map_defs.json 读取，禁止硬编码备用表
-        var paths = new[]
-        {
-            Path.Combine(Directory.GetCurrentDirectory(), "content", "map_defs.json"),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "content", "map_defs.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "content", "map_defs.json"),
-            "D:\\123\\rimisekai\\content\\map_defs.json",
-        };
-
-        foreach (var p in paths)
-        {
-            if (File.Exists(p))
-                return LoadFromFile(p);
-        }
-
-        throw new FileNotFoundException("未找到地图配置文件 content/map_defs.json，禁止硬编码回退。");
+        return LoadFromJson(
+            ReadJson("map_defs.json"),
+            ReadJson("room_defs.json"),
+            ReadJson("facility_defs.json"),
+            ReadJson("poi_defs.json"));
     }
 
-    private static MapCatalog BuildFromTable(MapDefsTable table)
+    private static string ReadJson(string fileName)
     {
-        var catalog = new MapCatalog { Wilds = table.Wilds, Dungeon = table.Dungeon };
+        if (CustomJsonProvider != null)
+            return CustomJsonProvider(fileName) ?? throw new FileNotFoundException($"内容包缺少 content/{fileName}");
 
-        foreach (var t in table.Terrains)
+        var paths = new[]
         {
-            if (Enum.TryParse<WorldTerrainType>(t.Type, ignoreCase: true, out var parsed))
+            Path.Combine(Directory.GetCurrentDirectory(), "content", fileName),
+            Path.Combine(Directory.GetCurrentDirectory(), "..", "content", fileName),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "content", fileName),
+        };
+
+        foreach (var path in paths)
+            if (File.Exists(path))
+                return File.ReadAllText(path);
+        throw new FileNotFoundException($"未找到数据表 content/{fileName}");
+    }
+
+    private static MapCatalog BuildFromTables(MapDefsTable map, RoomDefsTable rooms, FacilityDefsTable facilities, PoiDefsTable poi)
+    {
+        var catalog = new MapCatalog { Wilds = map.Wilds, Dungeon = map.Dungeon };
+
+        foreach (var terrain in map.Terrains)
+        {
+            if (Enum.TryParse<WorldTerrainType>(terrain.Type, ignoreCase: true, out var parsed))
             {
-                catalog._terrainNames[parsed] = t.Name;
-                catalog._terrainTravel[parsed] = t.Travel;
-                catalog._terrainEncounter[parsed] = t.Encounter;
+                catalog._terrainNames[parsed] = terrain.Name;
+                catalog._terrainTravel[parsed] = terrain.Travel;
+                catalog._terrainEncounter[parsed] = terrain.Encounter;
             }
         }
 
-        foreach (var p in table.PoiSettlements)
+        foreach (var room in rooms.Rooms)
         {
-            catalog._poiNames[p.Type] = new List<string>(p.Names);
-        }
-
-        foreach (var s in table.PoiScales)
-        {
-            if (Enum.TryParse<WorldPoiType>(s.Type, ignoreCase: true, out var poiType))
-                catalog._poiScales[poiType] = s;
-        }
-
-        foreach (var d in table.DistrictTemplates)
-        {
-            catalog._districtTemplates[d.Name] = d;
-        }
-
-        if (table.SettlementGrammar != null)
-        {
-            catalog.Grammar.SyllablePrefixes.AddRange(table.SettlementGrammar.SyllablePrefixes);
-            catalog.Grammar.SyllableSuffixes.AddRange(table.SettlementGrammar.SyllableSuffixes);
-            foreach (var pair in table.SettlementGrammar.FeaturePrefixes)
-                catalog.Grammar.FeaturePrefixes[pair.Key] = new List<string>(pair.Value);
-            foreach (var pair in table.SettlementGrammar.TypeSuffixes)
-                catalog.Grammar.TypeSuffixes[pair.Key] = new List<string>(pair.Value);
-        }
-
-        foreach (var r in table.PoiRoomTemplates)
-        {
-            switch (r.Category.ToLowerInvariant())
+            catalog._roomsById.Add(room.Id, room);
+            switch (room.Category.ToLowerInvariant())
             {
                 case "entrance":
-                    catalog._entrances.Add(r);
+                    catalog._entrances.Add(room);
                     break;
                 case "exit":
-                    catalog._exits.Add(r);
+                    catalog._exits.Add(room);
                     break;
                 case "thoroughfare":
                 case "road":
-                    catalog._roads.Add(r);
+                    catalog._roads.Add(room);
                     break;
                 case "openspace":
-                    catalog._openSpaces.Add(r);
+                    catalog._openSpaces.Add(room);
                     break;
-                case "facility":
                 case "nature":
-                    catalog._facilities.Add(r);
+                    if (room.DefaultPool)
+                        catalog._facilityRoomPool.Add(room);
                     break;
                 case "treasure":
-                    catalog._treasures.Add(r);
+                    catalog._treasures.Add(room);
                     break;
                 case "shrine":
-                    catalog._shrines.Add(r);
+                    catalog._shrines.Add(room);
                     break;
                 default:
-                    catalog._facilities.Add(r);
+                    if (room.DefaultPool)
+                        catalog._facilityRoomPool.Add(room);
                     break;
             }
         }
 
+        foreach (var facility in facilities.Facilities)
+        {
+            catalog._facilitiesById.Add(facility.Id, facility);
+            if (facility.DefaultPool)
+                catalog._facilityRoomPool.Add(facility.AsRoomTemplate());
+        }
+
+        foreach (var scale in poi.Pois)
+        {
+            if (Enum.TryParse<WorldPoiType>(scale.Type, ignoreCase: true, out var poiType))
+                catalog._poiScales.Add(poiType, scale);
+        }
+
+        foreach (var district in poi.Districts)
+            catalog._districts.Add(district.Id, district);
+
+        catalog.Grammar.SyllablePrefixes.AddRange(poi.SettlementGrammar.SyllablePrefixes);
+        catalog.Grammar.SyllableSuffixes.AddRange(poi.SettlementGrammar.SyllableSuffixes);
+        foreach (var pair in poi.SettlementGrammar.FeaturePrefixes)
+            catalog.Grammar.FeaturePrefixes.Add(pair.Key, new List<string>(pair.Value));
+        foreach (var pair in poi.SettlementGrammar.TypeSuffixes)
+            catalog.Grammar.TypeSuffixes.Add(pair.Key, new List<string>(pair.Value));
         return catalog;
     }
 }

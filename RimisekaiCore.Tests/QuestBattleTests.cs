@@ -11,6 +11,7 @@ namespace Rimisekai.Tests;
 /// <summary>
 /// 委托只有纯战斗（普通 / 首领 / 连战）与地城探索两类；连战每清一波有补给回合。
 /// </summary>
+[Collection("Quest definition state")]
 public sealed class QuestBattleTests
 {
     private static Combatant Ally(int id, int hp = 100) => new()

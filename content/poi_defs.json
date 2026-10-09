@@ -1,0 +1,336 @@
+{
+  "pois": [
+    {
+      "type": "Village",
+      "blocksW": 1,
+      "blocksH": 1,
+      "districts": [
+        "VillageDistrict"
+      ]
+    },
+    {
+      "type": "Ruin",
+      "blocksW": 1,
+      "blocksH": 1,
+      "districts": [
+        "RuinDistrict"
+      ]
+    },
+    {
+      "type": "Monastery",
+      "blocksW": 1,
+      "blocksH": 1,
+      "districts": [
+        "MonasteryDistrict"
+      ]
+    },
+    {
+      "type": "Town",
+      "blocksW": 2,
+      "blocksH": 1,
+      "districts": [
+        "TownGateDistrict",
+        "TownMarketDistrict"
+      ]
+    },
+    {
+      "type": "Castle",
+      "blocksW": 1,
+      "blocksH": 2,
+      "districts": [
+        "CastleGateDistrict",
+        "CastleKeepDistrict"
+      ]
+    },
+    {
+      "type": "Fortress",
+      "blocksW": 2,
+      "blocksH": 1,
+      "districts": [
+        "FortressGateDistrict",
+        "FortressBarracksDistrict"
+      ]
+    },
+    {
+      "type": "Capital",
+      "blocksW": 2,
+      "blocksH": 2,
+      "districts": [
+        "CapitalGateDistrict",
+        "CapitalMarketDistrict",
+        "CapitalCraftDistrict",
+        "CapitalSanctuaryDistrict"
+      ]
+    }
+  ],
+  "districts": [
+    {
+      "id": "VillageDistrict",
+      "roomIds": [
+        1025,
+        1026,
+        1027,
+        7
+      ],
+      "facilityIds": [
+        1023,
+        9,
+        13
+      ]
+    },
+    {
+      "id": "TownGateDistrict",
+      "roomIds": [
+        1025,
+        1028
+      ],
+      "facilityIds": [
+        19,
+        13,
+        11
+      ]
+    },
+    {
+      "id": "TownMarketDistrict",
+      "roomIds": [
+        1029,
+        1026
+      ],
+      "facilityIds": [
+        10,
+        8,
+        9,
+        12
+      ]
+    },
+    {
+      "id": "CastleGateDistrict",
+      "roomIds": [
+        1030,
+        1031
+      ],
+      "facilityIds": [
+        19,
+        15,
+        13
+      ]
+    },
+    {
+      "id": "CastleKeepDistrict",
+      "roomIds": [
+        1032,
+        1033
+      ],
+      "facilityIds": [
+        16,
+        1024,
+        1025
+      ]
+    },
+    {
+      "id": "FortressGateDistrict",
+      "roomIds": [
+        1034,
+        1035
+      ],
+      "facilityIds": [
+        1026,
+        15
+      ]
+    },
+    {
+      "id": "FortressBarracksDistrict",
+      "roomIds": [
+        1036,
+        1037
+      ],
+      "facilityIds": [
+        20,
+        1027
+      ]
+    },
+    {
+      "id": "CapitalGateDistrict",
+      "roomIds": [
+        1038,
+        1039
+      ],
+      "facilityIds": [
+        1028,
+        1029,
+        1030
+      ]
+    },
+    {
+      "id": "CapitalMarketDistrict",
+      "roomIds": [
+        1040,
+        1029
+      ],
+      "facilityIds": [
+        1031,
+        1032,
+        11
+      ]
+    },
+    {
+      "id": "CapitalCraftDistrict",
+      "roomIds": [
+        1041,
+        1042
+      ],
+      "facilityIds": [
+        1033,
+        1034,
+        1035,
+        1036
+      ]
+    },
+    {
+      "id": "CapitalSanctuaryDistrict",
+      "roomIds": [
+        1043,
+        1044
+      ],
+      "facilityIds": [
+        1037,
+        1038,
+        1039
+      ]
+    },
+    {
+      "id": "RuinDistrict",
+      "roomIds": [
+        1045,
+        1046,
+        1047,
+        1048
+      ],
+      "facilityIds": [
+        1040,
+        1041
+      ]
+    },
+    {
+      "id": "MonasteryDistrict",
+      "roomIds": [
+        1049,
+        1050,
+        1051
+      ],
+      "facilityIds": [
+        1042,
+        1043,
+        1044
+      ]
+    }
+  ],
+  "settlementGrammar": {
+    "syllablePrefixes": [
+      "艾尔",
+      "贝尔",
+      "鲁米",
+      "阿斯特",
+      "诺亚",
+      "法尔",
+      "卡尔",
+      "塞莉",
+      "达尔",
+      "罗恩",
+      "米拉",
+      "维尔",
+      "索尔",
+      "梅尔",
+      "雷恩",
+      "库尔"
+    ],
+    "syllableSuffixes": [
+      "克",
+      "斯",
+      "纳",
+      "亚",
+      "恩",
+      "特",
+      "玛",
+      "德",
+      "多",
+      "加",
+      "拉",
+      "达",
+      "多夫"
+    ],
+    "featurePrefixes": {
+      "River": [
+        "水车",
+        "碧水",
+        "浅滩",
+        "双桥",
+        "清溪",
+        "河湾"
+      ],
+      "Forest": [
+        "绿树",
+        "白桦",
+        "苍木",
+        "林叶",
+        "红枫",
+        "松林"
+      ],
+      "Mountain": [
+        "铁石",
+        "矿山",
+        "岩山",
+        "灰石",
+        "高崖",
+        "断岩"
+      ],
+      "Grassland": [
+        "开拓",
+        "麦浪",
+        "风车",
+        "丰收",
+        "绿茵",
+        "向阳"
+      ]
+    },
+    "typeSuffixes": {
+      "Capital": [
+        "王都",
+        "帝国王都"
+      ],
+      "Town": [
+        "镇",
+        "小镇",
+        "城",
+        "商业镇"
+      ],
+      "Village": [
+        "村",
+        "开拓村",
+        "集落"
+      ],
+      "Castle": [
+        "要塞",
+        "砦",
+        "关卡"
+      ],
+      "Fortress": [
+        "要塞",
+        "防线",
+        "哨砦"
+      ],
+      "Ruin": [
+        "古代遗迹",
+        "哥布林洞窟",
+        "旧魔导遗址",
+        "迷宫入口",
+        "地下废墟"
+      ],
+      "Monastery": [
+        "大教会",
+        "修道院",
+        "祈祷之泉"
+      ]
+    }
+  }
+}

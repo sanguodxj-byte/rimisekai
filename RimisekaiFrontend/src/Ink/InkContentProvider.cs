@@ -34,11 +34,12 @@ public static class InkContentProvider
             return results;
         };
 
-        WorldMap.MapCatalog.CustomJsonProvider = () =>
+        WorldMap.MapCatalog.CustomJsonProvider = fileName =>
         {
-            if (FileAccess.FileExists("res://content/map_defs.json"))
+            var path = $"res://content/{fileName}";
+            if (FileAccess.FileExists(path))
             {
-                using var fa = FileAccess.Open("res://content/map_defs.json", FileAccess.ModeFlags.Read);
+                using var fa = FileAccess.Open(path, FileAccess.ModeFlags.Read);
                 return fa?.GetAsText();
             }
             return null;
