@@ -371,6 +371,24 @@ public partial class InkCombatFxLayer : Control
             var angle = Mathf.Atan2(dir.Y, dir.X);
             cuts.Add(new CutLine(targetPos, angle, primaryGlow));
         }
+        else if (def.Id is "palm_strike" or "throw_down" or "hurricane" or "shatter")
+        {
+            // 钝击（掌 / 摔 / 拳 / 碎震）：不是刀，没有剑光——落点炸开一圈冲击波，大小随目标卡。
+            primaryGlow = def.Id == "shatter" ? new Color("#FFC400") : new Color("#FF6D00");
+            SpawnBurstShader(targetPos, new Color("#FFFDE7"), primaryGlow, 0.36f, targetCard.Size.X * 1.25f);
+            cuts.Add(new CutLine(targetPos, -0.25f, primaryGlow));
+        }
+        else if (def.Id is "quick_stab" or "shadow_rush")
+        {
+            // 突刺：顺着出手方向的一道短促刺光，刺尖止于目标卡中心略过一点。
+            primaryGlow = def.Id == "shadow_rush" ? new Color("#B388FF") : new Color("#E0F7FA");
+            var dir = (targetPos - actorPos).Normalized();
+            if (dir == Vector2.Zero)
+                dir = Vector2.Up;
+            var reach = targetCard.Size.X * 0.9f;
+            SpawnProjectileShader(targetPos - dir * reach, targetPos + dir * reach * 0.25f, primaryGlow, 0.26f);
+            cuts.Add(new CutLine(targetPos, Mathf.Atan2(dir.Y, dir.X), primaryGlow));
+        }
         else
         {
             // 纯近战斩击光弧 Shader：支持单道或多道剑光自适应切开
@@ -379,6 +397,8 @@ public partial class InkCombatFxLayer : Control
                 "slash" => (new Color("#FFFFFF"), new Color("#2979FF"), -0.58f, false), // 疾斩：纯净电光宝蓝（严禁发绿）
                 "armor_break" => (new Color("#FFFDE7"), new Color("#FF1744"), -0.68f, false),// 破甲：左侧熔岩猩红大剑光
                 "cross_slash" => (new Color("#FFFFFF"), new Color("#D500F9"), -0.58f, true), // 二连斩：雷电紫芒交叉大斩
+                "sweep" => (new Color("#FFFFFF"), new Color("#FFD740"), -0.12f, false),      // 横扫：近乎水平的一道金光
+                "heavy_cleave" => (new Color("#FFF8E1"), new Color("#FF3D00"), -1.15f, false),// 重劈：自上而下的陡劈
                 _ => (new Color("#FFFFF0"), new Color("#FF9100"), -0.55f, false),            // 普攻：炽阳烈焰大剑气
             };
             primaryGlow = glowColor;
@@ -418,10 +438,10 @@ public partial class InkCombatFxLayer : Control
         });
     }
 
-    public void SpawnBurstShader(Vector2 center, Color core, Color outer, float duration = 0.42f)
+    public void SpawnBurstShader(Vector2 center, Color core, Color outer, float duration = 0.42f, float side = 280f)
     {
         var quad = GetPooledQuad(_burstShader);
-        var size = new Vector2(280f, 280f);
+        var size = new Vector2(side, side);
         quad.Position = center - size / 2f;
         quad.Size = size;
 

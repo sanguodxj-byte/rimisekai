@@ -1165,6 +1165,8 @@ public partial class PortraitCapture : Node
             ("fx_cross", "cross_slash", false, CombatEventKind.Hit, 0.18f),
             ("fx_blunt", "palm_strike", false, CombatEventKind.Hit, 0.16f),
             ("fx_stab", "quick_stab", false, CombatEventKind.Hit, 0.14f),
+            ("fx_sweep", "sweep", false, CombatEventKind.Hit, 0.18f),
+            ("fx_cleave", "heavy_cleave", false, CombatEventKind.Hit, 0.18f),
             ("fx_arrow", "aimed_shot", false, CombatEventKind.Hit, 0.14f),
             ("fx_spell", "flame_burst", false, CombatEventKind.Hit, 0.16f),
             ("fx_enemy", BattleSkills.AttackId, true, CombatEventKind.Hit, 0.18f),
