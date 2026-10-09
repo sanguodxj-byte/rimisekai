@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cportraitplay01"]
+
+[ext_resource type="Script" path="res://RimisekaiFrontend/src/Ink/Portrait/PortraitPlaytest.cs" id="1_pplay"]
+
+[node name="PortraitPlaytest" type="Node"]
+script = ExtResource("1_pplay")

@@ -256,11 +256,8 @@ public partial class PortraitHubScreen
             if (actor != null)
             {
                 var bond = InkText.Bond(actor.Condition.Bond);
-                var bondSize = InkDraw.Measure(bond, PortraitLayout.FontMeta);
-                var bondRect = new Rect2(nameX + InkDraw.Measure(name, nameSize).X + 24f, nameY - bondSize.Y / 2f - 6f,
-                    bondSize.X + 28f, bondSize.Y + 12f);
-                DrawRect(bondRect, new Color(InkStyle.Dim, 0.9f), false, 2f);
-                InkDraw.Text(this, new Vector2(bondRect.Position.X + 14f, nameY), bond, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+                                InkDraw.Text(this, new Vector2(nameX + InkDraw.Measure(name, nameSize).X + 24f, nameY + 4f), bond,
+                    PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             }
             var rule = PortraitLayout.SceneNameRule(dialog);
             DrawLine(new Vector2(nameX, rule), new Vector2(dialog.End.X - 60f, rule), new Color(InkStyle.Dim, 0.7f), 2f);

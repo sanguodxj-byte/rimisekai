@@ -38,6 +38,15 @@ public sealed partial class PortraitHubScreen
 
     public float DebugWorldZoom => _worldZoom;
 
+    /// <summary>试玩用（只读）：格坐标在画面上的像素中心，供模拟手指去点；视口外返回 null。</summary>
+    public Vector2? DebugWorldScreenOf(int x, int y)
+    {
+        if (!WorldMapActive)
+            return null;
+        var p = WorldToScreen(new Vector2(x + 0.5f, y + 0.5f));
+        return PortraitLayout.MapGrid.Grow(-20f).HasPoint(p) ? p : null;
+    }
+
     /// <summary>核对用：点世界地图上的某格（等同手指轻点）。</summary>
     public void DebugWorldTap(int x, int y)
     {
