@@ -162,14 +162,23 @@ public sealed class EnemyDef
 {
     public string Id { get; init; } = "";
     public string Name { get; init; } = "";
-    public int MaxHp { get; init; }
-    public int Attack { get; init; }
-    public int Defence { get; init; }
-    public int Dodge { get; init; }
-    public int SpellPower { get; init; }
 
-    /// <summary>行动速度：决定跑条上的行动间隔。</summary>
-    public int Speed { get; init; } = 10;
+    // ---- 身板：怪物视为没有生活技能的角色，生命、出手、防御、闪避、法力、速度都由角色生成器掷出，不在内容里手填 ----
+
+    /// <summary>手持武器；不写即徒手（爪牙）。决定推导流派、威胁与能学到的流派能力。</summary>
+    public Rimisekai.Character.WeaponType? Weapon { get; init; }
+
+    /// <summary>天资主属性（注 5 点）；不写随机。</summary>
+    public Rimisekai.Character.CoreStat? Primary { get; init; }
+
+    /// <summary>天资副属性（注 3 点）；不写随机。</summary>
+    public Rimisekai.Character.CoreStat? Secondary { get; init; }
+
+    /// <summary>属性池：底线 6 之上再分多少点。角色是 21；杂兵往下、首领往上。</summary>
+    public int CorePool { get; init; } = Rimisekai.Character.CharacterGenerator.CorePool;
+
+    /// <summary>经验池：一半给手持武器与流派、一半随机散发（落到生活轨的作废）。角色是 3000。</summary>
+    public int ExpPool { get; init; } = Rimisekai.Character.CharacterGenerator.ExpPool;
 
     /// <summary>威胁等级 1-5：越高越靠前（同列更高层级），敌方近战只打最前的玩家。</summary>
     public int ThreatTier { get; init; } = 1;

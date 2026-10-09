@@ -97,37 +97,84 @@ public sealed class CharacterGenerator
         ApplyLife(state, identity, seed.Concat(rolled.Select(t => t.Name)).ToList());
     }
 
-    /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、3000 经验、满状态起步。</summary>
-    private void ApplyLife(CharacterState state, IdentityDef identity, IReadOnlyList<string> traitNames)
+    /// <summary>角色的属性池：底线 6 之上再分 21 点。</summary>
+    public const int CorePool = 21;
+
+    /// <summary>角色的经验池：一半按逻辑、一半随机散发。</summary>
+    public const int ExpPool = 3000;
+
+    /// <summary>
+    /// 核心属性：全属性底线 6，再把 <paramref name="pool"/> 点按天资倾向分下去——
+    /// 主属性 5 点、副属性 3 点（池不够就先紧着主、副），余下逐点随机散发。
+    /// 主副属性不给就随机掷（每个个体有自己的天赋倾向）。速度保底在 [10, 16]。
+    /// </summary>
+    private void RollCore(CharacterState state, int pool, CoreStat? primary = null, CoreStat? secondary = null)
     {
-        // ---------- 1. 强制分配初始核心属性点（与身份完全无关） ----------
-        // 全属性（体质、灵巧、智力、魅力、感知、力量、速度）初始底线为 6，
-        // 强制分配 21 点属性池。角色根据自身掷出的天资倾向进行分配，不受身份限制。
         const int BaseAttribute = 6;
         for (var i = 0; i < state.Core.Length; i++)
             state.Core[i] = BaseAttribute;
 
-        // 随机掷出该角色的天资主副属性（每个个体拥有自己独特的天赋倾向）
-        var primaryStat = (CoreStat)_rng.Next(state.Core.Length);
-        var secondaryStat = (CoreStat)_rng.Next(state.Core.Length);
+        var primaryStat = primary ?? (CoreStat)_rng.Next(state.Core.Length);
+        var secondaryStat = secondary ?? (CoreStat)_rng.Next(state.Core.Length);
         while (secondaryStat == primaryStat)
             secondaryStat = (CoreStat)_rng.Next(state.Core.Length);
 
-        // 主属性注入 5 点，副属性注入 3 点
-        state.Core[(int)primaryStat] += 5;
-        state.Core[(int)secondaryStat] += 3;
-
-        // 剩余 13 点离散随机分配至全属性，保持数值丰满与个体差异
-        var remainingPool = 13;
-        while (remainingPool > 0)
-        {
-            var statIdx = _rng.Next(state.Core.Length);
-            state.Core[statIdx]++;
-            remainingPool--;
-        }
+        var left = Math.Max(0, pool);
+        var toPrimary = Math.Min(5, left);
+        state.Core[(int)primaryStat] += toPrimary;
+        left -= toPrimary;
+        var toSecondary = Math.Min(3, left);
+        state.Core[(int)secondaryStat] += toSecondary;
+        left -= toSecondary;
+        while (left-- > 0)
+            state.Core[_rng.Next(state.Core.Length)]++;
 
         // 速度保底在 [10, 16] 竞技作战合理区间，杜绝残疾速度
         state.Core[(int)CoreStat.Speed] = Math.Clamp(state.Core[(int)CoreStat.Speed], 10, 16);
+    }
+
+    /// <summary>
+    /// 掷一个怪物：视为**没有生活技能的角色**，与角色走同一套规则——
+    /// 底线 6 加属性池（默认与角色同为 21 点，主副属性可由内容指定），
+    /// 经验池（默认与角色同为 3000）一半按逻辑给手持武器与推导流派、一半按 100 一份在全部经验轨上散发，
+    /// 只是落到生活轨上的那几份作废（怪物没有生活技能）。不给武器即徒手（爪牙）。
+    /// 不入名册、不掷身份与特质、不发好感；等级与角色开局一样从 1 起，满状态起步。
+    /// </summary>
+    public CharacterState RollMonster(int id, string name, WeaponType? weapon = null,
+        CoreStat? primary = null, CoreStat? secondary = null, int corePool = CorePool, int expPool = ExpPool)
+    {
+        var state = new CharacterState(id) { Name = name };
+        RollCore(state, corePool, primary, secondary);
+        var main = weapon ?? WeaponType.Unarmed;
+        state.Equip(main);
+        var style = state.EquippedStyle ?? StyleType.Unarmed;
+
+        const int ExpChunk = 100;
+        var logic = Math.Max(0, expPool) / 2;
+        state.Weapons[(int)main].AddExp(logic / 2);
+        state.Styles[(int)style].AddExp(logic - logic / 2);
+        var tracks = AttributeMap.LifeCount + state.Weapons.Length + state.Styles.Length;
+        var scatterLeft = Math.Max(0, expPool) - logic;
+        while (scatterLeft > 0)
+        {
+            var add = Math.Min(ExpChunk, scatterLeft);
+            var track = _rng.Next(tracks);
+            if (track >= AttributeMap.LifeCount + state.Weapons.Length)
+                state.Styles[track - AttributeMap.LifeCount - state.Weapons.Length].AddExp(add);
+            else if (track >= AttributeMap.LifeCount)
+                state.Weapons[track - AttributeMap.LifeCount].AddExp(add);
+            // 落在生活轨上的作废：怪物没有生活技能。
+            scatterLeft -= add;
+        }
+        state.Condition.RecoverFull();
+        return state;
+    }
+
+    /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、3000 经验、满状态起步。</summary>
+    private void ApplyLife(CharacterState state, IdentityDef identity, IReadOnlyList<string> traitNames)
+    {
+        // ---------- 1. 强制分配初始核心属性点（与身份完全无关） ----------
+        RollCore(state, CorePool);
 
         // ---------- 2. 初始装备按身份授予（战斗类身份自带武器，非战斗类为空） ----------
         state.Equip(identity.MainWeapon, identity.OffWeapon, identity.OffShield);
@@ -139,7 +186,6 @@ public sealed class CharacterGenerator
         // 若身份自带武器（战斗类），余量分给手持主武器与实际推导流派；
         // 若身份无武器（非战斗类），余量注入生活技能池（模拟过往生活阅历）。
         // 随机的一半：100 一点，在所有经验轨（生活 + 武器 + 流派）上散发。
-        const int ExpPool = 3000;
         const int ExpPerTrait = 150;
         const int ExpChunk = 100;
         var skillOfTrait = new Dictionary<string, LifeSkill>

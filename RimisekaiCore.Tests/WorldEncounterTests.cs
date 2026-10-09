@@ -296,7 +296,7 @@ public sealed class WorldEncounterTests
             Difficulty = 3.5,
             CooldownDays = 1,
             MaxPartySize = 4,
-            Foes = { new Catalog.EnemyDef { Id = "boss", Name = "矿道之主", MaxHp = 30, Attack = 2, Speed = 5, ThreatTier = 1, Column = 1 } },
+            Foes = { new Catalog.EnemyDef { Id = "boss", Name = "矿道之主", ThreatTier = 1, Column = 1 } },
         };
         return state.Quests.Start(def, party)!;
     }

@@ -311,15 +311,15 @@ public partial class PortraitCapture : Node
             var probe = new Rimisekai.Combat.Battle();
             probe.Add(Rimisekai.Combat.Deploy.FromEnemy(new Rimisekai.Catalog.EnemyDef
             {
-                Id = "front_a", Name = "前甲", MaxHp = 9, ThreatTier = 4, Column = 1,
+                Id = "front_a", Name = "前甲", ThreatTier = 4, Column = 1,
             }, 900, Rimisekai.Combat.CombatSide.Defender));
             probe.Add(Rimisekai.Combat.Deploy.FromEnemy(new Rimisekai.Catalog.EnemyDef
             {
-                Id = "rear_a", Name = "后甲", MaxHp = 9, ThreatTier = 1, Column = 1,
+                Id = "rear_a", Name = "后甲", ThreatTier = 1, Column = 1,
             }, 901, Rimisekai.Combat.CombatSide.Defender));
             probe.Add(Rimisekai.Combat.Deploy.FromEnemy(new Rimisekai.Catalog.EnemyDef
             {
-                Id = "rear_b", Name = "后乙", MaxHp = 9, ThreatTier = 2, Column = 2,
+                Id = "rear_b", Name = "后乙", ThreatTier = 2, Column = 2,
             }, 902, Rimisekai.Combat.CombatSide.Defender));
             probe.StartBattle();
             var tiers = probe.Members.Select(m => m.ThreatTier).OrderByDescending(t => t).ToList();
@@ -925,28 +925,31 @@ public partial class PortraitCapture : Node
             for (var i = 1; i <= 4; i++)
                 foes.Add(new Rimisekai.Catalog.EnemyDef
                 {
-                    Id = $"probe_{i}", Name = $"敌 {i}", MaxHp = 20, Attack = 3,
-                    ThreatTier = i, Column = i, Speed = 1,
+                    Id = $"probe_{i}", Name = $"敌 {i}",
+                    ThreatTier = i, Column = i,
                     Portrait = new[] { "monster_acid_slime", "monster_banshee", "monster_basilisk", "monster_bog_leech" }[i - 1],
                 });
         else
         {
             foes.Add(new Rimisekai.Catalog.EnemyDef
             {
-                Id = "probe_boss", Name = "首领", MaxHp = size * 120, Attack = 3,
-                ThreatTier = 4, Column = size == 4 ? 1 : 2, Size = size, Speed = 1,
+                Id = "probe_boss", Name = "首领", CorePool = 40, ExpPool = 6000,
+                ThreatTier = 4, Column = size == 4 ? 1 : 2, Size = size,
                 ActionPoints = size, Portrait = size switch { 2 => "monster_boss_magma_behemoth", 3 => "monster_boss_bone_colossus", _ => "monster_boss_flesh_titan" },
             });
             if (size == 2)
                 foreach (var column in new[] { 1, 2, 3, 4 })
                     foes.Add(new Rimisekai.Catalog.EnemyDef
                     {
-                        Id = $"probe_flank{column}", Name = $"敌 {column}", MaxHp = 30,
-                        Attack = 2, ThreatTier = column is 2 or 3 ? 1 : 2, Column = column, Speed = 1,
+                        Id = $"probe_flank{column}", Name = $"敌 {column}",
+                        ThreatTier = column is 2 or 3 ? 1 : 2, Column = column,
                         Portrait = column is 1 or 4 ? "monster_bone_hound" : "monster_blood_beast",
                     });
         }
         _battleProbe = Encounters.Start(hub.State, foes)!;
+        // 夹具：敌人身板由生成器掷（速度 10 起），把敌方出手时点推远，截图前不让敌人先动手。
+        foreach (var foe in _battleProbe.Battle.Members.Where(m => m.Side != _battleProbe.Battle.ControlledSide))
+            foe.NextActAt += 1_000_000;
         var tiers = new[] { 0, 2, 3, 5 };
         var allies = _battleProbe.Battle.Members.Where(m => m.Side == _battleProbe.Battle.ControlledSide).ToArray();
         for (var i = 0; i < allies.Length; i++)

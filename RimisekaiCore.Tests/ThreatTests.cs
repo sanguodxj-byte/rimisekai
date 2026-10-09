@@ -20,19 +20,37 @@ public class ThreatTests
         Power = 100, Range = SkillRange.Ranged,
     };
 
-    private static EnemyDef Foe(int id, string name, int tier, int column, int hp = 50, int size = 1) => new()
+    private sealed record FoeSpec(EnemyDef Def, int Hp);
+
+    private static FoeSpec Foe(int id, string name, int tier, int column, int hp = 50, int size = 1) => new(new EnemyDef
     {
-        Id = $"foe{id}", Name = name, MaxHp = hp, Attack = 5,
+        Id = $"foe{id}", Name = name,
         ThreatTier = tier, Column = column, Size = size,
-    };
+    }, hp);
+
+    /// <summary>
+    /// 站位测试只看打谁、不看身板：按目录行的站位成军，身板钉死（生命取 hp、出手 5、无防御闪避），
+    /// 免得生成器掷出的数值左右「打不打得死」。
+    /// </summary>
+    private static Combatant Unit(FoeSpec foe, int id, CombatSide side)
+    {
+        var rolled = Deploy.FromEnemy(foe.Def, id, side);
+        var c = new Combatant
+        {
+            Id = id, Name = rolled.Name, Side = side, Hp = foe.Hp, MaxHp = foe.Hp,
+            Attack = 5, StrikePower = 5, Speed = 10,
+            ThreatTier = rolled.ThreatTier, Column = rolled.Column, Size = rolled.Size,
+        };
+        return c;
+    }
 
     [Fact]
     public void Player_melee_strikes_whatever_target_is_named()
     {
         var battle = new Battle(d100: () => 0);
         battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, StrikePower = 10 });
-        battle.Add(Deploy.FromEnemy(Foe(2, "后排", 2, 2), 2, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(3, "前排", 5, 1), 3, CombatSide.Defender));
+        battle.Add(Unit(Foe(2, "后排", 2, 2), 2, CombatSide.Defender));
+        battle.Add(Unit(Foe(3, "前排", 5, 1), 3, CombatSide.Defender));
 
         // 锁前排是 UI 遮挡（每列最前才可点）的事，核心只认点到的目标
         Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 2 }));
@@ -49,9 +67,9 @@ public class ThreatTests
         var mage = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, SpellPower = 10 };
         mage.Skills.Add("shot");
         battle.Add(mage);
-        battle.Add(Deploy.FromEnemy(Foe(2, "甲", 2, 1), 2, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(3, "乙", 5, 1), 3, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(4, "丙", 3, 2), 4, CombatSide.Defender));
+        battle.Add(Unit(Foe(2, "甲", 2, 1), 2, CombatSide.Defender));
+        battle.Add(Unit(Foe(3, "乙", 5, 1), 3, CombatSide.Defender));
+        battle.Add(Unit(Foe(4, "丙", 3, 2), 4, CombatSide.Defender));
 
         // 点第一列打该列最前面的（威胁最高者）；第二列只有丙
         Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = "shot", TargetColumn = 1 }));
@@ -66,8 +84,8 @@ public class ThreatTests
     {
         var battle = new Battle(d100: () => 0);
         battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, StrikePower = 30 });
-        battle.Add(Deploy.FromEnemy(Foe(2, "后排", 2, 2), 2, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(3, "前排", 5, 1, hp: 30), 3, CombatSide.Defender));
+        battle.Add(Unit(Foe(2, "后排", 2, 2), 2, CombatSide.Defender));
+        battle.Add(Unit(Foe(3, "前排", 5, 1, hp: 30), 3, CombatSide.Defender));
 
         Assert.True(battle.Act(new CombatAction { ActorId = 1, TargetId = 3 }));
         Assert.False(battle.Find(3)!.Alive);
@@ -93,9 +111,9 @@ public class ThreatTests
         mage.Skills.Add("column");
         mage.Skills.Add("all");
         battle.Add(mage);
-        battle.Add(Deploy.FromEnemy(Foe(2, "一列上", 5, 1), 2, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(3, "一列下", 2, 1), 3, CombatSide.Defender));
-        battle.Add(Deploy.FromEnemy(Foe(4, "二列", 3, 2), 4, CombatSide.Defender));
+        battle.Add(Unit(Foe(2, "一列上", 5, 1), 2, CombatSide.Defender));
+        battle.Add(Unit(Foe(3, "一列下", 2, 1), 3, CombatSide.Defender));
+        battle.Add(Unit(Foe(4, "二列", 3, 2), 4, CombatSide.Defender));
 
         // 打击格：一列两只全中，二列不碰
         Assert.True(battle.Act(new CombatAction { ActorId = 1, SkillId = "column", TargetColumn = 1 }));
@@ -145,7 +163,7 @@ public class ThreatTests
             var mage = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 40, MaxHp = 40, SpellPower = 10 };
             mage.Skills.Add("shot");
             battle.Add(mage);
-            battle.Add(Deploy.FromEnemy(def, 9, CombatSide.Defender));
+            battle.Add(Unit(def, 9, CombatSide.Defender));
 
             Assert.True(battle.Act(new CombatAction
             {

@@ -23,6 +23,10 @@ public partial class PortraitCombatView : Control
     private Combatant? _actor;
     private string _armed = BattleSkills.AttackId;
     private float _tick;
+
+    /// <summary>跑条上各单位此刻画在哪（纵坐标）：逐帧向目标位滑过去，不随时间轴跳步瞬移。</summary>
+    private readonly Dictionary<int, float> _trackY = new();
+    private float _frameDelta;
     private bool _settled;
     private int _skillPage;
     private int _selectedTarget = -1;
@@ -63,6 +67,7 @@ public partial class PortraitCombatView : Control
         _modal = modal;
         _settled = false;
         _tick = 0f;
+        _trackY.Clear();
         _actor = null;
         _armed = BattleSkills.AttackId;
         _selectedTarget = -1;
@@ -101,6 +106,8 @@ public partial class PortraitCombatView : Control
         if (battle == null)
             return;
         InkCombatRenderer.IndicatorTime += (float)delta;
+        // 缓动步长封顶：掉帧时一帧也只走一小段，不会一帧跳到位。
+        _frameDelta = Mathf.Min((float)delta, 0.05f);
         // 攻击光效、受击震颤、卡片斩裂与伤害飘字（横版迁入）。
         InkCombatFx.Update((float)delta);
         ConsumeBattleEvents();
@@ -229,6 +236,9 @@ public partial class PortraitCombatView : Control
     /// 速度跑条（沿用历史版）：嵌在战场容器内、首领条下方的左上竖轨，顶端一道出手线；中线分左右两列——左列我方、右列敌方，
     /// 各按「离下次出手还剩多久」自上而下排，越靠上越先出手；同列互不相叠。等指令的我方行动者骨白托底。
     /// </summary>
+    /// <summary>跑条头像缓动速率（每秒）：约 0.25 秒走完九成路程，赶在下一步推进（0.35 秒）之前到位。</summary>
+    private const float TrackGlide = 9f;
+
     private void DrawTurnOrder(Battle battle)
     {
         var track = PortraitLayout.CombatTrack;
@@ -272,7 +282,13 @@ public partial class PortraitCombatView : Control
             for (var i = 0; i < members.Count; i++)
             {
                 var m = members[i];
-                var c = new Vector2(columnX, Mathf.Max(ys[i], top));
+                // 时间轴是一步一步跳的（一步可能跨过好几个行动间隔），头像不能跟着瞬移：逐帧按指数缓动滑向目标位。
+                var target = Mathf.Max(ys[i], top);
+                var y = _trackY.TryGetValue(m.Id, out var shown)
+                    ? shown + (target - shown) * (1f - MathF.Exp(-TrackGlide * _frameDelta))
+                    : target;
+                _trackY[m.Id] = y;
+                var c = new Vector2(columnX, y);
                 var tex = TrackImageProvider?.Invoke(m) ?? UnitImageProvider?.Invoke(m);
                 if (ally)
                 {

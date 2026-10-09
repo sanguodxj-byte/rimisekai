@@ -2601,7 +2601,8 @@ public sealed class ArchitectureTests
         Assert.Equal(normalCombat.Attack / 2, tiredDeploy.Attack);
         Assert.Equal(normalCombat.Defence / 2, tiredDeploy.Defence);
         Assert.Equal(normalCombat.Dodge / 2, tiredDeploy.Dodge);
-        Assert.Equal(normalCombat.SpellPower / 2, tiredDeploy.SpellPower);
+        // 法力进战斗另按参战折算（四成），疲劳再减半。
+        Assert.Equal(Math.Max(1, (int)Math.Round(normalCombat.SpellPower * 0.5 * BattleRules.PowerPercent / 100.0)), tiredDeploy.SpellPower);
 
         // 5. 恢复气力回升到 30% 以上后疲劳解除，战斗全属性恢复正常
         c.Condition.Recover(0, 500);

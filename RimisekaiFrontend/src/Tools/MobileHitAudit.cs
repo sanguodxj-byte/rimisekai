@@ -127,12 +127,12 @@ public partial class MobileHitAudit : Node
                 list.Add(new Rimisekai.Catalog.EnemyDef
                 {
                     Id = $"foe_c{col}_t{tier}", Name = $"敌{col}{tier}",
-                    MaxHp = 14, Attack = 3, ThreatTier = tier, Column = col, Speed = 8 + tier,
+                    ThreatTier = tier, Column = col,
                 });
         list.Add(new Rimisekai.Catalog.EnemyDef
         {
-            Id = "boss", Name = "首领", MaxHp = 80, Attack = 8, Defence = 4,
-            ThreatTier = 4, Column = 2, Size = 2, Speed = 8,
+            Id = "boss", Name = "首领", CorePool = 40, ExpPool = 6000,
+            ThreatTier = 4, Column = 2, Size = 2,
         });
         return list;
     }

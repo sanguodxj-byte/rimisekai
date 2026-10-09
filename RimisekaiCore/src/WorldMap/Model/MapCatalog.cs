@@ -340,7 +340,12 @@ public sealed class MapCatalog
 
     public static MapCatalog LoadFromJson(string json)
     {
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            // 敌人行的武器、天资属性写成字串（"unarmed"、"speed"）。
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        };
         var table = JsonSerializer.Deserialize<MapDefsTable>(json, options) ?? new MapDefsTable();
         return BuildFromTable(table);
     }

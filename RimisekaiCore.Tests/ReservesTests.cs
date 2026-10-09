@@ -99,7 +99,7 @@ public class ReservesTests
         var m4 = state.Roster.Add("队员4"); m4.Equip(WeaponType.Bow); // 远程 => ThreatTier 1
         var m5 = state.Roster.Add("队员5"); m5.Equip(WeaponType.Crossbow); // 远程 => ThreatTier 1
 
-        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林", MaxHp = 10, Attack = 2 } };
+        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林" } };
 
         var session = Encounters.Start(state, goblins);
         Assert.NotNull(session);
@@ -130,7 +130,7 @@ public class ReservesTests
         var leftHome = state.Roster.Add("留守"); leftHome.Equip(WeaponType.Sword);
         var alsoHome = state.Roster.Add("也留守"); alsoHome.Equip(WeaponType.Axe);
 
-        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林", MaxHp = 10, Attack = 2 } };
+        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林" } };
 
         // 任务编成：只带「随行」一人（玩家本人由调用方一并列入）。
         var session = Encounters.Start(state, goblins, null, "迷宫地下城",
@@ -157,7 +157,7 @@ public class ReservesTests
         master.Equip(WeaponType.Sword, null, true);
         var companion = state.Roster.Add("随行"); companion.Equip(WeaponType.Spear, null, true);
 
-        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林", MaxHp = 10, Attack = 2 } };
+        var goblins = new List<EnemyDef> { new() { Id = "g1", Name = "哥布林" } };
 
         // 单人出征：名单只有玩家本人，随从不上阵。
         var session = Encounters.Start(state, goblins, null, "迷宫地下城", new[] { master.Id });

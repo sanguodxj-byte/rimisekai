@@ -208,6 +208,12 @@ public static class BattleRules
     public const int MinDamage = 1;
     /// <summary>回合上限，打满判 Draw。</summary>
     public const int RoundLimit = 30;
+    /// <summary>
+    /// 参战折算（百分比）：角色与怪物上场时，出手总量与法力按此折算进战斗。
+    /// 角色面板的出手是乘算长出来的（一两百），生命却只随体质线性长（一百上下），不折算就是人人一刀一个；
+    /// 折到四成，同级之间三到五下见分晓。只折战斗快照，不动角色面板与体力（体力即生命，日常照旧）。
+    /// </summary>
+    public const int PowerPercent = 40;
     /// <summary>连战补给回合：在场我方各回复最大生命的百分比。</summary>
     public const int SupplyHealPercent = 30;
     /// <summary>防御架势：防御提升幅度（基础值百分比）。</summary>

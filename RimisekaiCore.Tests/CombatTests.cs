@@ -37,8 +37,8 @@ public sealed class CombatTests
         Assert.Equal(c.Combat.MaxHp, unit.MaxHp);
         Assert.Equal(c.Combat.MaxHp, unit.Hp);
         // 武器经验顺带升了 3 级，六项各 +3：面板 20 + 5×熟练1 + 2×灵巧11 + 力量15 = 62，
-        // 乘数 1 + 0.55 + 0.2 + 1 = 2.75 → 170
-        Assert.Equal(170, unit.StrikePower);
+        // 乘数 1 + 0.55 + 0.2 + 1 = 2.75 → 170；进战斗按参战折算四成 → 68
+        Assert.Equal(170 * BattleRules.PowerPercent / 100, unit.StrikePower);
         Assert.Equal(WeaponType.Sword, unit.Weapon);
         Assert.Equal(StyleType.OneHand, unit.Style);
         Assert.Equal(c.EquippedHit(BattleRules.BaseHit), unit.BaseHit);
@@ -181,25 +181,36 @@ public sealed class CombatTests
     [Fact]
     public void Enemy_row_deploys_its_sheet_and_skills()
     {
+        // 怪物视为没有生活技能的角色：身板由角色生成器掷出，再走角色同一条快照公式。
         var def = new EnemyDef
         {
-            Id = "slime", Name = "软泥", MaxHp = 40, Attack = 8,
-            Defence = 3, Dodge = 2, SpellPower = 0,
-            Armour = 5, Money = 12,
+            Id = "slime", Name = "软泥", Weapon = WeaponType.Unarmed,
+            Primary = CoreStat.Constitution, Secondary = CoreStat.Strength,
+            Armour = 5, Money = 12, ThreatTier = 2, Column = 3,
             Skills = { "acid" },
         };
         var unit = Deploy.FromEnemy(def, 11, CombatSide.Defender);
+        var body = new CharacterGenerator(new System.Random(0)).RollMonster(11, "软泥", WeaponType.Unarmed,
+            CoreStat.Constitution, CoreStat.Strength);
         Assert.Equal(11, unit.Id);
         Assert.Equal("软泥", unit.Name);
-        Assert.Equal(40, unit.Hp);
-        Assert.Equal(8, unit.StrikePower);
-        Assert.Equal(3, unit.Defence);
-        Assert.Equal(2, unit.EffDodge);
+        Assert.False(unit.IsPlayer);
+        Assert.Equal(unit.MaxHp, unit.Hp);
+        // 生命公式与角色同：20 + 体质×10 + 等级×5；体质至少底线 6 加主属性 5。
+        Assert.True(unit.MaxHp >= CharacterState.BaseHp + 11 * CharacterState.HpPerConstitution + CharacterState.HpPerLevel);
+        Assert.True(unit.StrikePower > 1);
+        Assert.InRange(unit.Speed, 10, 16);
+        Assert.Equal(WeaponType.Unarmed, unit.Weapon);
         Assert.Equal(5, unit.Armour);
         Assert.Equal(12, unit.MoneyReward);
-        Assert.Equal(0, unit.CritRate);
+        Assert.Equal(2, unit.ThreatTier);
+        Assert.Equal(3, unit.Column);
         Assert.Contains("acid", unit.Skills);
         Assert.Contains(BattleSkills.AttackId, unit.Skills);
+        Assert.DoesNotContain(BattleSkills.GuardId, unit.Skills);
+        // 同一 id 身板固定；没有生活技能。
+        Assert.Equal(unit.MaxHp, Deploy.FromEnemy(def, 11, CombatSide.Defender).MaxHp);
+        Assert.All(body.LifeExp, exp => Assert.Equal(0, exp));
     }
 
     [Fact]
@@ -378,12 +389,14 @@ public sealed class CombatTests
     {
         var def = new EnemyDef
         {
-            Id = "slime", Name = "软泥", MaxHp = 10, Money = 30,
+            Id = "slime", Name = "软泥", Money = 30, CorePool = 0, ExpPool = 0,
             Loot = { new EnemyLoot { ItemId = "炼金尘", Min = 2, Max = 4, RatePercent = 60 } },
         };
         var battle = new Battle(d100: () => 0);
-        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 30, Dodge = 9, StrikePower = 10 });
-        battle.Add(Deploy.FromEnemy(def, 2, CombatSide.Defender));
+        battle.Add(new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 300, MaxHp = 300, Dodge = 9, StrikePower = 10 });
+        var slime = Deploy.FromEnemy(def, 2, CombatSide.Defender);
+        slime.Hp = 10;
+        battle.Add(slime);
         while (battle.PendingActor != null && battle.Outcome == CombatOutcome.Ongoing)
             Assert.True(battle.Act(new CombatAction { ActorId = battle.PendingActor.Id, TargetId = 2 }));
         Assert.Equal(CombatOutcome.AttackerWin, battle.Outcome);

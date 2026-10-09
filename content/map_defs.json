@@ -252,9 +252,9 @@
         "weight": 30,
         "minTier": 1,
         "foes": [
-          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 1, "money": 8 },
-          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "maxHp": 40, "attack": 4, "speed": 10, "threatTier": 2, "column": 2, "money": 14 },
-          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 3, "money": 8 }
+          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 1, "money": 8 },
+          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "primary": "strength", "secondary": "speed", "corePool": 10, "expPool": 700, "armour": 1, "threatTier": 2, "column": 2, "money": 14 },
+          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8 }
         ],
         "detourMinutes": 90
       },
@@ -266,9 +266,9 @@
         "weight": 20,
         "minTier": 2,
         "foes": [
-          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "maxHp": 34, "attack": 4, "speed": 10, "threatTier": 1, "column": 1, "money": 20 },
-          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "maxHp": 48, "attack": 5, "speed": 9, "threatTier": 2, "column": 2, "money": 40 },
-          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "maxHp": 34, "attack": 4, "speed": 10, "threatTier": 1, "column": 3, "money": 20 }
+          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 1, "money": 20 },
+          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "weapon": "axe", "primary": "strength", "secondary": "constitution", "corePool": 14, "expPool": 1400, "armour": 2, "threatTier": 2, "column": 2, "money": 40 },
+          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 3, "money": 20 }
         ],
         "detourMinutes": 120
       },
@@ -280,8 +280,8 @@
         "weight": 25,
         "minTier": 1,
         "foes": [
-          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 18, "attack": 2, "speed": 12, "threatTier": 1, "column": 1, "money": 4 },
-          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 18, "attack": 2, "speed": 12, "threatTier": 1, "column": 2, "money": 4 }
+          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 4 },
+          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 2, "money": 4 }
         ],
         "detourMinutes": 60
       },
@@ -344,9 +344,9 @@
         "title": "石室守卫",
         "text": "黑暗里亮起几对眼睛，盘踞此处的东西被惊醒了。",
         "foes": [
-          { "id": "dg_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 20, "attack": 2, "speed": 12, "threatTier": 1, "column": 1, "money": 5 },
-          { "id": "dg_rat_b", "portrait": "monster_giant_rat", "name": "鼠王", "maxHp": 30, "attack": 3, "speed": 12, "threatTier": 2, "column": 2, "money": 12, "size": 2 },
-          { "id": "dg_rat_c", "portrait": "monster_giant_rat", "name": "大鼠", "maxHp": 20, "attack": 2, "speed": 12, "threatTier": 1, "column": 3, "money": 5 }
+          { "id": "dg_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 5 },
+          { "id": "dg_rat_b", "portrait": "monster_giant_rat", "name": "鼠王", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 800, "armour": 1, "threatTier": 2, "column": 2, "money": 12, "size": 2 },
+          { "id": "dg_rat_c", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 4, "money": 5 }
         ]
       },
       {
@@ -354,9 +354,9 @@
         "title": "石室守卫",
         "text": "几具披甲骸骨从壁龛里站起，锈剑在石地上拖出火星。",
         "foes": [
-          { "id": "dg_skel_a", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 1, "money": 12, "defence": 2 },
-          { "id": "dg_skel_b", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 2, "money": 12, "defence": 2 },
-          { "id": "dg_skel_c", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 3, "money": 12, "defence": 2 }
+          { "id": "dg_skel_a", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 1, "money": 12 },
+          { "id": "dg_skel_b", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 2, "money": 12 },
+          { "id": "dg_skel_c", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12 }
         ]
       }
     ],
@@ -366,8 +366,8 @@
         "title": "遗迹之主",
         "text": "最深处的石座上，一头庞然的东西缓缓抬起头来。",
         "foes": [
-          { "id": "dg_boss_wolf", "portrait": "monster_dire_wolf", "name": "洞穴魔狼", "maxHp": 90, "attack": 6, "speed": 10, "threatTier": 3, "column": 1, "money": 80, "size": 2 },
-          { "id": "dg_boss_add", "portrait": "monster_dire_wolf", "name": "野狼", "maxHp": 30, "attack": 3, "speed": 10, "threatTier": 1, "column": 3, "money": 8 }
+          { "id": "dg_boss_wolf", "portrait": "monster_dire_wolf", "name": "洞穴魔狼", "primary": "strength", "secondary": "speed", "corePool": 22, "expPool": 1800, "armour": 2, "threatTier": 3, "column": 1, "money": 80, "size": 2 },
+          { "id": "dg_boss_add", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8 }
         ]
       },
       {
@@ -375,8 +375,8 @@
         "title": "遗迹之主",
         "text": "尘封的王座上坐着一具戴冠的骸骨，眼窝里燃起幽火。",
         "foes": [
-          { "id": "dg_boss_lich", "portrait": "", "name": "骸骨王", "maxHp": 140, "attack": 8, "speed": 9, "threatTier": 4, "column": 1, "money": 160, "size": 2, "defence": 3 },
-          { "id": "dg_boss_guard", "portrait": "", "name": "骸骨兵", "maxHp": 36, "attack": 4, "speed": 9, "threatTier": 1, "column": 3, "money": 12, "defence": 2 }
+          { "id": "dg_boss_lich", "portrait": "", "name": "骸骨王", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 28, "expPool": 2400, "armour": 3, "threatTier": 4, "column": 1, "money": 160, "size": 2 },
+          { "id": "dg_boss_guard", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12 }
         ]
       }
     ],
