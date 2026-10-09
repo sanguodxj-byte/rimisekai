@@ -248,8 +248,14 @@ public partial class PortraitHubScreen
         {
             var nameY = dialog.Position.Y - 70f;
             InkDraw.Text(this, new Vector2(60f, nameY), actor.Name, 72, InkStyle.Line, "lm");
-            InkDraw.Text(this, new Vector2(60f + InkDraw.Measure(actor.Name, 72).X + 30f, nameY + 6f),
-                InkText.Bond(actor.Condition.Bond), PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            // 好感标签压在立绘上：垫半透明暗底 + 细描边，文字提到正文色，浅色衣服上也读得清。
+            var bond = InkText.Bond(actor.Condition.Bond);
+            var bondSize = InkDraw.Measure(bond, PortraitLayout.FontMeta);
+            var bondRect = new Rect2(60f + InkDraw.Measure(actor.Name, 72).X + 24f, nameY + 6f - bondSize.Y / 2f - 8f,
+                bondSize.X + 28f, bondSize.Y + 16f);
+            DrawRect(bondRect, new Color(InkStyle.Bg, 0.78f));
+            DrawRect(bondRect, new Color(InkStyle.Dim, 0.9f), false, 2f);
+            InkDraw.Text(this, new Vector2(bondRect.Position.X + 14f, nameY + 6f), bond, PortraitLayout.FontMeta, InkStyle.Line, "lm");
         }
         else
             InkDraw.Text(this, new Vector2(60f, dialog.Position.Y - 70f), speaker, PortraitLayout.FontTitle, InkStyle.Line, "lm");
