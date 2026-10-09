@@ -404,16 +404,25 @@ public partial class PortraitHubScreen
         if (entries.Count == 0)
             return;
         var gap = 12f;
+        // 字号自 50 往下试到 44：先求放得下，再求折行最少——差一两个字就折出半行孤字时，宁可收小一号排成整行。
+        // 同样行数取较大的字号。
         var size = PortraitLayout.LogFontMin;
+        var best = (Fits: false, Lines: int.MaxValue);
         for (var fs = PortraitLayout.LogFontMax; fs >= PortraitLayout.LogFontMin; fs -= 2)
         {
             var need = 0f;
+            var lines = 0;
             foreach (var e in entries)
-                need += InkDraw.WrapLines(e.Text, area.Size.X, fs).Count * LogLineHeight(fs) + gap;
-            if (need - gap <= area.Size.Y)
             {
+                var n = InkDraw.WrapLines(e.Text, area.Size.X, fs).Count;
+                lines += n;
+                need += n * LogLineHeight(fs) + gap;
+            }
+            var fits = need - gap <= area.Size.Y;
+            if ((fits && !best.Fits) || (fits == best.Fits && lines < best.Lines))
+            {
+                best = (fits, lines);
                 size = fs;
-                break;
             }
         }
         var lineH = LogLineHeight(size);

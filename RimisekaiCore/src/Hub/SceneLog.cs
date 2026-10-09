@@ -84,18 +84,28 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 在场角色对玩家到来的反应：按名册顺序找第一个挑得出 Meet 口上的人，
+    /// 在场角色对玩家到来的反应：按名册顺序找第一个挑得出 Meet 口上、且 <see cref="GreetCooldownMinutes"/> 内没打过招呼的人，
     /// 写成「某某说「……」」。谁都没有就返回 null。
     /// </summary>
+    /// <summary>同一个人隔这么久（游戏分钟）没打过招呼，才会在你进门时再开口；其余时候只写他在做什么。</summary>
+    public const int GreetCooldownMinutes = 120;
+
+    private readonly Dictionary<int, long> _lastGreeted = new();
+
+    private long ClockStamp => (long)State.Clock.Day * 24 * 60 + State.Clock.Minutes;
+
     private (int Who, string Line)? MeetReaction(int roomId)
     {
         foreach (var who in State.Roster.Members)
         {
             if (who.IsMaster || _presence.GetValueOrDefault(who.Id, -1) != roomId)
                 continue;
+            if (_lastGreeted.TryGetValue(who.Id, out var at) && ClockStamp - at < GreetCooldownMinutes)
+                continue;
             var utterance = PickVoice(who, VoiceTrigger.Meet, kind: VoiceKind.Speech);
             if (utterance == null || utterance.Value.Lines.Count == 0)
                 continue;
+            _lastGreeted[who.Id] = ClockStamp;
             return (who.Id, $"{utterance.Value.Speaker}说「{string.Join("", utterance.Value.Lines)}」");
         }
         return null;

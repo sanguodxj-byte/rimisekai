@@ -345,16 +345,33 @@ public sealed class VoiceTests
             Lines = { "回来了。" },
         }));
 
-        // 进房不是角色交互：对话框不弹；在场者的 Meet 口上写在角色档，代替他此刻的行为（见 docs/日志规范.md）。
+        // 进房不是角色交互：对话框不弹（移动途中角色会随日程走动，这里只看弹层）。
         hub.Place(who.Id, 2);
         Assert.True(hub.Move(2));
         Assert.Null(hub.Overlay);
-
-        // 折返再进也一样，移动永远不弹对话框。
         Assert.True(hub.Move(1));
         Assert.True(hub.Move(2));
         Assert.Null(hub.Overlay);
         Assert.Contains(hub.Log, l => l.Kind == LogKind.Scene && l.Text == "你来到了" + hub.State.Territory.Room(2)!.Name + "。");
+
+        // 在场者的 Meet 口上写在角色档，代替他此刻的行为（见 docs/日志规范.md）。落脚记日志与走进门同一条路（WriteOpening）。
+        // 先隔开上面走动时可能打过的招呼。
+        hub.PassTime(HubSession.GreetCooldownMinutes);
+        hub.Place(who.Id, hub.PlayerRoomId);
+        hub.BeginOperation();
+        hub.WriteOpening();
+        Assert.Contains(hub.Log, l => l.Kind == LogKind.Activity && l.Text == $"{who.Name}说「回来了。」");
+
+        // 刚打过招呼，冷却内再进门不再开口。
+        hub.BeginOperation();
+        hub.WriteOpening();
+        Assert.DoesNotContain(hub.Log, l => l.Text.Contains("回来了。"));
+
+        // 隔够冷却，又会招呼一声。
+        hub.PassTime(HubSession.GreetCooldownMinutes);
+        hub.Place(who.Id, hub.PlayerRoomId);
+        hub.BeginOperation();
+        hub.WriteOpening();
         Assert.Contains(hub.Log, l => l.Kind == LogKind.Activity && l.Text == $"{who.Name}说「回来了。」");
     }
 

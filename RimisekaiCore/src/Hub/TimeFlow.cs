@@ -93,6 +93,8 @@ public sealed partial class HubSession
     /// </summary>
     private void FlushActivities(StepContext ctx)
     {
+        foreach (var (id, text) in ctx.Activity)
+            _knownActivity[id] = text;
         // 走在路上：这段时间里人还没落脚，等进了门再按新房间看（见 Walk / SeeAround）。
         if (_walking)
         {
@@ -107,6 +109,12 @@ public sealed partial class HubSession
     private readonly Dictionary<int, string> _walkSeen = new();
 
     /// <summary>
+    /// 每个角色最近一次被叙述的行为（不论玩家在不在场都记）。
+    /// 落脚时写在场的人「在做什么」用它——哪怕这一步没推进时间（开局、零耗时的过界），也不会漏掉。
+    /// </summary>
+    private readonly Dictionary<int, string> _knownActivity = new();
+
+    /// <summary>
     /// 走过去花的时间：推进时不记活动，留到落脚后由 <see cref="SeeAround"/> 按落脚那间房写，
     /// 不会把出发那间房里的人写进来到新房间的这次日志。
     /// </summary>
@@ -118,10 +126,10 @@ public sealed partial class HubSession
         _walking = false;
     }
 
-    /// <summary>落脚后：把走路途中最后看到的活动按此刻所在房间筛一遍写入（写在场景描述之后）。</summary>
+    /// <summary>落脚后：把每人最近的行为按此刻所在房间筛一遍写入（写在场景描述之后）。</summary>
     private void SeeAround()
     {
-        WriteActivities(_walkSeen);
+        WriteActivities(_knownActivity);
         _walkSeen.Clear();
         RollChatter();
     }
