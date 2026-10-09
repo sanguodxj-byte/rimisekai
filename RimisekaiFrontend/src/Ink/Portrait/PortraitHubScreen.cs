@@ -57,6 +57,7 @@ public enum PortraitAction
     FixtureRun,
     ObserveRoom,
     ConversationAdvance,
+    ChatterAdvance,
     ConversationChoice,
     CharacterPage,
     StatusAbilityToggle,

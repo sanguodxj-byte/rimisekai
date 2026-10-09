@@ -51,6 +51,7 @@ public partial class PortraitHubScreen
             PortraitLayout.NowRuleY, "此刻");
         if (!Crossing && !WorldLayer)
             DrawCrossRuleGap();
+        ShowChatterSpeakerPage();
         DrawNowStrip();
 
         var travel = PortraitLayout.TravelButton;
@@ -63,6 +64,65 @@ public partial class PortraitHubScreen
         var build = PortraitLayout.BuildButton;
         PortraitFrame.Plaque(this, build, "建造", primary: true, enabled: buildable, glyph: PortraitGlyph.Hammer);
         _widgets.Add(new PortraitWidget(build, PortraitAction.Build, 0, buildable, "建造"));
+        if (!Crossing)
+            DrawChatter();
+    }
+
+    /// <summary>「此刻」里与主角同处的人（与 <see cref="DrawNowStrip"/> 同一份名单、同一顺序）。</summary>
+    private CharacterCard[] NowCards() => _vm.Cards().Where(SameRoomAsPlayer).ToArray();
+
+    /// <summary>有人主动开口时，「此刻」翻到说话人那一页，气泡才指得到她的头像。</summary>
+    private void ShowChatterSpeakerPage()
+    {
+        if (_vm.Hub.PendingChatter is not { } chat)
+            return;
+        var at = Array.FindIndex(NowCards(), c => c.Id == chat.Speaker.Id);
+        if (at >= 0)
+            _nowPage = at / PortraitLayout.NowPageSize;
+    }
+
+    /// <summary>
+    /// 场景内的主动对话：半透明黑底气泡盖住地图网格下半部分，白字；底边伸出一道尖角指向「此刻」里说话人的头像。
+    /// 左上写说话人，正文折行；右下一枚小三角提示点按。整只气泡是一个命中块：点一下推进一句，说完收起。
+    /// </summary>
+    private void DrawChatter()
+    {
+        if (_vm.Hub.PendingChatter is not { } chat)
+            return;
+        var at = Array.FindIndex(NowCards(), c => c.Id == chat.Speaker.Id);
+        if (at < 0)
+            return;
+        var grid = PortraitLayout.MapGrid;
+        var bubble = new Rect2(grid.Position.X + 12f, grid.GetCenter().Y, grid.Size.X - 24f, grid.Size.Y / 2f - 12f);
+        var fill = new Color(0f, 0f, 0f, 0.78f);
+        var white = new Color(1f, 1f, 1f);
+
+        // 尖角：从气泡底边（对准头像的横坐标，夹在气泡左右圆角之内）伸到头像框顶上。
+        var card = PortraitLayout.NowCard(at % PortraitLayout.NowPageSize);
+        var tipX = card.GetCenter().X;
+        var baseX = Math.Clamp(tipX, bubble.Position.X + 70f, bubble.End.X - 70f);
+        var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 10f);
+        var tail = new[]
+        {
+            new Vector2(baseX - 34f, bubble.End.Y - 1f),
+            tip,
+            new Vector2(baseX + 34f, bubble.End.Y - 1f),
+        };
+        DrawColoredPolygon(tail, fill);
+        DrawRect(bubble, fill);
+        DrawRect(bubble, new Color(white, 0.55f), false, 2f);
+        DrawLine(tail[0], tip, new Color(white, 0.55f), 2f);
+        DrawLine(tip, tail[2], new Color(white, 0.55f), 2f);
+
+        var pad = 36f;
+        InkDraw.Text(this, new Vector2(bubble.Position.X + pad, bubble.Position.Y + 30f), chat.Speaker.Name,
+            PortraitLayout.FontMeta, new Color(white, 0.7f));
+        InkDraw.Wrapped(this, new Rect2(bubble.Position.X + pad, bubble.Position.Y + 100f, bubble.Size.X - pad * 2f, bubble.Size.Y - 150f),
+            chat.Text, PortraitLayout.FontBody, white, PortraitLayout.FontBody * 1.5f);
+        var mark = new Vector2(bubble.End.X - 40f, bubble.End.Y - 34f);
+        DrawColoredPolygon(new[] { mark + new Vector2(-14f, -8f), mark + new Vector2(14f, -8f), mark + new Vector2(0f, 10f) }, white);
+
+        _widgets.Add(new PortraitWidget(bubble, PortraitAction.ChatterAdvance, chat.Speaker.Id, true, chat.Text));
     }
 
     /// <summary>画一格。register＝登记命中块（过界平移时滑出的旧网格只画不登记）。</summary>
@@ -427,6 +487,9 @@ public partial class PortraitHubScreen
                     OpenRoomSheet(w.Index);
                 else
                     GoTo(w.Index);
+                return true;
+            case PortraitAction.ChatterAdvance:
+                _vm.Hub.AdvanceChatter();
                 return true;
             case PortraitAction.NowPage:
                 _nowPage++;

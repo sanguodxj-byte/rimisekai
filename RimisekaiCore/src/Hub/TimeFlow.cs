@@ -80,6 +80,9 @@ public sealed partial class HubSession
         // 演出期间插画盖网格、右下锁成继续与选项，走完才交还据点。
         CollectEvents(seasonBefore != State.Clock.Season, weatherBefore != State.Weather, false);
         PlayNextEvent();
+        // 走在路上不开口，等落脚（SeeAround）再问。
+        if (!_walking)
+            RollChatter();
         return logs;
     }
 
@@ -120,6 +123,7 @@ public sealed partial class HubSession
     {
         WriteActivities(_walkSeen);
         _walkSeen.Clear();
+        RollChatter();
     }
 
     private void WriteActivities(IReadOnlyDictionary<int, string> activity)

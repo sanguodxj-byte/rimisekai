@@ -22,12 +22,14 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "a",
             Trigger = VoiceTrigger.Talk,
             Lines = { "甲" },
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "b",
             Trigger = VoiceTrigger.Observe,
             Lines = { "乙" },
@@ -48,6 +50,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "familiar",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { FavorMax = 99 },
@@ -55,6 +58,7 @@ public sealed class VoiceTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "fond",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { BondMin = Bond.Fond },
@@ -75,6 +79,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "night",
             Trigger = VoiceTrigger.Meet,
             Gate = new VoiceGate { HourMin = 22, HourMax = 5 },
@@ -93,6 +98,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "maid",
             Trigger = VoiceTrigger.Invited,
             Gate = new VoiceGate { RequireTraits = { Trait.Maid } },
@@ -100,6 +106,7 @@ public sealed class VoiceTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "rain",
             Trigger = VoiceTrigger.Meet,
             Gate = new VoiceGate { Weather = Weather.Rain },
@@ -122,6 +129,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "hello",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { Once = true },
@@ -142,6 +150,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "after",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { RequireSaid = { "before" } },
@@ -149,6 +158,7 @@ public sealed class VoiceTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "before",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { ForbidSaid = { "before" } },
@@ -169,6 +179,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "chatter",
             Trigger = VoiceTrigger.Idle,
             Gate = new VoiceGate { CooldownMinutes = 60 },
@@ -188,6 +199,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "lonely",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { DaysSinceTalkMin = 2 },
@@ -212,6 +224,7 @@ public sealed class VoiceTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "once",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { Once = true },
@@ -248,6 +261,7 @@ public sealed class VoiceTests
         var director = new VoiceDirector();
         director.World.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "dawn",
             Kind = VoiceKind.Narration,
             Trigger = VoiceTrigger.DayEnd,
@@ -269,6 +283,7 @@ public sealed class VoiceTests
         var (hub, who) = TalkSetup();
         hub.State.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "hi",
             Trigger = VoiceTrigger.Talk,
             Lines = { "早。", "院子有露水。" },
@@ -301,6 +316,7 @@ public sealed class VoiceTests
         // 于是两条路径互不重叠，断言不受随机挑选影响。
         hub.State.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "flower",
             Trigger = VoiceTrigger.Gift,
             Gate = new VoiceGate { GiftItemId = "花" },
@@ -323,6 +339,7 @@ public sealed class VoiceTests
         var (hub, who) = TalkSetup();
         hub.State.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "greet",
             Trigger = VoiceTrigger.Meet,
             Lines = { "回来了。" },
@@ -349,6 +366,7 @@ public sealed class VoiceTests
         var (hub, who) = TalkSetup();
         hub.State.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "greet",
             Trigger = VoiceTrigger.Meet,
             Lines = { "回来了。" },
@@ -365,6 +383,7 @@ public sealed class VoiceTests
         var (hub, who) = TalkSetup();
         hub.State.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "seek",
             Kind = VoiceKind.Narration,
             Trigger = VoiceTrigger.Seek,
@@ -424,12 +443,14 @@ public sealed class VoiceTests
         hub.State.Voice.Register(who.Name, PackFor(who.Name,
             new VoiceLine
             {
+                Settings = { VoiceSetting.Territory },
                 Id = "yes",
                 Trigger = VoiceTrigger.Invited,
                 Lines = { "好啊。" },
             },
             new VoiceLine
             {
+                Settings = { VoiceSetting.Territory },
                 Id = "no",
                 Trigger = VoiceTrigger.InviteRefused,
                 Lines = { "现在不行。" },
@@ -460,6 +481,7 @@ public sealed class VoiceTests
         hub.Select(who.Id);
         state.Voice.Register(who.Name, PackFor(who.Name, new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "once",
             Trigger = VoiceTrigger.Talk,
             Gate = new VoiceGate { Once = true },

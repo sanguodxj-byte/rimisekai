@@ -523,6 +523,53 @@ public partial class PortraitPlaytest : Node
         Goal(name, started && cleared && off && paid >= def.RewardMoney && await GoHubRoot("探索委托收尾"));
     }
 
+    /// <summary>
+    /// 场景内主动对话：带同伴进一张探索委托，在地城里逐间走，等同伴自己开口——
+    /// 气泡要指着「此刻」里的说话人、说的是地城那一组话（台词分场景，不许把家常话带进地城）、点一下推进、说完收起。
+    /// </summary>
+    private async Task GoalChatter()
+    {
+        const string name = "同伴主动开口";
+        await GoHubRoot(name);
+        await TapAction(PortraitAction.Tab, "quest tab", w => w.Index == 2);
+        var hub = _root.DebugVm!.Hub;
+        var idx = _root.HubScreen.DebugQuestIndex(d => d.Generated);
+        for (var k = 0; k < 8 && idx >= 0 && !Widgets().Any(w => w.Action == PortraitAction.QuestTake && w.Index == idx); k++)
+            await Drag(new Vector2(540f, 1800f), new Vector2(540f, 900f));
+        if (idx < 0 || !await TapAction(PortraitAction.QuestTake, "take", w => w.Index == idx)) { Goal(name, false); return; }
+        foreach (var w in Widgets().Where(w => w.Action == PortraitAction.PartyPick && w.Enabled).Take(4).ToList())
+            await Tap(w, "party pick");
+        if (!await TapAction(PortraitAction.QuestStart, "start") || !hub.InQuestDungeon) { Goal(name, false); return; }
+        var spoke = false;
+        var wrongScene = false;
+        var visits = new Dictionary<int, int>();
+        for (var i = 0; i < 160 && hub.InQuestDungeon; i++)
+        {
+            if (_root.CombatView.Visible) { await FinishCombat(name); continue; }
+            if (ModalOn) { if (!await TapAction(PortraitAction.ModalChoice, "enc", w => w.Label is "fight" or "accept") && !await Escape()) break; continue; }
+            var bubble = Find(PortraitAction.ChatterAdvance);
+            if (bubble != null)
+            {
+                var chat = hub.PendingChatter!;
+                wrongScene |= hub.Setting != Rimisekai.Voice.VoiceSetting.Dungeon || !chat.Line.Settings.Contains(Rimisekai.Voice.VoiceSetting.Dungeon);
+                Shoot("chatter_bubble");
+                _log.Add($"[主动开口] {chat.Speaker.Name}：{string.Join(" / ", chat.Lines)}（场景 {hub.Setting}，台词 {chat.Line.Id} 属于 {string.Join("/", chat.Line.Settings)}）");
+                var count = chat.Lines.Count;
+                for (var k = 0; k < count; k++)
+                    await Tap(bubble.Value, "chatter advance");
+                spoke = hub.PendingChatter == null && Find(PortraitAction.ChatterAdvance) == null;
+                Shoot("chatter_closed");
+                break;
+            }
+            var cells = Widgets().Where(w => w.Action == PortraitAction.Cell && w.Enabled && w.Index != CurrentCellIndex() && w.Label.Length > 0).ToList();
+            var next = cells.OrderBy(w => (w.Label is "？" or "?") ? -1 : visits.GetValueOrDefault(w.Index)).Cast<PortraitWidget?>().FirstOrDefault();
+            if (next == null) break;
+            visits[next.Value.Index] = visits.GetValueOrDefault(next.Value.Index) + 1;
+            await Tap(next.Value, "walk");
+        }
+        Goal(name, spoke && !wrongScene);
+    }
+
     private int CurrentCellIndex() => _root.DebugVm?.Hub.PlayerRoomId ?? -1;
 
     private async Task GoalTalk()
@@ -691,7 +738,7 @@ public partial class PortraitPlaytest : Node
         var steps = new (string, Func<Task>)[]
         {
             ("开局", GoalStart), ("页签", GoalTabs), ("对话", GoalTalk), ("交易", GoalTrade),
-            ("建造", GoalBuild), ("委托", GoalQuest), ("探索委托", GoalDungeonQuest), ("出行", GoalWorld), ("存读档", GoalSaveLoad),
+            ("建造", GoalBuild), ("委托", GoalQuest), ("探索委托", GoalDungeonQuest), ("主动开口", GoalChatter), ("出行", GoalWorld), ("存读档", GoalSaveLoad),
         };
         foreach (var (name, step) in steps)
         {

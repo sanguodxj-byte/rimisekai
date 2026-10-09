@@ -11,6 +11,9 @@ namespace Rimisekai.Voice;
 /// </summary>
 public sealed class VoiceContext
 {
+    /// <summary>此刻所在的场景（领地/野外/聚落/地城）。台词与场景剧情只认自己写明的场景。</summary>
+    public VoiceSetting Setting { get; init; }
+
     /// <summary>说话的角色。</summary>
     public required CharacterState Character { get; init; }
 
@@ -98,12 +101,14 @@ public sealed class VoiceContext
         IReadOnlySet<string>? firedEvents = null,
         bool allMembersMaxLevel = false,
         IReadOnlyList<string>? roomTags = null,
-        bool returnedFromCombat = false)
+        bool returnedFromCombat = false,
+        VoiceSetting setting = VoiceSetting.Territory)
     {
         var normalizedDay = day < 1 ? 1 : day;
         return new VoiceContext
         {
             Character = character,
+            Setting = setting,
             MasterId = masterId,
             Trigger = trigger,
             NowTotal = (normalizedDay - 1) * GameClock.MinutesPerDay + minutes,

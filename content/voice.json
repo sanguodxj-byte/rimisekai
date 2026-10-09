@@ -11,6 +11,9 @@
         {
           "id": "lum_meet_n1",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -22,6 +25,9 @@
         {
           "id": "lum_meet_n2",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -33,6 +39,9 @@
         {
           "id": "lum_meet_f1",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -45,6 +54,9 @@
         {
           "id": "lum_meet_f2",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -57,6 +69,9 @@
         {
           "id": "lum_meet_c1",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -69,6 +84,9 @@
         {
           "id": "lum_meet_c2",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -81,6 +99,9 @@
         {
           "id": "lum_meet_l1",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -92,6 +113,9 @@
         {
           "id": "lum_meet_l2",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -103,6 +127,9 @@
         {
           "id": "lum_meet_morning",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "hourMin": 6,
@@ -115,6 +142,9 @@
         {
           "id": "lum_meet_night",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "hourMin": 20
@@ -126,6 +156,9 @@
         {
           "id": "lum_meet_rain",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "weather": "Rain"
@@ -137,6 +170,9 @@
         {
           "id": "lum_obs_n",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "gate": {
             "favorMax": 99
@@ -148,6 +184,9 @@
         {
           "id": "lum_obs_f",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "gate": {
             "bondMin": "Fond",
@@ -160,6 +199,9 @@
         {
           "id": "lum_obs_c",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "gate": {
             "bondMin": "Close",
@@ -172,6 +214,9 @@
         {
           "id": "lum_obs_l",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "gate": {
             "bondMin": "Lover"
@@ -183,6 +228,9 @@
         {
           "id": "lum_gift_n",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -194,6 +242,9 @@
         {
           "id": "lum_gift_f",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -206,6 +257,9 @@
         {
           "id": "lum_gift_c",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -218,6 +272,9 @@
         {
           "id": "lum_gift_l",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -229,6 +286,9 @@
         {
           "id": "lum_gift_flower",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "giftItemId": "花"
@@ -240,6 +300,9 @@
         {
           "id": "lum_touch_n",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -251,6 +314,9 @@
         {
           "id": "lum_touch_f",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -263,6 +329,9 @@
         {
           "id": "lum_touch_c",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -275,6 +344,9 @@
         {
           "id": "lum_touch_l",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -286,6 +358,9 @@
         {
           "id": "lum_pat_n",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -297,6 +372,9 @@
         {
           "id": "lum_pat_f",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -309,6 +387,9 @@
         {
           "id": "lum_pat_c",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -321,6 +402,9 @@
         {
           "id": "lum_pat_l",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -332,6 +416,9 @@
         {
           "id": "lum_body_n",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -343,6 +430,9 @@
         {
           "id": "lum_body_f",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -355,6 +445,9 @@
         {
           "id": "lum_body_c",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -367,6 +460,9 @@
         {
           "id": "lum_body_l",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -378,6 +474,9 @@
         {
           "id": "lum_hug_n",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -389,6 +488,9 @@
         {
           "id": "lum_hug_f",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -401,6 +503,9 @@
         {
           "id": "lum_hug_c",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -413,6 +518,9 @@
         {
           "id": "lum_hug_l",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -424,6 +532,9 @@
         {
           "id": "lum_kiss_c",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -436,6 +547,9 @@
         {
           "id": "lum_kiss_l",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -447,6 +561,9 @@
         {
           "id": "lum_refused",
           "trigger": "TalkRefused",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，锅里正煮着热汤，容我稍后再来回话。"
@@ -455,6 +572,9 @@
         {
           "id": "lum_invited",
           "trigger": "Invited",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "明白了，大人。我这就收拾好手头的杂物跟上。"
@@ -463,6 +583,9 @@
         {
           "id": "lum_inv_ref",
           "trigger": "InviteRefused",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，屋里的地板还没擦完，今天恐怕去不成呢。"
@@ -471,6 +594,9 @@
         {
           "id": "lum_bondup_f",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Fond",
@@ -483,6 +609,9 @@
         {
           "id": "lum_bondup_c",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Close",
@@ -495,6 +624,9 @@
         {
           "id": "lum_bondup_l",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "bondMin": "Lover"
@@ -506,6 +638,9 @@
         {
           "id": "lum_seek",
           "trigger": "Seek",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔正快步走向大人的身边。"
@@ -514,6 +649,9 @@
         {
           "id": "lum_seek_gaveup",
           "trigger": "SeekGaveUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔四处看了一眼，转身返回了原处。"
@@ -522,6 +660,9 @@
         {
           "id": "lum_meal",
           "trigger": "Meal",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔坐在桌角小口吃着杂粮面包。"
@@ -530,6 +671,9 @@
         {
           "id": "lum_sleep",
           "trigger": "Sleep",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔在床上闭着眼睛睡着。"
@@ -538,6 +682,9 @@
         {
           "id": "lum_wake",
           "trigger": "Wake",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔从床上起身，整理好褶皱的床单。"
@@ -546,6 +693,9 @@
         {
           "id": "lum_dayend",
           "trigger": "DayEnd",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔关上房门，吹熄了桌上的油灯。"
@@ -554,6 +704,9 @@
         {
           "id": "lum_idle1",
           "trigger": "Idle",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔站在门前望着远处的空地。"
@@ -562,6 +715,9 @@
         {
           "id": "lum_idle2",
           "trigger": "Idle",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "璐米埃尔正低头掸掉围裙上的碎线头。"
@@ -570,6 +726,9 @@
         {
           "id": "lum_st_cook1",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Cooking"
@@ -581,6 +740,9 @@
         {
           "id": "lum_st_cook2",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Cooking"
@@ -592,6 +754,9 @@
         {
           "id": "lum_st_clean",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Playing"
@@ -603,6 +768,9 @@
         {
           "id": "lum_st_farm",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Farming"
@@ -614,6 +782,9 @@
         {
           "id": "lum_st_mine",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Mining"
@@ -625,6 +796,9 @@
         {
           "id": "lum_st_craft",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Crafting"
@@ -636,6 +810,9 @@
         {
           "id": "lum_st_work1",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Working"
@@ -647,6 +824,9 @@
         {
           "id": "lum_st_work2",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Working"
@@ -658,6 +838,9 @@
         {
           "id": "lum_st_train",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Training"
@@ -669,6 +852,9 @@
         {
           "id": "lum_st_eat",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Eating"
@@ -680,6 +866,9 @@
         {
           "id": "lum_st_rest",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Resting"
@@ -691,6 +880,9 @@
         {
           "id": "lum_st_sleep",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Sleeping"
@@ -702,6 +894,9 @@
         {
           "id": "lum_st_idle",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "activities": [
             "Idle"
@@ -713,6 +908,9 @@
         {
           "id": "lum_talk_none_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -724,6 +922,9 @@
         {
           "id": "lum_talk_none_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -735,6 +936,9 @@
         {
           "id": "lum_talk_none_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -746,6 +950,9 @@
         {
           "id": "lum_talk_none_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -757,6 +964,9 @@
         {
           "id": "lum_talk_fond_morning",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -771,6 +981,9 @@
         {
           "id": "lum_talk_fond_noon",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -785,6 +998,9 @@
         {
           "id": "lum_talk_fond_night",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -799,6 +1015,9 @@
         {
           "id": "lum_talk_fond_spring",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -812,6 +1031,9 @@
         {
           "id": "lum_talk_fond_summer",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -825,6 +1047,9 @@
         {
           "id": "lum_talk_fond_autumn",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -838,6 +1063,9 @@
         {
           "id": "lum_talk_fond_winter",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -851,6 +1079,9 @@
         {
           "id": "lum_talk_fond_rain",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -864,6 +1095,9 @@
         {
           "id": "lum_talk_fond_snow",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -877,6 +1111,9 @@
         {
           "id": "lum_talk_cook_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Cooking"
@@ -891,6 +1128,9 @@
         {
           "id": "lum_talk_cook_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Cooking"
@@ -905,6 +1145,9 @@
         {
           "id": "lum_talk_cook_excl",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Cooking"
@@ -921,6 +1164,9 @@
         {
           "id": "lum_talk_farm_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Farming"
@@ -935,6 +1181,9 @@
         {
           "id": "lum_talk_farm_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Farming"
@@ -949,6 +1198,9 @@
         {
           "id": "lum_talk_farm_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Farming"
@@ -963,6 +1215,9 @@
         {
           "id": "lum_talk_mine_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Mining"
@@ -977,6 +1232,9 @@
         {
           "id": "lum_talk_mine_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Mining"
@@ -991,6 +1249,9 @@
         {
           "id": "lum_talk_mine_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Mining"
@@ -1005,6 +1266,9 @@
         {
           "id": "lum_talk_craft_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -1019,6 +1283,9 @@
         {
           "id": "lum_talk_craft_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -1033,6 +1300,9 @@
         {
           "id": "lum_talk_craft_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -1047,6 +1317,9 @@
         {
           "id": "lum_talk_rest_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -1061,6 +1334,9 @@
         {
           "id": "lum_talk_rest_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -1075,6 +1351,9 @@
         {
           "id": "lum_talk_rest_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -1089,6 +1368,9 @@
         {
           "id": "lum_talk_eat_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -1103,6 +1385,9 @@
         {
           "id": "lum_talk_eat_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -1117,6 +1402,9 @@
         {
           "id": "lum_talk_eat_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -1131,6 +1419,9 @@
         {
           "id": "lum_talk_train_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -1145,6 +1436,9 @@
         {
           "id": "lum_talk_train_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -1159,6 +1453,9 @@
         {
           "id": "lum_talk_train_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -1173,6 +1470,9 @@
         {
           "id": "lum_talk_play_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -1187,6 +1487,9 @@
         {
           "id": "lum_talk_play_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -1201,6 +1504,9 @@
         {
           "id": "lum_talk_play_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -1215,6 +1521,9 @@
         {
           "id": "lum_talk_close_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -1227,6 +1536,9 @@
         {
           "id": "lum_talk_close_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -1239,6 +1551,9 @@
         {
           "id": "lum_talk_close_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -1251,6 +1566,9 @@
         {
           "id": "lum_talk_close_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -1263,6 +1581,9 @@
         {
           "id": "lum_talk_close_5",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -1275,6 +1596,9 @@
         {
           "id": "lum_talk_lover_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -1286,6 +1610,9 @@
         {
           "id": "lum_talk_lover_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -1297,6 +1624,9 @@
         {
           "id": "lum_talk_lover_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -1308,6 +1638,9 @@
         {
           "id": "lum_talk_lover_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -1319,6 +1652,9 @@
         {
           "id": "lum_talk_lover_5",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -1330,6 +1666,9 @@
         {
           "id": "lum_talk_llm",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "priority": 2,
           "gate": {
@@ -1352,6 +1691,9 @@
         {
           "id": "lum_touch_before_none",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1366,6 +1708,9 @@
         {
           "id": "lum_touch_before_fond",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1381,6 +1726,9 @@
         {
           "id": "lum_touch_before_close",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1396,6 +1744,9 @@
         {
           "id": "lum_touch_before_lover",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1410,6 +1761,9 @@
         {
           "id": "lum_touch_after_none",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1434,6 +1788,9 @@
         {
           "id": "lum_touch_after_fond",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1459,6 +1816,9 @@
         {
           "id": "lum_touch_after_close",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1484,6 +1844,9 @@
         {
           "id": "lum_touch_after_lover",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1508,6 +1871,9 @@
         {
           "id": "lum_pathead_before_none",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1522,6 +1888,9 @@
         {
           "id": "lum_pathead_before_fond",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1537,6 +1906,9 @@
         {
           "id": "lum_pathead_before_close",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1552,6 +1924,9 @@
         {
           "id": "lum_pathead_before_lover",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1566,6 +1941,9 @@
         {
           "id": "lum_pathead_after_none",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1590,6 +1968,9 @@
         {
           "id": "lum_pathead_after_fond",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1615,6 +1996,9 @@
         {
           "id": "lum_pathead_after_close",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1640,6 +2024,9 @@
         {
           "id": "lum_pathead_after_lover",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1664,6 +2051,9 @@
         {
           "id": "lum_body_before_none",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1678,6 +2068,9 @@
         {
           "id": "lum_body_before_fond",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1693,6 +2086,9 @@
         {
           "id": "lum_body_before_close",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1708,6 +2104,9 @@
         {
           "id": "lum_body_before_lover",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1722,6 +2121,9 @@
         {
           "id": "lum_body_after_none",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1746,6 +2148,9 @@
         {
           "id": "lum_body_after_fond",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1771,6 +2176,9 @@
         {
           "id": "lum_body_after_close",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1796,6 +2204,9 @@
         {
           "id": "lum_body_after_lover",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1820,6 +2231,9 @@
         {
           "id": "lum_hug_before_none",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1834,6 +2248,9 @@
         {
           "id": "lum_hug_before_fond",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1849,6 +2266,9 @@
         {
           "id": "lum_hug_before_close",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1864,6 +2284,9 @@
         {
           "id": "lum_hug_before_lover",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1878,6 +2301,9 @@
         {
           "id": "lum_hug_after_none",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1902,6 +2328,9 @@
         {
           "id": "lum_hug_after_fond",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1927,6 +2356,9 @@
         {
           "id": "lum_hug_after_close",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1952,6 +2384,9 @@
         {
           "id": "lum_hug_after_lover",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -1976,6 +2411,9 @@
         {
           "id": "lum_kiss_before_none",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -1990,6 +2428,9 @@
         {
           "id": "lum_kiss_before_fond",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2005,6 +2446,9 @@
         {
           "id": "lum_kiss_before_close",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2020,6 +2464,9 @@
         {
           "id": "lum_kiss_before_lover",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2034,6 +2481,9 @@
         {
           "id": "lum_kiss_after_none",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2058,6 +2508,9 @@
         {
           "id": "lum_kiss_after_fond",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2083,6 +2536,9 @@
         {
           "id": "lum_kiss_after_close",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2108,6 +2564,9 @@
         {
           "id": "lum_kiss_after_lover",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2132,6 +2591,9 @@
         {
           "id": "lum_observe_before_none",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2146,6 +2608,9 @@
         {
           "id": "lum_observe_before_fond",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2161,6 +2626,9 @@
         {
           "id": "lum_observe_before_close",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2176,6 +2644,9 @@
         {
           "id": "lum_observe_before_lover",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2190,6 +2661,9 @@
         {
           "id": "lum_observe_after_none",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2214,6 +2688,9 @@
         {
           "id": "lum_observe_after_fond",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2239,6 +2716,9 @@
         {
           "id": "lum_observe_after_close",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2264,6 +2744,9 @@
         {
           "id": "lum_observe_after_lover",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2288,6 +2771,9 @@
         {
           "id": "lum_gift_before_none",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2302,6 +2788,9 @@
         {
           "id": "lum_gift_before_fond",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2317,6 +2806,9 @@
         {
           "id": "lum_gift_before_close",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2332,6 +2824,9 @@
         {
           "id": "lum_gift_before_lover",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -2346,6 +2841,9 @@
         {
           "id": "lum_gift_after_none",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2370,6 +2868,9 @@
         {
           "id": "lum_gift_after_fond",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2395,6 +2896,9 @@
         {
           "id": "lum_gift_after_close",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2420,6 +2924,9 @@
         {
           "id": "lum_gift_after_lover",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -2440,6 +2947,184 @@
               "temperature": "0.8"
             }
           }
+        },
+        {
+          "id": "lum_chat_t1",
+          "trigger": "Chatter",
+          "settings": [
+            "Territory"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人，库房的柴还够烧三天。天要是转冷，我再去劈一些。"
+          ]
+        },
+        {
+          "id": "lum_chat_t2",
+          "trigger": "Chatter",
+          "settings": [
+            "Territory"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "今天风大，晾着的被单我先收进来了。"
+          ]
+        },
+        {
+          "id": "lum_chat_t3",
+          "trigger": "Chatter",
+          "settings": [
+            "Territory"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人走累了的话，厨房里还温着茶。"
+          ]
+        },
+        {
+          "id": "lum_chat_w1",
+          "trigger": "Chatter",
+          "settings": [
+            "Wilds"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人，前面那段路看着平一些。要先歇一歇再赶吗？"
+          ]
+        },
+        {
+          "id": "lum_chat_w2",
+          "trigger": "Chatter",
+          "settings": [
+            "Wilds"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "风里有雨的味道。斗篷我已经取出来了。"
+          ]
+        },
+        {
+          "id": "lum_chat_s1",
+          "trigger": "Chatter",
+          "settings": [
+            "Settlement"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人，这里人多，请看好钱袋。"
+          ]
+        },
+        {
+          "id": "lum_chat_s2",
+          "trigger": "Chatter",
+          "settings": [
+            "Settlement"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "集市上的盐比领地便宜些，回去时可以捎上。"
+          ]
+        },
+        {
+          "id": "lum_chat_d1",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人，脚下湿滑，请走在我后面一步。"
+          ]
+        },
+        {
+          "id": "lum_chat_d2",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "这里的气很闷……灯油还够，不必担心。"
+          ]
+        },
+        {
+          "id": "lum_chat_d3",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "墙上有抓痕，是新的。",
+            "大人，请留神。"
+          ]
+        },
+        {
+          "id": "lum_chat_d4",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人。",
+            "……没什么，只是想确认您还在。"
+          ]
         }
       ]
     },
@@ -2449,6 +3134,9 @@
         {
           "id": "sel_meet_1",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，早上好……今天工坊也有很多活要干呢。"
@@ -2462,6 +3150,9 @@
         {
           "id": "sel_meet_2",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人早安。今天的温水符文已经准备好了哦。"
@@ -2476,6 +3167,9 @@
         {
           "id": "sel_meet_3",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，今天一早就见到大人……真是太好了呢。"
@@ -2490,6 +3184,9 @@
         {
           "id": "sel_meet_4",
           "trigger": "Meet",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人早安。今天也请让赛琳陪在大人身边吧。"
@@ -2503,6 +3200,9 @@
         {
           "id": "sel_observe_23",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳站在木桌边，手里握着羽毛笔。"
@@ -2516,6 +3216,9 @@
         {
           "id": "sel_observe_24",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳低头翻看羊皮纸，在边缘写下批注。"
@@ -2530,6 +3233,9 @@
         {
           "id": "sel_observe_25",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳坐在木椅上看笔记，听见脚步声便抬起头。"
@@ -2544,6 +3250,9 @@
         {
           "id": "sel_observe_26",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳放下手中的墨水瓶，安静地注视着大人。"
@@ -2557,6 +3266,9 @@
         {
           "id": "sel_gift_27",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大、大人，送给我吗？这么好的东西……可以吗？"
@@ -2570,6 +3282,9 @@
         {
           "id": "sel_gift_28",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，是给我的吗？谢谢大人，我一定会好好收着。"
@@ -2584,6 +3299,9 @@
         {
           "id": "sel_gift_29",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "每次都收大人的礼物，我都不知道该怎么道谢了呢。"
@@ -2598,6 +3316,9 @@
         {
           "id": "sel_gift_30",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人送给赛琳的东西，我会一直带在身边的……谢谢大人。"
@@ -2611,6 +3332,9 @@
         {
           "id": "sel_touch_31",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大、大人？碰到了吗？抱歉……是我站得太近了。"
@@ -2624,6 +3348,9 @@
         {
           "id": "sel_touch_32",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，衣服上沾到草木灰了吗？赛琳帮大人拍拍吧。"
@@ -2638,6 +3365,9 @@
         {
           "id": "sel_touch_33",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……大人的手有些凉呢，要不要烤烤火石？"
@@ -2652,6 +3382,9 @@
         {
           "id": "sel_touch_34",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……请不要松手。这样碰着，心里就很安稳呢。"
@@ -2665,6 +3398,9 @@
         {
           "id": "sel_pathead_35",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大、大人！为什么突然摸我的头……头发很乱吗？"
@@ -2678,6 +3414,9 @@
         {
           "id": "sel_pathead_36",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……被大人摸头，感觉像没毕业的学生呢。"
@@ -2692,6 +3431,9 @@
         {
           "id": "sel_pathead_37",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……大人的手很厚实。被这样摸着很温暖呢。"
@@ -2706,6 +3448,9 @@
         {
           "id": "sel_pathead_38",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……大人的手很温暖。请再多停留一会儿吧……"
@@ -2719,6 +3464,9 @@
         {
           "id": "sel_bodycontact_39",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "啊，对不起大人！我、我退后，碰到大人衣角了吗？"
@@ -2732,6 +3480,9 @@
         {
           "id": "sel_bodycontact_40",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人站得好近呢……是药水的气味太呛人了吗？"
@@ -2746,6 +3497,9 @@
         {
           "id": "sel_bodycontact_41",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "肩膀碰到一起了呢……这样和大人的距离好近哦。"
@@ -2760,6 +3514,9 @@
         {
           "id": "sel_bodycontact_42",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……就这样靠着大人一会儿，可以吗？"
@@ -2773,6 +3530,9 @@
         {
           "id": "sel_hug_43",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大、大人？！这、这是……领地的礼节吗？太突然了……"
@@ -2786,6 +3546,9 @@
         {
           "id": "sel_hug_44",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "工坊里到处都是灰，会把大人的衣服弄脏的哦。"
@@ -2800,6 +3563,9 @@
         {
           "id": "sel_hug_45",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人的怀抱好暖和……赛琳也可以抱住大人吗？"
@@ -2814,6 +3580,9 @@
         {
           "id": "sel_hug_46",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "请再抱紧一些吧……只要在大人怀里，我就不怕了。"
@@ -2827,6 +3596,9 @@
         {
           "id": "sel_kiss_47",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大、大人……突然亲过来……脑海中全是一片空白了……"
@@ -2841,6 +3613,9 @@
         {
           "id": "sel_kiss_48",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人……如果大人不嫌弃，可以再亲一次吗？"
@@ -2854,6 +3629,9 @@
         {
           "id": "sel_talkrefused_49",
           "trigger": "TalkRefused",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人先忙正事吧，赛琳在工坊整理材料就好。"
@@ -2864,6 +3642,9 @@
         {
           "id": "sel_invited_50",
           "trigger": "Invited",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "是！只要大人吩咐，赛琳随时可以出发哦。"
@@ -2874,6 +3655,9 @@
         {
           "id": "sel_inviterefused_51",
           "trigger": "InviteRefused",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "锅里的药液还在熬煮，走开会糊掉的……对不起。"
@@ -2884,6 +3668,9 @@
         {
           "id": "sel_bondup_52",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "大人，最近能帮上领地的忙，我真的很高兴呢。"
@@ -2898,6 +3685,9 @@
         {
           "id": "sel_bondup_53",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "在大人面前，我好像越来越不会紧张结巴了呢。"
@@ -2912,6 +3702,9 @@
         {
           "id": "sel_bondup_54",
           "trigger": "BondUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "lines": [
             "赛琳的心意，大人都明白的吧……请一直看着我。"
@@ -2925,6 +3718,9 @@
         {
           "id": "sel_seek_55",
           "trigger": "Seek",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳正拿着刚配好的防潮粉走过来。"
@@ -2935,6 +3731,9 @@
         {
           "id": "sel_seekgaveup_56",
           "trigger": "SeekGaveUp",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "见大人正忙，赛琳把符文纸收进木盒回工坊了。"
@@ -2945,6 +3744,9 @@
         {
           "id": "sel_meal_57",
           "trigger": "Meal",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳坐在桌角喝热菜汤，摊着笔记。"
@@ -2955,6 +3757,9 @@
         {
           "id": "sel_sleep_58",
           "trigger": "Sleep",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳盖着旧毛毯在木床上睡着。"
@@ -2965,6 +3770,9 @@
         {
           "id": "sel_wake_59",
           "trigger": "Wake",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳整理好法师长袍，正准备生火。"
@@ -2975,6 +3783,9 @@
         {
           "id": "sel_dayend_60",
           "trigger": "DayEnd",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "工坊的烛火熄灭了，赛琳回房安歇。"
@@ -2985,6 +3796,9 @@
         {
           "id": "sel_idle_61",
           "trigger": "Idle",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳站在工坊门边，看着屋外出神。"
@@ -2995,6 +3809,9 @@
         {
           "id": "sel_state_62",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳在桌前用羽毛笔计算符文配比。"
@@ -3008,6 +3825,9 @@
         {
           "id": "sel_state_63",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳在空地上练习基础魔力引导法。"
@@ -3021,6 +3841,9 @@
         {
           "id": "sel_state_64",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳靠在工坊的木椅上闭目歇息。"
@@ -3034,6 +3857,9 @@
         {
           "id": "sel_state_65",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳盖着旧毛毯在木床上睡着。"
@@ -3047,6 +3873,9 @@
         {
           "id": "sel_state_66",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳坐在桌角喝热菜汤，摊着笔记。"
@@ -3060,6 +3889,9 @@
         {
           "id": "sel_state_67",
           "trigger": "State",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "lines": [
             "赛琳站在工坊门边，看着屋外出神。"
@@ -3073,6 +3905,9 @@
         {
           "id": "sel_talk_none_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -3084,6 +3919,9 @@
         {
           "id": "sel_talk_none_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -3095,6 +3933,9 @@
         {
           "id": "sel_talk_none_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -3106,6 +3947,9 @@
         {
           "id": "sel_talk_none_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMax": 99
@@ -3117,6 +3961,9 @@
         {
           "id": "sel_talk_fond_morning",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -3131,6 +3978,9 @@
         {
           "id": "sel_talk_fond_night",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -3145,6 +3995,9 @@
         {
           "id": "sel_talk_fond_rain",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -3158,6 +4011,9 @@
         {
           "id": "sel_talk_fond_snow",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -3171,6 +4027,9 @@
         {
           "id": "sel_talk_fond_ask",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 100,
@@ -3183,6 +4042,9 @@
         {
           "id": "sel_talk_craft_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -3197,6 +4059,9 @@
         {
           "id": "sel_talk_craft_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -3211,6 +4076,9 @@
         {
           "id": "sel_talk_craft_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Crafting"
@@ -3225,6 +4093,9 @@
         {
           "id": "sel_talk_rest_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -3239,6 +4110,9 @@
         {
           "id": "sel_talk_rest_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -3253,6 +4127,9 @@
         {
           "id": "sel_talk_rest_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Resting"
@@ -3267,6 +4144,9 @@
         {
           "id": "sel_talk_eat_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -3281,6 +4161,9 @@
         {
           "id": "sel_talk_eat_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -3295,6 +4178,9 @@
         {
           "id": "sel_talk_eat_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Eating"
@@ -3309,6 +4195,9 @@
         {
           "id": "sel_talk_train_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -3323,6 +4212,9 @@
         {
           "id": "sel_talk_train_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -3337,6 +4229,9 @@
         {
           "id": "sel_talk_train_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Training"
@@ -3351,6 +4246,9 @@
         {
           "id": "sel_talk_work_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Working"
@@ -3365,6 +4263,9 @@
         {
           "id": "sel_talk_work_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Working"
@@ -3379,6 +4280,9 @@
         {
           "id": "sel_talk_work_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Working"
@@ -3393,6 +4297,9 @@
         {
           "id": "sel_talk_play_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -3407,6 +4314,9 @@
         {
           "id": "sel_talk_play_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -3421,6 +4331,9 @@
         {
           "id": "sel_talk_play_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "activities": [
             "Playing"
@@ -3435,6 +4348,9 @@
         {
           "id": "sel_talk_close_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -3447,6 +4363,9 @@
         {
           "id": "sel_talk_close_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -3459,6 +4378,9 @@
         {
           "id": "sel_talk_close_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -3471,6 +4393,9 @@
         {
           "id": "sel_talk_close_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -3483,6 +4408,9 @@
         {
           "id": "sel_talk_close_5",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 300,
@@ -3495,6 +4423,9 @@
         {
           "id": "sel_talk_lover_1",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -3506,6 +4437,9 @@
         {
           "id": "sel_talk_lover_2",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -3517,6 +4451,9 @@
         {
           "id": "sel_talk_lover_3",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -3528,6 +4465,9 @@
         {
           "id": "sel_talk_lover_4",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -3539,6 +4479,9 @@
         {
           "id": "sel_talk_lover_5",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "gate": {
             "favorMin": 600
@@ -3550,6 +4493,9 @@
         {
           "id": "sel_talk_llm",
           "trigger": "Talk",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Speech",
           "priority": 2,
           "gate": {
@@ -3572,6 +4518,9 @@
         {
           "id": "sel_touch_before_none",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3586,6 +4535,9 @@
         {
           "id": "sel_touch_before_fond",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3601,6 +4553,9 @@
         {
           "id": "sel_touch_before_close",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3616,6 +4571,9 @@
         {
           "id": "sel_touch_before_lover",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3630,6 +4588,9 @@
         {
           "id": "sel_touch_after_none",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3654,6 +4615,9 @@
         {
           "id": "sel_touch_after_fond",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3679,6 +4643,9 @@
         {
           "id": "sel_touch_after_close",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3704,6 +4671,9 @@
         {
           "id": "sel_touch_after_lover",
           "trigger": "Touch",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3728,6 +4698,9 @@
         {
           "id": "sel_pathead_before_none",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3742,6 +4715,9 @@
         {
           "id": "sel_pathead_before_fond",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3757,6 +4733,9 @@
         {
           "id": "sel_pathead_before_close",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3772,6 +4751,9 @@
         {
           "id": "sel_pathead_before_lover",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3786,6 +4768,9 @@
         {
           "id": "sel_pathead_after_none",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3810,6 +4795,9 @@
         {
           "id": "sel_pathead_after_fond",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3835,6 +4823,9 @@
         {
           "id": "sel_pathead_after_close",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3860,6 +4851,9 @@
         {
           "id": "sel_pathead_after_lover",
           "trigger": "PatHead",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3884,6 +4878,9 @@
         {
           "id": "sel_body_before_none",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3898,6 +4895,9 @@
         {
           "id": "sel_body_before_fond",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3913,6 +4913,9 @@
         {
           "id": "sel_body_before_close",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3928,6 +4931,9 @@
         {
           "id": "sel_body_before_lover",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -3942,6 +4948,9 @@
         {
           "id": "sel_body_after_none",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3966,6 +4975,9 @@
         {
           "id": "sel_body_after_fond",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -3991,6 +5003,9 @@
         {
           "id": "sel_body_after_close",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4016,6 +5031,9 @@
         {
           "id": "sel_body_after_lover",
           "trigger": "BodyContact",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4040,6 +5058,9 @@
         {
           "id": "sel_hug_before_none",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4054,6 +5075,9 @@
         {
           "id": "sel_hug_before_fond",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4069,6 +5093,9 @@
         {
           "id": "sel_hug_before_close",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4084,6 +5111,9 @@
         {
           "id": "sel_hug_before_lover",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4098,6 +5128,9 @@
         {
           "id": "sel_hug_after_none",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4122,6 +5155,9 @@
         {
           "id": "sel_hug_after_fond",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4147,6 +5183,9 @@
         {
           "id": "sel_hug_after_close",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4172,6 +5211,9 @@
         {
           "id": "sel_hug_after_lover",
           "trigger": "Hug",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4196,6 +5238,9 @@
         {
           "id": "sel_kiss_before_none",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4210,6 +5255,9 @@
         {
           "id": "sel_kiss_before_fond",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4225,6 +5273,9 @@
         {
           "id": "sel_kiss_before_close",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4240,6 +5291,9 @@
         {
           "id": "sel_kiss_before_lover",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4254,6 +5308,9 @@
         {
           "id": "sel_kiss_after_none",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4278,6 +5335,9 @@
         {
           "id": "sel_kiss_after_fond",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4303,6 +5363,9 @@
         {
           "id": "sel_kiss_after_close",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4328,6 +5391,9 @@
         {
           "id": "sel_kiss_after_lover",
           "trigger": "Kiss",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4352,6 +5418,9 @@
         {
           "id": "sel_observe_before_none",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4366,6 +5435,9 @@
         {
           "id": "sel_observe_before_fond",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4381,6 +5453,9 @@
         {
           "id": "sel_observe_before_close",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4396,6 +5471,9 @@
         {
           "id": "sel_observe_before_lover",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4410,6 +5488,9 @@
         {
           "id": "sel_observe_after_none",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4434,6 +5515,9 @@
         {
           "id": "sel_observe_after_fond",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4459,6 +5543,9 @@
         {
           "id": "sel_observe_after_close",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4484,6 +5571,9 @@
         {
           "id": "sel_observe_after_lover",
           "trigger": "Observe",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4508,6 +5598,9 @@
         {
           "id": "sel_gift_before_none",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4522,6 +5615,9 @@
         {
           "id": "sel_gift_before_fond",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4537,6 +5633,9 @@
         {
           "id": "sel_gift_before_close",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4552,6 +5651,9 @@
         {
           "id": "sel_gift_before_lover",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "Before"
@@ -4566,6 +5668,9 @@
         {
           "id": "sel_gift_after_none",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4590,6 +5695,9 @@
         {
           "id": "sel_gift_after_fond",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4615,6 +5723,9 @@
         {
           "id": "sel_gift_after_close",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4640,6 +5751,9 @@
         {
           "id": "sel_gift_after_lover",
           "trigger": "Gift",
+          "settings": [
+            "Territory"
+          ],
           "kind": "Narration",
           "places": [
             "After"
@@ -4660,6 +5774,151 @@
               "temperature": "0.8"
             }
           }
+        },
+        {
+          "id": "sel_chat_t1",
+          "trigger": "Chatter",
+          "settings": [
+            "Territory"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大、大人，我把温水符文又改了一遍，这次应该不会烫手了……"
+          ]
+        },
+        {
+          "id": "sel_chat_t2",
+          "trigger": "Chatter",
+          "settings": [
+            "Territory"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "今天的草药晒得正好，晚些我拿去工坊研磨。"
+          ]
+        },
+        {
+          "id": "sel_chat_w1",
+          "trigger": "Chatter",
+          "settings": [
+            "Wilds"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "走了这么远……鞋底好像都磨薄了。"
+          ]
+        },
+        {
+          "id": "sel_chat_w2",
+          "trigger": "Chatter",
+          "settings": [
+            "Wilds"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "大人，那边的草是止血草！回程能不能绕过去采一点？"
+          ]
+        },
+        {
+          "id": "sel_chat_s1",
+          "trigger": "Chatter",
+          "settings": [
+            "Settlement"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "魔法书店！……啊，不不，我只是看看，大人。"
+          ]
+        },
+        {
+          "id": "sel_chat_s2",
+          "trigger": "Chatter",
+          "settings": [
+            "Settlement"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "这里的人说话好快，我都听不太清……"
+          ]
+        },
+        {
+          "id": "sel_chat_d1",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "这、这里的魔力流动有点怪……大人，请别离我太远。"
+          ]
+        },
+        {
+          "id": "sel_chat_d2",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "我点一盏光球吧，小一点的，不会把东西引过来的……大概。"
+          ]
+        },
+        {
+          "id": "sel_chat_d3",
+          "trigger": "Chatter",
+          "settings": [
+            "Dungeon"
+          ],
+          "kind": "Speech",
+          "gate": {
+            "chance": 6,
+            "cooldownMinutes": 480,
+            "triggerCooldownMinutes": 90
+          },
+          "lines": [
+            "墙上的刻纹是古代的封印式。",
+            "已经断了一半了。大人，我们得快一点。"
+          ]
         }
       ]
     }
@@ -4668,6 +5927,9 @@
     {
       "id": "cleanup",
       "title": "大人的房间",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "roomTags": [
           "卧室"
@@ -4755,6 +6017,9 @@
     {
       "id": "night_talk",
       "title": "夜里的对话",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "roomTags": [
           "室内"
@@ -4846,6 +6111,9 @@
     {
       "id": "cooking_help",
       "title": "灶台旁",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "activities": [
           "Cooking"
@@ -4941,6 +6209,9 @@
     {
       "id": "rain_shelter",
       "title": "屋檐避雨",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "weather": "HeavyRain",
         "roomTags": [
@@ -5028,6 +6299,9 @@
     {
       "id": "old_scar",
       "title": "手臂上的旧痕",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "sameRoomAsPlayer": true,
         "bondMin": "Close",
@@ -5112,6 +6386,9 @@
     {
       "id": "first_snow",
       "title": "初雪",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "weather": "Snow",
         "season": "Winter",
@@ -5164,6 +6441,9 @@
     {
       "id": "well_memory",
       "title": "水井旁的回忆",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "roomTags": [
           "室外"
@@ -5258,6 +6538,9 @@
     {
       "id": "tailoring",
       "title": "灯下缝衣",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "roomTags": [
           "室内"
@@ -5352,6 +6635,9 @@
     {
       "id": "storm_night",
       "title": "雷雨之夜",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "weather": "Thunder",
         "hourMin": 20,
@@ -5449,6 +6735,9 @@
     {
       "id": "mood_low_comfort",
       "title": "心情低落",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "sameRoomAsPlayer": true,
         "bondMin": "Close",
@@ -5542,6 +6831,9 @@
     {
       "id": "scars_reveal",
       "title": "手心的茧",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "sameRoomAsPlayer": true,
         "bondMin": "Close",
@@ -5635,6 +6927,9 @@
     {
       "id": "star_night",
       "title": "星空下的约定",
+      "settings": [
+        "Territory"
+      ],
       "gate": {
         "weather": "Clear",
         "hourMin": 21,
@@ -5847,6 +7142,9 @@
         }
       ],
       "title": "一朵野花",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -5916,6 +7214,9 @@
         }
       ],
       "title": "离别的牵挂",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6036,6 +7337,9 @@
         }
       ],
       "title": "归来",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6165,6 +7469,9 @@
         }
       ],
       "title": "辗转难眠",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6304,6 +7611,9 @@
         }
       ],
       "title": "量身做衣",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6438,6 +7748,9 @@
         }
       ],
       "title": "练武",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6571,6 +7884,9 @@
         }
       ],
       "title": "发热照料",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6717,6 +8033,9 @@
         }
       ],
       "title": "集市同行",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6840,6 +8159,9 @@
         }
       ],
       "title": "无声的眼泪",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -6906,6 +8228,9 @@
         }
       ],
       "title": "清晨的日常",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "璐米埃尔"
       ],
@@ -7031,6 +8356,9 @@
         }
       ],
       "title": "失控的法术",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "赛琳"
       ],
@@ -7156,6 +8484,9 @@
         }
       ],
       "title": "成功的法术",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "赛琳"
       ],
@@ -7278,6 +8609,9 @@
         }
       ],
       "title": "魔导书与旧痕",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "赛琳"
       ],
@@ -7287,6 +8621,9 @@
     {
       "id": "visitor_arrival",
       "title": "登门的访客",
+      "settings": [
+        "Territory"
+      ],
       "characters": [
         "访客"
       ],

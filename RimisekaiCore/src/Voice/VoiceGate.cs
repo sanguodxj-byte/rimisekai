@@ -91,6 +91,9 @@ public sealed class VoiceGate
     /// <summary>距上次说这句至少这么多分钟。</summary>
     public int CooldownMinutes { get; set; }
 
+    /// <summary>距本角色上次在同一时机开口（不论哪一句）至少这么多分钟。主动对话靠它控频。</summary>
+    public int TriggerCooldownMinutes { get; set; }
+
     /// <summary>必须先说过这些台词。</summary>
     public List<string> RequireSaid { get; set; } = new();
 
@@ -277,6 +280,13 @@ public sealed class VoiceGate
         {
             var last = memory.LastSaidAt(lineId);
             if (last >= 0 && ctx.NowTotal - last < CooldownMinutes)
+                return false;
+        }
+
+        if (TriggerCooldownMinutes > 0)
+        {
+            var last = memory.LastSpoke(ctx.Trigger);
+            if (last >= 0 && ctx.NowTotal - last < TriggerCooldownMinutes)
                 return false;
         }
 

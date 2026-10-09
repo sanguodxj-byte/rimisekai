@@ -20,6 +20,9 @@ public sealed class SceneEvent
     /// <summary>分类，供配置界面按类过滤与开关。</summary>
     public string Genre { get; init; } = "";
 
+    /// <summary>这段剧情属于哪些场景（领地/野外/聚落/地城），只在这些场景开演，禁止跨越；读表时必填。</summary>
+    public List<VoiceSetting> Settings { get; init; } = new();
+
     /// <summary>
     /// 基础发生率，千分率（1000 = 每次检查必发，100 = 10%）。
     /// 与 eraFL 的 _RATE 同一口径，便于照搬既有数值。
@@ -126,6 +129,9 @@ public sealed class SceneLibrary
     {
         // 所有场景演出全存档终身仅演一次：已演过绝不再触发。
         if (ctx.FiredEvents.Contains(scene.Id))
+            return false;
+
+        if (!scene.Settings.Contains(ctx.Setting))
             return false;
 
         if (scene.Characters.Count > 0 && !scene.Characters.Contains(character.Name))

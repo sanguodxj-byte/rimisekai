@@ -85,4 +85,10 @@ public enum VoiceTrigger
 
     /// <summary>场景事件（多步剧情）开演。</summary>
     Scene,
+
+    /// <summary>
+    /// 场景内的主动对话：同处一地（「此刻」里看得见）的同伴自己开口。
+    /// 呈现为指向说话人头像的气泡，点一下推进，说完收起。频率由台词的 chance / cooldownMinutes 管。
+    /// </summary>
+    Chatter,
 }

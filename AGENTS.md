@@ -551,3 +551,8 @@
 - API Key: `REDACTED_API_KEY`
 - 默认生图模型: `gpt-image-2.5-sunburst` (或 `gptimage 2.5 sunburst` 对应映射标识)
 - 常用宽高比: 16:9
+
+## 台词分场景（禁止跨越）与场景内主动对话
+- 每句台词、每段场景剧情都必须写 `settings`（Territory 领地 / Wilds 野外 / Settlement 聚落 / Dungeon 地城），只在所写场景出现；没写的读表即报错。当前场景由 `HubSession.Setting` 按图层与是否在地城推出。
+- 主动对话＝`VoiceTrigger.Chatter`：时间流过、落脚后，「此刻」里同处的同伴按台词门槛（chance、cooldownMinutes、triggerCooldownMinutes）自己开口，进 `HubSession.PendingChatter`；换了场景或人不在眼前即作废。
+- 前端画成半透明黑底、白字气泡，盖地图网格下半部分，尖角指向「此刻」里说话人头像；整只气泡是一个命中块，点一下推进一句，说完收起。

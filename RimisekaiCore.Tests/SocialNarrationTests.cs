@@ -33,6 +33,7 @@ public class SocialNarrationTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "pat_act",
             Trigger = VoiceTrigger.PatHead,
             Kind = VoiceKind.Narration,
@@ -41,6 +42,7 @@ public class SocialNarrationTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "pat_react",
             Trigger = VoiceTrigger.PatHead,
             Kind = VoiceKind.Narration,
@@ -49,6 +51,7 @@ public class SocialNarrationTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "pat_speech",
             Trigger = VoiceTrigger.PatHead,
             Kind = VoiceKind.Speech,

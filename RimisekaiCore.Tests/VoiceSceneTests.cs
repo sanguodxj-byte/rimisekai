@@ -24,6 +24,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "cooking",
             Trigger = VoiceTrigger.Idle,
             Activities = { VoiceActivity.Cooking },
@@ -41,6 +42,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "touched",
             Trigger = VoiceTrigger.Touch,
             Roles = { VoiceRole.Partner },
@@ -58,6 +60,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "before",
             Trigger = VoiceTrigger.Kiss,
             Places = { VoicePlace.Before },
@@ -75,6 +78,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "tired",
             Trigger = VoiceTrigger.Idle,
             Emotion = VoiceEmotion.Tired,
@@ -125,6 +129,7 @@ public sealed class VoiceSceneTests
         // 低优先级的普通闲话，权重很高但会被排他句压掉。
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "smalltalk",
             Trigger = VoiceTrigger.Talk,
             Weight = 1000,
@@ -134,6 +139,7 @@ public sealed class VoiceSceneTests
         // 高优先级的排他句：此刻必须说这句。
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "urgent",
             Trigger = VoiceTrigger.Talk,
             Priority = 10,
@@ -153,6 +159,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "smalltalk",
             Trigger = VoiceTrigger.Talk,
             Priority = 1,
@@ -160,6 +167,7 @@ public sealed class VoiceSceneTests
         });
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "urgent",
             Trigger = VoiceTrigger.Talk,
             Priority = 10,
@@ -179,6 +187,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "off",
             Trigger = VoiceTrigger.Talk,
             Priority = 0,
@@ -197,6 +206,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "cleaning",
             Title = "打扫",
             Characters = { who.Name },
@@ -245,6 +255,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "offer",
             Characters = { who.Name },
             Steps =
@@ -294,6 +305,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "locked",
             Characters = { who.Name },
             Steps =
@@ -328,6 +340,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "first_meeting",
             Characters = { who.Name },
             Flag = "met",
@@ -348,6 +361,7 @@ public sealed class VoiceSceneTests
         // 换成"只在标志为 0 时触发"，验证状态机确实挡住了重复。
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "first_meeting",
             Characters = { who.Name },
             Flag = "met",
@@ -363,6 +377,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "rare",
             Characters = { who.Name },
             Rate = 0,
@@ -373,6 +388,7 @@ public sealed class VoiceSceneTests
 
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "daily",
             Characters = { who.Name },
             CooldownDays = 3,
@@ -393,6 +409,7 @@ public sealed class VoiceSceneTests
 
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "reward",
             Characters = { who.Name },
             Effects =
@@ -421,6 +438,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "gen",
             Trigger = VoiceTrigger.Talk,
             Generation = new VoiceGeneration { Instruction = "说点什么" },
@@ -441,6 +459,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "gen",
             Trigger = VoiceTrigger.Talk,
             Generation = new VoiceGeneration { Instruction = "回应玩家", LineCount = 2 },
@@ -466,6 +485,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "gen",
             Trigger = VoiceTrigger.Talk,
             Generation = new VoiceGeneration { Instruction = "x", CacheMinutes = 30 },
@@ -492,6 +512,7 @@ public sealed class VoiceSceneTests
         var pack = new VoicePack();
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "gen",
             Trigger = VoiceTrigger.Talk,
             Generation = new VoiceGeneration { Instruction = "x" },
@@ -526,6 +547,7 @@ public sealed class VoiceSceneTests
         // 同一句既有静态正文又有生成配置：同步路径用静态正文。
         pack.Register(new VoiceLine
         {
+            Settings = { VoiceSetting.Territory },
             Id = "both",
             Trigger = VoiceTrigger.Talk,
             Lines = { "静态兜底。" },
@@ -553,6 +575,7 @@ public sealed class VoiceSceneTests
                 {
                   "id": "cook",
                   "trigger": "Idle",
+                  "settings": ["Territory"],
                   "priority": 5,
                   "exclusive": true,
                   "activities": ["Cooking"],
@@ -586,6 +609,7 @@ public sealed class VoiceSceneTests
           "scenes": [
             {
               "id": "cleaning",
+              "settings": ["Territory"],
               "title": "打扫",
               "genre": "日常",
               "rate": 500,
@@ -654,6 +678,7 @@ public sealed class VoiceSceneTests
                 {
                   "id": "gen",
                   "trigger": "Talk",
+                  "settings": ["Territory"],
                   "generation": {
                     "instruction": "回应玩家刚才的话",
                     "style": "冷淡、简短",
@@ -898,6 +923,7 @@ public sealed class VoiceSceneTests
         var state = Setup(out var who, out var library, out var runner);
         library.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "once_scene",
             Characters = { who.Name },
             Rate = 1000,
@@ -965,6 +991,7 @@ public sealed class VoiceSceneTests
         // 注册一个只要人在场就 100% 触发的场景
         state.Voice.Scenes.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "ambient_scene",
             Characters = { "璐米埃尔" },
             Rate = 1000,
@@ -996,6 +1023,7 @@ public sealed class VoiceSceneTests
 
         state.Voice.Scenes.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "ambient_scene",
             Characters = { "璐米埃尔" },
             Rate = 1000,
@@ -1035,6 +1063,7 @@ public sealed class VoiceSceneTests
         // 注册测试用严苛门槛场景：满好感 + 全员满级 + 战斗归来状态
         state.Voice.Scenes.Register(new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "test_strict_scene",
             Characters = { "璐米埃尔" },
             Rate = 1000,

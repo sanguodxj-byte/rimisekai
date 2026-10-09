@@ -45,6 +45,9 @@ public sealed class VoiceLine
 
     // ---------- 场景维度 ----------
 
+    /// <summary>本句属于哪些场景（领地/野外/聚落/地城）。只在这些场景出现，禁止跨越；读表时必填。</summary>
+    public List<VoiceSetting> Settings { get; init; } = new();
+
     /// <summary>
     /// 本句只在说话人处于这些活动时出现。留空表示不限。
     /// 填了多项即"其中任一"。
@@ -82,6 +85,8 @@ public sealed class VoiceLine
     /// </summary>
     public bool MatchesScene(VoiceContext ctx)
     {
+        if (!Settings.Contains(ctx.Setting))
+            return false;
         if (Activities.Count > 0 && !Activities.Contains(ctx.Activity))
             return false;
         if (Roles.Count > 0 && !Roles.Contains(ctx.Role))

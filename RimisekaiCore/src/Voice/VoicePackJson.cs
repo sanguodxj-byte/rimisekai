@@ -108,6 +108,9 @@ public static class VoicePackJson
 
         // ---------- 场景维度 ----------
 
+        /// <summary>属于哪些场景（Territory / Wilds / Settlement / Dungeon）。必填，禁止跨越。</summary>
+        public List<VoiceSetting> Settings { get; set; } = new();
+
         /// <summary>只在说话人处于这些活动时出现。留空不限。</summary>
         public List<VoiceActivity> Activities { get; set; } = new();
 
@@ -147,6 +150,9 @@ public static class VoicePackJson
         public string Id { get; set; } = "";
         public string Title { get; set; } = "";
         public string Genre { get; set; } = "";
+
+        /// <summary>属于哪些场景（Territory / Wilds / Settlement / Dungeon）。必填，禁止跨越。</summary>
+        public List<VoiceSetting> Settings { get; set; } = new();
 
         /// <summary>基础发生率，千分率。1000 为必发。</summary>
         public int Rate { get; set; } = 1000;
@@ -335,6 +341,7 @@ public static class VoicePackJson
         public int? Chance { get; set; }
         public bool Once { get; set; }
         public int CooldownMinutes { get; set; }
+        public int TriggerCooldownMinutes { get; set; }
         public List<string> RequireSaid { get; set; } = new();
         public List<string> ForbidSaid { get; set; } = new();
 
@@ -408,6 +415,27 @@ public static class VoicePackJson
             error = "内容为空";
             return false;
         }
+
+        // 台词分场景，禁止跨越：没写场景的台词与剧情一律不收，读表即报错。
+        foreach (var entry in file.Characters)
+            foreach (var line in entry.Lines)
+                if (line.Settings.Count == 0)
+                {
+                    error = $"{entry.Name} 的台词 {line.Id} 没写 settings（台词分场景，禁止跨越）。";
+                    return false;
+                }
+        foreach (var line in file.World)
+            if (line.Settings.Count == 0)
+            {
+                error = $"通用台词 {line.Id} 没写 settings（台词分场景，禁止跨越）。";
+                return false;
+            }
+        foreach (var entry in file.Scenes)
+            if (entry.Settings.Count == 0)
+            {
+                error = $"场景剧情 {entry.Id} 没写 settings（台词分场景，禁止跨越）。";
+                return false;
+            }
 
         foreach (var entry in file.Characters)
         {
@@ -484,6 +512,7 @@ public static class VoicePackJson
         Exclusive = entry.Exclusive,
         IllustrationId = entry.IllustrationId,
         Gate = ToGate(entry.Gate),
+        Settings = entry.Settings,
         Activities = entry.Activities,
         Roles = entry.Roles,
         Places = entry.Places,
@@ -562,6 +591,7 @@ public static class VoicePackJson
             Id = entry.Id,
             Title = entry.Title,
             Genre = entry.Genre,
+            Settings = entry.Settings,
             Rate = entry.Rate,
             Characters = entry.Characters,
             Gate = entry.Gate == null ? null : ToGate(entry.Gate),
@@ -630,6 +660,7 @@ public static class VoicePackJson
             Chance = entry.Chance,
             Once = entry.Once,
             CooldownMinutes = entry.CooldownMinutes,
+            TriggerCooldownMinutes = entry.TriggerCooldownMinutes,
             RequireSaid = entry.RequireSaid,
             ForbidSaid = entry.ForbidSaid,
             Activities = entry.Activities,

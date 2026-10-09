@@ -372,6 +372,60 @@ public sealed class WorldEncounterTests
     }
 
     [Fact]
+    public void Lines_stay_in_their_own_setting_and_companions_chatter_as_a_bubble()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var mate = state.Roster.Add("同伴");
+        var pack = new Rimisekai.Voice.VoicePack();
+        Rimisekai.Voice.VoiceLine Chat(string id, Rimisekai.Voice.VoiceSetting where, params string[] lines) => new()
+        {
+            Id = id, Trigger = Rimisekai.Voice.VoiceTrigger.Chatter, Settings = { where }, Lines = lines.ToList(),
+            Gate = new Rimisekai.Voice.VoiceGate { TriggerCooldownMinutes = 30 },
+        };
+        pack.Register(Chat("home", Rimisekai.Voice.VoiceSetting.Territory, "家里的话"));
+        pack.Register(Chat("deep", Rimisekai.Voice.VoiceSetting.Dungeon, "地城的话一", "地城的话二"));
+        state.Voice.Register("同伴", pack);
+        hub.Day.Track(mate.Id, hub.PlayerRoomId).FollowsPlayer = true;
+        hub.PassTime(0);
+
+        // 领地里同房：开口的是领地那句，地城那句不越界。
+        Assert.Equal(Rimisekai.Voice.VoiceSetting.Territory, hub.Setting);
+        hub.PassTime(5);
+        Assert.Equal("家里的话", hub.PendingChatter!.Text);
+        Assert.Same(mate, hub.PendingChatter.Speaker);
+        hub.AdvanceChatter();
+        Assert.Null(hub.PendingChatter);
+
+        // 冷却之内不再开口。
+        hub.PassTime(5);
+        Assert.Null(hub.PendingChatter);
+
+        // 领地里开了口没点完就进地城：这段家常话作废，不带进地城。
+        state.Clock.Advance(60);
+        hub.PassTime(5);
+        Assert.Equal("家里的话", hub.PendingChatter!.Text);
+
+        // 进了委托地城：只说地城的话，两句逐句推进，说完收起；领地那句一次也不出现。
+        var run = MapQuest(state, state.Roster.Master!.Id, mate.Id);
+        Assert.True(hub.StartQuestDungeon(run));
+        Assert.Equal(Rimisekai.Voice.VoiceSetting.Dungeon, hub.Setting);
+        Assert.Null(hub.PendingChatter);
+        hub.PassTime(60);
+        Assert.Equal("地城的话一", hub.PendingChatter!.Text);
+        hub.AdvanceChatter();
+        Assert.Equal("地城的话二", hub.PendingChatter!.Text);
+        hub.AdvanceChatter();
+        Assert.Null(hub.PendingChatter);
+        for (var i = 0; i < 20; i++)
+        {
+            hub.PassTime(60);
+            Assert.True(hub.PendingChatter == null || hub.PendingChatter.Text.StartsWith("地城"));
+            hub.AdvanceChatter();
+            hub.AdvanceChatter();
+        }
+    }
+
+    [Fact]
     public void Leaving_a_quest_dungeon_rides_home_without_clearing_it()
     {
         var (hub, state) = Setup(rate: 0);

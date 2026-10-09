@@ -376,6 +376,7 @@ public sealed class EventSchedulingTests
           "scenes": [
             {
               "id": "visitor_arrival",
+              "settings": ["Territory"],
               "characters": ["访客"],
               "spawn": true,
               "dismissChoice": "decline",
@@ -447,6 +448,7 @@ public sealed class EventSchedulingTests
         // 注册两个同时触发的 Season 换季事件，Priority 分别为 20 和 5
         var sceneLow = new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "scene_p20",
             Title = "低优场景",
             Characters = { "璐米埃尔" },
@@ -454,6 +456,7 @@ public sealed class EventSchedulingTests
         };
         var sceneHigh = new SceneEvent
         {
+            Settings = { VoiceSetting.Territory },
             Id = "scene_p5",
             Title = "高优场景",
             Characters = { "璐米埃尔" },
