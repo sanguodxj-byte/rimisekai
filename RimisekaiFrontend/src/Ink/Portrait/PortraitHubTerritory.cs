@@ -403,50 +403,58 @@ public partial class PortraitHubScreen
         var entries = _vm.Hub.Log;
         if (entries.Count == 0)
             return;
-        var gap = 12f;
-        // 字号自 50 往下试到 44：先求放得下，再求折行最少——差一两个字就折出半行孤字时，宁可收小一号排成整行。
-        // 同样行数取较大的字号。
+        // 字号自 50 往下逐级试到下限 36：先求整段放得下，再求折行最少——差一两个字就折出半行孤字时，
+        // 宁可收小一号排成整行。同样行数取较大的字号。行距与条间距随字号同比缩。
         var size = PortraitLayout.LogFontMin;
         var best = (Fits: false, Lines: int.MaxValue);
         for (var fs = PortraitLayout.LogFontMax; fs >= PortraitLayout.LogFontMin; fs -= 2)
         {
-            var need = 0f;
+            var need = -LogGap(fs);
             var lines = 0;
             foreach (var e in entries)
             {
                 var n = InkDraw.WrapLines(e.Text, area.Size.X, fs).Count;
                 lines += n;
-                need += n * LogLineHeight(fs) + gap;
+                need += n * LogLineHeight(fs) + LogGap(fs);
             }
-            var fits = need - gap <= area.Size.Y;
-            if ((fits && !best.Fits) || (fits == best.Fits && lines < best.Lines))
+            var fits = need <= area.Size.Y + 0.5f;
+            // 都放不下时取下限字号，好让尽量多的条目露出来。
+            if ((fits && !best.Fits) || (fits && lines < best.Lines) || (!fits && !best.Fits))
             {
                 best = (fits, lines);
                 size = fs;
             }
         }
         var lineH = LogLineHeight(size);
+        var gap = LogGap(size);
+        // 下限字号仍放不下（极少见：一次操作里人多又都开口）：留最后一行写「还有 N 条」，点面板进日志页签看全。
+        var rows = (int)((area.Size.Y + gap + 0.5f) / (lineH + gap));
+        var budget = best.Fits ? int.MaxValue : rows - 1;
         var top = area.Position.Y;
+        var used = 0;
+        var drawn = 0;
         foreach (var e in entries)
         {
             var lines = InkDraw.WrapLines(e.Text, area.Size.X, size);
-            if (top + lines.Count * lineH > area.End.Y + 0.5f && top > area.Position.Y)
+            if (used + lines.Count > budget || top + lines.Count * lineH > area.End.Y + 0.5f)
                 break;
-            for (var i = 0; i < lines.Count; i++)
+            foreach (var line in lines)
             {
-                if (top + lineH > area.End.Y + 0.5f)
-                    break;
-                // 放不下的长条：最后一行收成「…」，看得出话没说完（点面板进日志页签看全文）。
-                var cut = i < lines.Count - 1 && top + 2f * lineH > area.End.Y + 0.5f;
-                var text = cut ? InkDraw.Ellipsize(lines[i] + lines[i + 1], area.Size.X, size) : lines[i];
-                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), text, size, InkStyle.Line, "lm");
+                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), line, size, InkStyle.Line, "lm");
                 top += lineH;
             }
             top += gap;
+            used += lines.Count;
+            drawn++;
         }
+        if (drawn < entries.Count)
+            InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), $"……还有 {entries.Count - drawn} 条，点开日志看全部", size, InkStyle.Dim, "lm");
     }
 
-    private static float LogLineHeight(int size) => Mathf.Round(size * 1.36f);
+    /// <summary>行距＝字号 ×1.28，条间距＝字号 ×0.16：50 号 64＋8，36 号 46＋6。</summary>
+    private static float LogLineHeight(int size) => Mathf.Round(size * 1.28f);
+
+    private static float LogGap(int size) => Mathf.Round(size * 0.16f);
 
     // ---------- 设施牌 ----------
 

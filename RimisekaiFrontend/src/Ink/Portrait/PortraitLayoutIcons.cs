@@ -21,12 +21,14 @@ public static partial class PortraitLayout
     /// <summary>日志面板内文字区：四边让 28px。</summary>
     public static Rect2 LogPanelText => LogPanel.Grow(-28f);
 
-    /// <summary>日志字号自 50 往下收，不低于 44；收到 44 仍放不下就裁掉最旧的。</summary>
+    /// <summary>
+    /// 日志字号自 50 往下自动收，下限 36（约 2.3mm，相当于手机系统 13pt 正文，高于 11pt 的系统最小字）。
+    /// 这是全局 44 下限之外唯一的例外：日志一次要装下一整次操作，宁可字小一号也不吞条目。
+    /// 收到 36 仍放不下，末行写「还有 N 条」，点面板进日志页签看全。
+    /// </summary>
     public const int LogFontMax = FontBody;
-    public const int LogFontMin = FontMeta;
+    public const int LogFontMin = 36;
 
-    /// <summary>字号自适应时要求完整放下的最近几条。</summary>
-    public const int LogFitEntries = 4;
 
     /// <summary>「此刻」带：每页 4 人，每人一格 220 宽；人多时第 4 人右侧一枚翻页三角钮（120 宽，≥118）。</summary>
     public const float NowSlot = 220f;
