@@ -372,9 +372,6 @@ public partial class PortraitHubScreen
             DrawPieceBadge(new Vector2(cx + 56f, r.Position.Y + 130f), card);
             InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 168f, r.Size.X, 56f), card.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            InkDraw.TextBounded(this, new Rect2(r.Position.X, r.Position.Y + 226f, r.Size.X, 52f),
-                ActivityOf(card.Id),
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.NowAvatar, card.Id, true, card.Name));
         }
         if (cards.Length <= size)

@@ -10,7 +10,7 @@ namespace Rimisekai.Portrait;
 ///
 /// 骨架（2026-10-07 重设计）：
 /// 根页签＝顶部 HUD（安全区之下 210 高，两行：地名＋金钱 / 季节·天气·时刻＋系统钮）
-///        ＋内容区＋底部五页签（领地 / 角色 / 委托 / 仓储 / 日志，210 高）；
+///        ＋内容区＋底部五页签（领地 / 角色 / 委托 / 仓储 / 日志，176 高）；
 /// 推入页（角色详情、建造、系统、技能星盘、对话）＝顶栏（返回＋标题，150 高）＋整页内容，不带页签；
 /// 设施、编成、排班、存取、交互一律走底部抽屉（压暗上层＋圆顶面板）。
 /// </summary>
@@ -71,7 +71,8 @@ public static partial class PortraitLayout
     // ---------- 根页签骨架：HUD / 内容 / 页签带 ----------
 
     public const float HudHeight = 210f;
-    public const float TabBarHeight = 210f;
+    /// <summary>2026-10-09 主人改：210 压到 176（图标窗贴上沿、字收紧），省下的给日志。</summary>
+    public const float TabBarHeight = 176f;
     public const int TabCount = 5;
     public static readonly string[] TabLabels = { "领地", "角色", "委托", "仓储", "日志" };
 

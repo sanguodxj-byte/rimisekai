@@ -429,7 +429,7 @@ public partial class PortraitHubScreen : Control
         var y0 = bar.Position.Y;
         DrawLine(new Vector2(0, y0), new Vector2(PortraitLayout.CanvasWidth, y0), InkStyle.Dim, 3f, true);
         DrawLine(new Vector2(0, y0 + 10f), new Vector2(PortraitLayout.CanvasWidth, y0 + 10f), new Color(InkStyle.WoodDark, 0.9f), 2f, true);
-        var cy = PortraitLayout.Tab(0).Position.Y + 70f;
+        var cy = PortraitLayout.Tab(0).Position.Y + 62f;
         // 龛：每个页签一道压暗尖拱轮廓（自檐下垂到字下），柱：页签缝上一根细柱＋柱头菱
         for (var i = 0; i < PortraitLayout.TabCount; i++)
         {
@@ -446,10 +446,10 @@ public partial class PortraitHubScreen : Control
         }
         // 当前页签的尖拱窗：不横向滑动（安卓式指示条），切换时新龛里的窗自檐下升起、旧龛的窗淡去。
         var rise = _tabMotion.Running ? _tabMotion.Eased : 1f;
-        var full = new Rect2(PortraitLayout.Tab(_tab).GetCenter().X - 64f, cy - 66f, 128f, 112f);
+        var full = new Rect2(PortraitLayout.Tab(_tab).GetCenter().X - 64f, cy - 62f, 128f, 102f);
         if (_tabMotion.Running && _tabFrom != _tab)
         {
-            var old = new Rect2(PortraitLayout.Tab(_tabFrom).GetCenter().X - 64f, cy - 66f, 128f, 112f);
+            var old = new Rect2(PortraitLayout.Tab(_tabFrom).GetCenter().X - 64f, cy - 62f, 128f, 102f);
             PortraitFrame.Arch(this, old, 46f, new Color(InkStyle.Line, 1f - rise));
         }
         var h = Mathf.Max(1f, full.Size.Y * rise);
@@ -467,7 +467,7 @@ public partial class PortraitHubScreen : Control
             var cx = r.GetCenter().X;
             var covered = on ? rise >= 0.6f : _tabMotion.Running && i == _tabFrom && rise < 0.4f;
             PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
-            InkDraw.Text(this, new Vector2(cx, cy + 90f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
+            InkDraw.Text(this, new Vector2(cx, cy + 82f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
         }

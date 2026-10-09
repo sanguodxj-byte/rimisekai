@@ -31,7 +31,8 @@ public static partial class PortraitLayout
     /// <summary>「此刻」带：每页 4 人，每人一格 220 宽；人多时第 4 人右侧一枚翻页三角钮（120 宽，≥118）。</summary>
     public const float NowSlot = 220f;
     public const int NowPageSize = 4;
-    public const float NowStripHeight = 290f;
+    /// <summary>2026-10-09 主人改：名字下的状态行（空闲/睡觉…）去掉，带高只到名字底，省下的给日志。</summary>
+    public const float NowStripHeight = 232f;
     public static Rect2 NowStrip => new(0, TravelButton.Position.Y - 12f - NowStripHeight, CanvasWidth, NowStripHeight);
     public static float NowRuleY => NowStrip.Position.Y - 28f;
     public static Rect2 NowCard(int i) => new(Pad + i * NowSlot, NowStrip.Position.Y, NowSlot - 16f, NowStrip.Size.Y);
