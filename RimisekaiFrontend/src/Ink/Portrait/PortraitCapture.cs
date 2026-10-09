@@ -301,8 +301,12 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() => { _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0); _root.HubScreen.ShowTab(0); });
         _steps.Enqueue(CheckCrowdedTerritory);
+        _steps.Enqueue(FillCrowdedLog);
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
         _steps.Enqueue(() => Shoot("territory_crowded", _root.HubScreen));
         _steps.Enqueue(PressNowPager);
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() => Shoot("territory_crowded_page2", _root.HubScreen));
         _steps.Enqueue(CheckNowPageTurned);
         _steps.Enqueue(CheckNowPageWrapped);
         _steps.Enqueue(() =>
@@ -560,9 +564,12 @@ public partial class PortraitCapture : Node
             "log snapshot runs action → environment → characters and only carries what the player's room can perceive");
         Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.Tab && w.Index == 4 && w.Rect == PortraitLayout.LogPanel),
             "log panel taps through to log tab");
-        Require(PortraitLayout.LogPanel.Size.Y >= 400f && PortraitLayout.LogPanel.End.Y < PortraitLayout.MapFrame.Position.Y
+        // 最小字号 36 下至少装得下 6 行（玩家动作 1～2＋环境 1＋「此刻」当前页 3 人）：行高 46、条距 6。
+        var minLine = Mathf.Round(PortraitLayout.LogFontMin * 1.28f);
+        var minGap = Mathf.Round(PortraitLayout.LogFontMin * 0.16f);
+        Require(6 * minLine + 5 * minGap <= PortraitLayout.LogPanelText.Size.Y + 0.5f && PortraitLayout.LogPanel.End.Y < PortraitLayout.MapFrame.Position.Y
             && PortraitLayout.NowStrip.End.Y <= PortraitLayout.TravelButton.Position.Y && PortraitLayout.MapCell >= PortraitLayout.TouchMin,
-            "log panel is tall and grid plus strip sit below it");
+            "log panel holds six lines at the minimum font and grid plus strip sit below it");
         Require(LogEntry.Compose("细雨落在菜垄上。", "你闻到了泥土的气味。") == "细雨落在菜垄上，你闻到了泥土的气味。"
             && LogEntry.Compose("天气转为雨天。", "") == "天气转为雨天。", "log entry joins a and b with a comma");
         Shoot("territory_moved", screen);
@@ -586,21 +593,43 @@ public partial class PortraitCapture : Node
             && avatars.All(a => a.Rect.End.X <= pager.Rect.Position.X), "now strip pager sits right of the fourth avatar");
     }
 
+    /// <summary>满屋子人：每人写一行在做什么，看日志角色档是否只跟着「此刻」当前页的 3 人走。</summary>
+    private void FillCrowdedLog()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        hub.BeginOperation();
+        hub.WriteScene("你来到了" + (hub.State.Territory.Room(hub.PlayerRoomId)?.Name ?? "这里") + "。");
+        hub.WriteEnvironment("天气转为雨天。");
+        foreach (var c in hub.Party().Where(c => !c.IsPlayer && c.RoomId == hub.PlayerRoomId))
+            hub.WriteActivity(c.Id, $"{c.Name}靠在窗边看雨。");
+        var others = hub.Party().Count(c => !c.IsPlayer && c.RoomId == hub.PlayerRoomId);
+        Require(hub.Log.Count(e => e.Kind == LogKind.Activity) == others, "crowded log has a line per person");
+        _root.HubScreen.QueueRedraw();
+    }
+
     private int[] _nowFirstPage = Array.Empty<int>();
 
-    private int[] NowIds() =>
-        _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar).Select(w => w.Index).ToArray();
+    /// <summary>「此刻」当前页上除主角外的人（主角固定在第 1 格，不随翻页换）。</summary>
+    private int[] NowIds()
+    {
+        var player = _root.HubScreen.DebugHub.Party().First(c => c.IsPlayer).Id;
+        return _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.NowAvatar && w.Index != player).Select(w => w.Index).ToArray();
+    }
 
     private int NowPages()
     {
         var hub = _root.HubScreen.DebugHub;
-        var total = hub.Party().Count(c => c.IsPlayer || c.RoomId == hub.PlayerRoomId);
-        return (total + PortraitLayout.NowPageSize - 1) / PortraitLayout.NowPageSize;
+        var others = hub.Party().Count(c => !c.IsPlayer && c.RoomId == hub.PlayerRoomId);
+        return (others + PortraitLayout.NowOthersPerPage - 1) / PortraitLayout.NowOthersPerPage;
     }
 
     /// <summary>翻页（上）：记下首页，按一次三角钮。</summary>
     private void PressNowPager()
     {
+        // 有人开口时「此刻」钉在说话人那页，先把气泡说完再翻页。
+        for (var i = 0; i < 20 && _root.HubScreen.DebugHub.PendingChatter != null; i++)
+            _root.HubScreen.DebugHub.AdvanceChatter();
+        _root.HubScreen.QueueRedraw();
         _nowFirstPage = NowIds();
         _root.HubScreen.DebugPress(PortraitAction.NowPage, 0);
     }
@@ -608,7 +637,7 @@ public partial class PortraitCapture : Node
     /// <summary>翻页（中）：换成了下 4 人；再按到翻过末页。</summary>
     private void CheckNowPageTurned()
     {
-        Require(NowIds().Length > 0 && !NowIds().Intersect(_nowFirstPage).Any(), "now pager turns to the next four");
+        Require(NowIds().Length > 0 && !NowIds().Intersect(_nowFirstPage).Any(), "now pager turns to the next three");
         for (var i = 1; i < NowPages(); i++)
             _root.HubScreen.DebugPress(PortraitAction.NowPage, 0);
     }

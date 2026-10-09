@@ -22,6 +22,8 @@ public partial class PortraitHubScreen
 
     private void DrawTerritory()
     {
+        // 先定「此刻」翻到哪一页（有人开口就翻到说话人那页），日志面板与头像栏用同一页。
+        ShowChatterSpeakerPage();
         // 过界平移时网格先画、再把滑出网格的部分遮掉，日志面板须在遮罩之后画。
         if (!Crossing)
             DrawLogPanel();
@@ -51,7 +53,6 @@ public partial class PortraitHubScreen
             DrawFacilityStrip();
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
-        ShowChatterSpeakerPage();
         DrawNowStrip();
 
         var travel = PortraitLayout.TravelButton;
@@ -68,17 +69,37 @@ public partial class PortraitHubScreen
             DrawChatter();
     }
 
-    /// <summary>「此刻」里与主角同处的人（与 <see cref="DrawNowStrip"/> 同一份名单、同一顺序）。</summary>
-    private CharacterCard[] NowCards() => _vm.Cards().Where(SameRoomAsPlayer).ToArray();
+    /// <summary>「此刻」里与主角同处的其他人（不含主角，按名册顺序）：每页 <see cref="PortraitLayout.NowOthersPerPage"/> 人。</summary>
+    private CharacterCard[] NowOthers() => _vm.Cards().Where(c => !c.IsPlayer && SameRoomAsPlayer(c)).ToArray();
+
+    private int NowPages() => Math.Max(1, (NowOthers().Length + PortraitLayout.NowOthersPerPage - 1) / PortraitLayout.NowOthersPerPage);
+
+    /// <summary>
+    /// 「此刻」当前页：主角固定在第 1 格，后面跟当前页的至多 3 人。
+    /// 日志面板的角色档只显示这几个人的行——与头像一一对应，翻页即同步换（2026-10-10 主人定）。
+    /// </summary>
+    private CharacterCard[] NowPageCards()
+    {
+        _nowPage %= NowPages();
+        var list = new List<CharacterCard>();
+        foreach (var c in _vm.Cards())
+            if (c.IsPlayer)
+            {
+                list.Add(c);
+                break;
+            }
+        list.AddRange(NowOthers().Skip(_nowPage * PortraitLayout.NowOthersPerPage).Take(PortraitLayout.NowOthersPerPage));
+        return list.ToArray();
+    }
 
     /// <summary>有人主动开口时，「此刻」翻到说话人那一页，气泡才指得到她的头像。</summary>
     private void ShowChatterSpeakerPage()
     {
         if (_vm.Hub.PendingChatter is not { } chat)
             return;
-        var at = Array.FindIndex(NowCards(), c => c.Id == chat.Speaker.Id);
+        var at = Array.FindIndex(NowOthers(), c => c.Id == chat.Speaker.Id);
         if (at >= 0)
-            _nowPage = at / PortraitLayout.NowPageSize;
+            _nowPage = at / PortraitLayout.NowOthersPerPage;
     }
 
     /// <summary>
@@ -91,7 +112,7 @@ public partial class PortraitHubScreen
     {
         if (_vm.Hub.PendingChatter is not { } chat)
             return;
-        var at = Array.FindIndex(NowCards(), c => c.Id == chat.Speaker.Id);
+        var at = Array.FindIndex(NowPageCards(), c => c.Id == chat.Speaker.Id);
         if (at < 0)
             return;
         var grid = PortraitLayout.MapGrid;
@@ -99,7 +120,7 @@ public partial class PortraitHubScreen
         var white = new Color(1f, 1f, 1f);
         var fill = new Color(0.02f, 0.02f, 0.03f, 0.9f);
 
-        var card = PortraitLayout.NowCard(at % PortraitLayout.NowPageSize);
+        var card = PortraitLayout.NowCard(at);
         var tipX = card.GetCenter().X;
         var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 14f);
         var outline = BubblePath(bubble, 28f, tip, 26f);
@@ -351,18 +372,16 @@ public partial class PortraitHubScreen
     private int _nowPage;
 
     /// <summary>
-    /// 「此刻」：与主角同房的人（头像＋棋子徽＋名字＋此刻的安排），每页至多 4 人；不在同一房间的人不显示。
-    /// 点别人即交流，点主角看角色详情。多于 4 人时第 4 人右侧画一枚实心右指三角钮，点了翻到下 4 人，末页再点回首页。
+    /// 「此刻」：主角固定第 1 格，其后是与主角同房的其他人，每页至多 3 人；不在同一房间的人不显示。
+    /// 点别人即交流，点主角看角色详情。多于 3 人时第 4 格右侧画一枚实心右指三角钮，点了翻到下 3 人，末页再点回首页；
+    /// 日志面板跟着换成这一页的人（见 <see cref="NowPageCards"/>）。
     /// </summary>
     private void DrawNowStrip()
     {
-        var cards = _vm.Cards().Where(SameRoomAsPlayer).ToArray();
-        var size = PortraitLayout.NowPageSize;
-        var pages = Math.Max(1, (cards.Length + size - 1) / size);
-        _nowPage %= pages;
-        for (var i = 0; i < size && _nowPage * size + i < cards.Length; i++)
+        var cards = NowPageCards();
+        for (var i = 0; i < cards.Length; i++)
         {
-            var card = cards[_nowPage * size + i];
+            var card = cards[i];
             var r = PortraitLayout.NowCard(i);
             var cx = r.GetCenter().X;
             if (PortraitFrame.IsPressed(r))
@@ -374,7 +393,7 @@ public partial class PortraitHubScreen
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.NowAvatar, card.Id, true, card.Name));
         }
-        if (cards.Length <= size)
+        if (NowPages() <= 1)
             return;
         var pager = PortraitLayout.NowPager;
         if (PortraitFrame.IsPressed(pager))
@@ -387,7 +406,7 @@ public partial class PortraitHubScreen
     /// <summary>
     /// 日志面板＝本次操作的快照（Core 的 <c>HubSession.Log</c>，按写入先后即按时间排）：
     /// 每次有新输出的操作都整份清空换新，不与旧日志混排。每条一句「a，b」，自上而下排，全部骨白。
-    /// 字号自 50 往下收到恰好放下，不低于 44；收到 44 仍放不下，末尾放不下的整条不画，不溢出。
+    /// 字号自 50 往下收到恰好放下，下限 36；角色档只显示「此刻」当前页的至多 3 人，翻页同步换。
     /// 整块点一下即进日志页签（那里按时间看全部历史）。
     /// </summary>
     private void DrawLogPanel()
@@ -400,7 +419,11 @@ public partial class PortraitHubScreen
             PortraitFrame.PressMark(this, panel);
         _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
         var area = PortraitLayout.LogPanelText;
-        var entries = _vm.Hub.Log;
+        // 角色档只留「此刻」当前页上的人（至多 3 人），与头像对齐；玩家动作与环境变化照常全显。
+        // 门外搭话的人不在同房名单里，照常显示（声音隔着门听得见）。
+        var onPage = NowPageCards().Select(c => c.Id).ToHashSet();
+        var inRoom = NowOthers().Select(c => c.Id).ToHashSet();
+        var entries = _vm.Hub.Log.Where(e => e.Kind != LogKind.Activity || e.Who < 0 || onPage.Contains(e.Who) || !inRoom.Contains(e.Who)).ToList();
         if (entries.Count == 0)
             return;
         // 字号自 50 往下逐级试到下限 36：先求整段放得下，再求折行最少——差一两个字就折出半行孤字时，
@@ -427,28 +450,25 @@ public partial class PortraitHubScreen
         }
         var lineH = LogLineHeight(size);
         var gap = LogGap(size);
-        // 下限字号仍放不下（极少见：一次操作里人多又都开口）：留最后一行写「还有 N 条」，点面板进日志页签看全。
-        var rows = (int)((area.Size.Y + gap + 0.5f) / (lineH + gap));
-        var budget = best.Fits ? int.MaxValue : rows - 1;
         var top = area.Position.Y;
-        var used = 0;
         var drawn = 0;
         foreach (var e in entries)
         {
             var lines = InkDraw.WrapLines(e.Text, area.Size.X, size);
-            if (used + lines.Count > budget || top + lines.Count * lineH > area.End.Y + 0.5f)
+            if (top + lines.Count * lineH > area.End.Y + 0.5f)
+            {
+                // 规范：最小字号下必须完整显示全部日志（docs/日志规范.md）。走到这里是 Core 写多了，报出来而不是悄悄吞。
+                GD.PushWarning($"日志面板放不下：{entries.Count} 条里只画得下 {drawn} 条（字号 {size}）");
                 break;
+            }
             foreach (var line in lines)
             {
                 InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), line, size, InkStyle.Line, "lm");
                 top += lineH;
             }
             top += gap;
-            used += lines.Count;
             drawn++;
         }
-        if (drawn < entries.Count)
-            InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), $"……还有 {entries.Count - drawn} 条，点开日志看全部", size, InkStyle.Dim, "lm");
     }
 
     /// <summary>行距＝字号 ×1.28，条间距＝字号 ×0.16：50 号 64＋8，36 号 46＋6。</summary>

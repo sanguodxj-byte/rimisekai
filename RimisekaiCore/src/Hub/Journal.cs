@@ -22,8 +22,10 @@ public enum LogKind
 /// 一条日志：上帝视角，但只写玩家感知得到的事。
 /// <see cref="Fact"/>＝a 段，系统性/客观信息；<see cref="Feel"/>＝b 段，以玩家为中心的感受或角色对玩家的反应。
 /// 两段在显示时合成一句「a，b」（<see cref="Text"/>）；b 没有出处时为空，只显示 a。
+/// <see cref="Who"/>＝角色档（<see cref="LogKind.Activity"/>）这一行是谁的，其余为 -1；
+/// 日志面板据此只显示「此刻」当前页上那几个人的行。
 /// </summary>
-public readonly record struct LogEntry(LogKind Kind, string Fact, string Feel, int Day, int Minutes)
+public readonly record struct LogEntry(LogKind Kind, string Fact, string Feel, int Day, int Minutes, int Who = -1)
 {
     /// <summary>显示用的一句话：b 为空时就是 a（自带句末标点），否则 a 去掉句末句号后接「，」再接 b。</summary>
     public string Text => Compose(Fact, Feel);
@@ -190,7 +192,7 @@ public sealed partial class HubSession
 
     /// <summary>写某角色此刻在做什么（只写玩家所在房间里看得见的人）。</summary>
     public void WriteActivity(int characterId, string fact, string feel = "") =>
-        _book.WriteActivity(characterId, Entry(LogKind.Activity, fact, feel));
+        _book.WriteActivity(characterId, Entry(LogKind.Activity, fact, feel) with { Who = characterId });
 
     /// <summary>写一条场景描述。</summary>
     public void WriteScene(string fact, string feel = "") =>

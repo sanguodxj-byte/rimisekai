@@ -33,6 +33,8 @@ public sealed class LogEntryData
     public string Feel { get; set; } = "";
     public int Day { get; set; }
     public int Minutes { get; set; }
+    /// <summary>角色档那一行是谁的；旧档没有这一项，读出来是 -1（不按人筛）。</summary>
+    public int Who { get; set; } = -1;
 }
 
 public sealed partial class HubSession
@@ -58,7 +60,7 @@ public sealed partial class HubSession
         PlayerRoom = playerRoom,
         Selected = SelectedCharacterId,
         Presence = presence,
-        Log = History.Select(l => new LogEntryData { Kind = l.Kind, Fact = l.Fact, Feel = l.Feel, Day = l.Day, Minutes = l.Minutes }).ToList(),
+        Log = History.Select(l => new LogEntryData { Kind = l.Kind, Fact = l.Fact, Feel = l.Feel, Day = l.Day, Minutes = l.Minutes, Who = l.Who }).ToList(),
         MarketSettledDay = MarketSettledDay,
         StagedActors = CaptureStagedActors(),
     };
@@ -72,7 +74,7 @@ public sealed partial class HubSession
             Enter(snapshot.PlayerRoom);
         if (snapshot.Selected >= 0)
             Select(snapshot.Selected);
-        _book.Restore(snapshot.Log.Select(l => new LogEntry(l.Kind, l.Fact, l.Feel, l.Day, l.Minutes)));
+        _book.Restore(snapshot.Log.Select(l => new LogEntry(l.Kind, l.Fact, l.Feel, l.Day, l.Minutes, l.Who)));
         // 读档即人在据点：在集市状态是行程中的临时态，不进存档。
         AtMarket = false;
         MarketSettledDay = snapshot.MarketSettledDay;

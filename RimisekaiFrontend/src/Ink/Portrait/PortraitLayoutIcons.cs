@@ -24,7 +24,7 @@ public static partial class PortraitLayout
     /// <summary>
     /// 日志字号自 50 往下自动收，下限 36（约 2.3mm，相当于手机系统 13pt 正文，高于 11pt 的系统最小字）。
     /// 这是全局 44 下限之外唯一的例外：日志一次要装下一整次操作，宁可字小一号也不吞条目。
-    /// 收到 36 仍放不下，末行写「还有 N 条」，点面板进日志页签看全。
+    /// 规范要求 36 号下一次操作的日志必须全部放得下：玩家动作＋环境变化＋「此刻」当前页至多 3 人。
     /// </summary>
     public const int LogFontMax = FontBody;
     public const int LogFontMin = 36;
@@ -33,6 +33,9 @@ public static partial class PortraitLayout
     /// <summary>「此刻」带：每页 4 人，每人一格 220 宽；人多时第 4 人右侧一枚翻页三角钮（120 宽，≥118）。</summary>
     public const float NowSlot = 220f;
     public const int NowPageSize = 4;
+
+    /// <summary>「此刻」每页除主角外的人数：主角固定第 1 格，其余 3 格翻页（日志角色档同步只显示这 3 人）。</summary>
+    public const int NowOthersPerPage = NowPageSize - 1;
     /// <summary>2026-10-09 主人改：名字下的状态行（空闲/睡觉…）去掉，带高只到名字底，省下的给日志。</summary>
     public const float NowStripHeight = 232f;
     public static Rect2 NowStrip => new(0, TravelButton.Position.Y - 12f - NowStripHeight, CanvasWidth, NowStripHeight);
