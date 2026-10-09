@@ -92,19 +92,6 @@ public partial class PortraitHubScreen
         return list.ToArray();
     }
 
-    /// <summary>
-    /// 「此刻」第 i 格：要翻页时照固定 4 格＋右侧三角钮排；一页放得下时，这一页的几格整排居中（2026-10-10 主人定）。
-    /// </summary>
-    private Rect2 NowSlot(int i, int count)
-    {
-        var fixedRect = PortraitLayout.NowCard(i);
-        if (NowPages() > 1)
-            return fixedRect;
-        var rowW = count * PortraitLayout.NowSlot - 16f;
-        var left = PortraitLayout.CanvasWidth / 2f - rowW / 2f;
-        return new Rect2(left + i * PortraitLayout.NowSlot, fixedRect.Position.Y, fixedRect.Size.X, fixedRect.Size.Y);
-    }
-
     /// <summary>有人主动开口时，「此刻」翻到说话人那一页，气泡才指得到她的头像。</summary>
     private void ShowChatterSpeakerPage()
     {
@@ -133,7 +120,7 @@ public partial class PortraitHubScreen
         var white = new Color(1f, 1f, 1f);
         var fill = new Color(0.02f, 0.02f, 0.03f, 0.9f);
 
-        var card = NowSlot(at, NowPageCards().Length);
+        var card = PortraitLayout.NowCard(at);
         var tipX = card.GetCenter().X;
         var tip = new Vector2(tipX, card.Position.Y + 84f - 66f - 14f);
         var outline = BubblePath(bubble, 28f, tip, 26f);
@@ -395,7 +382,7 @@ public partial class PortraitHubScreen
         for (var i = 0; i < cards.Length; i++)
         {
             var card = cards[i];
-            var r = NowSlot(i, cards.Length);
+            var r = PortraitLayout.NowCard(i);
             var cx = r.GetCenter().X;
             if (PortraitFrame.IsPressed(r))
                 PortraitFrame.PressMark(this, r);
