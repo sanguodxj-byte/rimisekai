@@ -347,8 +347,11 @@ public partial class PortraitCombatView : Control
                     DrawUnitImage(unit, new Rect2(shaken.Position + new Vector2(4, 4), shaken.Size - new Vector2(8, 8)));
                     PortraitFrame.Bar(this, new Rect2(shaken.Position.X + 6, shaken.End.Y - 14, shaken.Size.X - 12, 10),
                         (float)unit.Hp / unit.MaxHp);
-                    InkDraw.TextBounded(this, new Rect2(shaken.Position.X, shaken.End.Y + 6f, shaken.Size.X, 34),
-                        unit.Name, PortraitLayout.FontBody, 26, InkStyle.Line, "cm");
+                    // 名字收进方区内、血条正上方：前排方区底缘紧贴行动面板，放在方区外会被面板截掉半行。
+                    // 底下垫一道自下而上渐隐的暗带，压在立绘脚部上也读得清。
+                    var nameRect = new Rect2(shaken.Position.X, shaken.End.Y - 20f - 36f, shaken.Size.X, 36f);
+                    PortraitFrame.Fade(this, new Rect2(nameRect.Position.X + 4f, nameRect.Position.Y - 12f, nameRect.Size.X - 8f, 48f + 8f), 0f, 0.85f);
+                    InkDraw.TextBounded(this, nameRect, unit.Name, PortraitLayout.FontBody, 26, InkStyle.Line, "cm");
                 }
                 else
                 {
