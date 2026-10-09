@@ -358,8 +358,7 @@ public partial class PortraitHubScreen : Control
         InkDraw.Text(this, new Vector2(place.Position.X + 20f, PortraitLayout.HudLine1), shown, titleSize, InkStyle.Line, "lm");
         if (_vm.CanRenameTerritory)
         {
-            PortraitGlyph.Pen(this, place.Position.X + 20f + InkDraw.Measure(shown, titleSize).X + 40f,
-                PortraitLayout.HudLine1, 16f, InkStyle.Dim);
+            // 2026-10-10 主人定：地名右侧的笔形小图标去掉；点地名照样改名。
             _widgets.Add(new PortraitWidget(new Rect2(place.Position, new Vector2(
                     Mathf.Min(place.Size.X, InkDraw.Measure(shown, titleSize).X + 100f), place.Size.Y)),
                 PortraitAction.Rename, 0, true, "改名"));
@@ -368,8 +367,12 @@ public partial class PortraitHubScreen : Control
         var pill = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - moneyWidth, PortraitLayout.HudLine1 - 38f,
             moneyWidth, 76f);
         PortraitFrame.RoundRect(this, pill, 38f, new Color(InkStyle.Inset, 0.85f), InkStyle.Dim, 3f);
-        PortraitGlyph.Coin(this, pill.Position.X + 46f, pill.GetCenter().Y, 20f, InkStyle.Line);
-        InkDraw.Text(this, new Vector2(pill.End.X - 32f, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "rm");
+        // 金币＋数字作为一组在签内水平居中（2026-10-10 主人定）。
+        const float coinR = 20f, coinGap = 14f;
+        var groupW = coinR * 2f + coinGap + InkDraw.Measure(money, PortraitLayout.FontMeta).X;
+        var gx0 = pill.GetCenter().X - groupW / 2f;
+        PortraitGlyph.Coin(this, gx0 + coinR, pill.GetCenter().Y, coinR, InkStyle.Line);
+        InkDraw.Text(this, new Vector2(gx0 + coinR * 2f + coinGap, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "lm");
 
         // 第二行＝一条状态缎带：季节日子 · 天气 · 时刻三段，段与段之间等距、正中各一枚小菱隔开；
         // 段宽按内容，剩下的空隙均分，所以无论字长短，三段的间距都一样齐。时刻是此刻最常看的，用亮字。
@@ -406,7 +409,8 @@ public partial class PortraitHubScreen : Control
             }
         }
         // 缎带上沿一道淡出细线，把状态行和地名行分开。
-        PortraitFrame.FadingRule(this, PortraitLayout.Pad, right, y - 40f);
+        // 两端对称，菱形落在画面正中（2026-10-10 主人定）。
+        PortraitFrame.FadingRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y - 40f);
 
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))

@@ -503,11 +503,25 @@ public partial class PortraitHubScreen
             FixtureGlyph(f)(this, cx, r.Position.Y + 46f, 22f, InkStyle.Line);
             var size = InkDraw.FitSize(f.Name, r.Size.X - 32f, PortraitLayout.FontMeta, PortraitLayout.FontMeta);
             InkDraw.Text(this, new Vector2(cx, r.End.Y - 40f), f.Name, size, InkStyle.Line, "cm");
-            var workers = _vm.WorkersAtFixture(f.Id).Count;
-            if (workers > 0)
-                InkDraw.Jewel(this, new Vector2(r.End.X - 24f, r.Position.Y + 24f), 7f, InkStyle.Line);
+            // 正在用这件设施的人：与领地格、「此刻」同款的棋子标识，右上角一排（2026-10-10 主人定，不另造标记）。
+            DrawFixturePieces(_vm.WorkersAtFixture(f.Id), r);
             _widgets.Add(new PortraitWidget(r, PortraitAction.Fixture, f.Id, true, f.Name));
         }
+    }
+
+    /// <summary>设施牌右上角的使用者棋子：底线对齐、自右向左排，多于 3 人时最左一枚换成「+」。</summary>
+    private void DrawFixturePieces(IReadOnlyList<CharacterCard> cards, Rect2 plaque)
+    {
+        if (cards.Count == 0)
+            return;
+        const float h = 34f, step = 24f, cap = 3;
+        var shown = cards.Count > cap ? (int)cap - 1 : cards.Count;
+        var baseY = plaque.Position.Y + 18f + h;
+        var x = plaque.End.X - 26f;
+        for (var i = 0; i < shown; i++, x -= step)
+            InkDraw.Chess(this, new Vector2(x, baseY), h, InkDraw.PieceFor(cards[i]));
+        if (cards.Count > cap)
+            PortraitGlyph.Plus(this, x, baseY - h * 0.4f, h * 0.32f, InkStyle.Line);
     }
 
     /// <summary>设施牌上的小图标：按设施能做的事挑一枚，挑不出就是一颗菱。</summary>

@@ -113,6 +113,12 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() =>
         {
+            // 返回前先弹一问写明路程，点「确定」才动身。
+            Require(_root.ModalLayer.IsActive, "return to the territory asks first");
+            _root.ModalLayer.Choose("confirm");
+        });
+        _steps.Enqueue(() =>
+        {
             var hub = _root.HubScreen.DebugHub;
             // 回到出门前那间（东区西门），过界回中心区。
             Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.RegionId == 2 && hub.CrossTo(0) && hub.RegionId == 0,

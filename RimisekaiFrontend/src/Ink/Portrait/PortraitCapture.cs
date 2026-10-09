@@ -396,6 +396,12 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
         {
+            // 返回前会先弹一问写明路程（2026-10-09 起），点「确定」才动身。
+            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Body.Contains("走回") == true, "return asks first with the walk time");
+            _root.ModalLayer.Choose("confirm");
+        });
+        _steps.Enqueue(() =>
+        {
             var hub = _root.HubScreen.DebugHub;
             Require(hub.Layer == Rimisekai.Hub.MapLayer.Territory && hub.State.Party.AtHome && hub.PlayerRoomId >= 0,
                 "return walks back home into the room left from");
@@ -904,6 +910,11 @@ public partial class PortraitCapture : Node
             _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
         });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.IsActive, "return from the dungeon asks first");
+            _root.ModalLayer.Choose("confirm");
+        });
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
