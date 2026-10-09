@@ -32,7 +32,7 @@ public sealed class RoomFacilityCapTests
     [Fact]
     public void Cap_matches_one_row_of_facility_plaques()
     {
-        Assert.Equal(3, Room.MaxFacilities);
+        Assert.Equal(4, Room.MaxFacilities);
     }
 
     [Fact]

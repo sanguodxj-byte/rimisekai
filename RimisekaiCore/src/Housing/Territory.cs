@@ -37,10 +37,10 @@ public enum RoomLock
 public sealed class Room
 {
     /// <summary>
-    /// 一间房最多摆几件设施。来自界面：地图与「此刻」之间的设施牌一排三块（约 300×120，手机上点得准），
+    /// 一间房最多摆几件设施。来自界面：地图与「此刻」之间的设施牌一排四块（约 216×140，图标在上、名字在下，手机上点得准），
     /// 不分页、不滚动，所以界面摆得下几块，房间表就只许放几件。改这个数要先改设施牌的排版。
     /// </summary>
-    public const int MaxFacilities = 3;
+    public const int MaxFacilities = 4;
 
     public int Id { get; init; }
     public string Name { get; init; } = "";

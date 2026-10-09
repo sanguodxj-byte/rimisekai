@@ -371,17 +371,42 @@ public partial class PortraitHubScreen : Control
         PortraitGlyph.Coin(this, pill.Position.X + 46f, pill.GetCenter().Y, 20f, InkStyle.Line);
         InkDraw.Text(this, new Vector2(pill.End.X - 32f, pill.GetCenter().Y), money, PortraitLayout.FontMeta, InkStyle.Line, "rm");
 
+        // 第二行＝一条状态缎带：季节日子 · 天气 · 时刻三段，段与段之间等距、正中各一枚小菱隔开；
+        // 段宽按内容，剩下的空隙均分，所以无论字长短，三段的间距都一样齐。时刻是此刻最常看的，用亮字。
         var y = PortraitLayout.HudLine2;
-        var x = PortraitLayout.Pad + 20f;
-        var season = $"{items[0].Value} 第{_vm.Hub.State.Clock.Week}日";
-        PortraitGlyph.Leaf(this, x + 18f, y, 18f, InkStyle.Dim);
-        InkDraw.Text(this, new Vector2(x + 50f, y), season, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-        x += 50f + InkDraw.Measure(season, PortraitLayout.FontMeta).X + 36f;
-        PortraitGlyph.Weather(this, header.Weather, x + 18f, y, 18f, InkStyle.Dim);
-        InkDraw.Text(this, new Vector2(x + 50f, y), items[1].Value, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-        x += 50f + InkDraw.Measure(items[1].Value, PortraitLayout.FontMeta).X + 36f;
-        PortraitGlyph.Clock(this, x + 18f, y, 18f, InkStyle.Dim);
-        InkDraw.Text(this, new Vector2(x + 50f, y), items[2].Value, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+        var sysLeft = PortraitLayout.HudSystem.Position.X;
+        var left = PortraitLayout.Pad + 20f;
+        var right = sysLeft - 28f;
+        var segments = new (System.Action<float> Glyph, string Text, Color Color)[]
+        {
+            (gx => PortraitGlyph.Leaf(this, gx, y, 18f, InkStyle.Dim),
+                $"{items[0].Value} 第{_vm.Hub.State.Clock.Week}日", InkStyle.Dim),
+            (gx => PortraitGlyph.Weather(this, header.Weather, gx, y, 18f, InkStyle.Dim), items[1].Value, InkStyle.Dim),
+            (gx => PortraitGlyph.Clock(this, gx, y, 18f, InkStyle.Line), items[2].Value, InkStyle.Line),
+        };
+        const float glyphSpan = 36f + 14f;
+        var widths = new float[segments.Length];
+        var used = 0f;
+        for (var i = 0; i < segments.Length; i++)
+        {
+            widths[i] = glyphSpan + InkDraw.Measure(segments[i].Text, PortraitLayout.FontMeta).X;
+            used += widths[i];
+        }
+        var gap = System.Math.Max(40f, (right - left - used) / (segments.Length - 1));
+        var x = left;
+        for (var i = 0; i < segments.Length; i++)
+        {
+            segments[i].Glyph(x + 18f);
+            InkDraw.Text(this, new Vector2(x + glyphSpan, y), segments[i].Text, PortraitLayout.FontMeta, segments[i].Color, "lm");
+            x += widths[i];
+            if (i < segments.Length - 1)
+            {
+                InkDraw.Jewel(this, new Vector2(x + gap / 2f, y), 5f, new Color(InkStyle.Dim, 0.9f));
+                x += gap;
+            }
+        }
+        // 缎带上沿一道淡出细线，把状态行和地名行分开。
+        PortraitFrame.FadingRule(this, PortraitLayout.Pad, right, y - 40f);
 
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))

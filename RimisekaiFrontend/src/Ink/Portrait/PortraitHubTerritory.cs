@@ -47,10 +47,10 @@ public partial class PortraitHubScreen
         if (Crossing)
             DrawLogPanel();
 
+        if (!Crossing && !WorldLayer)
+            DrawFacilityStrip();
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
-        if (!Crossing && !WorldLayer)
-            DrawCrossRuleGap();
         ShowChatterSpeakerPage();
         DrawNowStrip();
 
@@ -426,11 +426,14 @@ public partial class PortraitHubScreen
             var lines = InkDraw.WrapLines(e.Text, area.Size.X, size);
             if (top + lines.Count * lineH > area.End.Y + 0.5f && top > area.Position.Y)
                 break;
-            foreach (var line in lines)
+            for (var i = 0; i < lines.Count; i++)
             {
                 if (top + lineH > area.End.Y + 0.5f)
                     break;
-                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), line, size, InkStyle.Line, "lm");
+                // 放不下的长条：最后一行收成「…」，看得出话没说完（点面板进日志页签看全文）。
+                var cut = i < lines.Count - 1 && top + 2f * lineH > area.End.Y + 0.5f;
+                var text = cut ? InkDraw.Ellipsize(lines[i] + lines[i + 1], area.Size.X, size) : lines[i];
+                InkDraw.Text(this, new Vector2(area.Position.X, top + lineH / 2f), text, size, InkStyle.Line, "lm");
                 top += lineH;
             }
             top += gap;
@@ -438,6 +441,56 @@ public partial class PortraitHubScreen
     }
 
     private static float LogLineHeight(int size) => Mathf.Round(size * 1.36f);
+
+    // ---------- 设施牌 ----------
+
+    /// <summary>
+    /// 网格与「此刻」之间一排设施牌：只摆主角此刻所在房间的设施，按房里的顺序，最多 Room.MaxFacilities 块；
+    /// 空位只描一道暗框，让人看得出这间还能放几件。点牌＝使用该设施（与抽屉里的「使用」同一动作）。
+    /// </summary>
+    private void DrawFacilityStrip()
+    {
+        if (Walking)
+            return;
+        var fixtures = _vm.Hub.FixturesIn(_vm.Hub.PlayerRoomId);
+        for (var i = 0; i < Rimisekai.Housing.Room.MaxFacilities; i++)
+        {
+            var r = PortraitLayout.FacilityPlaque(i);
+            if (i >= fixtures.Count)
+            {
+                PortraitFrame.Bevel(this, r, 22f, null, new Color(InkStyle.WoodDark, 0.6f), 2f);
+                continue;
+            }
+            var f = fixtures[i];
+            var pressed = PortraitFrame.IsPressed(r);
+            PortraitFrame.Bevel(this, r, 22f, pressed ? PortraitFrame.PressFill : new Color(InkStyle.Inset, 0.85f), InkStyle.Line, 3f);
+            PortraitFrame.Bevel(this, r.Grow(-9f), 16f, null, new Color(InkStyle.Dim, 0.6f), 1.5f);
+            var cx = r.GetCenter().X;
+            FixtureGlyph(f)(this, cx, r.Position.Y + 46f, 22f, InkStyle.Line);
+            var size = InkDraw.FitSize(f.Name, r.Size.X - 32f, PortraitLayout.FontMeta, PortraitLayout.FontMeta);
+            InkDraw.Text(this, new Vector2(cx, r.End.Y - 40f), f.Name, size, InkStyle.Line, "cm");
+            var workers = _vm.WorkersAtFixture(f.Id).Count;
+            if (workers > 0)
+                InkDraw.Jewel(this, new Vector2(r.End.X - 24f, r.Position.Y + 24f), 7f, InkStyle.Line);
+            _widgets.Add(new PortraitWidget(r, PortraitAction.Fixture, f.Id, true, f.Name));
+        }
+    }
+
+    /// <summary>设施牌上的小图标：按设施能做的事挑一枚，挑不出就是一颗菱。</summary>
+    private static System.Action<CanvasItem, float, float, float, Color> FixtureGlyph(Rimisekai.Housing.Facility f)
+    {
+        if (f.CanStore)
+            return PortraitGlyph.Chest;
+        if (f.Supports(Rimisekai.Housing.ActionKind.Till) || f.Supports(Rimisekai.Housing.ActionKind.Tend))
+            return PortraitGlyph.Leaf;
+        if (f.Supports(Rimisekai.Housing.ActionKind.Forge) || f.Supports(Rimisekai.Housing.ActionKind.Woodwork))
+            return PortraitGlyph.Hammer;
+        if (f.Supports(Rimisekai.Housing.ActionKind.Read))
+            return PortraitGlyph.Book;
+        if (f.Supports(Rimisekai.Housing.ActionKind.Pray))
+            return PortraitGlyph.Bell;
+        return PortraitGlyph.Diamond;
+    }
 
     // ---------- 设施抽屉 ----------
 

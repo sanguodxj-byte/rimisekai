@@ -71,30 +71,6 @@ public partial class PortraitHubScreen
         _crossArrowShown = true;
     }
 
-    /// <summary>
-    /// 南向箭头的去路：「此刻」分节线在箭头正下方让出一段（与缺口同宽，两端各收一枚小菱），
-    /// 箭头不再夹在框与分节线之间，读作一条往下走的通道。分节线正中的标题段本来就断开，落在那里时不用再让。
-    /// </summary>
-    private void DrawCrossRuleGap()
-    {
-        var hub = _vm.Hub;
-        if (Walking || hub.CrossDir(hub.PlayerRoomId) is not Territory.RegionDir.South)
-            return;
-        var room = hub.State.Territory.Room(hub.PlayerRoomId)!;
-        var mouth = PortraitLayout.CrossMouth(Territory.RegionDir.South, PortraitLayout.Cell(room.X, room.Y));
-        var y = PortraitLayout.NowRuleY;
-        var titleHalf = InkDraw.Measure("此刻", PortraitLayout.FontMeta).X / 2f + 56f;
-        var cx = PortraitLayout.CanvasWidth / 2f;
-        var half = PortraitLayout.CrossGapSpan / 2f;
-        var left = mouth.X - half;
-        var right = mouth.X + half;
-        if (right > cx - titleHalf && left < cx + titleHalf)
-            return;
-        GothicArt.BackdropPart(this, new Rect2(left, y - 4f, right - left, 8f));
-        foreach (var x in new[] { left, right })
-            InkDraw.Jewel(this, new Vector2(x, y), 6f, new Color(InkStyle.Line, 0.8f));
-    }
-
     /// <summary>点箭头：先记下旧网格（地城迷雾下的格名照旧），过界，再起镜头平移。</summary>
     private void StartCross(int target)
     {

@@ -260,7 +260,7 @@ public sealed partial class PortraitHubScreen
         return dir switch
         {
             Territory.RegionDir.North => new Rect2(cx - StepLong / 2f, PortraitLayout.LogPanel.End.Y + 6f, StepLong, StepDeep),
-            Territory.RegionDir.South => new Rect2(cx - StepLong / 2f, PortraitLayout.NowRuleY - 14f - StepDeep, StepLong, StepDeep),
+            Territory.RegionDir.South => new Rect2(cx - StepLong / 2f, grid.End.Y - 70f, StepLong, StepDeep),
             Territory.RegionDir.East => new Rect2(PortraitLayout.CanvasWidth - 8f - StepDeep, cy - StepLong / 2f, StepDeep, StepLong),
             _ => new Rect2(8f, cy - StepLong / 2f, StepDeep, StepLong),
         };

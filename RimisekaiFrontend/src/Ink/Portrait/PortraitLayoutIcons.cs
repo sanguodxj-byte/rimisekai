@@ -41,7 +41,28 @@ public static partial class PortraitLayout
 
     public static Rect2 MapFrame => MapGrid.Grow(24f);
     public static Rect2 MapGrid => new(MapOrigin, new Vector2(MapCell * GridCols, MapCell * GridRows));
-    public static Vector2 MapOrigin => new((CanvasWidth - MapCell * GridCols) / 2f, NowRuleY - 50f - 24f - MapCell * GridRows);
+    public static Vector2 MapOrigin => new((CanvasWidth - MapCell * GridCols) / 2f,
+        FacilityStrip.Position.Y - FacilityStripGap - 24f - MapCell * GridRows);
+
+    // ---------- 设施牌：网格与「此刻」之间一排 ----------
+    // 2026-10-09 主人定：网格不动，当前所在房间的设施直接摆成一排大牌，点牌即使用；
+    // 一排放 Room.MaxFacilities（4）块，左右对齐网格外框，每块约 216×140——房间表的设施上限就从这里来。
+
+    public const float FacilityPlaqueHeight = 140f;
+    public const float FacilityPlaqueGap = 16f;
+
+    /// <summary>网格框底到设施牌的间隔（南向过界箭头的命中块落在这段与网格底排之间）。</summary>
+    public const float FacilityStripGap = 30f;
+
+    /// <summary>左右与网格外框对齐（不依赖 MapFrame，免得与 MapOrigin 互相引用）。</summary>
+    public static Rect2 FacilityStrip => new((CanvasWidth - MapCell * GridCols) / 2f - 24f, NowRuleY - 36f - FacilityPlaqueHeight,
+        MapCell * GridCols + 48f, FacilityPlaqueHeight);
+
+    public static float FacilityPlaqueWidth =>
+        (FacilityStrip.Size.X - FacilityPlaqueGap * (Rimisekai.Housing.Room.MaxFacilities - 1)) / Rimisekai.Housing.Room.MaxFacilities;
+
+    public static Rect2 FacilityPlaque(int i) => new(FacilityStrip.Position.X + i * (FacilityPlaqueWidth + FacilityPlaqueGap),
+        FacilityStrip.Position.Y, FacilityPlaqueWidth, FacilityPlaqueHeight);
 
     public static Rect2 Cell(int x, int y) =>
         new(MapOrigin.X + x * MapCell, MapOrigin.Y + y * MapCell, MapCell, MapCell);
@@ -113,7 +134,7 @@ public static partial class PortraitLayout
     public static Rect2 CrossHit(Rimisekai.Housing.Territory.RegionDir dir, Rect2 cell) => dir switch
     {
         Rimisekai.Housing.Territory.RegionDir.North => new Rect2(cell.Position.X, LogPanel.End.Y, MapCell, TouchMin),
-        Rimisekai.Housing.Territory.RegionDir.South => new Rect2(cell.Position.X, NowStrip.Position.Y - TouchMin, MapCell, TouchMin),
+        Rimisekai.Housing.Territory.RegionDir.South => new Rect2(cell.Position.X, FacilityStrip.Position.Y - TouchMin, MapCell, TouchMin),
         Rimisekai.Housing.Territory.RegionDir.East => new Rect2(CanvasWidth - TouchMin, cell.Position.Y, TouchMin, MapCell),
         _ => new Rect2(0f, cell.Position.Y, TouchMin, MapCell),
     };
