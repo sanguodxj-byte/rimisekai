@@ -1205,7 +1205,12 @@ public static class InkDraw
             foreach (var rune in paragraph.EnumerateRunes())
             {
                 var next = line + rune;
-                if (line.Length > 0 && Measure(next, size).X > width)
+                // 标点悬挂：行尾的收尾标点（」。，？…）多出半个字以内时挂在行外，不为它把前面几个字一起挤下去。
+                // 这些标点字面本身大半是留白，挂出去看上去仍在框内。
+                var over = line.Length > 0 && Measure(next, size).X > width;
+                if (over && rune.Utf16SequenceLength == 1 && NoLineStart.Contains((char)rune.Value) && Measure(next, size).X <= width + size * 0.5f)
+                    over = false;
+                if (over)
                 {
                     var carry = rune.ToString();
                     var cut = wordStart[pos];
