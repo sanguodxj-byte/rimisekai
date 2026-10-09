@@ -1052,7 +1052,7 @@ public static class InkDraw
 
     /// <summary>带黑色描边的文字（数字角标用）：先画描边再画字，叠在图标上也完整清晰。</summary>
     public static void TextOutlined(CanvasItem ci, Vector2 at, string text, int size, Color color, int outline,
-        string anchor = "lt")
+        string anchor = "lt", Color? outlineColor = null)
     {
         size = Mathf.Max(InkStyle.MinFontSize, size);
         var font = InkStyle.Font;
@@ -1067,7 +1067,7 @@ public static class InkDraw
             _ => at.Y + ascent,
         };
         var pos = new Vector2(x, baseline);
-        ci.DrawStringOutline(font, pos, text, HorizontalAlignment.Left, -1, size, outline, InkStyle.Bg);
+        ci.DrawStringOutline(font, pos, text, HorizontalAlignment.Left, -1, size, outline, outlineColor ?? InkStyle.Bg);
         ci.DrawString(font, pos, text, HorizontalAlignment.Left, -1, size, color);
     }
 

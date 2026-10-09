@@ -250,7 +250,7 @@ public partial class InkCombatFxLayer : Control
 
                 // 4. 纯净线稿伤害跳字（遵守黑白铜版规范，严禁彩色文字）
                 var isCritical = ev.SkillId == "cross_slash" || battle.AwakeningActive;
-                var popupColor = isCritical ? InkStyle.Line : new Color(InkStyle.Line, 0.85f);
+                var popupColor = InkStyle.Line;
 
                 // 主人定：飘字减慢消失，停留更久更醒目
                 _activePopups.Add(new ActivePopup
@@ -890,8 +890,10 @@ internal sealed partial class PopupCanvas : Control
             var driftY = p.Pos.Y - 28f - prog * 44f;
             var rect = new Rect2(p.Pos.X - 110f, driftY, 220f, 52f);
             var col = new Color(p.Color.R, p.Color.G, p.Color.B, alpha);
-            var size = Math.Max(22, (int)(44f * pop));
-            InkDraw.Text(this, rect.GetCenter(), p.Text, size, col, "cm");
+            // 飘字压在白色立绘与光效上，单色细字几乎看不见：加大字号并套一圈深色描边托底。
+            var size = Math.Max(30, (int)(64f * pop));
+            var edge = new Color(0.02f, 0.02f, 0.03f, 0.92f * alpha);
+            InkDraw.TextOutlined(this, rect.GetCenter(), p.Text, size, col, 14, "cm", edge);
         }
     }
 }
