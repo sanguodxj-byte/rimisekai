@@ -1,0 +1,256 @@
+{
+  "rooms": [
+    {
+      "id": 1,
+      "category": "Entrance",
+      "name": "大门",
+      "terrain": "Road",
+      "defaultPool": true
+    },
+    {
+      "id": 2,
+      "category": "Exit",
+      "name": "出口",
+      "terrain": "Road",
+      "defaultPool": true
+    },
+    {
+      "id": 3,
+      "category": "Thoroughfare",
+      "name": "道路",
+      "terrain": "Road",
+      "defaultPool": true
+    },
+    {
+      "id": 4,
+      "category": "OpenSpace",
+      "name": "中央广场",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 5,
+      "category": "OpenSpace",
+      "name": "庭院",
+      "terrain": "Grassland",
+      "defaultPool": true
+    },
+    {
+      "id": 6,
+      "category": "OpenSpace",
+      "name": "草地",
+      "terrain": "Grassland",
+      "defaultPool": true
+    },
+    {
+      "id": 7,
+      "category": "Nature",
+      "name": "树林",
+      "terrain": "Forest",
+      "defaultPool": true
+    },
+    {
+      "id": 24,
+      "category": "Treasure",
+      "name": "藏宝库",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 25,
+      "category": "Shrine",
+      "name": "神龛",
+      "terrain": "Plains",
+      "defaultPool": true
+    },
+    {
+      "id": 1025,
+      "category": "Nature",
+      "name": "草地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1026,
+      "category": "Nature",
+      "name": "庭院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1027,
+      "category": "Nature",
+      "name": "菜园",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1028,
+      "category": "Nature",
+      "name": "后院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1029,
+      "category": "Nature",
+      "name": "中央广场",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1030,
+      "category": "Nature",
+      "name": "外围草地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1031,
+      "category": "Nature",
+      "name": "哨塔通道",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1032,
+      "category": "Nature",
+      "name": "内廷",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1033,
+      "category": "Nature",
+      "name": "石板路",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1034,
+      "category": "Nature",
+      "name": "防壁通道",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1035,
+      "category": "Nature",
+      "name": "壕沟草地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1036,
+      "category": "Nature",
+      "name": "操练场",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1037,
+      "category": "Nature",
+      "name": "内院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1038,
+      "category": "Nature",
+      "name": "外廷草地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1039,
+      "category": "Nature",
+      "name": "城墙林道",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1040,
+      "category": "Nature",
+      "name": "中央大道",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1041,
+      "category": "Nature",
+      "name": "后街道路",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1042,
+      "category": "Nature",
+      "name": "工坊后院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1043,
+      "category": "Nature",
+      "name": "静谧庭院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1044,
+      "category": "Nature",
+      "name": "白桦树林",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1045,
+      "category": "Nature",
+      "name": "荒废石路",
+      "terrain": "Road",
+      "defaultPool": false
+    },
+    {
+      "id": 1046,
+      "category": "Nature",
+      "name": "枯草地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1047,
+      "category": "Nature",
+      "name": "乱石原",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1048,
+      "category": "Nature",
+      "name": "旧树林",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1049,
+      "category": "Nature",
+      "name": "祈祷庭院",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1050,
+      "category": "Nature",
+      "name": "静水池",
+      "terrain": "Lake",
+      "defaultPool": false
+    },
+    {
+      "id": 1051,
+      "category": "Nature",
+      "name": "禅思树林",
+      "terrain": "Forest",
+      "defaultPool": false
+    }
+  ]
+}

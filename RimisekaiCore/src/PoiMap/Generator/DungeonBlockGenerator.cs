@@ -163,8 +163,19 @@ public static class DungeonBlockGenerator
             else
             {
                 // 普通通道或古遗迹设施
-                var tpl = catalog.GetDistrictRoomTemplate(district, facilityIdx++);
-                r.Name = tpl.Name;
+                var templateIndex = facilityIdx++;
+                var tpl = catalog.GetDistrictRoomTemplate(district, templateIndex);
+                r.RoomTemplateId = tpl.Id;
+                var facility = catalog.GetDistrictFacilityTemplate(district, tpl.Id, templateIndex);
+                if (facility != null)
+                {
+                    r.FacilityIds.Add(facility.Id);
+                    r.Name = facility.Name;
+                }
+                else
+                {
+                    r.Name = tpl.Name;
+                }
                 r.Terrain = Enum.TryParse<WorldTerrainType>(tpl.Terrain, ignoreCase: true, out var t) ? t : WorldTerrainType.Plains;
             }
         }

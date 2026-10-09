@@ -82,6 +82,36 @@ public partial class PortraitCapture : Node
             _steps.Enqueue(() => _root.HubScreen.ShowTab(index));
             _steps.Enqueue(() => Shoot($"tab{index}", _root.HubScreen));
         }
+        // 图鉴只收录怪物表；装备实例属性运行时生成，物品定义不是图鉴目录。
+        _steps.Enqueue(() =>
+        {
+            var widgets = _root.HubScreen.DebugWidgets;
+            var codex = widgets.First(widget => widget.Action == PortraitAction.CodexOpen);
+            var system = widgets.First(widget => widget.Action == PortraitAction.OpenSystem);
+            Require(codex.Rect.Size.X >= PortraitLayout.TouchMin && codex.Rect.Size.Y >= PortraitLayout.TouchMin
+                && !codex.Rect.Intersects(system.Rect), "codex entry meets the touch minimum and stays clear of system");
+            _root.HubScreen.DebugPress(PortraitAction.CodexOpen, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            var widgets = _root.HubScreen.DebugWidgets;
+            Require(widgets.Any(widget => widget.Action == PortraitAction.CodexEntry)
+                && widgets.All(widget => widget.Action is PortraitAction.CodexEntry or PortraitAction.Back or PortraitAction.ScrollTrack),
+                "codex contains monster entries only, without equipment or item selectors");
+            Shoot("codex_monsters", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.CodexEntry, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            var detail = _root.ModalLayer.Current;
+            Require(_root.ModalLayer.IsActive && detail?.Title.Length > 0
+                && detail.MonsterCodex?.Attributes.Count == 9
+                && detail.Body.Length == 0,
+                $"monster codex entry opens structured details (attributes={detail?.MonsterCodex?.Attributes.Count}, body={detail?.Body.Length})");
+            Shoot("codex_monster_detail", _root.ModalLayer);
+            _root.ModalLayer.Dismiss();
+            _root.HubScreen.DebugPress(PortraitAction.Back, 0);
+        });
         // 仓储三段
         _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
