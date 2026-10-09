@@ -871,6 +871,10 @@ internal sealed partial class PopupCanvas : Control
             QueueRedraw();
     }
 
+    /// <summary>飘字专用加粗字形：宋体 / 细黑笔画太细，压在立绘上读不出数字。</summary>
+    private static FontVariation? _bold;
+    private static Font BoldFont => _bold ??= new FontVariation { BaseFont = InkStyle.Font, VariationEmbolden = 0.9f };
+
     public override void _Draw()
     {
         foreach (var p in Popups)
@@ -893,7 +897,7 @@ internal sealed partial class PopupCanvas : Control
             // 飘字压在白色立绘与光效上，单色细字几乎看不见：加大字号并套一圈深色描边托底。
             var size = Math.Max(30, (int)(64f * pop));
             var edge = new Color(0.02f, 0.02f, 0.03f, 0.92f * alpha);
-            InkDraw.TextOutlined(this, rect.GetCenter(), p.Text, size, col, 14, "cm", edge);
+            InkDraw.TextOutlined(this, rect.GetCenter(), p.Text, size, col, 16, "cm", edge, BoldFont);
         }
     }
 }
