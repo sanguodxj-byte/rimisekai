@@ -191,55 +191,55 @@ public sealed partial class PortraitHubScreen
     }
 
     /// <summary>
-    /// 方向键（2026-10-09 主人要求）：哥特框四条边的正中各开一道缺口，缺口里一枚实心三角朝外，
-    /// 点一下队伍朝那边走一格（不用去点小格子）。画法与领地过界箭头同一套：缺口、两道骨白门槛、三角；
-    /// 命中块也同过界箭头（沿边 172、外沿到最近邻件、往网格里伸凑足 118）。
-    /// 那边走不过去（出界、湖海雪峰）时三角换暗色、不登记可点。遭遇未了结时整组暗掉。
+    /// 方向键（2026-10-09 主人要求，同日改大）：哥特框四条边的正中各一枚骑在框线上的大按钮
+    /// （南北 260×130、东西 130×260，黑底骨白框，内一枚大实心三角朝外），点一下队伍朝那边走一格。
+    /// 北钮上沿贴日志面板下沿，南钮下沿让开「此刻」分节线，东西钮外沿离画布边 8；
+    /// 都不碰右侧放大 / 缩小 / 领地三钮。那边走不过去（出界、湖海雪峰）或遭遇未了结时暗掉、不可点。
     /// </summary>
     private void DrawWorldSteps()
     {
         var hub = _vm.Hub;
         var map = World;
         var (px, py) = hub.WorldPartyPosition;
-        var mid = PortraitLayout.GridCols / 2;
         var busy = hub.PendingEncounter != null;
         foreach (var dir in new[] { Territory.RegionDir.North, Territory.RegionDir.East, Territory.RegionDir.South, Territory.RegionDir.West })
         {
             var (dx, dy) = StepDelta(dir);
-            var cell = dir switch
-            {
-                Territory.RegionDir.North => PortraitLayout.Cell(mid, 0),
-                Territory.RegionDir.South => PortraitLayout.Cell(mid, PortraitLayout.GridRows - 1),
-                Territory.RegionDir.East => PortraitLayout.Cell(PortraitLayout.GridCols - 1, PortraitLayout.GridRows / 2),
-                _ => PortraitLayout.Cell(0, PortraitLayout.GridRows / 2),
-            };
             var enabled = !busy && map.IsPassable(px + dx, py + dy);
-            var gap = PortraitLayout.CrossGap(dir, cell);
-            var hit = PortraitLayout.CrossHit(dir, cell);
+            var r = StepRect(dir);
             var outward = PortraitLayout.CrossOutward(dir);
             var along = new Vector2(-outward.Y, outward.X);
-            var mouth = PortraitLayout.CrossMouth(dir, cell);
             var ink = enabled ? InkStyle.Line : InkStyle.WoodDark;
-
-            if (enabled && PortraitFrame.IsPressed(hit))
-                PortraitFrame.PressMark(this, hit);
-            DrawRect(gap, InkStyle.Bg);
-            var near = mouth + outward * 2f;
-            var far = mouth + outward * (PortraitLayout.MapGrid.Position.X - PortraitLayout.MapFrame.Position.X + 3f);
-            foreach (var side in new[] { -1f, 1f })
-            {
-                var shift = along * (side * PortraitLayout.CrossGapSpan / 2f);
-                DrawLine(near + shift, far + shift, ink, 3f);
-            }
-            var foot = mouth + outward * PortraitLayout.CrossArrowInset;
+            var pressed = enabled && PortraitFrame.IsPressed(r);
+            DrawRect(r, pressed ? PortraitFrame.PressFill : new Color(0f, 0f, 0f, 0.82f));
+            InkDraw.Ink(this, RectLoop(r.Grow(-2f)), ink, 3f);
+            InkDraw.Ink(this, RectLoop(r.Grow(-9f)), enabled ? InkStyle.Dim : InkStyle.WoodDark, 1.5f);
+            var c = r.GetCenter() - outward * 22f;
             DrawColoredPolygon(new[]
             {
-                foot + along * (PortraitLayout.CrossArrowBase / 2f),
-                foot + outward * PortraitLayout.CrossArrowDepth,
-                foot - along * (PortraitLayout.CrossArrowBase / 2f),
+                c + along * 46f,
+                c + outward * 50f,
+                c - along * 46f,
             }, ink);
-            _widgets.Add(new PortraitWidget(hit, PortraitAction.WorldStep, (int)dir, enabled, StepName(dir)));
+            _widgets.Add(new PortraitWidget(r, PortraitAction.WorldStep, (int)dir, enabled, StepName(dir)));
         }
+    }
+
+    private const float StepLong = 260f;
+    private const float StepDeep = 130f;
+
+    private static Rect2 StepRect(Territory.RegionDir dir)
+    {
+        var grid = PortraitLayout.MapGrid;
+        var cx = grid.GetCenter().X;
+        var cy = grid.GetCenter().Y;
+        return dir switch
+        {
+            Territory.RegionDir.North => new Rect2(cx - StepLong / 2f, PortraitLayout.LogPanel.End.Y + 6f, StepLong, StepDeep),
+            Territory.RegionDir.South => new Rect2(cx - StepLong / 2f, PortraitLayout.NowRuleY - 14f - StepDeep, StepLong, StepDeep),
+            Territory.RegionDir.East => new Rect2(PortraitLayout.CanvasWidth - 8f - StepDeep, cy - StepLong / 2f, StepDeep, StepLong),
+            _ => new Rect2(8f, cy - StepLong / 2f, StepDeep, StepLong),
+        };
     }
 
     private static (int Dx, int Dy) StepDelta(Territory.RegionDir dir) => dir switch

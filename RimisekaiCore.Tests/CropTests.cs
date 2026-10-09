@@ -233,6 +233,48 @@ public sealed class CropTests
     }
 
     [Fact]
+    public void Worker_keeps_working_the_field_while_master_walks_the_world()
+    {
+        var state = new GameState();
+        state.Roster.Add("你", master: true);
+        var worker = state.Roster.Add("工");
+        worker[CoreStat.Perception] = ActionKindMap.SkillBaseline;
+        worker.Affect.LastMealDay = 1;
+        worker.Affect.LastMealWindow = 1;
+        worker.Bag.Add("小麦种子", 1);
+        var territory = state.Territory;
+        territory.AddRoom(new Room { Id = 1, Name = "农田", Open = true });
+        territory.AddRoom(new Room { Id = 2, Name = "卧室", Open = true });
+        territory.Link(1, 2);
+        var field = Field();
+        territory.AddFacility(field);
+        territory.Assign(worker.Id, 2, SlotMode.Work, field.Id);
+        state.Clock.SetTime(1, 14 * 60);
+
+        var hub = new HubSession(state) { EncounterRate = 0 };
+        hub.Enter(2);
+        hub.Place(worker.Id, 1);
+        hub.Day.Rng = new Random(5);
+
+        // 主人出门，在大地图上来回踱步（每步按地貌推进时间），家里的工人照常干活。
+        hub.SwitchToWorld();
+        var w = state.World;
+        var start = state.Clock.TotalMinutes;
+        var (hx, hy) = hub.WorldPartyPosition;
+        var dir = new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.First(d => w.IsPassable(hx + d.Item1, hy + d.Item2));
+        var back = false;
+        while (state.Clock.TotalMinutes - start < TillTicks * 5 + 15)
+        {
+            Assert.True(back ? hub.StepWorld(-dir.Item1, -dir.Item2) : hub.StepWorld(dir.Item1, dir.Item2));
+            back = !back;
+        }
+        Assert.Equal(MapLayer.World, hub.Layer);
+        Assert.Equal(-1, hub.PlayerRoomId);
+        Assert.Equal("小麦", field.CropDefName);
+        Assert.Equal(0, worker.Bag.Get("小麦种子"));
+    }
+
+    [Fact]
     public void SaveRoundtrip_KeepsPlotState()
     {
         var state = new GameState();

@@ -444,6 +444,22 @@ public partial class PortraitHubScreen
                     });
                     return true;
                 }
+                if (hub.Layer == MapLayer.World && !hub.State.Party.AtHome)
+                {
+                    // 快速返回（2026-10-09 主人要求）：先问一声，写明走回去要多久——返回照常沿最省时的路逐格走、推进时间、掷遭遇。
+                    var map = hub.State.World;
+                    var minutes = hub.WorldTravelMinutes(map.HomeX, map.HomeY);
+                    var span = minutes >= 60 ? $"{minutes / 60}时{minutes % 60:00}分" : $"{minutes}分";
+                    Confirm(hub.TravelLabel, $"走回{TerritoryName()}要 {span}，\n途中可能遇上状况。", () =>
+                    {
+                        hub.ToggleWorldLayer();
+                        _sheet = SheetKind.None;
+                        if (WorldLayer)
+                            CenterWorldOnParty();
+                        QueueRedraw();
+                    });
+                    return true;
+                }
                 hub.ToggleWorldLayer();
                 _sheet = SheetKind.None;
                 if (WorldLayer)
