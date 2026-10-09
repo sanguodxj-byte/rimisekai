@@ -103,7 +103,11 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() =>
         {
-            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title.Length > 0, "monster codex entry opens details");
+            var detail = _root.ModalLayer.Current;
+            Require(_root.ModalLayer.IsActive && detail?.Title.Length > 0
+                && detail.MonsterCodex?.Attributes.Count == 9
+                && detail.Body.Length == 0,
+                $"monster codex entry opens structured details (attributes={detail?.MonsterCodex?.Attributes.Count}, body={detail?.Body.Length})");
             Shoot("codex_monster_detail", _root.ModalLayer);
             _root.ModalLayer.Dismiss();
             _root.HubScreen.DebugPress(PortraitAction.Back, 0);

@@ -12,7 +12,7 @@ namespace Rimisekai.Portrait;
 
 public partial class PortraitHubScreen
 {
-    private readonly record struct CodexEntry(string Label, string Summary, string Detail);
+    private readonly record struct CodexEntry(string Label, string Summary, InkModalMonsterCodexData Detail);
 
     private void OpenCodexPage()
     {
@@ -30,7 +30,7 @@ public partial class PortraitHubScreen
             return false;
 
         var entry = BuildMonsterEntries()[widget.Index];
-        ModalWanted!(new InkModalPage { Title = entry.Label, Body = entry.Detail });
+        ModalWanted!(new InkModalPage { Title = entry.Label, MonsterCodex = entry.Detail });
         return true;
     }
 
@@ -83,37 +83,39 @@ public partial class PortraitHubScreen
             {
                 var variants = group.ToArray();
                 var summary = $"血量 {Range(variants.Select(enemy => enemy.MaxHp))} · 攻击 {Range(variants.Select(enemy => enemy.Attack))}";
-                var lines = new List<string>
-                {
-                    $"血量 {Range(variants.Select(enemy => enemy.MaxHp))}",
-                    $"攻击 {Range(variants.Select(enemy => enemy.Attack))}",
-                    $"防御 {Range(variants.Select(enemy => enemy.Defence))}",
-                    $"闪避 {Range(variants.Select(enemy => enemy.Dodge))}",
-                    $"法强 {Range(variants.Select(enemy => enemy.SpellPower))}",
-                    $"速度 {Range(variants.Select(enemy => enemy.Speed))}",
-                    $"护甲 {Range(variants.Select(enemy => enemy.Armour))}",
-                    $"行动点 {Range(variants.Select(enemy => enemy.ActionPoints))}",
-                    $"金钱 {Range(variants.Select(enemy => enemy.Money))}G",
-                };
                 var skills = variants.SelectMany(enemy => enemy.Skills).Distinct(StringComparer.Ordinal)
                     .Select(id => DefDatabase<SkillDef>.Get(id)!.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray();
-                if (skills.Length > 0)
-                    lines.Add($"技能　{string.Join("、", skills)}");
-
                 var loot = variants.SelectMany(enemy => enemy.Loot).GroupBy(drop => drop.ItemId)
                     .OrderBy(grouping => Items.Get(grouping.Key)!.Label, StringComparer.Ordinal);
                 var drops = loot.Select(grouping =>
                 {
                     var item = Items.Get(grouping.Key)!;
-                    return $"{item.Label} ×{Range(grouping.Select(drop => drop.Min))}–{Range(grouping.Select(drop => drop.Max))} · {Range(grouping.Select(drop => drop.RatePercent))}%";
+                    return new InkModalMonsterCodexData.Drop
+                    {
+                        Name = item.Label,
+                        Quantity = $"×{Range(grouping.Select(drop => drop.Min))}–{Range(grouping.Select(drop => drop.Max))}",
+                        Chance = $"{Range(grouping.Select(drop => drop.RatePercent))}%",
+                    };
                 }).ToArray();
-                if (drops.Length > 0)
-                {
-                    lines.Add("掉落");
-                    lines.AddRange(drops);
-                }
 
-                return new CodexEntry(group.Key.Name, summary, string.Join("\n", lines));
+                return new CodexEntry(group.Key.Name, summary, new InkModalMonsterCodexData
+                {
+                    RecordCount = variants.Length,
+                    Attributes = new List<InkModalMonsterCodexData.Metric>
+                    {
+                        new() { Label = "血量", Value = Range(variants.Select(enemy => enemy.MaxHp)) },
+                        new() { Label = "攻击", Value = Range(variants.Select(enemy => enemy.Attack)) },
+                        new() { Label = "防御", Value = Range(variants.Select(enemy => enemy.Defence)) },
+                        new() { Label = "闪避", Value = Range(variants.Select(enemy => enemy.Dodge)) },
+                        new() { Label = "法强", Value = Range(variants.Select(enemy => enemy.SpellPower)) },
+                        new() { Label = "速度", Value = Range(variants.Select(enemy => enemy.Speed)) },
+                        new() { Label = "护甲", Value = Range(variants.Select(enemy => enemy.Armour)) },
+                        new() { Label = "行动点", Value = Range(variants.Select(enemy => enemy.ActionPoints)) },
+                        new() { Label = "金币", Value = $"{Range(variants.Select(enemy => enemy.Money))} G" },
+                    },
+                    Skills = skills.ToList(),
+                    Drops = drops.ToList(),
+                });
             }).ToArray();
     }
 
