@@ -82,7 +82,7 @@ public partial class PortraitCapture : Node
             _steps.Enqueue(() => _root.HubScreen.ShowTab(index));
             _steps.Enqueue(() => Shoot($"tab{index}", _root.HubScreen));
         }
-        // 图鉴入口与怪物 / 装备 / 物品三表：各检查列表、详情与根页返回。
+        // 图鉴只收录怪物表；装备实例属性运行时生成，物品定义不是图鉴目录。
         _steps.Enqueue(() =>
         {
             var widgets = _root.HubScreen.DebugWidgets;
@@ -95,8 +95,9 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() =>
         {
             var widgets = _root.HubScreen.DebugWidgets;
-            Require(widgets.Any(widget => widget.Action == PortraitAction.CodexSegment && widget.Label == "怪物表")
-                && widgets.Any(widget => widget.Action == PortraitAction.CodexEntry), "monster table is housed in the codex");
+            Require(widgets.Any(widget => widget.Action == PortraitAction.CodexEntry)
+                && widgets.All(widget => widget.Action is PortraitAction.CodexEntry or PortraitAction.Back or PortraitAction.ScrollTrack),
+                "codex contains monster entries only, without equipment or item selectors");
             Shoot("codex_monsters", _root.HubScreen);
             _root.HubScreen.DebugPress(PortraitAction.CodexEntry, 0);
         });
@@ -104,32 +105,6 @@ public partial class PortraitCapture : Node
         {
             Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title.Length > 0, "monster codex entry opens details");
             Shoot("codex_monster_detail", _root.ModalLayer);
-            _root.ModalLayer.Dismiss();
-            _root.HubScreen.DebugPress(PortraitAction.CodexSegment, 1);
-        });
-        _steps.Enqueue(() =>
-        {
-            Require(_root.HubScreen.DebugWidgets.Any(widget => widget.Action == PortraitAction.CodexEntry), "equipment table lists definitions");
-            Shoot("codex_equipment", _root.HubScreen);
-            _root.HubScreen.DebugPress(PortraitAction.CodexEntry, 0);
-        });
-        _steps.Enqueue(() =>
-        {
-            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title.Length > 0, "equipment codex entry opens details");
-            Shoot("codex_equipment_detail", _root.ModalLayer);
-            _root.ModalLayer.Dismiss();
-            _root.HubScreen.DebugPress(PortraitAction.CodexSegment, 2);
-        });
-        _steps.Enqueue(() =>
-        {
-            Require(_root.HubScreen.DebugWidgets.Any(widget => widget.Action == PortraitAction.CodexEntry), "item table lists things and materials");
-            Shoot("codex_items", _root.HubScreen);
-            _root.HubScreen.DebugPress(PortraitAction.CodexEntry, 0);
-        });
-        _steps.Enqueue(() =>
-        {
-            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Title.Length > 0, "item codex entry opens details");
-            Shoot("codex_item_detail", _root.ModalLayer);
             _root.ModalLayer.Dismiss();
             _root.HubScreen.DebugPress(PortraitAction.Back, 0);
         });

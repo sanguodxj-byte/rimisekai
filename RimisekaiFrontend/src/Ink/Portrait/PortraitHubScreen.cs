@@ -88,7 +88,6 @@ public enum PortraitAction
     EquipRemove,
     OpenDisc,
     CodexOpen,
-    CodexSegment,
     CodexEntry,
     StoreSegment,
     StockCategory,

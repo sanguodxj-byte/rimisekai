@@ -14,14 +14,10 @@ public partial class PortraitHubScreen
 {
     private readonly record struct CodexEntry(string Label, string Summary, string Detail);
 
-    private static readonly string[] CodexSegmentLabels = { "怪物表", "装备表", "物品表" };
-    private int _codexSegment;
-
     private void OpenCodexPage()
     {
         LeaveTradeIfOpen();
         CloseTransient();
-        _codexSegment = 0;
         _pan.Remove("codex");
         _push = PushPage.Codex;
         ResetListDrag();
@@ -30,25 +26,18 @@ public partial class PortraitHubScreen
 
     private bool ExecuteCodex(PortraitWidget widget)
     {
-        switch (widget.Action)
-        {
-            case PortraitAction.CodexSegment:
-                _codexSegment = widget.Index;
-                _pan.Remove("codex");
-                return true;
-            case PortraitAction.CodexEntry:
-                var entry = BuildCodexEntries(_codexSegment)[widget.Index];
-                ModalWanted!(new InkModalPage { Title = entry.Label, Body = entry.Detail });
-                return true;
-            default:
-                return false;
-        }
+        if (widget.Action != PortraitAction.CodexEntry)
+            return false;
+
+        var entry = BuildMonsterEntries()[widget.Index];
+        ModalWanted!(new InkModalPage { Title = entry.Label, Body = entry.Detail });
+        return true;
     }
 
     private void DrawCodexPage()
     {
         var viewport = PortraitLayout.CodexViewport;
-        var entries = BuildCodexEntries(_codexSegment);
+        var entries = BuildMonsterEntries();
         var total = entries.Count * PortraitLayout.CodexRowStep + 16f;
         var offset = Pan("codex", (int)total, (int)viewport.Size.Y);
 
@@ -76,21 +65,8 @@ public partial class PortraitHubScreen
         RegisterScroll("codex", viewport, (int)total, (int)viewport.Size.Y, offset,
             value => _pan["codex"] = value, 1f);
         MaskAbove(viewport);
-        var segments = PortraitLayout.CodexSegments;
-        PortraitFrame.Segmented(this, segments, CodexSegmentLabels, _codexSegment);
-        for (var i = 0; i < CodexSegmentLabels.Length; i++)
-            _widgets.Add(new PortraitWidget(PortraitFrame.SegmentRect(segments, CodexSegmentLabels.Length, i),
-                PortraitAction.CodexSegment, i, true, CodexSegmentLabels[i]));
-        DrawPageTop("图鉴");
+        DrawPageTop("怪物图鉴");
     }
-
-    private static IReadOnlyList<CodexEntry> BuildCodexEntries(int segment) => segment switch
-    {
-        0 => BuildMonsterEntries(),
-        1 => BuildEquipmentEntries(),
-        2 => BuildItemEntries(),
-        _ => BuildMonsterEntries(),
-    };
 
     private static IReadOnlyList<CodexEntry> BuildMonsterEntries()
     {
@@ -140,64 +116,6 @@ public partial class PortraitHubScreen
                 return new CodexEntry(group.Key.Name, summary, string.Join("\n", lines));
             }).ToArray();
     }
-
-    private static IReadOnlyList<CodexEntry> BuildEquipmentEntries()
-    {
-        var entries = new List<CodexEntry>();
-        entries.AddRange(DefDatabase<WeaponTypeDef>.All.OrderBy(def => def.Label, StringComparer.Ordinal).Select(def =>
-            new CodexEntry(def.Label,
-                $"武器 · {InkText.Style(def.Style)} · 面板 {def.BasePanel}",
-                JoinLines(def.Description, $"风格 {InkText.Style(def.Style)}", $"主属性 {InkText.CoreStat(def.Core)}",
-                    $"基础面板 {def.BasePanel}", $"基础价值 {def.BaseValue}"))));
-        entries.AddRange(DefDatabase<ArmorSlotDef>.All.OrderBy(def => def.Label, StringComparer.Ordinal).Select(def =>
-            new CodexEntry(def.Label,
-                $"防具 · 防御 {def.BaseDefence}",
-                JoinLines(def.Description, $"基础防御 {def.BaseDefence}", $"物品名词 {def.Noun}"))));
-        entries.AddRange(DefDatabase<AccessoryDef>.All.OrderBy(def => def.Label, StringComparer.Ordinal).Select(def =>
-            new CodexEntry(def.Label,
-                $"饰品 · {InkText.CoreStat(def.Core)} +{def.BaseBonus}",
-                JoinLines(def.Description, $"{InkText.CoreStat(def.Core)} +{def.BaseBonus}"))));
-        entries.AddRange(DefDatabase<EnchantDef>.All.OrderBy(def => def.Label, StringComparer.Ordinal).Select(def =>
-            new CodexEntry(def.Label,
-                $"附魔 · {def.Effect}",
-                JoinLines(def.Effect, def.Core.HasValue ? $"{InkText.CoreStat(def.Core.Value)} +{def.CoreBonus}" : ""))));
-        return entries;
-    }
-
-    private static IReadOnlyList<CodexEntry> BuildItemEntries() => Items.All()
-        .OrderBy(def => def.Label, StringComparer.Ordinal)
-        .Select(def =>
-        {
-            var category = DefDatabase<ThingCategoryDef>.Get(def.Category)?.Label ?? "";
-            var summaryParts = new List<string>();
-            if (category.Length > 0)
-                summaryParts.Add(category);
-            if (def.MarketValue > 0)
-                summaryParts.Add($"{def.MarketValue}G");
-            if (def.IsFood)
-                summaryParts.Add(InkText.FoodTier(def.FoodTier));
-
-            var lines = new List<string>();
-            if (category.Length > 0)
-                lines.Add(category);
-            if (def.MarketValue > 0)
-                lines.Add($"{def.MarketValue}G");
-            if (def.IsFood)
-                lines.AddRange(new[] { InkText.FoodTier(def.FoodTier), $"营养+{def.Nutrition}　心情{def.MoodBonus:+0;-0}" });
-            if (def is MaterialDef material)
-            {
-                lines.Add($"材料等级 {material.Tier}");
-                lines.Add($"伤害/防御加成 {material.DamageBonus}");
-                lines.Add($"价值倍率 {material.ValueFactor}%");
-                lines.Add($"兵器 { (material.WeaponUsable ? "可用" : "不可用") } · 防具 { (material.ArmorUsable ? "可用" : "不可用") }");
-            }
-            if (def.Description.Length > 0)
-                lines.AddRange(new[] { "", def.Description });
-
-            return new CodexEntry(def.Label, string.Join(" · ", summaryParts), string.Join("\n", lines));
-        }).ToArray();
-
-    private static string JoinLines(params string[] lines) => string.Join("\n", lines.Where(line => line.Length > 0));
 
     private static string Range(IEnumerable<int> values) => Range(values.Select(value => (long)value));
 
