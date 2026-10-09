@@ -176,9 +176,36 @@ public partial class PortraitCombatView : Control
         while (_lastEventCount < battle.Events.Count)
         {
             var ev = battle.Events[_lastEventCount++];
-            InkCombatFx.SpawnFromEvent(ev, battle, UnitCenter, unit => PortraitLayout.EnemyCard(unit),
+            InkCombatFx.SpawnFromEvent(ev, battle, UnitCenter, UnitCard,
                 unit => UnitImageProvider?.Invoke(unit));
         }
+    }
+
+    /// <summary>截图检查用：清掉现有光效，按给定战况事件生成光效并快进 advance 秒，好把特效定格在画面上核对位置。</summary>
+    public void DebugFx(BattleEvent ev, float advance)
+    {
+        InkCombatFx.Clear();
+        InkCombatFx.SpawnFromEvent(ev, B!, UnitCenter, UnitCard, unit => UnitImageProvider?.Invoke(unit));
+        InkCombatFx.Update(advance);
+        QueueRedraw();
+    }
+
+    public Rect2 DebugUnitCard(Combatant unit) => UnitCard(unit);
+
+    /// <summary>
+    /// 战斗单位在竖屏画布上的卡片矩形：敌方取占格方区，我方取底部头像卡。
+    /// 剑光、受击光效与死亡斩裂都以它定位——此前一律按敌方格算，敌人砍我方时光效落在场上空格里。
+    /// </summary>
+    private Rect2 UnitCard(Combatant unit)
+    {
+        if (B != null && unit.Side == B.ControlledSide)
+        {
+            var allies = B.Members.Where(m => m.Side == B.ControlledSide).Take(4).ToArray();
+            for (var i = 0; i < allies.Length; i++)
+                if (allies[i].Id == unit.Id)
+                    return PortraitLayout.AllyCard(i);
+        }
+        return PortraitLayout.EnemyCard(unit);
     }
 
     /// <summary>战斗单位在竖屏画布上的视觉中心：敌方取占格方区、我方取底部头像卡。</summary>

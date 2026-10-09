@@ -419,6 +419,8 @@ public partial class PortraitCapture : Node
                 CheckAvatars();
                 Shoot(capturedSize == 1 ? "combat" : $"boss{capturedSize}", _root.CombatView);
             });
+            if (size == 1)
+                EnqueueFxChecks();
         }
         _steps.Enqueue(CheckCombatButtons);
         _steps.Enqueue(() => Shoot("combat_item_popup", _root.CombatView));
@@ -1151,6 +1153,44 @@ public partial class PortraitCapture : Node
         _wait = 0;
         _steps.Dequeue()();
     }
+    /// <summary>
+    /// 战斗特效定格：每类招式（近战剑光 / 钝击 / 突刺 / 远射 / 法术 / 治疗 / 防御）以及敌打我方，
+    /// 各生成一次光效、快进到中段截图，核对光效落点是否压在目标卡上。
+    /// </summary>
+    private void EnqueueFxChecks()
+    {
+        var cases = new (string Tag, string Skill, bool EnemyActs, CombatEventKind Kind, float At)[]
+        {
+            ("fx_attack", BattleSkills.AttackId, false, CombatEventKind.Hit, 0.18f),
+            ("fx_cross", "cross_slash", false, CombatEventKind.Hit, 0.18f),
+            ("fx_blunt", "palm_strike", false, CombatEventKind.Hit, 0.16f),
+            ("fx_stab", "quick_stab", false, CombatEventKind.Hit, 0.14f),
+            ("fx_arrow", "aimed_shot", false, CombatEventKind.Hit, 0.14f),
+            ("fx_spell", "flame_burst", false, CombatEventKind.Hit, 0.16f),
+            ("fx_enemy", BattleSkills.AttackId, true, CombatEventKind.Hit, 0.18f),
+            ("fx_heal", "mend", false, CombatEventKind.Heal, 0.16f),
+            ("fx_guard", BattleSkills.GuardId, false, CombatEventKind.Status, 0.16f),
+        };
+        foreach (var c in cases)
+        {
+            var fx = c;
+            _steps.Enqueue(() =>
+            {
+                var battle = _battleProbe.Battle;
+                var ally = battle.Members.First(m => m.Side == battle.ControlledSide);
+                var foe = battle.Members.First(m => m.Side != battle.ControlledSide);
+                var actor = fx.EnemyActs ? foe : ally;
+                var target = fx.Kind is CombatEventKind.Heal or CombatEventKind.Status ? ally : fx.EnemyActs ? ally : foe;
+                _root.CombatView.DebugFx(new BattleEvent
+                {
+                    Kind = fx.Kind, ActorId = actor.Id, TargetId = target.Id, SkillId = fx.Skill, Amount = 12, HpAfter = 99,
+                }, fx.At);
+            });
+            _steps.Enqueue(() => Shoot(fx.Tag, _root.CombatView));
+        }
+        _steps.Enqueue(() => InkCombatFx.Clear());
+    }
+
     private void Shoot(string tag, Node source)
     {
         if (_prefix.Length > 0)
