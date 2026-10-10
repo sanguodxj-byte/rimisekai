@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    
+    <path fill="#E9EFEA" d="M -245,-60 L 0,-225 L 245,-60 L 215,-40 L 0,-185 L -215,-40 Z"/>
+    <path fill="#E9EFEA" d="M -190,-45 L 0,-170 L 190,-45 L 190,205 L -190,205 Z"/>
+    <rect x="-150" y="-50" width="300" height="230" rx="14" fill="#000000"/>
+    <g transform="translate(0,65) scale(0.52) translate(0,0)">
+    <!-- 台面上的木槌与手锯 -->
+    <rect x="-200" y="-150" width="100" height="56" rx="8" fill="#E9EFEA"/>
+    <rect x="-100" y="-132" width="130" height="20" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M 40,-100 L 210,-170 L 220,-130 L 60,-90 Z"/>
+    <path fill="#E9EFEA" d="M 200,-195 L 245,-175 L 230,-125 L 195,-140 Z"/>
+    <!-- 厚台面 -->
+    <rect x="-235" y="-80" width="470" height="50" rx="6" fill="#E9EFEA"/>
+    <!-- 台钳（负形钳口） -->
+    <rect x="-235" y="-30" width="70" height="60" fill="#E9EFEA"/>
+    <!-- 腿、横撑与下层搁板 -->
+    <rect x="-205" y="-30" width="40" height="230" fill="#E9EFEA"/>
+    <rect x="165" y="-30" width="40" height="230" fill="#E9EFEA"/>
+    <rect x="-165" y="110" width="330" height="30" fill="#E9EFEA"/>
+</g>
+  </g>
+</svg>
