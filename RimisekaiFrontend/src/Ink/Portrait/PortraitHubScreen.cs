@@ -73,6 +73,7 @@ public enum PortraitAction
     RoomGo,
     DevelopmentDoor,
     RoomDemolish,
+    RoomLock,
     NowAvatar,
     NowPage,
     WorldZoomIn,

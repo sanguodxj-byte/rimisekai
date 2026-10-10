@@ -37,7 +37,7 @@ public abstract class BaseWorkerState : IWorkerState
         {
             var next = ctx.Territory.Rooms.Find(r => r.Id == worker.Path.Peek());
             // 路上那间房锁上了（主人进屋睡下、或刚拧了锁）：走不过去，就地停下。
-            if (next != null && ctx.Territory.IsLocked(next))
+            if (next != null && ctx.Territory.BarsEntry(next, ctx.Character))
             {
                 worker.Path.Clear();
                 worker.Phase = WorkPhase.Idle;
@@ -60,49 +60,14 @@ public abstract class BaseWorkerState : IWorkerState
         return false;
     }
 
-    public static List<int> Route(Territory territory, int fromRoom, int toRoom, Func<Room, bool>? passable = null)
-    {
-        var rooms = territory.Rooms;
-        var queue = new Queue<int>();
-        var prev = new Dictionary<int, int> { [fromRoom] = -1 };
-        queue.Enqueue(fromRoom);
-        while (queue.Count > 0)
-        {
-            var id = queue.Dequeue();
-            if (id == toRoom)
-                break;
-            var room = rooms.Find(r => r.Id == id);
-            if (room == null)
-                continue;
-            foreach (var next in room.Links)
-            {
-                if (prev.ContainsKey(next))
-                    continue;
-                var node = rooms.Find(r => r.Id == next);
-                if (node == null || !node.Open)
-                    continue;
-                if (next != toRoom && passable != null && !passable(node))
-                    continue;
-                prev[next] = id;
-                queue.Enqueue(next);
-            }
-        }
-        var path = new List<int>();
-        if (!prev.ContainsKey(toRoom))
-            return path;
-        for (var id = toRoom; id != fromRoom; id = prev[id])
-            path.Add(id);
-        path.Reverse();
-        return path;
-    }
-
-    public static void GotoRoom(Worker worker, Territory territory, int targetRoom, Func<Room, bool>? enterable = null)
+    /// <summary>规划去某房间的路：只走这人进得去的房（权限 enterable、门锁 <see cref="Territory.BarsEntry"/>）。</summary>
+    public static void GotoRoom(Worker worker, Territory territory, int targetRoom, Character.CharacterState who, Func<Room, bool>? enterable = null)
     {
         worker.Path.Clear();
         if (worker.RoomId == targetRoom)
             return;
 
-        var path = Route(territory, worker.RoomId, targetRoom, enterable);
+        var path = territory.Route(worker.RoomId, targetRoom, enterable, r => territory.BarsEntry(r, who));
         foreach (var r in path)
             worker.Path.Enqueue(r);
     }

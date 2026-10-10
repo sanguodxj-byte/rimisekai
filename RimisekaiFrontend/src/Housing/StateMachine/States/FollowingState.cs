@@ -39,7 +39,7 @@ public sealed class FollowingState : BaseWorkerState
         {
             ReleaseSeat(worker);
             if (worker.Path.Count == 0)
-                GotoRoom(worker, ctx.Territory, target.Id, r => Enterable(r, ctx.Character, stepCtx));
+                GotoRoom(worker, ctx.Territory, target.Id, ctx.Character, r => Enterable(r, ctx.Character, stepCtx));
             if (worker.Path.Count == 0)
                 return false;
             MoveAlong(worker, ctx);

@@ -63,7 +63,7 @@ public sealed class SeekingChatState : BaseWorkerState
 
         if (worker.RoomId != target.Id && worker.Path.Count == 0)
         {
-            GotoRoom(worker, territory, target.Id, r => Enterable(r, character, stepCtx));
+            GotoRoom(worker, territory, target.Id, character, r => Enterable(r, character, stepCtx));
             if (worker.Path.Count == 0)
             {
                 worker.SeekWaiting = true;

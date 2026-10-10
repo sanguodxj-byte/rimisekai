@@ -51,12 +51,11 @@ public sealed class BedroomRulesTests
         return state.Territory.Facilities[^1];
     }
 
-    /// <summary>主人站在卧室里，等某人在卧室睡到天亮，返回起床那一下的心情变化。</summary>
-    private static int WakeDeltaNextToMaster(HubSession hub, GameState state, CharacterState who)
+    /// <summary>主人待在某间房里，等某人在那间睡到天亮，返回起床那一下的心情变化。</summary>
+    private static int WakeDeltaNextToMaster(HubSession hub, GameState state, CharacterState who, int roomId)
     {
-        TerritoryLoopTests.GiveMaidABed(hub, state);
-        hub.Enter(Bedroom);
-        RunUntil(hub, () => Asleep(hub, who.Id) && W(hub, who.Id).RoomId == Bedroom && state.Clock.Minutes >= 5 * 60 + 50
+        hub.Enter(roomId);
+        RunUntil(hub, () => Asleep(hub, who.Id) && W(hub, who.Id).RoomId == roomId && state.Clock.Minutes >= 5 * 60 + 50
             && state.Clock.Minutes < 6 * 60, "睡到清晨五点五十");
         var before = who.Affect.Mood;
         RunUntil(hub, () => !Asleep(hub, who.Id), "起床");
@@ -67,14 +66,18 @@ public sealed class BedroomRulesTests
     public void Maid_shares_the_masters_room_without_the_crowding_penalty()
     {
         var hub = TerritoryLoopTests.NewGame(out var state, 11);
-        var maidDelta = WakeDeltaNextToMaster(hub, state, Maid(state));
+        TerritoryLoopTests.GiveMaidABed(hub, state);
+        var maidDelta = WakeDeltaNextToMaster(hub, state, Maid(state), Bedroom);
         Assert.True(maidDelta > -10, $"女仆与主人同屋醒来心情 {maidDelta}");
 
-        // 对照：同一个人去掉女仆身份，同样的屋子醒来就是挤房 -15。
+        // 对照：同一个人去掉女仆身份，与（睡在庭院的）主人同屋醒来就是挤房 -15。
+        // 外人不去主人的卧室睡（见 Lock_happy_sleepers_never_take_the_masters_bedroom），所以换到庭院比。
         hub = TerritoryLoopTests.NewGame(out state, 11);
         var plain = Maid(state);
         plain.Talents.Remove((int)Trait.Maid);
-        var plainDelta = WakeDeltaNextToMaster(hub, state, plain);
+        BuildBed(hub, state, Courtyard);
+        state.Territory.MasterAsleep = true; // 主人在庭院打地铺睡着：睡着的人不被请出门
+        var plainDelta = WakeDeltaNextToMaster(hub, state, plain, Courtyard);
         Assert.True(plainDelta <= -10, $"外人与主人同屋醒来心情 {plainDelta}");
     }
 
@@ -165,7 +168,7 @@ public sealed class BedroomRulesTests
         RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在庭院睡下");
         var yard = state.Territory.Rooms.Single(r => r.Id == Courtyard);
         Assert.True(state.Territory.IsLocked(yard));
-        Assert.Equal(guest.Id, state.Territory.SleeperLocks[Courtyard]);
+        Assert.Equal(guest.Id, state.Territory.SleeperLocks[Courtyard].SleeperId);
 
         // 醒着待在屋里的人被请出去。
         hub.Day.EndRoutineOf(maid.Id);
@@ -175,13 +178,87 @@ public sealed class BedroomRulesTests
         // 门锁着进不来。
         hub.Place(maid.Id, Courtyard);
         Assert.NotEqual(Courtyard, W(hub, maid.Id).RoomId);
-        // 主人有钥匙。
+        // 主人也进不来（门锁一视同仁）。
         hub.Enter(Courtyard);
-        Assert.Equal(Courtyard, hub.PlayerRoomId);
+        Assert.Equal(Bedroom, hub.PlayerRoomId);
+        Assert.False(hub.CanReach(Courtyard));
+        Assert.True(hub.LockedOut(Courtyard));
 
         RunUntil(hub, () => !Asleep(hub, guest.Id), "旅人起床");
         hub.PassTime(10);
         Assert.False(state.Territory.IsLocked(yard));
+        Assert.True(hub.Arrive(Courtyard), "醒了门开，主人进得去");
+    }
+
+    [Fact]
+    public void Masters_lock_keeps_the_maid_out_only_while_he_stays_inside()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 22);
+        var maid = Maid(state);
+        var hers = TerritoryLoopTests.GiveMaidABed(hub, state);
+        hub.Place(maid.Id, Parlor);
+        hub.Enter(Bedroom);
+        Assert.True(hub.ToggleRoomLock());
+        Assert.Equal(RoomLock.Locked, state.Territory.Rooms.Single(r => r.Id == Bedroom).Lock);
+        // 锁着：女仆进不来，就算到了睡觉的点、她的床就在里头。
+        while (state.Clock.Minutes / 60 != 23)
+        {
+            hub.PassTime(10);
+            Assert.NotEqual(Bedroom, W(hub, maid.Id).RoomId);
+        }
+        // 主人出门：门回到自动，女仆进得去，回自己的床睡。
+        Assert.True(hub.Arrive(Parlor));
+        RunUntil(hub, () => Asleep(hub, maid.Id) && W(hub, maid.Id).FacilityId == hers.Id, "女仆回她的床睡下");
+    }
+
+    [Fact]
+    public void Awake_master_is_evicted_when_someone_locks_the_room_to_sleep()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 19);
+        var guest = state.Roster.Add("旅人", false);
+        BuildBed(hub, state, Courtyard);
+        hub.Place(guest.Id, Courtyard);
+        hub.Enter(Courtyard);
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在庭院睡下");
+        Assert.NotEqual(Courtyard, hub.PlayerRoomId);
+        Assert.Contains(hub.Log, e => e.Text.Contains($"{guest.Name}锁门睡下，你被请出了庭院"));
+        Assert.False(hub.Arrive(Courtyard));
+        Assert.True(hub.LockedOut(Courtyard));
+    }
+
+    [Fact]
+    public void A_sleeper_with_no_open_room_next_door_does_not_shut_the_master_out_of_everything()
+    {
+        // 请出门却无处可去：主人留在原地，不被关死。
+        var hub = TerritoryLoopTests.NewGame(out var state, 20);
+        var guest = state.Roster.Add("旅人", false);
+        var yard = state.Territory.Rooms.Single(r => r.Id == Courtyard);
+        foreach (var id in yard.Links.ToList())
+            state.Territory.Rooms.Single(r => r.Id == id).Open = false;
+        BuildBed(hub, state, Courtyard);
+        hub.Place(guest.Id, Courtyard);
+        hub.Enter(Courtyard);
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在庭院睡下");
+        Assert.Equal(Courtyard, hub.PlayerRoomId);
+    }
+
+    [Fact]
+    public void Lock_happy_sleepers_never_take_the_masters_bedroom()
+    {
+        // 卧室里除了主人的床还有一张空床，旅人别处无床：他也不去主人的卧室睡（一锁门就把主人关在自己房外）。
+        var hub = TerritoryLoopTests.NewGame(out var state, 21);
+        var maid = Maid(state);
+        maid.Condition.AddFavor(1000); // 女仆与主人同床，空出她那张
+        var guest = state.Roster.Add("旅人", false);
+        BuildBed(hub, state, Bedroom);
+        hub.Place(guest.Id, Parlor);
+        hub.Enter(Bedroom);
+        for (var i = 0; i < 24 * 6; i++)
+        {
+            hub.PassTime(10);
+            Assert.False(Asleep(hub, guest.Id) && W(hub, guest.Id).RoomId == Bedroom, "旅人睡进了主人的卧室");
+            Assert.False(state.Territory.SleeperLocks.ContainsKey(Bedroom));
+        }
     }
 
     [Fact]

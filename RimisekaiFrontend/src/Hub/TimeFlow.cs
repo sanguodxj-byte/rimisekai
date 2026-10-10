@@ -9,6 +9,24 @@ namespace Rimisekai.Hub;
 
 public sealed partial class HubSession
 {
+    /// <summary>
+    /// 有人在主人所在的房间锁门睡下、主人醒着：主人跟别人一样被请到隔壁进得去的房间（没有就留在原地，不把人关死）。
+    /// </summary>
+    private void EvictMasterFromSleepersRoom()
+    {
+        var master = State.Roster.Master;
+        var room = Room(PlayerRoomId);
+        if (master == null || room == null || State.Territory.MasterAsleep
+            || !State.Territory.SleeperLocks.TryGetValue(room.Id, out var sleeper) || !State.Territory.BarsEntry(room, master))
+            return;
+        var outside = State.Territory.DoorOut(room, master);
+        if (outside == null)
+            return;
+        LeaveFixture();
+        Write($"{NameOf(sleeper.SleeperId)}锁门睡下，你被请出了{room.Name}。");
+        Enter(outside.Id);
+    }
+
     /// <summary>推进时间。委派角色按当前槽位跑分钟级结算，闲时跑自主节律。</summary>
     public List<WorkLog> PassTime(int minutes)
     {
@@ -53,6 +71,7 @@ public sealed partial class HubSession
         }
         foreach (var w in Day.Workers)
             _presence[w.CharacterId] = w.RoomId;
+        EvictMasterFromSleepersRoom();
         if (master != null)
         {
             Worker? masterWorker = null;

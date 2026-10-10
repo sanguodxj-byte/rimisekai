@@ -151,7 +151,7 @@ public sealed partial class HubSession
         }
 
         var master = State.Roster.Master;
-        // 睡下的主人把门带上；一醒过来做别的事，门就还回去（下一次行动不再是睡）。
+        // 睡下的主人把门带上（自己的房间自动锁上）；醒来即还回去。
         State.Territory.MasterAsleep = action == ActionKind.Sleep;
         if (action == ActionKind.Sleep)
         {
@@ -160,6 +160,7 @@ public sealed partial class HubSession
         }
         PassTime(sleepMinutes > 0 ? sleepMinutes
             : minutes > 0 ? minutes : FacilityActionTicks * TerritoryClock.StepMinutes);
+        State.Territory.MasterAsleep = false; // 一觉醒来门就还回去
         switch (action)
         {
             case ActionKind.Sleep:

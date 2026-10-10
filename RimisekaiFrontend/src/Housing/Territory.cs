@@ -14,10 +14,6 @@ public enum RoomPermission
     Faction = 2,
 }
 
-/// <summary>
-/// 房门的锁。只有「私人空间」房间（卧室类）用得上：
-/// 自动 = 主人不在屋内或正在睡时锁；另两档是玩家手动拧的，压过自动规则。
-/// </summary>
 /// <summary>房间朝向（网格上 北＝y-1、东＝x+1、南＝y+1、西＝x-1）。</summary>
 public enum RoomDir
 {
@@ -27,6 +23,11 @@ public enum RoomDir
     West,
 }
 
+/// <summary>
+/// 房门的锁。只有主人的房间（摆着主人的床那间，<see cref="Territory.MasterBedroomId"/>）用得上：
+/// 自动 = 主人不在屋内或正在睡时锁（女仆照进）；手动锁 = 主人在屋里时把门锁死，谁都进不来（主人一出门就回到自动）；
+/// 手动敞开 = 谁都进得来。
+/// </summary>
 public enum RoomLock
 {
     Auto = 0,
@@ -51,11 +52,7 @@ public sealed class Room
     public int OpenCost { get; init; }
     public RoomPermission Permission { get; set; } = RoomPermission.Public;
 
-    /// <summary>
-    /// 门锁。只有打了「私人空间」标签的房间（卧室类）这个字段才有意义。
-    /// 自动 = 主人不在屋内或正在睡时锁上；手动锁/手动解锁压过自动规则。
-    /// 锁只挡别人——主人是这间房的主人，随时进得去。
-    /// </summary>
+    /// <summary>门锁。只有主人的房间这个字段才有意义，见 <see cref="RoomLock"/>。</summary>
     public RoomLock Lock { get; set; } = RoomLock.Auto;
 
     public List<int> Links { get; } = new();
@@ -1090,9 +1087,6 @@ public sealed class Territory
     /// </summary>
     public Room? RoomAt(int x, int y) => Rooms.Find(r => r.X == x && r.Y == y);
 
-    /// <summary>私人空间的标签名。卧室类房间带这个标签，锁才对它有意义。</summary>
-    public const string PrivateTag = "私人空间";
-
     /// <summary>主人此刻在哪间房（-1 = 不在领地里）。自动上锁按它判。</summary>
     public int MasterRoomId { get; set; } = -1;
 
@@ -1102,18 +1096,23 @@ public sealed class Territory
     /// </summary>
     public int MasterBedId { get; set; } = -1;
 
-    /// <summary>主人是不是正在睡。睡着的私室别人进不来。</summary>
+    /// <summary>主人的房间：主人的床摆在哪间。门锁（<see cref="Room.Lock"/>）只对这一间有意义；没有主人的床就是 -1。</summary>
+    public int MasterBedroomId => Facilities.Find(f => f.Id == MasterBedId)?.RoomId ?? -1;
+
+    /// <summary>主人是不是正在睡。睡着时主人的房间自动锁上。</summary>
     public bool MasterAsleep { get; set; }
 
     /// <summary>
-    /// 有人睡着、把门反锁了的房间 → 睡着的那人。除了女仆，人一睡下就锁门，醒了才开
-    /// （由领地时钟每格按「谁在哪张床上睡着」重算，不进存档）。主人照旧不受门锁拦。
+    /// 有人睡着、把门反锁了的房间 → 那人是谁、放不放主人进来（肯与主人同床的人不拦主人）。
+    /// 除了女仆，人一睡下就锁门，醒了才开（由领地时钟每格按「谁在哪张床上睡着」重算，不进存档）。
     /// </summary>
-    public Dictionary<int, int> SleeperLocks { get; } = new();
+    public Dictionary<int, SleeperLock> SleeperLocks { get; } = new();
+
+    public readonly record struct SleeperLock(int SleeperId, bool AdmitsMaster);
 
     /// <summary>
-    /// 这间房此刻锁不锁。有人在里头睡着锁了门就锁；
-    /// 否则只有卧室类（私人空间）才谈得上锁：手动锁/手动解锁压过自动规则。
+    /// 这间房的门此刻关没关上（对一个寻常外人而言）：有人睡着反锁了，或者是主人的房间且按门锁该锁。
+    /// 具体某人进不进得去看 <see cref="BarsEntry"/>。
     /// </summary>
     public bool IsLocked(Room room)
     {
@@ -1121,24 +1120,48 @@ public sealed class Territory
             return false;
         if (SleeperLocks.ContainsKey(room.Id))
             return true;
-        if (!room.HasTag(PrivateTag))
-            return false;
-        return room.Lock switch
+        return room.Id == MasterBedroomId && room.Lock switch
         {
             RoomLock.Locked => true,
             RoomLock.Unlocked => false,
-            // 自动：主人不在屋内，或者主人在睡。
             _ => MasterRoomId != room.Id || MasterAsleep,
         };
     }
 
     /// <summary>
+    /// 这个人此刻进不进得了这间房。门锁一视同仁，主人也不例外：
+    /// - 有人锁门睡下：除了睡着的那人自己，谁都进不去（肯与主人同床的人不拦主人）。
+    /// - 主人的房间：主人自己随时进得去。手动锁上＝别人一律进不去，女仆也不例外；手动敞开＝谁都进得去；
+    ///   自动＝主人不在屋里或在睡时锁上，只放女仆（她与主人同屋）。
+    /// </summary>
+    public bool BarsEntry(Room room, CharacterState who)
+    {
+        if (SleeperLocks.TryGetValue(room.Id, out var sleeper))
+            return sleeper.SleeperId != who.Id && !(who.IsMaster && sleeper.AdmitsMaster);
+        if (room.Id != MasterBedroomId || who.IsMaster)
+            return false;
+        return room.Lock switch
+        {
+            RoomLock.Locked => true,
+            RoomLock.Unlocked => false,
+            _ => (MasterRoomId != room.Id || MasterAsleep) && !who.SharesRoomWithMaster(),
+        };
+    }
+
+    /// <summary>被请出门时去哪：隔壁第一间开着、这人进得去的房；没有就是 null（留在原地，不把人关死）。</summary>
+    public Room? DoorOut(Room room, CharacterState who) =>
+        room.Links.Select(id => Rooms.Find(r => r.Id == id))
+            .FirstOrDefault(r => r != null && r.Open && !BarsEntry(r, who));
+
+    /// <summary>
     /// 房间间的最短通路（BFS）。找不到返回空表。
     /// passable 用于"这个角色能不能进这间房"的额外判定；目标房间本身不查。
-    /// 锁着的私人空间走不通：角色不会规划一条穿门上锁的私室的路。
+    /// barred 是门锁：进不去的房间（含目标）走不通；不给就按寻常外人算（<see cref="IsLocked"/>），
+    /// 知道是谁走就传 <c>r => BarsEntry(r, who)</c>。
     /// </summary>
-    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null, bool ignoreLocks = false)
+    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null, Func<Room, bool>? barred = null)
     {
+        barred ??= IsLocked;
         var queue = new Queue<int>();
         var prev = new Dictionary<int, int> { [fromRoom] = -1 };
         queue.Enqueue(fromRoom);
@@ -1155,7 +1178,7 @@ public sealed class Territory
                 if (prev.ContainsKey(next))
                     continue;
                 var node = Rooms.Find(r => r.Id == next);
-                if (node == null || !node.Open || (!ignoreLocks && IsLocked(node)))
+                if (node == null || !node.Open || barred(node))
                     continue;
                 if (next != toRoom && passable != null && !passable(node))
                     continue;

@@ -321,12 +321,12 @@ public partial class PortraitHubScreen
     private void GoTo(int roomId)
     {
         var from = _vm.Hub.PlayerRoomId;
-        var path = _vm.Hub.State.Territory.Route(from, roomId, ignoreLocks: true);
+        var path = _vm.Hub.State.Territory.Route(from, roomId, barred: _vm.Hub.PlayerBarred);
         if (_vm.Hub.Arrive(roomId))
             // 地城里半路撞上东西会停在那一间：棋子只走到人实际站的地方。
             StartWalk(from, path.Take(path.IndexOf(_vm.Hub.PlayerRoomId) + 1).ToList());
         else
-            SetNotice($"{RoomNameOf(roomId)}与这里不连通，过不去。");
+            SetNotice(_vm.Hub.LockedOut(roomId) ? $"{RoomNameOf(roomId)}的门锁着，进不去。" : $"{RoomNameOf(roomId)}与这里不连通，过不去。");
     }
 
     /// <summary>
@@ -616,8 +616,18 @@ public partial class PortraitHubScreen
         var reachable = here || WorldLayer || _vm.Hub.CanReach(room.Id);
         // 只有自家领地的房能拆：兴趣点与地城（含委托地城）的石室不归你。
         var canDemolish = _vm.Hub.Layer == MapLayer.Territory && !here;
-        PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
-        _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomDemolish, room.Id, canDemolish, "拆除"));
+        // 站在自己的房间里：左钮换成门锁（自己待的房间本就拆不了），点一下换一档。
+        if (here && _vm.Hub.Layer == MapLayer.Territory && _vm.Hub.CurrentRoomLockable())
+        {
+            var lockLabel = _vm.Hub.RoomLockLabel();
+            PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, lockLabel);
+            _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomLock, room.Id, true, lockLabel));
+        }
+        else
+        {
+            PortraitFrame.Plaque(this, PortraitLayout.SheetFooterLeft, "拆除", enabled: canDemolish);
+            _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterLeft, PortraitAction.RoomDemolish, room.Id, canDemolish, "拆除"));
+        }
         var goLabel = here ? "已在此处" : reachable ? "前往" : "不连通";
         PortraitFrame.Plaque(this, PortraitLayout.SheetFooterRight, goLabel, primary: true, enabled: !here && reachable);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterRight, PortraitAction.RoomGo, room.Id, !here && reachable, goLabel));
@@ -692,6 +702,17 @@ public partial class PortraitHubScreen
                 return true;
             case PortraitAction.RoomGo:
                 GoTo(w.Index);
+                return true;
+            case PortraitAction.RoomLock:
+                hub.BeginOperation();
+                hub.ToggleRoomLock();
+                SetNotice(hub.RoomLockLabel() switch
+                {
+                    "门·锁着" => "门锁上了：你在屋里时谁都进不来，出门就回到自动。",
+                    "门·敞开" => "门敞开着：谁都进得来。",
+                    _ => "门回到自动：你不在或睡下时上锁，只放女仆进来。",
+                });
+                QueueRedraw();
                 return true;
             case PortraitAction.RoomDemolish:
                 var roomName = RoomNameOf(w.Index);

@@ -453,6 +453,15 @@ public sealed partial class HubSession
         var room = Room(roomId);
         if (room == null || !room.Open)
             return;
+        // 门锁对主人一视同仁：有人锁门睡下的房间进不去。
+        if (roomId != PlayerRoomId && PlayerBarred(room))
+        {
+            Write($"{room.Name}的门锁着，进不去。");
+            return;
+        }
+        // 手动锁只管主人在屋里的时候：出了自己的房间，门回到自动。
+        if (roomId != PlayerRoomId && Room(PlayerRoomId) is { Lock: RoomLock.Locked } left)
+            left.Lock = RoomLock.Auto;
         PlayerRoomId = roomId;
         RegionId = room.RegionId;
         State.Territory.MasterRoomId = roomId;
@@ -465,7 +474,7 @@ public sealed partial class HubSession
         {
             if (!worker.FollowsPlayer)
                 continue;
-            if (State.Territory.IsLocked(room))
+            if (State.Roster.Find(worker.CharacterId) is not { } follower || State.Territory.BarsEntry(room, follower))
             {
                 Write($"{NameOf(worker.CharacterId)}被关在{room.Name}门外。");
                 continue;

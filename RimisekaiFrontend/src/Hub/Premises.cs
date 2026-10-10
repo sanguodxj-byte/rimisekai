@@ -61,23 +61,25 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 玩家所在这间房是不是私人空间（卧室类）。行动面板据此决定要不要画门锁那个钮。
+    /// 玩家所在这间房是不是自己的房间（摆着主人的床，<see cref="Territory.MasterBedroomId"/>）。门锁只在这间拧得动，
+    /// 界面据此决定要不要画门锁那个钮。
     /// </summary>
-    public bool CurrentRoomIsPrivate() =>
-        Room(PlayerRoomId)?.HasTag(Territory.PrivateTag) == true;
+    public bool CurrentRoomLockable() =>
+        PlayerRoomId >= 0 && PlayerRoomId == State.Territory.MasterBedroomId;
 
     /// <summary>玩家所在这间房此刻锁没锁。</summary>
     public bool CurrentRoomLocked() =>
         Room(PlayerRoomId) is { } room && State.Territory.IsLocked(room);
 
     /// <summary>
-    /// 拧门锁。只能在卧室类房间里操作，且人得在屋里——锁的是"主人自己动手"这件事。
-    /// 三档循环：自动 → 手动锁 → 手动解锁 → 自动。
+    /// 拧门锁。只能在自己的房间里操作，且人得在屋里——锁的是"主人自己动手"这件事。
+    /// 三档循环：自动 → 手动锁 → 手动敞开 → 自动。手动锁只在主人待在屋里时有效：一出门就回到自动
+    /// （见 <see cref="Enter"/>），不会把女仆的床、别人的路长期锁死。
     /// </summary>
     public bool ToggleRoomLock()
     {
         var room = Room(PlayerRoomId);
-        if (room == null || !room.HasTag(Territory.PrivateTag))
+        if (room == null || !CurrentRoomLockable())
             return false;
         room.Lock = room.Lock switch
         {
@@ -85,10 +87,23 @@ public sealed partial class HubSession
             RoomLock.Locked => RoomLock.Unlocked,
             _ => RoomLock.Auto,
         };
-        var locked = State.Territory.IsLocked(room);
-        Write(locked ? $"你把{room.Name}的门锁上了。" : $"你把{room.Name}的门打开了。");
+        Write(room.Lock switch
+        {
+            RoomLock.Locked => $"你把{room.Name}的门锁上了。",
+            RoomLock.Unlocked => $"你把{room.Name}的门敞开了。",
+            _ => $"你把{room.Name}的门带上，人不在时自动上锁。",
+        });
         return true;
     }
+
+    /// <summary>门锁钮上的字：当前这一档。</summary>
+    public string RoomLockLabel() =>
+        Room(PlayerRoomId)?.Lock switch
+        {
+            RoomLock.Locked => "门·锁着",
+            RoomLock.Unlocked => "门·敞开",
+            _ => "门·自动",
+        };
 
     /// <summary>设施名；找不到返回空串。</summary>
     public string FacilityName(int facilityId) =>

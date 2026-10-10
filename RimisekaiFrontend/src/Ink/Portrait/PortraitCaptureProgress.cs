@@ -356,8 +356,46 @@ public partial class PortraitCapture
             Require(!hub.Log.Any(e => e.Text == hub.UseRefusal), "kick-out toast is not also logged");
             Shoot("bed_kickout", screen);
             hub.Day.EndRoutineOf(hub.State.Roster.Members.First(m => !m.IsMaster && m.IsMaid()).Id);
-            hub.Enter(_kickFrom); // 回到摆满设施的那间，后面的开发探针按它来
             screen.ShowTab(0);
+        });
+        EnqueueRoomLock();
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugHub.Enter(_kickFrom); // 回到摆满设施的那间，后面的开发探针按它来
+            _root.HubScreen.ShowTab(0);
+        });
+    }
+
+    /// <summary>自己的房间（主人的床那间）的抽屉：左钮是门锁，点一下换一档，标签与提示签跟着变。</summary>
+    private void EnqueueRoomLock()
+    {
+        _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.CurrentRoomLockable(), "room lock fixture: player stands in own bedroom");
+            Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomLock && w.Label == "门·自动" && w.Enabled),
+                "own room sheet shows the door lock in place of demolish");
+            Require(!screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomDemolish), "lock replaces demolish");
+            ClickHub(PortraitAction.RoomLock, hub.PlayerRoomId);
+        });
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId).Lock == RoomLock.Locked, "lock click locks the door");
+            Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomLock && w.Label == "门·锁着"), "lock label follows state");
+            Require(screen.DebugNotice.StartsWith("门锁上了"), "lock shows a toast");
+            Shoot("room_lock", screen);
+            ClickHub(PortraitAction.RoomLock, hub.PlayerRoomId);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.RoomLock, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId).Lock == RoomLock.Auto, "lock cycles back to auto");
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
         });
     }
 

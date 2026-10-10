@@ -104,7 +104,7 @@ public sealed partial class HubSession
     {
         LeaveFixture();
         var from = PlayerRoomId;
-        foreach (var step in State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), ignoreLocks: true))
+        foreach (var step in State.Territory.Route(PlayerRoomId, roomId, r => RoomShown(r.Id), PlayerBarred))
         {
             Walk(CostMove * TerritoryClock.StepMinutes);
             Enter(step);
