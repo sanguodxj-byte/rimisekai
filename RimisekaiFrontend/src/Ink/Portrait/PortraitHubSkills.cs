@@ -81,7 +81,7 @@ public partial class PortraitHubScreen
     {
         var left = PortraitLayout.Pad;
         var right = PortraitLayout.CanvasWidth - PortraitLayout.Pad;
-        PortraitFrame.SectionRule(this, left, right, y, who.PoolIdentity.Length > 0 ? $"身份技能池 · {who.PoolIdentity}" : "身份技能池");
+        PortraitFrame.SectionRule(this, left, right, y, who.PoolIdentity.Length > 0 ? who.PoolIdentity : who.Identity);
         y += 56f;
         foreach (var def in SkillPool.Skills(who))
         {
@@ -161,7 +161,7 @@ public partial class PortraitHubScreen
     private void OpenPoolIdentities()
     {
         var hub = _vm.Hub;
-        var page = new InkModalPage { Title = "换身份", Body = "选一个身份，按它的技能池重新抽取。" };
+        var page = new InkModalPage { Title = "换身份", Body = "选一个身份，重新抽取技能。" };
         foreach (var identity in hub.PoolIdentities)
         {
             var chosen = identity;
