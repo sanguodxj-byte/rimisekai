@@ -137,6 +137,12 @@ public sealed partial class PortraitBattleWipe : Control
 
     // ---------- 时间 ----------
 
+    /// <summary>纹章（玫瑰窗＋荆棘＋巨剑）中心：首领战上移，给下方首领名字留出整块空间。</summary>
+    private Vector2 O => _boss ? new Vector2(C.X, C.Y - 140f) : C;
+
+    /// <summary>首领战玫瑰窗缩一号，荆棘与巨剑同比。</summary>
+    private float RoseScale => _boss ? 0.84f : 1f;
+
     private float DoorStart => _boss ? 2.25f : 1.55f;
 
     /// <summary>首领战震屏：竖劈落下与巨剑插入两下，各自衰减。</summary>
@@ -212,7 +218,7 @@ public sealed partial class PortraitBattleWipe : Control
         ci.DrawRect(new Rect2(0, 0, W, H), new Color(InkStyle.Bg, 0.55f));
         var glow = Ease3(Seg(0.36f, 0.9f));
         for (var i = 0; i < 10; i++)
-            ci.DrawCircle(C, 640f - i * 52f, new Color(InkStyle.Line, 0.012f * glow));
+            ci.DrawCircle(O, 640f - i * 52f, new Color(InkStyle.Line, 0.012f * glow));
     }
 
     /// <summary>玫瑰窗：三重环、十二尖拱花瓣、外圈菱珠，外侧放射细线反向缓转。</summary>
@@ -221,7 +227,7 @@ public sealed partial class PortraitBattleWipe : Control
         var show = Ease3(Seg(0.36f, 0.85f));
         if (show <= 0f)
             return;
-        var scale = 0.72f + 0.28f * show;
+        var scale = (0.72f + 0.28f * show) * RoseScale;
         var spin = _t * 0.22f;
         var a = show;
         // 放射光线。
@@ -229,15 +235,15 @@ public sealed partial class PortraitBattleWipe : Control
         {
             var th = -spin * 0.6f + k * Mathf.Tau / 36f;
             var dir = new Vector2(MathF.Cos(th), MathF.Sin(th));
-            ci.DrawLine(C + dir * 360f * scale, C + dir * (k % 3 == 0 ? 760f : 600f) * scale,
+            ci.DrawLine(O + dir * 360f * scale, O + dir * (k % 3 == 0 ? 760f : 600f) * scale,
                 new Color(InkStyle.Line, (k % 3 == 0 ? 0.16f : 0.07f) * a), k % 3 == 0 ? 2f : 1.2f, true);
         }
         float R(float r) => r * scale;
-        ci.DrawCircle(C, R(338f), new Color(InkStyle.Bg, 0.9f * a));
-        ci.DrawArc(C, R(338f), 0f, Mathf.Tau, 96, new Color(InkStyle.Line, a), 4f, true);
-        ci.DrawArc(C, R(322f), 0f, Mathf.Tau, 96, new Color(InkStyle.Dim, a), 1.5f, true);
-        ci.DrawArc(C, R(176f), 0f, Mathf.Tau, 72, new Color(InkStyle.Line, a), 3f, true);
-        ci.DrawArc(C, R(160f), 0f, Mathf.Tau, 72, new Color(InkStyle.Dim, a), 1.5f, true);
+        ci.DrawCircle(O, R(338f), new Color(InkStyle.Bg, 0.9f * a));
+        ci.DrawArc(O, R(338f), 0f, Mathf.Tau, 96, new Color(InkStyle.Line, a), 4f, true);
+        ci.DrawArc(O, R(322f), 0f, Mathf.Tau, 96, new Color(InkStyle.Dim, a), 1.5f, true);
+        ci.DrawArc(O, R(176f), 0f, Mathf.Tau, 72, new Color(InkStyle.Line, a), 3f, true);
+        ci.DrawArc(O, R(160f), 0f, Mathf.Tau, 72, new Color(InkStyle.Dim, a), 1.5f, true);
         // 十二枚尖拱花瓣：根在内环，尖顶抵外环。
         for (var k = 0; k < 12; k++)
         {
@@ -251,24 +257,24 @@ public sealed partial class PortraitBattleWipe : Control
                 var half = 0.2f * MathF.Pow(1f - v, 0.7f);
                 var r = Mathf.Lerp(186f, 312f, v);
                 var ang = th + side * half;
-                pts[i] = C + new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * R(r);
+                pts[i] = O + new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * R(r);
             }
             ci.DrawPolyline(pts, new Color(InkStyle.Dim, a), 2f, true);
             // 瓣心一枚小菱、瓣间一道辐条。
             var mid = th;
-            var pm = C + new Vector2(MathF.Cos(mid), MathF.Sin(mid)) * R(258f);
+            var pm = O + new Vector2(MathF.Cos(mid), MathF.Sin(mid)) * R(258f);
             PortraitGlyph.Diamond(ci, pm.X, pm.Y, 6f * scale, new Color(InkStyle.Line, 0.8f * a));
             var gap = th + Mathf.Tau / 24f;
             var gd = new Vector2(MathF.Cos(gap), MathF.Sin(gap));
-            ci.DrawLine(C + gd * R(176f), C + gd * R(322f), new Color(InkStyle.WoodDark, a), 1.5f, true);
+            ci.DrawLine(O + gd * R(176f), O + gd * R(322f), new Color(InkStyle.WoodDark, a), 1.5f, true);
         }
         for (var k = 0; k < 24; k++)
         {
             var th = spin + (k + 0.5f) * Mathf.Tau / 24f;
-            var p = C + new Vector2(MathF.Cos(th), MathF.Sin(th)) * R(330f);
+            var p = O + new Vector2(MathF.Cos(th), MathF.Sin(th)) * R(330f);
             PortraitGlyph.Diamond(ci, p.X, p.Y, 5f * scale, new Color(InkStyle.Line, a));
         }
-        ci.DrawCircle(C, R(150f), new Color(InkStyle.Bg, a));
+        ci.DrawCircle(O, R(150f), new Color(InkStyle.Bg, a));
     }
 
     /// <summary>双剑自左右旋入交成 X，相触时冲击环＋菱屑。</summary>
@@ -376,13 +382,13 @@ public sealed partial class PortraitBattleWipe : Control
             var th = spin + k * Mathf.Tau / 18f;
             var dir = new Vector2(MathF.Cos(th), MathF.Sin(th));
             var n = new Vector2(-dir.Y, dir.X);
-            var len = (k % 2 == 0 ? 190f : 120f) * grow;
-            var root = C + dir * 344f;
+            var len = (k % 2 == 0 ? 170f : 100f) * grow * RoseScale;
+            var root = O + dir * 344f * RoseScale;
             var tip = root + dir * len;
-            ci.DrawColoredPolygon(new[] { root - n * 18f, tip, root + n * 18f }, new Color(InkStyle.Line, 0.85f * grow));
+            ci.DrawColoredPolygon(new[] { root - n * 16f, tip, root + n * 16f }, new Color(InkStyle.Line, 0.85f * grow));
             ci.DrawLine(root, tip, new Color(InkStyle.Bg, grow), 2f, true);
         }
-        ci.DrawArc(C, 352f, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, grow), 6f, true);
+        ci.DrawArc(O, 352f * RoseScale, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, grow), 6f, true);
     }
 
     /// <summary>巨剑自上方直插窗心：剑尖没入时冲击环、放射裂纹、窗心一闪。</summary>
@@ -392,10 +398,10 @@ public sealed partial class PortraitBattleWipe : Control
         if (fall <= 0f)
             return;
         var e = EaseIn2(fall);
-        // 剑尖朝下、放大 1.6 倍：剑尖在护手下方 450×1.6，自画面上方落到窗心下方 60。
-        const float scale = 1.6f;
-        var tipY = Mathf.Lerp(-80f, C.Y + 60f, e);
-        SetT(ci, new Transform2D(Mathf.Pi, new Vector2(C.X, tipY - 450f * scale)) * Transform2D.Identity.Scaled(new Vector2(scale, scale)));
+        // 剑尖朝下、放大 1.2 倍：剑尖在护手下方 450×1.2，自画面上方落到窗心下方 40；剑首留在上黑幕带之下。
+        const float scale = 1.2f;
+        var tipY = Mathf.Lerp(-80f, O.Y + 40f, e);
+        SetT(ci, new Transform2D(Mathf.Pi, new Vector2(O.X, tipY - 450f * scale)) * Transform2D.Identity.Scaled(new Vector2(scale, scale)));
         DrawSword(ci, 1f);
         SetT(ci, Transform2D.Identity);
 
@@ -409,14 +415,14 @@ public sealed partial class PortraitBattleWipe : Control
             var th = k * Mathf.Tau / 8f + 0.3f;
             var d = new Vector2(MathF.Cos(th), MathF.Sin(th));
             var n = new Vector2(-d.Y, d.X);
-            var reach = 300f * he;
-            var mid = C + d * reach * 0.5f + n * (k % 2 == 0 ? 22f : -22f);
-            ci.DrawPolyline(new[] { C, mid, C + d * reach }, new Color(InkStyle.Line, 0.8f), 3f, true);
+            var reach = 260f * he;
+            var mid = O + d * reach * 0.5f + n * (k % 2 == 0 ? 22f : -22f);
+            ci.DrawPolyline(new[] { O, mid, O + d * reach }, new Color(InkStyle.Line, 0.8f), 3f, true);
         }
         if (hit < 1f)
         {
-            ci.DrawArc(C, 60f + he * 640f, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, 0.95f * (1f - hit)), 14f * (1f - he) + 2f, true);
-            ci.DrawArc(C, 30f + he * 420f, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, 0.5f * (1f - hit)), 4f, true);
+            ci.DrawArc(O, 60f + he * 640f, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, 0.95f * (1f - hit)), 14f * (1f - he) + 2f, true);
+            ci.DrawArc(O, 30f + he * 420f, 0f, Mathf.Tau, 96, new Color(InkStyle.Line, 0.5f * (1f - hit)), 4f, true);
         }
         var flash = Seg(0.62f, 0.78f);
         if (flash > 0f && flash < 1f)
@@ -429,7 +435,7 @@ public sealed partial class PortraitBattleWipe : Control
         var show = Ease3(Seg(0.95f, 1.45f));
         if (show <= 0f)
             return;
-        var titleY = C.Y + 480f;
+        var titleY = C.Y + 500f;
         var size = 120;
         while (size > 64 && InkDraw.Measure(_title, size).X + 24f * (_title.Length - 1) > W - 160f)
             size -= 4;
