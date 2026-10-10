@@ -332,7 +332,9 @@ public partial class PortraitHubScreen
                 return true;
             case PortraitAction.FixtureRun:
                 var act = _vm.FixtureActions()[widget.Index];
-                if (hub.ActAtFixture(act))
+                // 过场只给耗时的设施行动：打开存储这类不过时间的不演。
+                var before = hub.State.Clock.TotalMinutes;
+                if (hub.ActAtFixture(act) && hub.State.Clock.TotalMinutes > before)
                     PlayVeil(PortraitVeil.IconFor(act), Rimisekai.Housing.ActionKindMap.LabelOf(act));
                 return true;
             case PortraitAction.ObserveRoom:
