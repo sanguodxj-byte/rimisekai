@@ -441,12 +441,16 @@ public sealed class TerritoryLoopTests
                         shopId = state.Territory.RoomAt(0, ShopCellX, ShopCellY)!.Id;
                         investDay["杂货铺"] = day;
                         Assert.True(state.Territory.Room(shopId)!.Commercial);
+                        // 女仆上午守摊；下午先采石攒第三格，石材够了下午也改守摊（店多卖才能盖完还回本）
                         Assert.True(hub.Assign(maidId, 1, SlotMode.Work, Stall(state, shopId).Id));
-                        // 第三格起开拓要石材：铁砧把石头用光了，女仆下午改去采石，攒够了再开养鸡场
                         Assert.True(hub.Assign(maidId, 2, SlotMode.Work, quarry.Id));
                     }
                     if (shopId >= 0)
+                    {
                         StockShop(hub, state, Stall(state, shopId));
+                        if (coopId < 0 && Total(state, "石材") >= hub.VacantCostStone + 5)
+                            Assert.True(hub.Assign(maidId, 2, SlotMode.Work, Stall(state, shopId).Id));
+                    }
                     // 钱够再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡
                     if (coopId < 0 && shopId >= 0 && state.Money >= hub.VacantCostMoney + 200
                         && hub.DevelopVacantCell(0, CoopCellX, CoopCellY)
