@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 书架外框与两层隔板 -->
+    <rect x="-200" y="-220" width="400" height="430" fill="#E9EFEA"/>
+    <rect x="-170" y="-190" width="340" height="160" fill="#000000"/>
+    <rect x="-170" y="0" width="340" height="180" fill="#000000"/>
+<rect x="-160" y="-170" width="40" height="140" fill="#E9EFEA"/><rect x="-160" y="-152" width="40" height="8" fill="#000000"/><rect x="-112" y="-150" width="34" height="120" fill="#E9EFEA"/><rect x="-112" y="-132" width="34" height="8" fill="#000000"/><rect x="-70" y="-180" width="46" height="150" fill="#E9EFEA"/><rect x="-70" y="-162" width="46" height="8" fill="#000000"/><rect x="-16" y="-160" width="36" height="130" fill="#E9EFEA"/><rect x="-16" y="-142" width="36" height="8" fill="#000000"/><rect x="28" y="-175" width="40" height="145" fill="#E9EFEA"/><rect x="28" y="-157" width="40" height="8" fill="#000000"/><path fill="#E9EFEA" d="M 80,-30 L 110,-30 L 165,-140 L 140,-155 Z"/><rect x="-160" y="30" width="46" height="150" fill="#E9EFEA"/><rect x="-160" y="48" width="46" height="8" fill="#000000"/><rect x="-106" y="50" width="36" height="130" fill="#E9EFEA"/><rect x="-106" y="68" width="36" height="8" fill="#000000"/><rect x="-62" y="20" width="40" height="160" fill="#E9EFEA"/><rect x="-62" y="38" width="40" height="8" fill="#000000"/><rect x="20" y="40" width="50" height="140" fill="#E9EFEA"/><rect x="20" y="58" width="50" height="8" fill="#000000"/><rect x="78" y="60" width="36" height="120" fill="#E9EFEA"/><rect x="78" y="78" width="36" height="8" fill="#000000"/><rect x="122" y="30" width="40" height="150" fill="#E9EFEA"/><rect x="122" y="48" width="40" height="8" fill="#000000"/>
+  </g>
+</svg>

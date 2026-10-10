@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 光芒十字（实心十字＋中央负形菱） -->
+    <rect x="-20" y="-240" width="40" height="150" fill="#E9EFEA"/>
+    <rect x="-70" y="-200" width="140" height="36" fill="#E9EFEA"/>
+    <!-- 一对烛台 -->
+    <rect x="-170" y="-110" width="30" height="80" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M -155,-170 C -135,-140 -135,-120 -155,-115 C -175,-120 -175,-140 -155,-170 Z"/>
+    <rect x="140" y="-110" width="30" height="80" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M 155,-170 C 175,-140 175,-120 155,-115 C 135,-120 135,-140 155,-170 Z"/>
+    <rect x="-190" y="-40" width="70" height="14" fill="#E9EFEA"/>
+    <rect x="120" y="-40" width="70" height="14" fill="#E9EFEA"/>
+    <!-- 坛台：台面＋哥特尖拱壁龛（负形） -->
+    <rect x="-230" y="-30" width="460" height="40" rx="6" fill="#E9EFEA"/>
+    <rect x="-200" y="10" width="400" height="190" fill="#E9EFEA"/>
+    <path fill="#000000" d="M -150,180 L -150,90 C -150,60 -125,40 -110,30 C -95,40 -70,60 -70,90 L -70,180 Z"/>
+    <path fill="#000000" d="M -40,180 L -40,90 C -40,60 -15,40 0,30 C 15,40 40,60 40,90 L 40,180 Z"/>
+    <path fill="#000000" d="M 70,180 L 70,90 C 70,60 95,40 110,30 C 125,40 150,60 150,90 L 150,180 Z"/>
+    <rect x="-230" y="195" width="460" height="20" fill="#E9EFEA"/>
+  </g>
+</svg>

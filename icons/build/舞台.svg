@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 幕顶垂幔 -->
+    <rect x="-240" y="-220" width="480" height="40" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M -240,-180 L 240,-180 L 240,-150 C 200,-110 160,-110 120,-150 C 80,-110 40,-110 0,-150 C -40,-110 -80,-110 -120,-150 C -160,-110 -200,-110 -240,-150 Z"/>
+    <!-- 两侧拉起的大幕 -->
+    <path fill="#E9EFEA" d="M -240,-150 L -150,-150 C -150,-60 -130,10 -90,60 L -150,80 L -150,130 L -240,130 Z"/>
+    <path fill="#E9EFEA" d="M 240,-150 L 150,-150 C 150,-60 130,10 90,60 L 150,80 L 150,130 L 240,130 Z"/>
+    <!-- 束幕绳（负形） -->
+    <rect x="-240" y="60" width="90" height="12" fill="#000000"/>
+    <rect x="150" y="60" width="90" height="12" fill="#000000"/>
+    <!-- 台面与台口 -->
+    <rect x="-240" y="130" width="480" height="30" fill="#E9EFEA"/>
+    <rect x="-220" y="160" width="440" height="50" fill="#E9EFEA"/>
+    <rect x="-120" y="175" width="10" height="35" fill="#000000"/>
+    <rect x="-5" y="175" width="10" height="35" fill="#000000"/>
+    <rect x="110" y="175" width="10" height="35" fill="#000000"/>
+  </g>
+</svg>
