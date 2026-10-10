@@ -6,6 +6,7 @@ using Rimisekai.Character;
 using Rimisekai.Defs;
 using Rimisekai.Housing;
 using Rimisekai.Hub;
+using Rimisekai.Quest;
 using Rimisekai.Save;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,6 +22,9 @@ public sealed class TerritoryLoopTests
 {
     private const int Quarry = 1006;  // 采石点：Mine → 石材
     private const int Kiln = 1070;    // 陶器坊：Forge（拉坯 3 石材 → 陶罐；冶铁 2 铁矿 → 铁）
+    private const int Anvil = 1013;   // 铁砧：石材 30 + 铁矿 20，Forge（冶铁、打兵器与铁甲）
+    private const int ChickenYard = 138; // 养鸡场：建成自带鸡舍（Tend → 鸡蛋）
+    private const int CoopCellX = 3, CoopCellY = 1; // 客厅东边、山脚北边的空格
     private const int Chest = 8;      // 箱子
     private const int Forest = 4, Mountain = 5, Courtyard = 1, Parlor = 2;
     private const int Woodlot = 11, IronVein = 7, HerbBush = 6;
@@ -284,15 +288,16 @@ public sealed class TerritoryLoopTests
     // ---------- 整条闭环 ----------
 
     /// <summary>
-    /// 三个人的领地：玩家、开局女仆、第 3 天登门留下的随机旅人。没有雇佣，只有这三双手。
-    /// 开局箱子就在客厅（餐厅）里，干粮够得着，谁都不用喂。玩家照一个用心的玩家来：
-    /// 第 1 天用开局木材建采石点、猪圈，再亲手去林场伐木，攒够 10 木材在卧室给女仆打一张床
-    /// （女仆与主人同屋不介意，同床要好感）；之后玩家自己排班去养猪（出肉当口粮）；
-    /// 女仆上午、下午伐木，陶器坊建起来后下午改去拉坯；旅人上午采草药、下午缺石材采石缺木材伐木、陶器坊建起来后采石；
-    /// 两人晚上排娱乐（沙发）。旅人不是女仆，睡觉锁门、与人挤房扣心情：给他开拓一间客房（1000G）摆张床。
-    /// 谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。
-    /// 钱主要靠委托与探索（这里不跑），所以不卖产物：只看领地本身越滚越大、口粮花得起。
-    /// 跑 30 天，第 16 天存读档一次。
+    /// 三个人的领地：玩家、开局女仆、第 3 天登门留下的随机旅人。没有雇佣，只有这三双手。照一个用心的玩家来走这条路：
+    /// 1. 第 1 天：开局木材建采石点、猪圈；玩家亲手伐木，攒够 10 木材在卧室给女仆打一张床。
+    ///    玩家自己排班养猪（出肉当口粮），女仆上午、下午伐木。
+    /// 2. 第 3 天旅人留下：开拓一格空地（1000G）建客卧——建成自带一张床，不用另打。旅人上午挖铁矿、下午缺石材采石。
+    /// 3. 工坊：石材、铁矿攒够就在庭院起铁砧（石 30 铁矿 20），旅人下午改去铁砧，铁砧指定冶铁锭。
+    /// 4. 打装备：铁锭够一件就下一单（先给旅人打他那门兵器，再给玩家、旅人各配一身铁甲），打好的从仓储取出来穿上。
+    /// 5. 委托：从第 4 天起，板上的固定战斗委托（谷仓鼠患、北坡头狼、狼群夜袭）有空就接，三人真打一场（骰子按天定），
+    ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
+    /// 6. 钱够了再开拓一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
+    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。跑 30 天，第 16 天存读档一次。
     /// </summary>
     [Fact]
     public void Three_people_territory_loop_runs_thirty_days_with_save_load_midway()
@@ -314,7 +319,7 @@ public sealed class TerritoryLoopTests
         // 玩家亲手伐木，够一张床就回卧室打床
         MoveTo(hub, Forest);
         Assert.True(hub.Use(Woodlot));
-        while (Total(state, "木材") < 10)
+        while (state.Territory.CountWith(master, "木材") < 10)
         {
             Assert.True(hub.ActAtFixture(ActionKind.Fell));
             AnswerWhoeverWantsToTalk(hub, state);
@@ -333,11 +338,19 @@ public sealed class TerritoryLoopTests
 
         var guestRoomId = -1;
         var guestBedId = -1;
-        var kilnId = -1;
+        var anvilId = -1;
+        var coopId = -1;
         var visitorId = -1;
         var maidSleptInHerBed = false;
         long spent = 0;
-        var history = new List<(int Day, long Money, int Wood, int Stone, int Meat, int Pots, int Dust)>();
+        long commissionPay = 0;
+        var commissionsWon = 0;
+        var commissionsLost = 0;
+        var eggs = 0;
+        var orders = new Queue<string>();
+        var worn = new List<string>();
+        var investDay = new Dictionary<string, int>();
+        var history = new List<(int Day, long Money, int Wood, int Stone, int Ore, int Iron, int Eggs)>();
         var moods = new Dictionary<int, int>();
         var produced = new Dictionary<int, int>();
         for (var day = 1; day <= 30; day++)
@@ -352,54 +365,87 @@ public sealed class TerritoryLoopTests
                 hub.Restore(data.Hub!);
                 master = state.Roster.Master!;
                 Assert.Equal(3, state.Roster.Members.Count);
-                Assert.Equal(kilnId, hub.AssignmentOf(maidId, 2).FacilityId);
+                Assert.Equal(anvilId, hub.AssignmentOf(visitorId, 2).FacilityId);
                 Assert.Equal(pigstyId, hub.AssignmentOf(master.Id, 1).FacilityId);
+                Assert.All(worn, id => Assert.True(state.Equips.Exists(id) || state.Weapons.Exists(id), $"读档后装备 {id} 还在"));
             }
             var target = state.Clock.Day + 1;
             var built = false;
             var traded = false;
+            var fought = false;
             while (state.Clock.Day < target)
             {
                 var hour = state.Clock.Minutes / 60;
+                if (hour >= 9 && !fought && visitorId >= 0 && day >= 4)
+                {
+                    fought = true;
+                    var (won, pay) = TakeCommission(state, day);
+                    commissionPay += pay;
+                    if (won > 0)
+                        commissionsWon += won;
+                    else if (won < 0)
+                        commissionsLost++;
+                }
                 if (hour >= 20 && !built)
                 {
                     built = true;
-                    // 先给第三个人收拾出一间客房：开拓空地 → 装卧室 → 摆客房床
-                    if (guestRoomId < 0 && hub.DevelopVacantCell(0, GuestCellX, GuestCellY))
-                    {
+                    // 第三个人一来就给他开一间客卧：开拓空地 → 建客卧（自带床）
+                    if (visitorId >= 0 && guestRoomId < 0 && hub.DevelopVacantCell(0, GuestCellX, GuestCellY))
                         guestRoomId = state.Territory.RoomAt(0, GuestCellX, GuestCellY)!.Id;
-                    }
-                    if (guestRoomId >= 0 && state.Territory.Rooms.Find(r => r.Id == guestRoomId)!.Vacant
+                    if (guestRoomId >= 0 && guestBedId < 0 && state.Territory.Rooms.Find(r => r.Id == guestRoomId)!.Vacant
                         && hub.BuildRoomDef(GuestRoom, guestRoomId))
                     {
                         guestRoomId = state.Territory.RoomAt(0, GuestCellX, GuestCellY)!.Id;
+                        guestBedId = state.Territory.Facilities.Single(f => f.RoomId == guestRoomId && f.Supports(ActionKind.Sleep)).Id;
+                        investDay["客卧"] = day;
                     }
-                    if (guestRoomId >= 0 && guestBedId < 0 && !state.Territory.Rooms.Find(r => r.Id == guestRoomId)!.Vacant
-                        && hub.BuildFacilityDef(Bed, guestRoomId))
+                    // 工坊：石材、铁矿够了就起铁砧，旅人下午去冶铁
+                    if (visitorId >= 0 && anvilId < 0 && hub.BuildFacilityDef(Anvil, Courtyard))
                     {
-                        guestBedId = state.Territory.Facilities[^1].Id;
+                        anvilId = state.Territory.Facilities[^1].Id;
+                        investDay["铁砧"] = day;
+                        Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, anvilId));
+                        var visitor = state.Roster.Find(visitorId)!;
+                        if (VisitorWeapon(visitor) is { } weapon)
+                            orders.Enqueue(weapon);
+                        foreach (var piece in IronSet)
+                            orders.Enqueue(piece);
+                        foreach (var piece in IronSet)
+                            orders.Enqueue(piece);
                     }
-                    // 木材堆着用不完就让女仆上午也去采石，喂陶器坊；木材见底再回林场
-                    var wood = Total(state, "木材");
-                    if (kilnId >= 0)
-                        Assert.True(hub.Assign(maidId, 1, SlotMode.Work, wood >= 30 ? quarry.Id
-                            : wood < 15 ? Woodlot : hub.AssignmentOf(maidId, 1).FacilityId));
-                    // 陶器坊建起来之前，旅人下午缺什么补什么：石材不够 16 去采石，够了去伐木
-                    if (visitorId >= 0 && kilnId < 0)
-                        Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, Total(state, "石材") < 16 ? quarry.Id : Woodlot));
-                    if (guestBedId >= 0 && kilnId < 0 && hub.BuildFacilityDef(Kiln, Forest))
+                    // 铁砧平时指定只冶铁锭（不指定它会顺手把石材拉成陶罐、把铁锭炼成钢）；
+                    // 铁锭够一件就改下那件的单，打完单子自动撤掉，再指回冶铁。打好的从仓储取出来穿上。
+                    if (anvilId >= 0 && state.Territory.GetTargetCraftItem(ActionKind.Forge) is "" or "铁")
                     {
-                        kilnId = state.Territory.Facilities[^1].Id;
-                        Assert.True(hub.Assign(maidId, 2, SlotMode.Work, kilnId));
-                        // 陶器坊要石材：旅人下午从林场改去采石
-                        if (visitorId >= 0)
-                            Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, quarry.Id));
+                        if (orders.Count > 0 && state.Territory.Recipes.First(r => r.ItemId == orders.Peek()).Costs
+                                .All(c => state.Territory.CountWith(null, c.ItemId) >= c.Count))
+                            Assert.True(hub.Craft(orders.Dequeue()));
+                        else if (state.Territory.GetTargetCraftItem(ActionKind.Forge) == "")
+                            Assert.True(hub.Craft("铁"));
                     }
+                    worn.AddRange(WearNewGear(hub, state, visitorId));
+                    // 钱够再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡
+                    if (coopId < 0 && guestBedId >= 0 && anvilId >= 0 && state.Money >= hub.VacantCostMoney + 200
+                        && hub.DevelopVacantCell(0, CoopCellX, CoopCellY)
+                        && hub.BuildRoomDef(ChickenYard, state.Territory.RoomAt(0, CoopCellX, CoopCellY)!.Id))
+                    {
+                        var yard = state.Territory.RoomAt(0, CoopCellX, CoopCellY)!;
+                        coopId = state.Territory.Facilities.Single(f => f.RoomId == yard.Id).Id;
+                        investDay["养鸡场"] = day;
+                        Assert.True(hub.Assign(maidId, 2, SlotMode.Work, coopId));
+                    }
+                    // 旅人下午：铁砧起来前缺石材采石、不缺去挖矿
+                    if (visitorId >= 0 && anvilId < 0)
+                        Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, Total(state, "石材") < 30 ? quarry.Id : IronVein));
                 }
                 if (hour >= 21 && !traded && day % 2 == 0 && (traded = true))
                     spent = MarketRun(hub, state, spent);
                 foreach (var log in hub.PassTime(10))
+                {
                     produced[log.CharacterId] = produced.GetValueOrDefault(log.CharacterId) + log.Count;
+                    if (log.ItemId == "鸡蛋")
+                        eggs += log.Count;
+                }
                 if (hub.ScenePlaying)
                 {
                     // 第 3 天十一点：旅人登门，留下他。
@@ -407,8 +453,9 @@ public sealed class TerritoryLoopTests
                     var visitor = state.Roster.Members.Single(c => !c.IsMaster && c.Id != maidId);
                     visitorId = visitor.Id;
                     Assert.Equal(3, day);
-                    Assert.True(hub.Assign(visitorId, 1, SlotMode.Work, HerbBush));
-                    Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, kilnId >= 0 ? quarry.Id : Woodlot));
+                    Assert.Contains(hub.Log, l => l.Fact.Contains("还没有自己的床"));
+                    Assert.True(hub.Assign(visitorId, 1, SlotMode.Work, IronVein));
+                    Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, quarry.Id));
                     Assert.True(hub.Assign(visitorId, 3, SlotMode.Entertainment, Sofa));
                 }
                 AnswerWhoeverWantsToTalk(hub, state);
@@ -417,34 +464,104 @@ public sealed class TerritoryLoopTests
             }
             foreach (var c in state.Roster.Members)
                 moods[c.Id] = Math.Min(moods.GetValueOrDefault(c.Id, 100), c.Affect.Mood);
-            history.Add((day, state.Money, Total(state, "木材"), Total(state, "石材"), Total(state, "肉"),
-                Total(state, "陶罐"), Total(state, "炼金尘")));
+            history.Add((day, state.Money, Total(state, "木材"), Total(state, "石材"), Total(state, "铁矿"),
+                Total(state, "铁"), Total(state, "鸡蛋")));
             var h = history[^1];
-            _out.WriteLine($"第{day}天 金钱={h.Money} 木材={h.Wood} 石材={h.Stone} 草药={Total(state, "herb")} 肉={h.Meat} 陶罐={h.Pots} 炼金尘={h.Dust} 干粮={Total(state, "干粮")} "
+            _out.WriteLine($"第{day}天 金钱={h.Money} 委托收入={commissionPay} 木材={h.Wood} 石材={h.Stone} 铁矿={h.Ore} 铁={h.Iron} 鸡蛋={h.Eggs} 肉={Total(state, "肉")} 兽皮={Total(state, "兽皮")} 干粮={Total(state, "干粮")} 装备={worn.Count} "
                 + string.Join(" ", state.Roster.Members.Select(c => $"{c.Name}心情={c.Affect.Mood} 产出={produced.GetValueOrDefault(c.Id)}")));
         }
-        _out.WriteLine($"30 天：买口粮 {spent}G；金钱 {startMoney} → {state.Money}；"
+        _out.WriteLine($"30 天：委托 胜{commissionsWon} 负{commissionsLost} 入账 {commissionPay}G；买口粮 {spent}G；金钱 {startMoney} → {state.Money}；"
+            + $"投资 {string.Join(" ", investDay.Select(p => $"{p.Key}@第{p.Value}天"))}；穿上 {worn.Count} 件；"
             + string.Join(" ", state.Roster.Members.Select(c => $"{c.Name}产出={produced.GetValueOrDefault(c.Id)}")));
 
-        // 三个人都在干活出东西：玩家（伐木、养猪）、女仆、第 3 天来的旅人
+        // 三个人都在干活出东西
         Assert.True(visitorId >= 0, "第 3 天有旅人登门留下");
         Assert.All(state.Roster.Members, c => Assert.True(produced.GetValueOrDefault(c.Id) > 30, $"{c.Name} 30 天产出 {produced.GetValueOrDefault(c.Id)}"));
         Assert.True(maidSleptInHerBed, "女仆睡在第一天给她打的床上");
-        // 建造：客房、陶器坊、猪圈都建起来了
-        Assert.True(guestBedId >= 0 && kilnId >= 0 && pigstyId >= 0, $"客房床 {guestBedId} 陶器坊 {kilnId} 猪圈 {pigstyId}");
-        // 领地越滚越大：成品库存后半月比前半月攒得多（陶器坊开工后），木材石材没见底
-        var mid = history.Single(h => h.Day == 15);
-        var end = history[^1];
-        Assert.True(end.Pots + end.Dust - mid.Pots - mid.Dust > mid.Pots + mid.Dust,
-            $"陶罐+炼金尘 第15天 {mid.Pots + mid.Dust} → 第30天 {end.Pots + end.Dust}");
-        Assert.True(end.Wood + end.Stone > 0, $"木材 {end.Wood} 石材 {end.Stone}");
-        // 钱：不靠卖产物。除开拓客房的 1000G 投资外，口粮开销花得起、金钱从未见底
+        // 路线走通：客卧（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 养鸡场（自带鸡舍）出蛋
+        Assert.True(guestBedId >= 0 && anvilId >= 0 && coopId >= 0, $"客卧床 {guestBedId} 铁砧 {anvilId} 鸡舍 {coopId}");
+        Assert.True(investDay["铁砧"] <= 10, $"铁砧第 {investDay["铁砧"]} 天才起");
+        Assert.True(worn.Count >= 6, $"穿上的装备 {worn.Count} 件");
+        Assert.True(commissionsWon >= 8, $"委托赢了 {commissionsWon} 场");
+        Assert.True(eggs > 0, "鸡舍出了鸡蛋");
+        // 钱：只有委托一个进项（不卖产物）。它付得起两格开拓、口粮，30 天后比开局还多
+        var invested = startMoney + commissionPay - spent - state.Money;
+        Assert.True(commissionPay > spent + invested / 2, $"委托 {commissionPay}G 撑起开销：口粮 {spent}G 开拓 {invested}G");
         Assert.True(history.All(h => h.Money > 0), "金钱从未见底");
-        Assert.True(spent < startMoney - Hub.HubSession.VacantBaseMoney, $"口粮 {spent}G");
+        Assert.True(state.Money > startMoney, $"金钱 {startMoney} → {state.Money}");
+        // 后半月比前半月攒得快：领地的钱与铁一直在涨
+        var mid = history.Single(h => h.Day == 15);
+        Assert.True(history[^1].Money > mid.Money, $"金钱 第15天 {mid.Money} → 第30天 {history[^1].Money}");
+        Assert.True(history[^1].Wood + history[^1].Stone > 0, $"木材 {history[^1].Wood} 石材 {history[^1].Stone}");
         // 没人心情崩到罢工（玩家自己也算）
         Assert.All(moods, m => Assert.True(m.Value > Affect.RefuseWorkAt, $"#{m.Key} 最低心情 {m.Value}"));
     }
 
+    /// <summary>旅人那门兵器的铁货（弓、杖是木工活，不在铁砧上打）。</summary>
+    private static string? VisitorWeapon(CharacterState visitor) => visitor.MainWeapon switch
+    {
+        WeaponType.Sword => "铁剑",
+        WeaponType.Axe => "铁斧",
+        WeaponType.Spear => "铁矛",
+        WeaponType.Dagger => "铁匕首",
+        WeaponType.Crossbow => "铁弩",
+        _ => null,
+    };
+
+    /// <summary>一身铁甲：盔、护腿、靴、护手（胸甲要皮衬，这条路线不鞣皮）。</summary>
+    private static readonly string[] IronSet = { "铁盔", "铁护腿", "铁靴", "铁护手" };
+
+    /// <summary>
+    /// 从仓储里把新打好的装备取出来穿上：兵器给旅人，甲先给玩家、玩家那格占了给旅人。返回穿上的实例 Id。
+    /// </summary>
+    private static List<string> WearNewGear(HubSession hub, GameState state, int visitorId)
+    {
+        var worn = new List<string>();
+        var master = state.Roster.Master!;
+        foreach (var store in state.Territory.Facilities.Where(f => f.Contents.Items.Any(p => p.Value > 0
+                     && (state.Weapons.Exists(p.Key) || state.Equips.Exists(p.Key)))).ToList())
+        {
+            MoveTo(hub, store.RoomId);
+            Assert.True(hub.OpenStorage(store.Id));
+            foreach (var id in store.Contents.Items.Where(p => p.Value > 0).Select(p => p.Key).ToList())
+                if (state.Weapons.Exists(id) || state.Equips.Exists(id))
+                    Assert.True(hub.TakeOne(id));
+            hub.CloseStorage();
+        }
+        foreach (var id in master.Bag.Items.Where(p => p.Value > 0).Select(p => p.Key).ToList())
+        {
+            if (state.Weapons.Get(id) is { } weapon)
+            {
+                Assert.True(hub.EquipFromBag(visitorId, EquipSlot.MainHand, id));
+                worn.Add(id);
+            }
+            else if (state.Equips.Get(id) is { } armour)
+            {
+                var wearer = master.EquippedId(armour.Slot).Length == 0 ? master.Id : visitorId;
+                Assert.True(hub.EquipFromBag(wearer, armour.Slot, id));
+                worn.Add(id);
+            }
+        }
+        return worn;
+    }
+
+    /// <summary>
+    /// 接一单板上空着的固定战斗委托（按编号轮着来），三个人带着身上的装备真打一场（骰子按天定），照结算入账。
+    /// 返回（赢了 1 / 输了 -1 / 没得接 0，入账金币）。
+    /// </summary>
+    private static (int Won, long Pay) TakeCommission(GameState state, int day)
+    {
+        var open = QuestBoard.Open(state).Where(q => !q.Generated && q.Kind == QuestKind.Battle).ToList();
+        if (open.Count == 0)
+            return (0, 0);
+        var def = open[day % open.Count];
+        var party = state.Roster.Members.Select(c => c.Id).Take(def.MaxPartySize).ToList();
+        var run = state.Quests.Start(def, party)!;
+        var before = state.Money;
+        var battle = CombatBalanceTests.Brawl(state, def.Foes, def.Waves, day, fresh: false);
+        var outcome = CombatSettlement.Settle(state, battle, run)!;
+        return (outcome.Won ? 1 : -1, state.Money - before);
+    }
     /// <summary>有人来找玩家说话（在玩家屋里等着，或在门外等）就应一声。</summary>
     private static void AnswerWhoeverWantsToTalk(HubSession hub, GameState state)
     {
@@ -562,7 +679,7 @@ public sealed class TerritoryLoopTests
         foreach (var r in DefDatabase<RecipeDef>.All.Select(d => d.ToRuntime()))
         {
             unknown.AddRange(r.Costs.Where(c => Items.Get(c.ItemId) == null).Select(c => $"配方 {r.ItemId} 料 {c.ItemId}"));
-            if (Items.Get(r.ItemId) == null)
+            if (r.Gear == null && Items.Get(r.ItemId) == null)
                 unknown.Add($"配方产物 {r.ItemId}");
         }
         foreach (var crop in DefDatabase<CropDef>.All)

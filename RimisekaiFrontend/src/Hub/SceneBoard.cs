@@ -1,6 +1,8 @@
+using System.Linq;
 using System.Collections.Generic;
 using Rimisekai.Character;
 using Rimisekai.Defs;
+using Rimisekai.Housing;
 using Rimisekai.Voice;
 
 namespace Rimisekai.Hub;
@@ -182,6 +184,8 @@ public sealed partial class HubSession
         if (actorId < 0 || !_spawnDismissed)
         {
             _spawnDismissed = false;
+            if (actorId >= 0 && State.Roster.Find(actorId) is { } stayed)
+                HintHousing(stayed);
             return;
         }
         _spawnDismissed = false;
@@ -193,6 +197,18 @@ public sealed partial class HubSession
         Day.EndRoutineOf(actorId);
         State.Roster.Remove(actorId);
         Write($"{actor.Name}告辞了。");
+    }
+
+    /// <summary>
+    /// 新人留下了，可床不够每人一张：提一句怎么安顿——开一间客卧（建成自带床）或添张床；
+    /// 不安顿也不会卡住，他会在屋里打地铺（心情受罪）。
+    /// </summary>
+    private void HintHousing(CharacterState newcomer)
+    {
+        var beds = State.Territory.Facilities.Count(f => f.Built && f.RoomId >= 0 && f.Supports(ActionKind.Sleep));
+        if (beds >= State.Roster.Members.Count)
+            return;
+        Write($"{newcomer.Name}还没有自己的床，今晚只能打地铺。开拓一格空地建间客卧（建成自带一张床），或在屋里添一张床。");
     }
 
     private SceneRunner ResolveSceneRunner() =>
