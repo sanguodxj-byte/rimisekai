@@ -13,6 +13,10 @@ public sealed class Affect
     public const int ContactDailyLimit = 3;
     public const int HugDailyLimit = 1;
     public const int KissDailyLimit = 1;
+    /// <summary>想找主人说话却等不到（被冷落）一次扣的心情。</summary>
+    public const int IgnoredChatPenalty = 2;
+    /// <summary>被冷落扣心情的每日上限（与摸头 / 亲密奖励同一套「按日计数」口径）：当天累计扣到这么多就不再扣。</summary>
+    public const int IgnoredChatDailyCap = 6;
 
     public int Mood = Neutral;
     public int ChatDesire;
@@ -24,6 +28,24 @@ public sealed class Affect
     public int LastBoredDay = -1;
     public int IntimateDay = -1;
     public int[] IntimateRewards = new int[4];
+    public int IgnoredChatDay = -1;
+    /// <summary>IgnoredChatDay 当天已因被冷落扣掉的心情（正数）。</summary>
+    public int IgnoredChatTaken;
+
+    /// <summary>被冷落一次：扣 <see cref="IgnoredChatPenalty"/>，当天累计不超过 <see cref="IgnoredChatDailyCap"/>。</summary>
+    public void TakeIgnoredChat(int day)
+    {
+        if (IgnoredChatDay != day)
+        {
+            IgnoredChatDay = day;
+            IgnoredChatTaken = 0;
+        }
+        var amount = System.Math.Min(IgnoredChatPenalty, IgnoredChatDailyCap - IgnoredChatTaken);
+        if (amount <= 0)
+            return;
+        IgnoredChatTaken += amount;
+        AddMood(-amount);
+    }
 
     /// <summary>领每日亲密奖励。slot：0 摸头、1 身体接触、2 拥抱、3 亲吻。行动不限次数，只限奖励次数。</summary>
     public bool TakeReward(int day, int slot, int limit)
