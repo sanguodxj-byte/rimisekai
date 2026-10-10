@@ -23,9 +23,10 @@ public sealed class BuildIconTests
     public void Every_buildable_facility_and_room_has_an_icon()
     {
         var dir = Path.Combine(RepoRoot(), "icons", "build");
-        var names = DefDatabase<FacilityDef>.All.Where(d => d.Buildable).Select(d => d.Name)
-            .Concat(DefDatabase<RoomDef>.All.Where(d => d.Buildable).Select(d => d.Name))
+        var names = DefDatabase<FacilityDef>.All.Where(d => d.Buildable && d.BuildCategory != "").Select(d => d.Name)
+            .Concat(DefDatabase<RoomDef>.All.Where(d => d.Buildable && d.BuildCategory != "").Select(d => d.Name))
             .ToList();
+        // 只数内容表里的（带分类）；别的测试临时注册的假定义不算。
         Assert.Equal(44 + 28, names.Count);
         var missing = names.Where(n => !File.Exists(Path.Combine(dir, n + ".svg")) || !File.Exists(Path.Combine(dir, n + ".svg.import"))).ToList();
         Assert.True(missing.Count == 0, "缺图标：" + string.Join("、", missing));
