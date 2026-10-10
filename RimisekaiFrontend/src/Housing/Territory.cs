@@ -646,12 +646,15 @@ public sealed class Territory
         return true;
     }
 
-    /// <summary>手艺定品质：生活技能不到 8 粗糙，不到 25 普通，不到 50 精良，再往上史诗（开局的人手艺在 10 上下，出普通货）。</summary>
+    /// <summary>
+    /// 手艺定品质（拟案，待主人核定）：生活等级不到 2 粗糙，不到 8 普通，不到 20 精良，再往上史诗。
+    /// 开局生活等级 0~7，多数出粗糙、普通货。
+    /// </summary>
     public static Quality CraftQuality(int skill) => skill switch
     {
-        < 8 => Quality.Crude,
-        < 25 => Quality.Common,
-        < 50 => Quality.Fine,
+        < 2 => Quality.Crude,
+        < 8 => Quality.Common,
+        < 20 => Quality.Fine,
         _ => Quality.Epic,
     };
 
@@ -745,7 +748,7 @@ public sealed class Territory
         if (facility.Growth < crop.GrowthDays)
             return null;
 
-        var amount = Math.Clamp(Math.Max(1, who.Life(ActionKindMap.SkillOf(task)!.Value)) / 40, 1, 4);
+        var amount = ActionKindMap.YieldAmount(who, ActionKindMap.SkillOf(task)!.Value);
         if (yieldFor != null)
             amount = Math.Max(1, amount * yieldFor(task) / 100);
         Produce(who, crop.ProduceItemId, amount);
@@ -1793,8 +1796,7 @@ public sealed class Territory
                 Skill = ActionKindMap.SkillOf(task)!.Value,
             };
         }
-        var stat = Math.Max(1, character.Life(ActionKindMap.SkillOf(task)!.Value));
-        var amount = Math.Clamp(stat / 40, 1, 4);
+        var amount = ActionKindMap.YieldAmount(character, ActionKindMap.SkillOf(task)!.Value);
         if (roll != null)
             amount = Math.Max(1, roll(amount));
         if (facility.YieldItemId.Length > 0)

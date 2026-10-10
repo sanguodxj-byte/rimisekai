@@ -204,26 +204,32 @@ public static class ActionKindMap
         ActionKind.Cook,
     };
 
-    /// <summary>技能基准点：这一档技能值对应 100% 速度。</summary>
-    public const int SkillBaseline = 40;
+    /// <summary>属性基准点：对应核心属性到这一档为 100% 速度。</summary>
+    public const int SpeedBaseline = 10;
+
+    /// <summary>对应核心属性每高（低）1 点快（慢）的百分比。</summary>
+    public const int SpeedPercentPerPoint = 5;
 
     /// <summary>技能速度系数的上下限（百分比）。</summary>
     public const int SpeedMinPercent = 50;
     public const int SpeedMaxPercent = 200;
 
     /// <summary>
-    /// 技能对干活速度的加成（百分比）。基准 40 为 100%，
-    /// 每高 1 点快 1%，每低 1 点慢 1%，夹在 50~200。
-    /// 技能 = 核心属性 + 该项经验/100，因此属性经技能直接决定手快慢。
+    /// 干活速度（百分比）由对应核心属性决定（拟案，待主人核定）：基准 10 为 100%，
+    /// 每高 1 点快 5%，每低 1 点慢 5%，夹在 50~200。生活等级不影响速度，只管产量与品质。
     /// </summary>
     public static int SpeedPercent(CharacterState c, ActionKind action)
     {
         var skill = SkillOf(action);
         if (skill == null)
             return 100;
-        var value = c.Life(skill.Value);
-        return System.Math.Clamp(100 + (value - SkillBaseline), SpeedMinPercent, SpeedMaxPercent);
+        var stat = c[AttributeMap.CoreOf(skill.Value)];
+        return System.Math.Clamp(100 + (stat - SpeedBaseline) * SpeedPercentPerPoint, SpeedMinPercent, SpeedMaxPercent);
     }
+
+    /// <summary>采集产量由生活等级决定（拟案，待主人核定）：每 5 级一件，夹在 1~4。</summary>
+    public static int YieldAmount(CharacterState c, LifeSkill skill) =>
+        System.Math.Clamp(c.Life(skill) / 5, 1, 4);
 
     /// <summary>行动名。工作页行名、日志文案优先取数据表。</summary>
     public static string LabelOf(ActionKind action)

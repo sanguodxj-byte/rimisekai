@@ -247,7 +247,7 @@ public sealed class WeatherTests
         var state = new GameState();
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
-        worker[CoreStat.Strength] = ActionKindMap.SkillBaseline;
+        worker[CoreStat.Strength] = ActionKindMap.SpeedBaseline;
         worker.Affect.LastMealDay = 1;
         worker.Affect.LastMealWindow = 1;
         var territory = state.Territory;
@@ -359,7 +359,7 @@ public sealed class WeatherTests
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
         // 技能补到基线：速度系数回到 100%，进度断言不掺技能修正。
-        worker[CoreStat.Strength] = ActionKindMap.SkillBaseline;
+        worker[CoreStat.Strength] = ActionKindMap.SpeedBaseline;
         // 标记午餐已用过：不背三餐逾期的心情惩罚，效率保持 100%。
         worker.Affect.LastMealDay = 1;
         worker.Affect.LastMealWindow = 1;

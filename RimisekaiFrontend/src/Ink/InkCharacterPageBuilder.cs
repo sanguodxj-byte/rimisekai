@@ -108,7 +108,7 @@ public static class InkCharacterPageBuilder
             });
         }
 
-        // 下排：能力三列。等级由经验换算，有效值 = 核心属性 + 经验/100。
+        // 下排：能力三列。等级由经验换算：生活等级 = 经验/100（不含核心属性）。
         rows.Add(Section("生活"));
         var life = new List<InkPageRow>();
         for (var i = 0; i < AttributeMap.LifeCount; i++)

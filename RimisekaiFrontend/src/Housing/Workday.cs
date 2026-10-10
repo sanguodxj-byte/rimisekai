@@ -566,7 +566,7 @@ public sealed class TerritoryClock
                 }
                 return farm;
             }
-            var amount = System.Math.Clamp(System.Math.Max(1, character.Life(ActionKindMap.SkillOf(worker.Task)!.Value)) / 40, 1, 4);
+            var amount = ActionKindMap.YieldAmount(character, ActionKindMap.SkillOf(worker.Task)!.Value);
             if (yieldFor != null)
                 amount = System.Math.Max(1, amount * yieldFor(worker.Task) / 100);
             if (facility.YieldItemId.Length > 0)

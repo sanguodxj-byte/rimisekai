@@ -221,7 +221,7 @@ public sealed partial class HubSession
                 return;
             }
             // 采集：产量按技能算，与 NPC 同口径。
-            var amount = System.Math.Clamp(System.Math.Max(1, master.Life(ActionKindMap.SkillOf(act)!.Value)) / 40, 1, 4);
+            var amount = ActionKindMap.YieldAmount(master, ActionKindMap.SkillOf(act)!.Value);
             if (fixture.YieldItemId.Length > 0)
                 State.Territory.Produce(master, fixture.YieldItemId, amount);
             master.GainLifeExp(ActionKindMap.SkillOf(act)!.Value, Territory.GatherExp);

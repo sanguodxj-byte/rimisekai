@@ -94,7 +94,7 @@ public sealed class WorkingState : BaseWorkerState
                 }
                 return farm;
             }
-            var amount = Math.Clamp(Math.Max(1, character.Life(ActionKindMap.SkillOf(worker.Task)!.Value)) / 40, 1, 4);
+            var amount = ActionKindMap.YieldAmount(character, ActionKindMap.SkillOf(worker.Task)!.Value);
             if (yieldFor != null)
                 amount = Math.Max(1, amount * yieldFor(worker.Task) / 100);
             if (facility.YieldItemId.Length > 0)

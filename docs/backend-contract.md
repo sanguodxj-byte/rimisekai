@@ -256,7 +256,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - 核心 6 项 `CoreStat`：Constitution 体质 / Dexterity 灵巧 / Intellect 智力 / Charm 魅力 / Perception 感知 / Strength 力量；`c[stat]` 读写
 - 生活 8 项 `LifeSkill`：Cooking 烹饪 / Social 社交 / Mining 采掘 / Farming 种植 / Husbandry 驯兽 / Craft 手工 / Research 研究 / Performance 表演
 - 对应核心：烹饪→体质，社交/驯兽/表演→魅力，采掘→力量，种植→感知，手工→灵巧，研究→智力
-- 有效值 `Life(skill) = 对应核心 + 经验/100`
+- 生活等级 `Life(skill) = 经验/100`；对应核心属性是另一个影响值，不加进来：属性定干活速度（`ActionKindMap.SpeedPercent`），等级定采集产量（`YieldAmount`）与手工品质（`CraftQuality`）
 - 经验分成：生活经验 50% 进对应核心经验、200% 进等级经验 `LevelExp`；核心经验满 100 自动+1 点核心
 - 角色等级 1–100（`XpTable`，累计 10×(n-1)²）：升级时六项核心均匀各 +1；血量 = 20 + 体质×10 + 等级×5；蓝量 = 10 + 智力×5 + 等级×3（`Vitals.Mana/MaxMana`，休息/睡眠/日终恢复）
 

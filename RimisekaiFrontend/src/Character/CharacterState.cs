@@ -97,12 +97,8 @@ public sealed class CharacterState
         set => Core[(int)stat] = value;
     }
 
-    public int Life(LifeSkill skill)
-    {
-        var core = this[AttributeMap.CoreOf(skill)];
-        var exp = LifeExp[(int)skill];
-        return core + exp / 100;
-    }
+    /// <summary>生活等级 = 经验/100。对应核心属性是另一个影响值，不加进来（主人定）。</summary>
+    public int Life(LifeSkill skill) => LifeExp[(int)skill] / 100;
 
     public void GainLifeExp(LifeSkill skill, int amount)
     {

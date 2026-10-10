@@ -113,11 +113,11 @@ public sealed class CharacterGeneratorTests
         for (var seed = 0; seed < 100; seed++)
         {
             var gen = Roll(seed);
-            // 生活 + 武器 + 流派经验合计 3000（一半按逻辑、一半随机）
+            // 生活 + 武器 + 流派经验合计一整池（一半按逻辑、一半随机）
             var totalExp = gen.State.LifeExp.Sum()
                 + gen.State.Weapons.Sum(w => w.Exp)
                 + gen.State.Styles.Sum(st => st.Exp);
-            Assert.Equal(3000, totalExp);
+            Assert.Equal(CharacterGenerator.ExpPool, totalExp);
 
             // 生活侧一定有经验落点（特质对口 + 随机散发，非战斗身份还有余量注入）
             Assert.True(gen.State.LifeExp.Sum() > 0);
@@ -126,12 +126,12 @@ public sealed class CharacterGeneratorTests
             if (gen.State.MainWeapon != null)
             {
                 var mainWp = gen.State.MainWeapon.Value;
-                Assert.True(gen.State.Weapons[(int)mainWp].Exp >= 300);
+                Assert.True(gen.State.Weapons[(int)mainWp].Exp >= CharacterGenerator.ExpPool / 10);
             }
             else
             {
                 // 非战斗身份：逻辑余量注入生活技能
-                Assert.True(gen.State.LifeExp.Sum() >= 1500);
+                Assert.True(gen.State.LifeExp.Sum() >= CharacterGenerator.ExpPool / 2);
             }
         }
 
@@ -150,8 +150,8 @@ public sealed class CharacterGeneratorTests
         Assert.True(knight.State.OffHandShield);
         Assert.Equal(StyleType.Shield, knight.State.EquippedStyle);
         Assert.Equal(3, knight.State.ThreatTier);
-        Assert.True(knight.State.Weapons[(int)WeaponType.Sword].Exp >= 300);
-        Assert.True(knight.State.Styles[(int)StyleType.Shield].Exp >= 300);
+        Assert.True(knight.State.Weapons[(int)WeaponType.Sword].Exp >= CharacterGenerator.ExpPool / 10);
+        Assert.True(knight.State.Styles[(int)StyleType.Shield].Exp >= CharacterGenerator.ExpPool / 10);
         Assert.NotEmpty(SkillTable.Known(knight.State));
 
         // 2. 验证非战斗身份初始武器可空（如女仆出场无武器）

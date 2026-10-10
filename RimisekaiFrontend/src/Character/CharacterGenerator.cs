@@ -104,8 +104,12 @@ public sealed class CharacterGenerator
     /// <summary>角色的属性池：底线 6 之上再分 21 点。</summary>
     public const int CorePool = 21;
 
-    /// <summary>角色的经验池：一半按逻辑、一半随机散发。</summary>
-    public const int ExpPool = 3000;
+    /// <summary>
+    /// 角色的经验池：一半按逻辑、一半随机散发（拟案，待主人核定）。
+    /// 定成 720：武器/流派最坏情况拿到逻辑的 1/4 加上全部随机份（共 3/4 池 = 540），开局战斗熟练不超过 5；
+    /// 生活最坏情况拿满整池（720），开局生活等级不超过 10。
+    /// </summary>
+    public const int ExpPool = 720;
 
     /// <summary>
     /// 核心属性：全属性底线 6，再把 <paramref name="pool"/> 点按天资倾向分下去——
@@ -140,7 +144,7 @@ public sealed class CharacterGenerator
     /// <summary>
     /// 掷一个怪物：视为**没有生活技能的角色**，与角色走同一套规则——
     /// 底线 6 加属性池（默认与角色同为 21 点，主副属性可由内容指定），
-    /// 经验池（默认与角色同为 3000）一半按逻辑给手持武器与推导流派、一半按 100 一份在全部经验轨上散发，
+    /// 经验池（默认与角色同池）一半按逻辑给手持武器与推导流派、一半按 1/30 池一份在全部经验轨上散发，
     /// 只是落到生活轨上的那几份作废（怪物没有生活技能）。不给武器即徒手（爪牙）。
     /// 不入名册、不掷身份与特质、不发好感；等级与角色开局一样从 1 起，满状态起步。
     /// </summary>
@@ -153,7 +157,7 @@ public sealed class CharacterGenerator
         state.Equip(main);
         var style = state.EquippedStyle ?? StyleType.Unarmed;
 
-        const int ExpChunk = 100;
+        const int ExpChunk = ExpPool / 30;
         var logic = Math.Max(0, expPool) / 2;
         state.Weapons[(int)main].AddExp(logic / 2);
         state.Styles[(int)style].AddExp(logic - logic / 2);
@@ -174,7 +178,7 @@ public sealed class CharacterGenerator
         return state;
     }
 
-    /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、3000 经验、满状态起步。</summary>
+    /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、经验池、满状态起步。</summary>
     private void ApplyLife(CharacterState state, IdentityDef identity, IReadOnlyList<string> traitNames)
     {
         // ---------- 1. 强制分配初始核心属性点（与身份完全无关） ----------
@@ -184,14 +188,15 @@ public sealed class CharacterGenerator
         state.Equip(identity.MainWeapon, identity.OffWeapon, identity.OffShield);
         var equippedStyle = state.EquippedStyle;
 
-        // ---------- 3. 经验 3000：一半按逻辑，一半随机 ----------
+        // ---------- 3. 经验池：一半按逻辑，一半随机 ----------
         // 仅核心七维是角色自有；经验是发出来的，不预设搭配。
-        // 逻辑的一半：特质对口的技能各 150。
+        // 逻辑的一半：特质对口的技能各 1/20 池。
         // 若身份自带武器（战斗类），余量分给手持主武器与实际推导流派；
         // 若身份无武器（非战斗类），余量注入生活技能池（模拟过往生活阅历）。
-        // 随机的一半：100 一点，在所有经验轨（生活 + 武器 + 流派）上散发。
-        const int ExpPerTrait = 150;
-        const int ExpChunk = 100;
+        // 随机的一半：1/30 池一份，在所有经验轨（生活 + 武器 + 流派）上散发。
+        // 份额都按池等比，池缩小时分配规则不变。
+        const int ExpPerTrait = ExpPool / 20;
+        const int ExpChunk = ExpPool / 30;
         var skillOfTrait = new Dictionary<string, LifeSkill>
         {
             ["吃货"] = LifeSkill.Cooking,

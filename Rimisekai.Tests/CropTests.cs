@@ -122,7 +122,7 @@ public sealed class CropTests
         var territory = Plot();
         var field = Field();
         var who = new CharacterState(1);
-        who[CoreStat.Perception] = ActionKindMap.SkillBaseline; // 生活技能 40 → 收获 1 份
+        who[CoreStat.Perception] = ActionKindMap.SpeedBaseline; // 属性到基准、生活等级 0 → 收获 1 份
         field.CropDefName = "小麦";
         field.Growth = 6;
 
@@ -194,7 +194,7 @@ public sealed class CropTests
         var state = new GameState();
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
-        worker[CoreStat.Perception] = ActionKindMap.SkillBaseline;
+        worker[CoreStat.Perception] = ActionKindMap.SpeedBaseline;
         worker.Affect.LastMealDay = 1;
         worker.Affect.LastMealWindow = 1;
         worker.Bag.Add("小麦种子", 1);
@@ -238,7 +238,7 @@ public sealed class CropTests
         var state = new GameState();
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
-        worker[CoreStat.Perception] = ActionKindMap.SkillBaseline;
+        worker[CoreStat.Perception] = ActionKindMap.SpeedBaseline;
         worker.Affect.LastMealDay = 1;
         worker.Affect.LastMealWindow = 1;
         worker.Bag.Add("小麦种子", 1);

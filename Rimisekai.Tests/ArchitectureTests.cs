@@ -127,7 +127,7 @@ public sealed class ArchitectureTests
         roster.Add("master", master: true);
         var a = roster.Add("a");
         var b = roster.Add("b");
-        a[CoreStat.Perception] = 80;
+        a.LifeExp[(int)LifeSkill.Farming] = 1000; // 种植 10 级 → 一份采 2 件
 
         var t = new Territory();
         t.AddRoom(new Room { Id = 0 });
@@ -140,7 +140,7 @@ public sealed class ArchitectureTests
         Assert.Equal(a.Id, logs[0].CharacterId);
         // 产出直接进采集者背包；入库由搬运逻辑另行完成。
         Assert.Equal(2, a.Bag.Get("herb"));
-        Assert.Equal(3, a.LifeExp[(int)LifeSkill.Farming]);
+        Assert.Equal(1003, a.LifeExp[(int)LifeSkill.Farming]);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public sealed class ArchitectureTests
 
         c.GainLifeExp(LifeSkill.Mining, 100);
         Assert.Equal(5, c.Level);
-        Assert.Equal(17, c.Life(LifeSkill.Mining));
+        Assert.Equal(1, c.Life(LifeSkill.Mining));
     }
 
     [Fact]
@@ -808,22 +808,55 @@ public sealed class ArchitectureTests
     public void Skill_speed_scales_work_progress()
     {
         var c = new CharacterState(1);
-        // 采集对口技能是 Farming（吃 Perception）。
-        c[CoreStat.Perception] = ActionKindMap.SkillBaseline;
+        // 速度只看对应核心属性：采集对口 Farming，吃 Perception；生活等级不影响速度。
+        c[CoreStat.Perception] = ActionKindMap.SpeedBaseline;
+        Assert.Equal(100, ActionKindMap.SpeedPercent(c, ActionKind.Till));
+        c.LifeExp[(int)LifeSkill.Farming] = 2000;
         Assert.Equal(100, ActionKindMap.SpeedPercent(c, ActionKind.Till));
 
-        c[CoreStat.Perception] = ActionKindMap.SkillBaseline + 40;
-        Assert.Equal(140, ActionKindMap.SpeedPercent(c, ActionKind.Till));
+        c[CoreStat.Perception] = ActionKindMap.SpeedBaseline + 4;
+        Assert.Equal(120, ActionKindMap.SpeedPercent(c, ActionKind.Till));
 
-        c[CoreStat.Perception] = ActionKindMap.SkillBaseline - 20;
-        Assert.Equal(80, ActionKindMap.SpeedPercent(c, ActionKind.Till));
+        c[CoreStat.Perception] = ActionKindMap.SpeedBaseline - 2;
+        Assert.Equal(90, ActionKindMap.SpeedPercent(c, ActionKind.Till));
 
-        // 上下限夹住。技能最低为 0（核心属性 + 经验都不能为负），
-        // 所以实际能到的最低速是 60%；50% 那道下限是防呆，正常玩不到。
+        // 上下限夹住。
         c[CoreStat.Perception] = 500;
         Assert.Equal(ActionKindMap.SpeedMaxPercent, ActionKindMap.SpeedPercent(c, ActionKind.Till));
         c[CoreStat.Perception] = 0;
-        Assert.Equal(60, ActionKindMap.SpeedPercent(c, ActionKind.Till));
+        Assert.Equal(ActionKindMap.SpeedMinPercent, ActionKindMap.SpeedPercent(c, ActionKind.Till));
+    }
+
+    [Fact]
+    public void Life_level_is_experience_only_and_drives_yield()
+    {
+        var c = new CharacterState(1);
+        c[CoreStat.Strength] = 20;
+        Assert.Equal(0, c.Life(LifeSkill.Mining));
+        Assert.Equal(1, ActionKindMap.YieldAmount(c, LifeSkill.Mining));
+        c.LifeExp[(int)LifeSkill.Mining] = 1000;
+        Assert.Equal(10, c.Life(LifeSkill.Mining));
+        Assert.Equal(2, ActionKindMap.YieldAmount(c, LifeSkill.Mining));
+        c.LifeExp[(int)LifeSkill.Mining] = 9000;
+        Assert.Equal(4, ActionKindMap.YieldAmount(c, LifeSkill.Mining));
+    }
+
+    [Fact]
+    public void Starting_proficiency_stays_within_life_10_and_combat_5()
+    {
+        // 开局：生活等级不超过 10，武器与流派熟练不超过 5（按池等比的分配规则下的最坏情况也成立）。
+        var g = new CharacterGenerator(new System.Random(7));
+        var roster = new Roster();
+        for (var i = 0; i < 500; i++)
+        {
+            var s = g.Roll(roster).State;
+            for (var k = 0; k < AttributeMap.LifeCount; k++)
+                Assert.InRange(s.Life((LifeSkill)k), 0, 10);
+            foreach (var w in s.Weapons)
+                Assert.InRange(w.Level, 0, 5);
+            foreach (var st in s.Styles)
+                Assert.InRange(st.Level, 0, 5);
+        }
     }
 
     [Fact]
@@ -1210,7 +1243,7 @@ public sealed class ArchitectureTests
         state.Roster.Add("你", master: true);
         var worker = state.Roster.Add("工");
         // 采掘吃力量：给到基准值，速度系数才是 100%（技能会影响干活快慢）。
-        worker[CoreStat.Strength] = ActionKindMap.SkillBaseline;
+        worker[CoreStat.Strength] = ActionKindMap.SpeedBaseline;
         state.Territory.AddRoom(new Room { Id = 1, Name = "房", Open = true });
         // 采集点产矿；同房放一个货架（能存货）。
         state.Territory.AddFacility(new Facility
@@ -2602,9 +2635,10 @@ public sealed class ArchitectureTests
         // 4. 疲劳的角色在战斗时受到全属性 -50% 的 debuff
         var normalCombat = c.Combat;
         var tiredDeploy = Deploy.FromCharacter(c, CombatSide.Attacker);
-        Assert.Equal(normalCombat.Attack / 2, tiredDeploy.Attack);
-        Assert.Equal(normalCombat.Defence / 2, tiredDeploy.Defence);
-        Assert.Equal(normalCombat.Dodge / 2, tiredDeploy.Dodge);
+        // 减半后四舍五入，与 Deploy 同口径。
+        Assert.Equal(Math.Max(1, (int)Math.Round(normalCombat.Attack * 0.5)), tiredDeploy.Attack);
+        Assert.Equal((int)Math.Round(normalCombat.Defence * 0.5), tiredDeploy.Defence);
+        Assert.Equal((int)Math.Round(normalCombat.Dodge * 0.5), tiredDeploy.Dodge);
         // 法力进战斗另按参战折算（四成），疲劳再减半。
         Assert.Equal(Math.Max(1, (int)Math.Round(normalCombat.SpellPower * 0.5 * BattleRules.PowerPercent / 100.0)), tiredDeploy.SpellPower);
 
