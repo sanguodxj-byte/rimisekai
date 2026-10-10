@@ -423,6 +423,30 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("territory_crowded_page2", _root.HubScreen));
         _steps.Enqueue(CheckNowPageTurned);
         _steps.Enqueue(CheckNowPageWrapped);
+        // 自家的店：开一间杂货铺、摊位摆货，访客从外沿走进店里；「此刻」列出访客，点他弹交互抽屉（邀请＝请他入伙）。
+        _steps.Enqueue(PrepareShopVisitor);
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.NowAvatar && w.Index == _shopVisitor),
+                "visitor in the shop is listed in the now band");
+            Shoot("shop_visitor", _root.HubScreen);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.NowAvatar, _shopVisitor));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.SelectedCharacterId == _shopVisitor, "tapping the visitor selects them");
+            Shoot("shop_visitor_talk", _root.HubScreen);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "shop room sheet opens");
+            Shoot("shop_room_sheet", _root.HubScreen);
+        });
+        _steps.Enqueue(LeaveShop);
         _steps.Enqueue(() =>
         {
             // 开局前排留空：StartBattle 应收拢阵型——空列后排一路顶到第一排，同列被挡者停在阻挡者身后。
@@ -898,6 +922,42 @@ public partial class PortraitCapture : Node
             var id = Rimisekai.Defs.Items.All().First(def => def.Label == name).DefName;
             hub.State.Roster.Master!.Bag.Add(id, 5);
         }
+    }
+
+    private int _shopVisitor = -1;
+    private int _shopReturnRoom = -1;
+
+    /// <summary>开拓庭院南边的空格建一间杂货铺（营业性），摊位摆上货；引一位访客，推到他走进店里，主人在店里等着。</summary>
+    private void PrepareShopVisitor()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        var state = hub.State;
+        _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        _shopReturnRoom = hub.PlayerRoomId;
+        state.Money += 5000;
+        state.Roster.Master!.Bag.Add("木材", 40);
+        Require(hub.DevelopVacantCell(0, 2, 3), "develop shop cell");
+        var cell = state.Territory.RoomAt(0, 2, 3)!;
+        Require(hub.BuildRoomDef(146, cell.Id), "build grocery");
+        var shop = state.Territory.RoomAt(0, 2, 3)!;
+        Require(shop.Commercial, "grocery is commercial");
+        var stall = state.Territory.Facilities.First(f => f.RoomId == shop.Id && Rimisekai.Housing.FacilityActions.Supports(f, Rimisekai.Housing.ActionKind.Trade));
+        stall.Contents.Add("布", 12);
+        stall.Contents.Add("陶罐", 6);
+        Require(hub.Arrive(shop.Id), "walk into the shop");
+        var visit = Rimisekai.Housing.Commerce.Spawn(state.Territory, state.Roster, shop, new Random(7));
+        Require(visit != null, "a visitor comes");
+        _shopVisitor = visit!.CharacterId;
+        for (var i = 0; i < 12 && visit.RoomId != shop.Id; i++)
+            hub.PassTime(Rimisekai.Housing.TerritoryClock.StepMinutes);
+        Require(visit.RoomId == shop.Id, "visitor reaches the shop");
+    }
+
+    private void LeaveShop()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        Require(hub.Arrive(_shopReturnRoom), "walk back from the shop");
     }
 
     private void PrepareOverflowCases()

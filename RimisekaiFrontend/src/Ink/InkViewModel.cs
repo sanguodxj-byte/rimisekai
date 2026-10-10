@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Character;
 using Rimisekai.Clock;
 using Rimisekai.Housing;
@@ -61,7 +62,7 @@ public sealed class InkViewModel
     {
         if (name.Length == 0)
             return null;
-        foreach (var character in Hub.State.Roster.Members)
+        foreach (var character in Hub.State.Roster.Members.Concat(Hub.State.Roster.Visitors))
         {
             if (character.Name == name)
                 return character;
@@ -70,7 +71,7 @@ public sealed class InkViewModel
     }
 
     /// <summary>按 Id 找角色。关系表存的是 Id，界面要显示名字。</summary>
-    public CharacterState? FindById(int id) => Hub.State.Roster.Find(id);
+    public CharacterState? FindById(int id) => Hub.State.Roster.Person(id);
 
     /// <summary>角色的显示名；名册里没有（已被移除）时退回 Id，避免显示空白。</summary>
     public string NameOf(int id) => FindById(id)?.Name ?? $"#{id}";
@@ -109,7 +110,7 @@ public sealed class InkViewModel
             if (actor != null)
                 return actor;
         }
-        var selected = Hub.State.Roster.Find(Hub.SelectedCharacterId);
+        var selected = Hub.State.Roster.Person(Hub.SelectedCharacterId);
         if (selected != null)
             return selected;
         foreach (var character in Hub.State.Roster.Members)
@@ -158,7 +159,7 @@ public sealed class InkViewModel
     /// <summary>当前所在地的设施，含容量与占用。</summary>
     public IReadOnlyList<FixtureView> Fixtures() => Hub.Here();
 
-    public IReadOnlyList<CharacterCard> Cards() => Hub.Party();
+    public IReadOnlyList<CharacterCard> Cards() => Hub.Present();
 
     /// <summary>左下角头像：只有同房的其他角色，主角不在内。</summary>
     public IReadOnlyList<CharacterCard> CardsHere() => Hub.CardsHere();
@@ -167,7 +168,7 @@ public sealed class InkViewModel
     public IReadOnlyList<CharacterCard> Avatars()
     {
         var list = new List<CharacterCard>();
-        foreach (var card in Hub.Party())
+        foreach (var card in Hub.Present())
         {
             if (card.IsPlayer || card.RoomId == Hub.PlayerRoomId)
                 list.Add(card);
@@ -214,7 +215,7 @@ public sealed class InkViewModel
 
     public CharacterCard? Selected()
     {
-        foreach (var card in Hub.Party())
+        foreach (var card in Hub.Present())
         {
             if (card.Id == Hub.SelectedCharacterId)
                 return card;
