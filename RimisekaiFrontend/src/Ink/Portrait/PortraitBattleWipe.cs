@@ -398,11 +398,10 @@ public sealed partial class PortraitBattleWipe : Control
         if (fall <= 0f)
             return;
         var e = EaseIn2(fall);
-        // 剑尖朝下、放大 1.2 倍：剑尖在护手下方 450×1.2，自画面上方落到窗心下方 40；剑首留在上黑幕带之下。
-        const float scale = 1.2f;
-        var tipY = Mathf.Lerp(-80f, O.Y + 40f, e);
-        SetT(ci, new Transform2D(Mathf.Pi, new Vector2(O.X, tipY - 450f * scale)) * Transform2D.Identity.Scaled(new Vector2(scale, scale)));
-        DrawSword(ci, 1f);
+        // 双手巨剑剑尖朝下（本地剑尖朝上 -y，转半圈）：剑尖自画面上方落到首领名上方的细线之上一点（C.Y + 405），剑身贯穿整扇窗，护手正好落在荆棘环上缘；剑首仍在上黑幕带之下。
+        var tipY = Mathf.Lerp(-120f, C.Y + 405f, e);
+        SetT(ci, new Transform2D(Mathf.Pi, new Vector2(O.X, tipY - ZweiBlade)));
+        DrawZweihander(ci);
         SetT(ci, Transform2D.Identity);
 
         var hit = Seg(0.62f, 1.10f);
@@ -427,6 +426,98 @@ public sealed partial class PortraitBattleWipe : Control
         var flash = Seg(0.62f, 0.78f);
         if (flash > 0f && flash < 1f)
             ci.DrawRect(new Rect2(0, 0, W, H), new Color(InkStyle.Line, 0.45f * (1f - flash)));
+    }
+
+    /// <summary>巨剑剑身长（护手到剑尖）。</summary>
+    private const float ZweiBlade = 840f;
+
+    /// <summary>
+    /// 双手巨剑（本地坐标：剑尖朝上 -y，护手在原点）：宽长剑身自根部匀收到尖＋中脊与双血槽、近护手一段无刃根（一对短护钩）、
+    /// 平直宽护手两端收菱、可容双手的握（中间一道箍、斜缠线）、多面剑首。剑身占全长约四分之三。骨白实心＋底色描线，不新增色相。
+    /// </summary>
+    private static void DrawZweihander(CanvasItem ci)
+    {
+        var line = InkStyle.Line;
+        var edge = InkStyle.Bg;
+        var dark = InkStyle.WoodDark;
+        void Outline(Vector2[] pts, float w)
+        {
+            var loop = new Vector2[pts.Length + 1];
+            pts.CopyTo(loop, 0);
+            loop[^1] = pts[0];
+            ci.DrawPolyline(loop, edge, w, true);
+        }
+
+        // 剑身：根宽 36，匀收到近尖 20，最后 130 收成尖；中脊一道暗线，两侧各一条血槽（到剑身六成处收住）。
+        const float root = -84f;
+        var blade = new[]
+        {
+            new Vector2(-18f, root), new Vector2(-10f, -ZweiBlade + 130f), new Vector2(0f, -ZweiBlade),
+            new Vector2(10f, -ZweiBlade + 130f), new Vector2(18f, root),
+        };
+        for (var i = 0; i < blade.Length; i++)
+            blade[i].X *= 2f;
+        ci.DrawColoredPolygon(blade, line);
+        Outline(blade, 3f);
+        ci.DrawLine(new Vector2(0f, root - 10f), new Vector2(0f, -ZweiBlade + 70f), dark, 2.5f, true);
+        foreach (var x in new[] { -10f, 10f })
+            ci.DrawLine(new Vector2(x, root - 16f), new Vector2(x * 0.6f, root - (ZweiBlade + root) * 0.6f), new Color(dark, 0.75f), 1.5f, true);
+
+        // 无刃根：略窄，一道皮箍，上端一对短护钩。
+        var ricasso = new[] { new Vector2(-26f, -16f), new Vector2(-26f, root), new Vector2(26f, root), new Vector2(26f, -16f) };
+        ci.DrawColoredPolygon(ricasso, line);
+        Outline(ricasso, 3f);
+        ci.DrawLine(new Vector2(-26f, -50f), new Vector2(26f, -50f), edge, 2.5f, true);
+        foreach (var side in new[] { -1f, 1f })
+        {
+            var hook = new[] { new Vector2(side * 26f, root + 6f), new Vector2(side * 54f, root - 6f), new Vector2(side * 60f, root - 22f), new Vector2(side * 26f, root - 8f) };
+            ci.DrawColoredPolygon(hook, line);
+            Outline(hook, 2.5f);
+        }
+
+        // 护手：平直宽臂（半宽 170），臂身自中块向外收细，两端各收一枚菱；中块嵌双菱。
+        foreach (var side in new[] { -1f, 1f })
+        {
+            var arm = new[] { new Vector2(side * 36f, -14f), new Vector2(side * 158f, -8f), new Vector2(side * 158f, 8f), new Vector2(side * 36f, 14f) };
+            ci.DrawColoredPolygon(arm, line);
+            Outline(arm, 3f);
+            ci.DrawLine(new Vector2(side * 44f, 0f), new Vector2(side * 150f, 0f), dark, 1.5f, true);
+            PortraitGlyph.Diamond(ci, side * 172f, 0f, 16f, line);
+            PortraitGlyph.Diamond(ci, side * 172f, 0f, 6f, edge);
+        }
+        var block = new[] { new Vector2(-36f, -22f), new Vector2(36f, -22f), new Vector2(36f, 22f), new Vector2(-36f, 22f) };
+        ci.DrawColoredPolygon(block, line);
+        Outline(block, 3f);
+        PortraitGlyph.Diamond(ci, 0f, 0f, 15f, edge);
+        PortraitGlyph.Diamond(ci, 0f, 0f, 7f, line);
+
+        // 握：长 140 可容双手，中间一道箍，斜缠细线。
+        const float gripTop = 22f;
+        const float gripEnd = 162f;
+        const float gripMid = (gripTop + gripEnd) / 2f;
+        var grip = new[] { new Vector2(-13f, gripTop), new Vector2(-15f, gripMid), new Vector2(-13f, gripEnd), new Vector2(13f, gripEnd), new Vector2(15f, gripMid), new Vector2(13f, gripTop) };
+        ci.DrawColoredPolygon(grip, line);
+        Outline(grip, 3f);
+        for (var y = gripTop + 8f; y < gripEnd - 6f; y += 12f)
+        {
+            if (MathF.Abs(y - gripMid) < 12f)
+                continue;
+            ci.DrawLine(new Vector2(-14f, y), new Vector2(14f, y + 6f), edge, 2f, true);
+        }
+        var ring = new Rect2(-19f, gripMid - 7f, 38f, 14f);
+        ci.DrawRect(ring, line);
+        ci.DrawRect(ring, edge, false, 2.5f);
+
+        // 剑首：多面梨形，正中嵌菱。
+        var pommel = new[]
+        {
+            new Vector2(-16f, gripEnd), new Vector2(-28f, gripEnd + 22f), new Vector2(-22f, gripEnd + 46f),
+            new Vector2(0f, gripEnd + 60f), new Vector2(22f, gripEnd + 46f), new Vector2(28f, gripEnd + 22f), new Vector2(16f, gripEnd),
+        };
+        ci.DrawColoredPolygon(pommel, line);
+        Outline(pommel, 3f);
+        PortraitGlyph.Diamond(ci, 0f, gripEnd + 28f, 10f, edge);
+        PortraitGlyph.Diamond(ci, 0f, gripEnd + 28f, 4f, line);
     }
 
     /// <summary>窗下首领名字（按宽度收字号），下方双层细线与三枚菱，再下一行「首领降临」。</summary>
