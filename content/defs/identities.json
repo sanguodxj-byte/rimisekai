@@ -20,7 +20,8 @@
       "mainWeapon": "Sword",
       "offWeapon": null,
       "offShield": true,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁",
+      "offMaterial": "木材"
     },
     {
       "defName": "商人",
@@ -59,7 +60,7 @@
       "mainWeapon": "Staff",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     },
     {
       "defName": "战士",
@@ -69,7 +70,8 @@
       "mainWeapon": "Sword",
       "offWeapon": "Sword",
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁",
+      "offMaterial": "铁"
     },
     {
       "defName": "护卫",
@@ -79,7 +81,8 @@
       "mainWeapon": "Spear",
       "offWeapon": null,
       "offShield": true,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁",
+      "offMaterial": "木材"
     },
     {
       "defName": "佣兵",
@@ -89,7 +92,7 @@
       "mainWeapon": "Axe",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁"
     },
     {
       "defName": "弓箭手",
@@ -99,7 +102,7 @@
       "mainWeapon": "Bow",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     },
     {
       "defName": "猎人",
@@ -109,7 +112,7 @@
       "mainWeapon": "Crossbow",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     },
     {
       "defName": "刺客",
@@ -119,7 +122,8 @@
       "mainWeapon": "Dagger",
       "offWeapon": "Sword",
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁",
+      "offMaterial": "铁"
     },
     {
       "defName": "盗贼",
@@ -129,7 +133,7 @@
       "mainWeapon": "Dagger",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "铁"
     },
     {
       "defName": "吟游诗人",
@@ -246,7 +250,7 @@
       "mainWeapon": "Staff",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     },
     {
       "defName": "游侠",
@@ -256,7 +260,7 @@
       "mainWeapon": "Bow",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     },
     {
       "defName": "圣骑士",
@@ -266,7 +270,8 @@
       "mainWeapon": "Sword",
       "offWeapon": null,
       "offShield": true,
-      "weaponMaterial": "木材"
+      "mainMaterial": "钢",
+      "offMaterial": "铁"
     },
     {
       "defName": "贵族",
@@ -312,7 +317,7 @@
       "mainWeapon": "Spear",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "钢"
     },
     {
       "defName": "魔剑士",
@@ -324,7 +329,7 @@
       "mainWeapon": "Sword",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "钢"
     },
     {
       "defName": "驯兽师",
@@ -334,7 +339,7 @@
       "mainWeapon": "Crossbow",
       "offWeapon": null,
       "offShield": false,
-      "weaponMaterial": "木材"
+      "mainMaterial": "木材"
     }
   ]
 }

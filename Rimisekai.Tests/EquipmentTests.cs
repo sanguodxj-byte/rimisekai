@@ -75,12 +75,13 @@ public sealed class EquipmentTests
         c.Identity = "战士";
         Assert.True(c.Equip(WeaponType.Sword, WeaponType.Sword));
 
-        // 原配武器入伙即落成实例：主副手各一把普通品质的木剑，面板真实。
+        // 原配武器入伙即落成实例：按身份表写的材料，主副手各一把普通品质的铁剑，面板真实。
         var armory = state.Weapons.All.Count;
         state.Outfit(c);
         var main = state.Weapons.Get(c.EquippedId(EquipSlot.MainHand))!;
         var off = state.Weapons.Get(c.EquippedId(EquipSlot.OffHand))!;
-        Assert.Equal("木材", main.MaterialDefName);
+        Assert.Equal("铁", main.MaterialDefName);
+        Assert.Equal("铁", off.MaterialDefName);
         Assert.Equal(Quality.Common, main.Quality);
         Assert.True(main.Panel > 0);
 
@@ -103,6 +104,25 @@ public sealed class EquipmentTests
         Assert.Equal(c.Stat(CoreStat.Strength, state.Equips), c[CoreStat.Strength] + ring.BonusAmount);
         Assert.True(after.Attack > before.Attack);
         Assert.True(after.StrikePower >= before.StrikePower);
+    }
+
+    [Fact]
+    public void Knight_starts_with_iron_sword_and_wooden_shield_that_adds_armour()
+    {
+        DefLoader.EnsureInitialized();
+        var state = new GameState();
+        var c = state.Roster.Add("骑士");
+        c.Identity = "骑士";
+        Assert.True(c.Equip(WeaponType.Sword, null, true));
+        var bare = Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips).Armour;
+
+        state.Outfit(c);
+        Assert.Equal("铁", state.Weapons.Get(c.EquippedId(EquipSlot.MainHand))!.MaterialDefName);
+        var shield = state.Equips.Get(c.EquippedId(EquipSlot.OffHand))!;
+        Assert.Equal("木材", shield.MaterialDefName);
+        Assert.Equal(EquipKind.Armor, shield.Kind);
+        Assert.True(shield.Defence > 0);
+        Assert.True(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips).Armour > bare);
     }
 
     [Fact]

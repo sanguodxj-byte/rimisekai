@@ -51,6 +51,15 @@
     <noun>靴</noun>
   </ArmorSlotDef>
 
+  <ArmorSlotDef>
+    <defName>OffHand</defName>
+    <label>盾</label>
+    <description>挽在副手的盾牌，木盾轻便、铁盾沉实，格挡来势、护住半身。</description>
+    <baseDefence>4</baseDefence>
+    <baseValue>100</baseValue>
+    <noun>盾</noun>
+  </ArmorSlotDef>
+
   <!-- 武器类型：共享一份熟练度；子类型（刺剑/太刀/戟/镰刀）后续扩展。 -->
   <WeaponTypeDef>
     <defName>Sword</defName>

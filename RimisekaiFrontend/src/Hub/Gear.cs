@@ -57,11 +57,8 @@ public sealed partial class HubSession
         {
             if (pair.Value <= 0)
                 continue;
-            if (IsWeaponSlot(slot))
-            {
-                if (State.Weapons.Get(pair.Key) is { } weapon)
-                    list.Add(new GearOption(pair.Key, WeaponForge.NameOf(weapon), pair.Value, weapon.Quality, weapon.DescribeDetails()));
-            }
+            if (IsWeaponSlot(slot) && State.Weapons.Get(pair.Key) is { } weapon)
+                list.Add(new GearOption(pair.Key, WeaponForge.NameOf(weapon), pair.Value, weapon.Quality, weapon.DescribeDetails()));
             else if (State.Equips.Get(pair.Key) is { } gear && Fits(slot, gear))
                 list.Add(new GearOption(pair.Key, EquipForge.NameOf(gear), pair.Value, gear.Quality, gear.DescribeDetails()));
         }
@@ -76,11 +73,8 @@ public sealed partial class HubSession
         if (c == null || bag == null || bag.Get(itemId) < 1)
             return false;
         string name;
-        if (IsWeaponSlot(slot))
+        if (IsWeaponSlot(slot) && State.Weapons.Get(itemId) is { } weapon)
         {
-            var weapon = State.Weapons.Get(itemId);
-            if (weapon == null)
-                return false;
             var main = slot == EquipSlot.MainHand ? weapon.Type : c.MainWeapon;
             var off = slot == EquipSlot.OffHand ? weapon.Type : c.OffWeapon;
             var shield = slot != EquipSlot.OffHand && c.OffHandShield;
@@ -92,6 +86,9 @@ public sealed partial class HubSession
         {
             var gear = State.Equips.Get(itemId);
             if (gear == null || !Fits(slot, gear))
+                return false;
+            // 盾进副手：主手照旧，副手武器让位给盾。
+            if (slot == EquipSlot.OffHand && !c.Equip(c.MainWeapon, null, true))
                 return false;
             name = EquipForge.NameOf(gear);
         }

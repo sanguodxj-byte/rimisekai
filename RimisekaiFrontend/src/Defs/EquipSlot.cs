@@ -65,11 +65,11 @@ public static class EquipSlots
         _ => "?",
     };
 
-    /// <summary>这件装备能不能进这个槽。武器只进主副手，防具进五件甲位，饰品进三件饰位。</summary>
+    /// <summary>这件装备能不能进这个槽。武器只进主副手，防具进五件甲位（盾进副手），饰品进三件饰位。</summary>
     public static bool Accepts(EquipSlot slot, EquipKind kind) => kind switch
     {
         EquipKind.Weapon => slot is EquipSlot.MainHand or EquipSlot.OffHand,
-        EquipKind.Armor => slot is EquipSlot.Head or EquipSlot.Torso or EquipSlot.Legs
+        EquipKind.Armor => slot is EquipSlot.OffHand or EquipSlot.Head or EquipSlot.Torso or EquipSlot.Legs
             or EquipSlot.Hands or EquipSlot.Feet,
         EquipKind.Accessory => slot is EquipSlot.Ring1 or EquipSlot.Ring2 or EquipSlot.Neck,
         _ => false,
@@ -82,7 +82,7 @@ public enum EquipKind
     /// <summary>武器。进主手/副手。</summary>
     Weapon = 0,
 
-    /// <summary>防具。进帽子/上装/下装/手套/鞋子。</summary>
+    /// <summary>防具。进帽子/上装/下装/手套/鞋子；盾也算防具，进副手。</summary>
     Armor = 1,
 
     /// <summary>饰品。进两枚戒指与一条项链，按类型加战斗属性。</summary>

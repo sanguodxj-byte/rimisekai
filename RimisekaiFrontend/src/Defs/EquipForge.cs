@@ -24,7 +24,9 @@ public static class EquipForge
     {
         rng ??= new Random();
         var material = DefDatabase<MaterialDef>.Get(materialDefName);
-        if (material == null || !material.ArmorUsable || !EquipSlots.Accepts(slot, EquipKind.Armor))
+        // 盾（副手）木头也能做：能做兵器或能缝甲的材料都行；其余甲位只认能缝甲的材料。
+        var usable = material != null && (material.ArmorUsable || (slot == EquipSlot.OffHand && material.WeaponUsable));
+        if (!usable || !EquipSlots.Accepts(slot, EquipKind.Armor))
             throw new ArgumentException($"防具基座不存在：{materialDefName} × {slot}");
 
         var rolled = Roll(quality, enchant, blessed, enhance, rng);
