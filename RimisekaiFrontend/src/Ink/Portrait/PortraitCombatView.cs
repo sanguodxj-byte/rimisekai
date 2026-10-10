@@ -61,9 +61,17 @@ public partial class PortraitCombatView : Control
         SetProcess(false);
     }
 
+    /// <summary>首领血条自中间向左右展开的时长（秒）。转场期间战斗画面暂停，展开在转场演完后才开始。</summary>
+    public const float BossBarGrowSeconds = 0.8f;
+
+    private float _bossGrow;
+    private int _bossId = -1;
+
     public void Bind(InkViewModel vm, PortraitModalLayer modal)
     {
         _vm = vm;
+        _bossGrow = 0f;
+        _bossId = -1;
         _modal = modal;
         _settled = false;
         _tick = 0f;
@@ -107,6 +115,11 @@ public partial class PortraitCombatView : Control
         if (battle == null)
             return;
         InkCombatRenderer.IndicatorTime += (float)delta;
+        if (_bossGrow < 1f)
+        {
+            _bossGrow = Mathf.Min(1f, _bossGrow + (float)delta / BossBarGrowSeconds);
+            QueueRedraw();
+        }
         // 缓动步长封顶：掉帧时一帧也只走一小段，不会一帧跳到位。
         _frameDelta = Mathf.Min((float)delta, 0.05f);
         // 攻击光效、受击震颤、卡片斩裂与伤害飘字（横版迁入）。
@@ -352,11 +365,23 @@ public partial class PortraitCombatView : Control
         var boss = battle.Members.Find(m => m.Alive && m.Side != battle.ControlledSide && m.Size > 1);
         if (boss == null)
             return;
+        // 换了首领（连战下一波）重新展开。
+        if (boss.Id != _bossId)
+        {
+            _bossId = boss.Id;
+            _bossGrow = 0f;
+        }
         InkDraw.TextBounded(this, PortraitLayout.BossName, boss.Name, PortraitLayout.FontBody,
             PortraitLayout.FontMeta, InkStyle.Line, "lm");
         InkDraw.TextBounded(this, PortraitLayout.BossHp, $"HP {boss.Hp} / {boss.MaxHp}",
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-        PortraitFrame.Bar(this, PortraitLayout.BossMeter, (float)boss.Hp / boss.MaxHp);
+        // 血条自中间向左右展开：框与填充一起从正中长到全宽（缓出）。
+        var grow = PortraitMotion.Instant ? 1f : 1f - MathF.Pow(1f - _bossGrow, 3f);
+        var meter = PortraitLayout.BossMeter;
+        var width = meter.Size.X * grow;
+        if (width >= 2f)
+            PortraitFrame.Bar(this, new Rect2(meter.GetCenter().X - width / 2f, meter.Position.Y, width, meter.Size.Y),
+                (float)boss.Hp / boss.MaxHp);
         // 血条下方正中一行，按内容声明的行动点数画实心菱（默认 1 枚）。
         var pips = Math.Max(1, boss.ActionPoints);
         for (var i = 0; i < pips; i++)

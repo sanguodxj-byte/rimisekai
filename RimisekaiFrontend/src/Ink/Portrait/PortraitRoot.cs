@@ -24,6 +24,9 @@ public partial class PortraitRoot : Control
     private PortraitHubScreen _hubScreen = null!;
     private PortraitCombatView _combat = null!;
     private PortraitBattleWipe _wipe = null!;
+    private PortraitMistReveal _mist = null!;
+
+    public PortraitMistReveal MistReveal => _mist;
     private bool _combatHeld;
     private PortraitModalLayer _modal = null!;
     private PortraitGenerationPump _pump = null!;
@@ -151,6 +154,8 @@ public partial class PortraitRoot : Control
             _combat.SetProcess(true);
         };
         AddChild(_wipe);
+        _mist = new PortraitMistReveal { Name = "PortraitMistReveal" };
+        AddChild(_mist);
 
         _flow.PhaseChanged += OnPhase;
         OnPhase((int)FlowPhase.Title);
@@ -196,6 +201,8 @@ public partial class PortraitRoot : Control
         _vm = new InkViewModel(hub, _pack);
         _hubScreen.Bind(_vm);
         _flow.Start(state);
+        // 继续游戏：雾化散开进领地。
+        _mist.Play();
     }
 
     private void OpenSystem(string page)
@@ -215,7 +222,8 @@ public partial class PortraitRoot : Control
         // 战斗转场：截下进战前的画面开演，转场期间战斗画面已就位但暂停推进。
         if (!PortraitMotion.Instant && !_wipe.Running)
         {
-            _wipe.Play("交战", FoeLine(session));
+            var boss = BossOf(session);
+            _wipe.Play(boss?.Name ?? "交战", boss != null);
             _combatHeld = true;
         }
         _combat.Bind(_vm, _modal);
@@ -224,14 +232,9 @@ public partial class PortraitRoot : Control
             _combat.SetProcess(false);
     }
 
-    /// <summary>转场题字下一行：敌方名单，同名合并计数，至多列三种（「斥候 ×2、巫师 等 5 名」）。</summary>
-    public static string FoeLine(Rimisekai.Session.BattleSession session)
-    {
-        var foes = session.Battle.Members.Where(m => m.Side == Rimisekai.Combat.CombatSide.Defender).ToList();
-        var groups = foes.GroupBy(m => m.Name).Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key).ToList();
-        var line = string.Join("、", groups.Take(3));
-        return groups.Count > 3 ? $"{line} 等 {foes.Count} 名" : line;
-    }
+    /// <summary>首领：敌方占多格的那一个（与战斗画面首领条同一判据）；没有则 null，演普通转场。</summary>
+    public static Rimisekai.Combat.Combatant? BossOf(Rimisekai.Session.BattleSession session) =>
+        session.Battle.Members.Find(m => m.Side != session.Battle.ControlledSide && m.Size > 1);
 
     private static readonly System.Collections.Generic.Dictionary<string, Texture2D?> MonsterArtCache = new();
 

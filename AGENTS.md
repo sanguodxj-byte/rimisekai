@@ -580,6 +580,13 @@
 - 拟案：怪物与角色同用一套规则，内容表里的 expPool 与 expPerStar 都按 720/3000 等比缩小。
 - 装备进战斗（主人定「全部都加上」，系数拟案）：主手面板全额，副手武器面板按 `BattleRules.OffHandPanelPercent`（50%）折进出手；饰品加成通过 `CharacterState.Stat(stat, equips)` / `CombatWith(equips)` 进攻击、血量、防御、闪避、法强、暴击、速度以及出手的流派属性；防具防御 ×50% 算作护甲（不变）。
 
+## 过场：继续游戏入场雾、战斗转场、首领转场（2026-10-11）
+
+- 继续游戏（读档进领地，`PortraitRoot.OnLoaded`）演入场雾 `PortraitMistReveal`（`shaders/mist_reveal.gdshader`）：灰白浓雾满屏，1.6 秒自正中向四周化开、雾缘拉丝飘散；只用骨白灰阶。主人要求补回（版本迁移时丢失）。
+- 普通战斗转场 `PortraitBattleWipe` 不再列敌方名单（主人定）。
+- 首领战（敌方有占多格者，判据同首领血条）演首领专属转场（拟案，待主人核定）：2.8 秒；更厚的黑幕带、一道竖劈＋震屏、定格裂成左右两半、窗外荆棘尖刺、巨剑自上直插窗心（震屏、放射裂纹、冲击环）、窗下写首领名字＋「首领降临」，开门放慢。
+- 首领血条在战斗画面开始推进后 0.8 秒内自中间向左右展开（框与填充一起，缓出）；连战换首领重新展开。
+
 ## 实机游玩测试桥（GABS · 2026-10-05 建）
 
 游戏内置 GABP 桥（`RimisekaiFrontend/src/AgentBridge/`，autoload `AgentBridge`），agent 经 GABS 操作运行中的游戏做游玩测试。
