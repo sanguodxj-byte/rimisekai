@@ -88,12 +88,11 @@ public static class InkText
         _ => "?",
     };
 
-    /// <summary>时段开关名（空闲 / 工作 / 娱乐）。</summary>
+    /// <summary>时段开关名（空闲 / 工作）。</summary>
     public static string SlotMode(Housing.SlotMode mode) => mode switch
     {
         Housing.SlotMode.Free => "空闲",
         Housing.SlotMode.Work => "工作",
-        Housing.SlotMode.Entertainment => "娱乐",
         _ => "?",
     };
 

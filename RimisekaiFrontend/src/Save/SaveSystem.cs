@@ -156,14 +156,14 @@ public sealed class FacilityData
 }
 
 /// <summary>
-/// 一个时段的存档镜像：开关，以及工作/娱乐时点名的那件设施。
+/// 一个时段的存档镜像：开关，以及工作时点名的那件设施。
 /// </summary>
 public sealed class AssignmentData
 {
     /// <summary>时段开关。缺省 Free。</summary>
     public SlotMode Mode { get; set; } = SlotMode.Free;
 
-    /// <summary>工作/娱乐时点名的那件设施 Id；-1 表示没点名。</summary>
+    /// <summary>工作时点名的那件设施 Id；-1 表示没点名。</summary>
     public int Facility { get; set; } = -1;
 }
 

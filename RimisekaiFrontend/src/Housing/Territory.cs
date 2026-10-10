@@ -1612,7 +1612,7 @@ public sealed class Territory
     }
 
     /// <summary>
-    /// 设某角色某段的安排：开关，以及工作/娱乐时点名的那件设施。
+    /// 设某角色某段的安排：开关，以及工作时点名的那件设施。
     /// 空闲时设施自动清空；点名一件不存在的设施则拒绝。
     /// </summary>
     public bool Assign(int characterId, int slot, SlotMode mode, int facilityId = -1)
@@ -1642,7 +1642,7 @@ public sealed class Territory
 
     /// <summary>
     /// 结算一个 6 小时段（测试钩子）：工作时段到点名的那件设施干活，
-    /// 同一件设施按 Capacity 先到先得；空闲与娱乐不出产。
+    /// 同一件设施按 Capacity 先到先得；空闲不出产。
     /// 真实时间不走这里——那在 <see cref="TerritoryClock.Step"/>。
     /// </summary>
     public List<WorkLog> ResolveSlot(int slot, Roster roster, Func<int, int>? roll = null, Season season = Season.Spring)

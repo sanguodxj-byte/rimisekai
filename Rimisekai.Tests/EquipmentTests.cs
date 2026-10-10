@@ -275,8 +275,6 @@ public sealed class EquipmentTests
         var weapon = maid.MainWeapon ?? WeaponType.Unarmed;
         maid.Weapons[(int)weapon].Restore(0);
         var exp = maid.Weapons[(int)weapon].Exp;
-        for (var slot = 1; slot <= 3; slot++)
-            Assert.True(hub.Assign(maid.Id, slot, SlotMode.Entertainment, target.Id));
         var seen = new HashSet<string>();
         for (var i = 0; i < 24 * 6; i++)
         {

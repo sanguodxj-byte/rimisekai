@@ -32,7 +32,6 @@ public sealed class TerritoryLoopTests
     private const int GuestBed = 1019; // 客房床
     private const int GuestRoom = 145;  // 卧室（12 木材）
     private const int GuestCellX = 1, GuestCellY = 1; // 客厅西边、森林北边的空格
-    private const int Sofa = 4;        // 客厅沙发（娱乐时段去歇着）
     private const int Bed = 5;         // 床：木材 10
     private const int Bedroom = 3;
 
@@ -298,7 +297,7 @@ public sealed class TerritoryLoopTests
     ///    玩家带旅人去、女仆留家干活，两人真打一场（骰子按天定），
     ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
     /// 6. 钱够了再开拓一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
-    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。跑 30 天，第 16 天存读档一次。
+    /// 晚上两人空闲，自己找乐子；谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。跑 30 天，第 16 天存读档一次。
     /// </summary>
     [Fact]
     public void Three_people_territory_loop_runs_thirty_days_with_save_load_midway()
@@ -316,7 +315,6 @@ public sealed class TerritoryLoopTests
         var pigstyId = Build(hub, state, Pigsty, Courtyard).Id;
         Assert.True(hub.Assign(maidId, 1, SlotMode.Work, Woodlot));
         Assert.True(hub.Assign(maidId, 2, SlotMode.Work, Woodlot));
-        Assert.True(hub.Assign(maidId, 3, SlotMode.Entertainment, Sofa));
         // 玩家亲手伐木，够一张床就回卧室打床
         MoveTo(hub, Forest);
         Assert.True(hub.Use(Woodlot));
@@ -457,7 +455,6 @@ public sealed class TerritoryLoopTests
                     Assert.Contains(hub.Log, l => l.Fact.Contains("还没有自己的床"));
                     Assert.True(hub.Assign(visitorId, 1, SlotMode.Work, IronVein));
                     Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, quarry.Id));
-                    Assert.True(hub.Assign(visitorId, 3, SlotMode.Entertainment, Sofa));
                 }
                 AnswerWhoeverWantsToTalk(hub, state);
                 AssertNoNegativeStock(state);

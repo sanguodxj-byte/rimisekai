@@ -33,7 +33,7 @@ public sealed partial class HubSession : IVoiceSink
 
     /// <summary>
     /// 设施是不是干活的地方：声明支持任一工作行动才算，床、浴池这类不算。
-    /// 排班页据此决定点它排的是工作还是娱乐；查不到返回 false。
+    /// 排班页只列这类设施；查不到返回 false。
     /// </summary>
     public bool FacilityIsWorkbench(int facilityId)
     {

@@ -226,7 +226,7 @@ public sealed class TerritoryClock
             }
             if (character.IsMaster)
             {
-                // 玩家在非工作时段（空闲或娱乐）不走自动工作，保持手动自由控制
+                // 玩家在空闲时段不走自动工作，保持手动自由控制
                 if (assignment.Mode != SlotMode.Work)
                 {
                     var existingMasterWorker = _workers.Find(w => w.CharacterId == character.Id);
@@ -759,13 +759,7 @@ public sealed class TerritoryClock
         // 搬运优先于娱乐——否则「每日一娱」无限重入，劳动产出永远躺在背包里。
         if (StartHaul(character, worker, territory, ctx, used))
             return;
-        // 娱乐时段：到点名的那件消遣设施去消遣。
-        if (assignment.Mode == SlotMode.Entertainment)
-        {
-            if (StartPlayAt(character, worker, territory, assignment.FacilityId, ctx, used))
-                return;
-        }
-        else if (ctx.Day - character.Affect.LastPlayDay >= 1)
+        if (ctx.Day - character.Affect.LastPlayDay >= 1)
         {
             if (StartPlay(character, worker, territory, roster, ctx, used))
                 return;
@@ -1474,39 +1468,6 @@ public sealed class TerritoryClock
             Character = character,
             Worker = worker,
             StepContext = ctx,
-            UsedFacilities = new HashSet<int>(used.Keys),
-        });
-        return true;
-    }
-
-    /// <summary>
-    /// 娱乐时段：到点名的那件消遣设施去消遣。设施没了或没空位就返回假，
-    /// 上层退回自选的闲时活动。
-    /// </summary>
-    private static bool StartPlayAt(CharacterState character, Worker worker, Territory territory,
-        int facilityId, StepContext ctx, Dictionary<int, int> used)
-    {
-        if (facilityId < 0)
-            return false;
-        var playFacility = territory.Facilities.Find(f => f.Id == facilityId && f.Built);
-        if (playFacility == null || used.GetValueOrDefault(playFacility.Id) >= playFacility.Capacity)
-            return false;
-
-        Release(worker, used);
-        worker.Goal = ActionKind.Loiter;
-        worker.Task = ActionKind.None;
-        worker.Progress = 0;
-        worker.FacilityId = playFacility.Id;
-        worker.PlayTicks = Traits.LoiterTicksFor(character);
-        GotoRoom(worker, territory, playFacility.RoomId, character, ctx);
-        worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
-        if (worker.Path.Count == 0)
-            Sit(territory, worker, used);
-        worker.StateMachine.TransitionTo(new StateMachine.States.PlayState(), new StateMachine.WorkerContext
-        {
-            Territory = territory,
-            Character = character,
-            Worker = worker,
             UsedFacilities = new HashSet<int>(used.Keys),
         });
         return true;

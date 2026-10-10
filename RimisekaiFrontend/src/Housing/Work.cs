@@ -10,8 +10,8 @@ public static class WorkSlot
 }
 
 /// <summary>
-/// 时段开关。三类：空闲 / 工作 / 娱乐。
-/// 工作与娱乐都要点名一件设施——排班是「某时段到某件设施去」，
+/// 时段开关。两类：空闲 / 工作。
+/// 工作要点名一件工作设施——排班是「某时段到某件设施去」，
 /// 不再有优先级表那种「按档位挑活」的间接层。
 /// </summary>
 public enum SlotMode
@@ -21,13 +21,10 @@ public enum SlotMode
 
     /// <summary>工作：到指定的工作设施干活。</summary>
     Work = 1,
-
-    /// <summary>娱乐：到指定的消遣设施消遣（戏台、吧台、书架这类）。</summary>
-    Entertainment = 2,
 }
 
 /// <summary>
-/// 一个时段的安排：开关，以及工作/娱乐时点名的那件设施。
+/// 一个时段的安排：开关，以及工作时点名的那件设施。
 /// FacilityId 为 -1 表示没点名（工作时段会退回空闲）。
 /// </summary>
 public struct SlotAssignment

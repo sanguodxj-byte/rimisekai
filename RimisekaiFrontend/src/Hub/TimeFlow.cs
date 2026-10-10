@@ -183,7 +183,7 @@ public sealed partial class HubSession
     public Schedule ScheduleOf(int characterId) => State.Territory.ScheduleOf(characterId);
 
     /// <summary>
-    /// 设某个角色某一段的安排（空闲 / 工作 / 娱乐，后两者要点名一件设施）。
+    /// 设某个角色某一段的安排（空闲 / 工作，工作要点名一件设施）。
     /// 玩家自身也可排班，在有工作安排的日程时间内执行自动工作。
     /// </summary>
     public bool Assign(int characterId, int slot, SlotMode mode, int facilityId = -1)

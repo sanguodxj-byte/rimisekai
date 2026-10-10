@@ -660,7 +660,7 @@ public static class InkCharacterPageBuilder
 	        for (var slot = 0; slot < WorkSlot.Count; slot++)
 	        {
 	            var assignment = schedule.Slots[slot];
-	            var hasWork = assignment.FacilityId >= 0 && (assignment.Mode == SlotMode.Work || vm.Hub.FacilityIsWorkbench(assignment.FacilityId));
+	            var hasWork = assignment.Mode == SlotMode.Work && assignment.FacilityId >= 0;
 	            rows.Add(new InkPageRow
 	            {
 	                // 第一行时间、第二行干什么、第三行 房间-设施-产出。
@@ -705,7 +705,7 @@ public static class InkCharacterPageBuilder
             {
                 if (!fixture.Built)
                     continue;
-                if (!HasFacilityTag(vm, fixture))
+                if (!vm.Hub.FacilityIsWorkbench(fixture.Id))
                     continue;
                 facilities.Add(new InkPageRow
                 {
@@ -806,12 +806,6 @@ public static class InkCharacterPageBuilder
     }
 
     /// <summary>
-    /// 设施是否有设施标签：支持工作行动的工作设施（工作标签），
-    /// 或具有专属起居(Rest)/消遣(Leisure)设施标签（非 Plain 摆设）。
-    /// 无设施标签的纯摆设（木栅、城门、水井、箱子等）不予显示。
-    /// </summary>
-
-    /// <summary>
     /// 这个人的工种：看他排到的设施支持哪种工作行动（行动 → 工种）。
     /// 一段都没排就是空闲；玩家没有设施可排时同样报空闲。
     /// </summary>
@@ -902,9 +896,6 @@ public static class InkCharacterPageBuilder
         }
         return list;
     }
-
-    private static bool HasFacilityTag(InkViewModel vm, Facility fixture) =>
-        vm.Hub.FacilityIsWorkbench(fixture.Id) || fixture.Usage != FacilityUsage.Plain;
 
     /// <summary>时段安排的一行小注：点了设施的写设施名，空闲写空。</summary>
     private static string SlotNote(InkViewModel vm, SlotAssignment assignment) =>

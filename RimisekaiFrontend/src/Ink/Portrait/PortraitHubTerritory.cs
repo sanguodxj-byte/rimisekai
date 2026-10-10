@@ -300,13 +300,13 @@ public partial class PortraitHubScreen
     /// <summary>当前时段（0/6/12/18 时起各 6 小时）。</summary>
     private int CurrentSlot => Math.Clamp(_vm.Hub.Header().Hour / 6, 0, WorkSlot.Count - 1);
 
-    /// <summary>某人此刻的安排：工作/娱乐写设施名，空闲写「空闲」。</summary>
+    /// <summary>某人此刻的安排：工作写设施名，空闲写「空闲」。</summary>
     private string ActivityOf(int characterId)
     {
         var a = _vm.Hub.AssignmentOf(characterId, CurrentSlot);
         if (a.Mode == SlotMode.Free || a.FacilityId < 0)
             return "空闲";
-        return $"{(a.Mode == SlotMode.Work ? "工作" : "娱乐")} · {_vm.Hub.FacilityName(a.FacilityId)}";
+        return $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}";
     }
 
     private string RoomNameOf(int roomId)

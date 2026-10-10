@@ -1874,10 +1874,6 @@ public partial class InkHubScreen : Control
         return $"安排{who.Name}在{InkText.WorkSlot(slot)}去{vm.Hub.FacilityName(facilityId)}。";
     }
 
-    /// <summary>
-    /// 日程页：把当前角色的某一段改成点中的开关（空闲 / 工作 / 娱乐）。
-    /// 工作与娱乐保留已点名的设施；空闲清掉设施。校验交给 Core。
-    /// </summary>
     /// <summary>取消这一段已排好的工作：清空该时段（模式回空闲、设施撤销）。</summary>
     private string CancelTask(InkViewModel vm, InkPageRow row)
     {
@@ -1900,7 +1896,7 @@ public partial class InkHubScreen : Control
             return "没有可安排的人。";
         if (!Enum.TryParse<SlotMode>(row.TargetId, out var mode))
             return "不认识这段时间的用法。";
-        // 切到工作/娱乐时沿用这段已点名的设施；没点名则只记开关，等点设施。
+        // 切到工作时沿用这段已点名的设施；没点名则只记开关，等点设施。
         var existing = vm.Hub.AssignmentOf(who.Id, row.TargetNumber);
         var facilityId = mode == SlotMode.Free ? -1 : existing.FacilityId;
         if (!vm.Hub.Assign(who.Id, row.TargetNumber, mode, facilityId))

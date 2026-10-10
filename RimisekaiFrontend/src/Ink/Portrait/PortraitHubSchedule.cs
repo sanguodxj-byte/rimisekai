@@ -9,9 +9,9 @@ using Rimisekai.Ink;
 namespace Rimisekai.Portrait;
 
 /// <summary>
-/// 日程：竖向 24 小时时间轴，四个 6 小时时段块（工作＝骨白实心、娱乐＝浅填描边、空闲＝暗描边），
-/// 一条「此刻」横线。点时段块弹排班抽屉：空闲钮＋房间签＋该房设施行（点设施即把这一段排过去，
-/// 设施有工作行动算工作，否则算娱乐；再点一次取消）。数据走 InkCharacterPageBuilder 的日程模型。
+/// 日程：竖向 24 小时时间轴，四个 6 小时时段块（工作＝骨白实心、空闲＝暗描边），
+/// 一条「此刻」横线。点时段块弹排班抽屉：空闲钮＋房间签＋该房工作设施行（点设施即把这一段排去工作，
+/// 再点一次取消）。数据走 InkCharacterPageBuilder 的日程模型。
 /// </summary>
 public partial class PortraitHubScreen
 {
@@ -50,15 +50,12 @@ public partial class PortraitHubScreen
             var r = new Rect2(190f, top + slot * 6 * HourPitch + 5f, PortraitLayout.CanvasWidth - 60f - 190f, 6 * HourPitch - 10f);
             var pressed = PortraitFrame.IsPressed(r);
             var work = a.Mode == SlotMode.Work && a.FacilityId >= 0;
-            var fun = a.Mode == SlotMode.Entertainment && a.FacilityId >= 0;
             if (work)
                 PortraitFrame.Bevel(this, r, 20f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
             else
-                PortraitFrame.Bevel(this, r, 20f, pressed ? PortraitFrame.PressFill : fun ? InkStyle.Hover : InkStyle.Bg,
-                    fun ? InkStyle.Dim : InkStyle.WoodDark, 3f);
-            var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}"
-                : fun ? $"娱乐 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
-            var ink = work ? InkStyle.Bg : fun ? InkStyle.Line : InkStyle.Dim;
+                PortraitFrame.Bevel(this, r, 20f, pressed ? PortraitFrame.PressFill : InkStyle.Bg, InkStyle.WoodDark, 3f);
+            var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
+            var ink = work ? InkStyle.Bg : InkStyle.Dim;
             var labelSize = InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 40f, r.Size.X - 80f, 70f), label,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, ink, "lm");
             InkDraw.Text(this, new Vector2(r.Position.X + 40f, r.End.Y - 50f), SlotRange(slot), PortraitLayout.FontMeta,
@@ -135,8 +132,7 @@ public partial class PortraitHubScreen
             PortraitFrame.Card(this, r, on, 22f);
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y, r.Size.X - 300f, r.Size.Y), row.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            var kind = _vm.Hub.FacilityIsWorkbench(row.TargetNumber) ? "工作" : "娱乐";
-            PortraitFrame.Tag(this, new Vector2(r.End.X - 40f - PortraitFrame.ChipWidth(kind) + 16f, r.GetCenter().Y - 33f), kind, 66f, on);
+            PortraitFrame.Tag(this, new Vector2(r.End.X - 40f - PortraitFrame.ChipWidth("工作") + 16f, r.GetCenter().Y - 33f), "工作", 66f, on);
             _widgets.Add(new PortraitWidget(r, PortraitAction.ScheduleFacility, row.TargetNumber, row.Enabled, row.Name));
         }
         RegisterScroll("slot_facilities", new Rect2(0, listTop, PortraitLayout.CanvasWidth, visible * PortraitLayout.SheetRowStep),
@@ -172,8 +168,7 @@ public partial class PortraitHubScreen
                 if (current.FacilityId == widget.Index && current.Mode != SlotMode.Free)
                     _vm.Hub.Assign(_charId, _scheduleSlot, SlotMode.Free, -1);
                 else
-                    _vm.Hub.Assign(_charId, _scheduleSlot,
-                        _vm.Hub.FacilityIsWorkbench(widget.Index) ? SlotMode.Work : SlotMode.Entertainment, widget.Index);
+                    _vm.Hub.Assign(_charId, _scheduleSlot, SlotMode.Work, widget.Index);
                 return true;
             default:
                 return false;
