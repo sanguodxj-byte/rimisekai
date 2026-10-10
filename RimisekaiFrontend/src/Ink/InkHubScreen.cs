@@ -84,6 +84,7 @@ public partial class InkHubScreen : Control
             var modal = InkModalFactory.CreateCombatSettlement(
                 outcome.Result,
                 outcome.Loot,
+                state.Territory,
                 onFinished: () =>
                 {
                     ExitCombat(); // 玩家点击结算弹窗推进关闭后，平滑退出战斗返回据点！

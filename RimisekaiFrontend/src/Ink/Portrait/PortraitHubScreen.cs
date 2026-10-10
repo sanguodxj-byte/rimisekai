@@ -236,7 +236,18 @@ public partial class PortraitHubScreen : Control
 
     // ---------- 绘制 ----------
 
+    /// <summary>稀有度雾（装备页候选条）：每帧随绘制摆放，没画到的收起。</summary>
+    private PortraitRarityFog? _fogPool;
+    private PortraitRarityFog _fog => _fogPool ??= new PortraitRarityFog(this);
+
     public override void _Draw()
+    {
+        _fog.Begin();
+        DrawFrame();
+        _fog.End();
+    }
+
+    private void DrawFrame()
     {
         _widgets.Clear();
         _scrollAreas.Clear();

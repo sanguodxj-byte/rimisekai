@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using Rimisekai.Combat;
 using Rimisekai.Ink;
@@ -97,18 +98,19 @@ public sealed class ModalTests
         });
 
         var loot = new LootResult { Money = 100 };
-        loot.Items.Add(("Herb", 3));
+        loot.Items.Add(("木材", 3));
+        loot.Items.Add(("以太", 1));
 
         var finished = false;
-        var page = InkModalFactory.CreateCombatSettlement(battle, loot, () => finished = true);
+        var page = InkModalFactory.CreateCombatSettlement(battle, loot, new Rimisekai.Housing.Territory(), () => finished = true);
 
         Assert.Equal("战斗胜利", page.Title);
         Assert.False(page.HasInteractiveControls); // 纯展示，允许点击任意处推进
         Assert.NotNull(page.Settlement);
         Assert.Equal(3, page.Settlement!.Rounds);
         Assert.Equal(100, page.Settlement.Money);
-        Assert.Single(page.Settlement.Items);
-        Assert.Equal("Herb", page.Settlement.Items[0].ItemId);
+        // 价值高的排上面：以太在木材之前。
+        Assert.Equal(new[] { "以太", "木材" }, page.Settlement.Items.Select(i => i.ItemId));
 
         page.OnAdvance?.Invoke();
         Assert.True(finished);

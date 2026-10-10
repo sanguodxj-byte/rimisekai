@@ -5,7 +5,7 @@ using Rimisekai.Defs;
 namespace Rimisekai.Hub;
 
 /// <summary>装备界面的一条可换候选：背包里的一件武器或防具 / 饰品实例。</summary>
-public readonly record struct GearOption(string ItemId, string Name, int Count, IReadOnlyList<string> Details);
+public readonly record struct GearOption(string ItemId, string Name, int Count, Quality Quality, IReadOnlyList<DetailLine> Details);
 
 /// <summary>
 /// 换装：候选一律取主角背包（武器进 Weapons、防具饰品进 Equips 登记表，背包按实例 Id 记件数）。
@@ -21,11 +21,11 @@ public sealed partial class HubSession
         EquipSlots.Accepts(slot, gear.Kind) && (gear.Slot == slot || (IsRingSlot(gear.Slot) && IsRingSlot(slot)));
 
     /// <summary>某槽当前装着的东西的详情行；空槽返回空表。</summary>
-    public IReadOnlyList<string> EquippedDetails(int characterId, EquipSlot slot)
+    public IReadOnlyList<DetailLine> EquippedDetails(int characterId, EquipSlot slot)
     {
         var c = State.Roster.Find(characterId);
         if (c == null)
-            return System.Array.Empty<string>();
+            return System.Array.Empty<DetailLine>();
         var id = c.EquippedId(slot);
         if (id.Length > 0)
         {
@@ -34,7 +34,16 @@ public sealed partial class HubSession
             if (State.Weapons.Get(id) is { } weapon)
                 return weapon.DescribeDetails();
         }
-        return System.Array.Empty<string>();
+        return System.Array.Empty<DetailLine>();
+    }
+
+    /// <summary>某槽当前装着的那件的品质；空槽或无实例的原配武器为 null。</summary>
+    public Quality? EquippedQuality(int characterId, EquipSlot slot)
+    {
+        var id = State.Roster.Find(characterId)?.EquippedId(slot) ?? "";
+        if (State.Equips.Get(id) is { } gear)
+            return gear.Quality;
+        return State.Weapons.Get(id)?.Quality;
     }
 
     /// <summary>背包里能放进该槽的候选，按名字排。</summary>
@@ -51,10 +60,10 @@ public sealed partial class HubSession
             if (IsWeaponSlot(slot))
             {
                 if (State.Weapons.Get(pair.Key) is { } weapon)
-                    list.Add(new GearOption(pair.Key, WeaponForge.NameOf(weapon), pair.Value, weapon.DescribeDetails()));
+                    list.Add(new GearOption(pair.Key, WeaponForge.NameOf(weapon), pair.Value, weapon.Quality, weapon.DescribeDetails()));
             }
             else if (State.Equips.Get(pair.Key) is { } gear && Fits(slot, gear))
-                list.Add(new GearOption(pair.Key, EquipForge.NameOf(gear), pair.Value, gear.DescribeDetails()));
+                list.Add(new GearOption(pair.Key, EquipForge.NameOf(gear), pair.Value, gear.Quality, gear.DescribeDetails()));
         }
         return list.OrderBy(o => o.Name).ToList();
     }

@@ -2451,12 +2451,12 @@ public sealed class ArchitectureTests
 
         // 详情列明其余字段（品质/材料/类型/强化/附魔/祝福），不与名字重复。
         var details = grand.DescribeDetails();
-        Assert.Contains("品质　传说", details);
-        Assert.Contains("材料　精金", details);
-        Assert.Contains("类型　剑", details);
-        Assert.Contains("强化　+5", details);
-        Assert.Contains("附魔　炽热的（力道炽盛）", details);
-        Assert.Contains("祝福　受祝福", details);
+        Assert.Contains(new DetailLine("品质", "传说"), details);
+        Assert.Contains(new DetailLine("材料", "精金"), details);
+        Assert.Contains(new DetailLine("类型", "剑"), details);
+        Assert.Contains(new DetailLine("强化", "+5"), details);
+        Assert.Contains(new DetailLine("附魔", "炽热的", "力道炽盛"), details);
+        Assert.Contains(new DetailLine("祝福", "受祝福"), details);
 
         // 随机生成确实在变。
         var rng = new Random(11);
@@ -2478,7 +2478,7 @@ public sealed class ArchitectureTests
             quality: Quality.Fine, enchant: "", blessed: false, enhance: 0);
         Assert.Equal("太刀", subtyped.Subtype);
         Assert.Equal("钢太刀", subtyped.Name);
-        Assert.Contains("类型　剑·太刀", subtyped.DescribeDetails());
+        Assert.Contains(new DetailLine("类型", "剑·太刀"), subtyped.DescribeDetails());
 
         // 实例进背包，按 Id 记 1 件。
         var master = state.Roster.Add("你", master: true);
@@ -2660,7 +2660,7 @@ public sealed class ArchitectureTests
         var plain = EquipForge.ForgeArmor(EquipSlot.Torso, "铁",
             quality: Quality.Legendary, enchant: "", blessed: false, enhance: 5);
         Assert.Equal("铁甲", plain.Name);
-        Assert.Contains("强化　+5", plain.DescribeDetails());
+        Assert.Contains(new DetailLine("强化", "+5"), plain.DescribeDetails());
         Assert.Equal("钢腿", EquipForge.ForgeArmor(EquipSlot.Legs, "钢",
             quality: Quality.Common, enchant: "", blessed: false, enhance: 0).Name);
         Assert.Equal("秘银靴", EquipForge.ForgeArmor(EquipSlot.Feet, "秘银",
@@ -2676,7 +2676,7 @@ public sealed class ArchitectureTests
         var keenRing = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Perception", "钢",
             quality: Quality.Common, enchant: "Keen", blessed: false, enhance: 0);
         Assert.Equal("锐利的钢戒指", keenRing.Name);
-        Assert.Contains("加成　感知 +15", keenRing.DescribeDetails());
+        Assert.Contains(new DetailLine("加成", "感知 +15"), keenRing.DescribeDetails());
 
         // 饰品名 = 材料 + 戒指/项链；加什么属性是类型的事，写在详情里。
         Assert.Equal("秘银戒指", EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "秘银",

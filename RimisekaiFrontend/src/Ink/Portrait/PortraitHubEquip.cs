@@ -73,9 +73,10 @@ public partial class PortraitHubScreen
             var o = options[i];
             var r = new Rect2(PortraitLayout.Pad, y, PortraitLayout.FullWidth, 134f);
             PortraitFrame.Card(this, r);
+            _fog.Place(r.Grow(-6f), o.Quality, viewport: view);
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 14f, r.Size.X - 220f, 64f), o.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            var brief = o.Details.Count > 0 ? string.Join("  ", o.Details.Take(2)) : "";
+            var brief = string.Join(" · ", o.Details.Take(3).Select(d => d.Value));
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 76f, r.Size.X - 220f, 48f), brief,
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), $"×{o.Count}",
@@ -155,15 +156,17 @@ public partial class PortraitHubScreen
     private void ShowHeldDetails(PortraitWidget w)
     {
         string title;
-        IReadOnlyList<string> details;
+        string subtitle;
+        Quality? quality;
+        IReadOnlyList<DetailLine> details;
         if (w.Action == PortraitAction.EquipSlotPick)
         {
             var slot = DisplayEquipSlots[w.Index];
             var name = EquipmentName(Who, slot, _vm.Hub.State.Equips);
             title = name == "空" ? EquipSlots.Label(slot) : name;
+            subtitle = name == "空" ? "未装备" : $"{Who.Name} · {EquipSlots.Label(slot)}";
             details = _vm.Hub.EquippedDetails(Who.Id, slot);
-            if (details.Count == 0)
-                details = new[] { name == "空" ? "未装备" : $"槽位　{EquipSlots.Label(slot)}" };
+            quality = _vm.Hub.EquippedQuality(Who.Id, slot);
         }
         else
         {
@@ -171,8 +174,10 @@ public partial class PortraitHubScreen
             if (option.ItemId == null)
                 return;
             title = option.Name;
+            subtitle = "";
+            quality = option.Quality;
             details = option.Details;
         }
-        ModalWanted!(new InkModalPage { Title = title, Body = string.Join("\n", details) });
+        ModalWanted!(new InkModalPage { Title = title, Item = new InkModalItemData { Subtitle = subtitle, Quality = quality, Lines = details } });
     }
 }

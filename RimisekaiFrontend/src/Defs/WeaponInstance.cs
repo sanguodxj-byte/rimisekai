@@ -107,20 +107,20 @@ public sealed class WeaponInstance
     /// 详情里逐行列明这件武器带着什么。
     /// 祝福与附魔已经写在名字里，这里只列其余字段，不重复。
     /// </summary>
-    public IReadOnlyList<string> DescribeDetails()
+    public IReadOnlyList<DetailLine> DescribeDetails()
     {
-        var list = new List<string>
+        var list = new List<DetailLine>
         {
-            $"品质　{QualityOf.Label(Quality)}",
+            new("品质", QualityOf.Label(Quality)),
+            new("材料", materialLabel()),
+            new("类型", typeLabel()),
         };
-        list.Add($"材料　{materialLabel()}");
-        list.Add($"类型　{typeLabel()}");
         if (Enhance > 0)
-            list.Add($"强化　+{Enhance}");
+            list.Add(new("强化", $"+{Enhance}"));
         if (EnchantDef is { } e)
-            list.Add($"附魔　{e.Prefix}（{e.Effect}）");
+            list.Add(new("附魔", e.Prefix, e.Effect));
         if (Blessed)
-            list.Add("祝福　受祝福");
+            list.Add(new("祝福", "受祝福"));
         return list;
     }
 

@@ -30,8 +30,11 @@ public static partial class PortraitLayout
     public const int LogFontMin = 36;
 
 
-    /// <summary>「此刻」带：每页 4 人，每人一格 220 宽；人多时第 4 人右侧一枚翻页三角钮（120 宽，≥118）。</summary>
-    public const float NowSlot = 220f;
+    /// <summary>
+    /// 「此刻」带：每页 4 人，每人一格 214 宽，按 4 人排满的宽度在画布上居中（2026-10-10 主人定）；
+    /// 人多时翻页三角钮贴画布最右侧（118 宽），命中块不压头像格。
+    /// </summary>
+    public const float NowSlot = 214f;
     public const int NowPageSize = 4;
 
     /// <summary>「此刻」每页除主角外的人数：主角固定第 1 格，其余 3 格翻页（日志角色档同步只显示这 3 人）。</summary>
@@ -40,10 +43,12 @@ public static partial class PortraitLayout
     public const float NowStripHeight = 232f;
     public static Rect2 NowStrip => new(0, TravelButton.Position.Y - 12f - NowStripHeight, CanvasWidth, NowStripHeight);
     public static float NowRuleY => NowStrip.Position.Y - 28f;
-    public static Rect2 NowCard(int i) => new(Pad + i * NowSlot, NowStrip.Position.Y, NowSlot - 16f, NowStrip.Size.Y);
+    /// <summary>4 格排满时整排的左缘：整排（4×214−16＝840）在 1080 画布上居中。</summary>
+    public static float NowLeft => (CanvasWidth - (NowPageSize * NowSlot - 16f)) / 2f;
+    public static Rect2 NowCard(int i) => new(NowLeft + i * NowSlot, NowStrip.Position.Y, NowSlot - 16f, NowStrip.Size.Y);
 
-    /// <summary>翻页三角钮：紧挨第 4 格右侧，垂直对准头像圆心，命中块 120×150。</summary>
-    public static Rect2 NowPager => new(Pad + NowPageSize * NowSlot - 4f, NowStrip.Position.Y + 9f, 120f, 150f);
+    /// <summary>翻页三角钮：贴画布最右侧，垂直对准头像圆心，命中块 118×150，左缘不越过第 4 格右缘。</summary>
+    public static Rect2 NowPager => new(CanvasWidth - TouchMin, NowStrip.Position.Y + 9f, TouchMin, 150f);
 
     public static Rect2 MapFrame => MapGrid.Grow(24f);
     public static Rect2 MapGrid => new(MapOrigin, new Vector2(MapCell * GridCols, MapCell * GridRows));

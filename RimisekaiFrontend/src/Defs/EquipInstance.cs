@@ -129,31 +129,31 @@ public sealed class EquipInstance
     /// <summary>
     /// 详情里逐行列明这件装备带着什么。祝福与附魔已写在名字里，这里不重复。
     /// </summary>
-    public IReadOnlyList<string> DescribeDetails()
+    public IReadOnlyList<DetailLine> DescribeDetails()
     {
-        var list = new List<string>
+        var list = new List<DetailLine>
         {
-            $"品质　{QualityOf.Label(Quality)}",
-            $"槽位　{EquipSlots.Label(Slot)}",
+            new("品质", QualityOf.Label(Quality)),
+            new("槽位", EquipSlots.Label(Slot)),
         };
 
         if (Kind == EquipKind.Armor)
         {
-            list.Add($"材料　{Material?.Label ?? "?"}");
-            list.Add($"防御　{Defence}");
+            list.Add(new("材料", Material?.Label ?? "?"));
+            list.Add(new("防御", Defence.ToString()));
         }
         else
         {
-            list.Add($"类型　{StatLabel(AccessoryDef?.Core)}");
-            list.Add($"加成　{StatLabel(BonusStat)} +{BonusAmount}");
+            list.Add(new("类型", StatLabel(AccessoryDef?.Core)));
+            list.Add(new("加成", $"{StatLabel(BonusStat)} +{BonusAmount}"));
         }
 
         if (Enhance > 0)
-            list.Add($"强化　+{Enhance}");
+            list.Add(new("强化", $"+{Enhance}"));
         if (EnchantDef is { } e)
-            list.Add($"附魔　{e.Prefix}（{e.Effect}）");
+            list.Add(new("附魔", e.Prefix, e.Effect));
         if (Blessed)
-            list.Add("祝福　受祝福");
+            list.Add(new("祝福", "受祝福"));
         return list;
     }
 

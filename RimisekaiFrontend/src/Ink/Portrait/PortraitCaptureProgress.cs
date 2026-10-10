@@ -300,10 +300,15 @@ public partial class PortraitCapture
             Require(_inputResult == "输入值" && !_root.ModalLayer.IsActive, "modal input confirmation dispatches submitted text");
             var result = new BattleResult { Outcome = CombatOutcome.AttackerWin, Rounds = 3 };
             foreach (var member in _root.HubScreen.DebugHub.State.Roster.Members.Take(4))
-                result.Rows.Add(new BattleResult.Row { CharacterId = member.Id, Name = member.Name, DamageDealt = 20, WeaponExp = 4, StyleExp = 2 });
+                {
+                var n = result.Rows.Count;
+                // 首人武器本场 1→2 级（挂上升箭头），其余停在本级中段，核对进度条。
+                result.Rows.Add(new BattleResult.Row { CharacterId = member.Id, Name = member.Name, DamageDealt = 20, WeaponExp = 24, StyleExp = 12,
+                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64 });
+            }
             var loot = new LootResult { Money = 10 };
             loot.Items.Add(("木材", 1));
-            _root.ModalLayer.Show(InkModalFactory.CreateCombatSettlement(result, loot, () => _modalChoices = 3));
+            _root.ModalLayer.Show(InkModalFactory.CreateCombatSettlement(result, loot, _root.HubScreen.DebugHub.State.Territory, () => _modalChoices = 3));
         });
         _steps.Enqueue(() =>
         {
@@ -313,7 +318,48 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() => Require(_modalChoices == 3 && !_root.ModalLayer.IsActive,
             "display-only settlement advances by clicking inside panel"));
+        // 战利品多到排不下：按价值排序（传说精金甲顶到最上）、超出容量转滚动（右下 ▼＋滑条）。
+        _steps.Enqueue(() =>
+        {
+            for (var party = 1; party <= 4; party++)
+                GD.Print($"settlement loot capacity: party {party} -> {PortraitModalLayer.SettlementLootCapacity(party)} strips");
+            var territory = _root.HubScreen.DebugHub.State.Territory;
+            var armor = EquipForge.ForgeArmor(EquipSlot.Torso, "精金", quality: Quality.Legendary, enchant: "", blessed: false, enhance: 0);
+            territory.Equips.Add(armor);
+            var result = new BattleResult { Outcome = CombatOutcome.AttackerWin, Rounds = 5 };
+            foreach (var member in _root.HubScreen.DebugHub.State.Roster.Members.Take(4))
+                {
+                var n = result.Rows.Count;
+                // 首人武器本场 1→2 级（挂上升箭头），其余停在本级中段，核对进度条。
+                result.Rows.Add(new BattleResult.Row { CharacterId = member.Id, Name = member.Name, DamageDealt = 20, WeaponExp = 24, StyleExp = 12,
+                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64 });
+            }
+            var loot = new LootResult { Money = 120 };
+            foreach (var m in new[] { "木材", "布", "皮", "珊瑚", "青铜", "铁", "钢", "秘银", "以太" })
+                loot.Items.Add((m, 2));
+            loot.Items.Add((armor.Id, 1));
+            _root.ModalLayer.Show(InkModalFactory.CreateCombatSettlement(result, loot, territory, () => _modalChoices = 4));
+            _sortedTop = armor.Name;
+        });
+        _steps.Enqueue(() =>
+        {
+            var data = _root.ModalLayer.Current!.Settlement!;
+            Require(data.Items[0].Label == _sortedTop && data.Items[^1].ItemId == "木材", "settlement loot sorts by market value, rare gear first");
+            Shoot("settlement_scroll", _root.ModalLayer);
+            var at = new Vector2(_root.ModalLayer.DebugPanel.GetCenter().X, _root.ModalLayer.DebugPanel.Position.Y + 700f);
+            for (var i = 0; i < 20; i++)
+                _root.ModalLayer._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.WheelDown, Pressed = true, Position = at });
+        });
+        _steps.Enqueue(() =>
+        {
+            Shoot("settlement_scroll_end", _root.ModalLayer);
+            var panel = _root.ModalLayer.DebugPanel;
+            Press(_root.ModalLayer, new Vector2(panel.GetCenter().X, panel.End.Y - 134f));
+        });
+        _steps.Enqueue(() => Require(_modalChoices == 4 && !_root.ModalLayer.IsActive, "scrolling settlement still closes from its button"));
     }
+
+    private string _sortedTop = "";
 
     private void ClickHub(PortraitAction action, int index)
     {
