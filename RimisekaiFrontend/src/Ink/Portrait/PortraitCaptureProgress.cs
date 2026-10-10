@@ -304,7 +304,8 @@ public partial class PortraitCapture
                 var n = result.Rows.Count;
                 // 首人武器本场 1→2 级（挂上升箭头），其余停在本级中段，核对进度条。
                 result.Rows.Add(new BattleResult.Row { CharacterId = member.Id, Name = member.Name, DamageDealt = 20, WeaponExp = 24, StyleExp = 12,
-                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64 });
+                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64,
+                    NewSkill = n == 0 ? "slash" : "" });
             }
             var loot = new LootResult { Money = 10 };
             loot.Items.Add(("木材", 1));
@@ -332,7 +333,8 @@ public partial class PortraitCapture
                 var n = result.Rows.Count;
                 // 首人武器本场 1→2 级（挂上升箭头），其余停在本级中段，核对进度条。
                 result.Rows.Add(new BattleResult.Row { CharacterId = member.Id, Name = member.Name, DamageDealt = 20, WeaponExp = 24, StyleExp = 12,
-                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64 });
+                    WeaponLevel = 1, StyleLevel = 1, WeaponTotalExp = n == 0 ? 212 : 30 + n * 20, StyleTotalExp = n == 1 ? 105 : 64,
+                    NewSkill = n == 0 ? "slash" : "" });
             }
             var loot = new LootResult { Money = 120 };
             foreach (var m in new[] { "木材", "布", "皮", "珊瑚", "青铜", "铁", "钢", "秘银", "以太" })

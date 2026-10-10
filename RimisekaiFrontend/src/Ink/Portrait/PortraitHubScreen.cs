@@ -36,11 +36,8 @@ public enum PortraitAction
     CombatColumn,
     CombatMenu,
     CombatSettings,
-    SkillSector,
     SkillNode,
-    SkillReset,
-    SkillPrevious,
-    SkillNext,
+    SkillGroup,
     ScrollTrack,
     RosterPick,
     ScheduleMember,
@@ -81,13 +78,11 @@ public enum PortraitAction
     WorldGo,
     WorldStep,
     CharacterSegment,
-    SkillCard,
     TraitInfo,
     EquipInfo,
     EquipSlotPick,
     EquipOption,
     EquipRemove,
-    OpenDisc,
     CodexOpen,
     CodexEntry,
     StoreSegment,
@@ -133,7 +128,6 @@ public partial class PortraitHubScreen : Control
     {
         None,
         Character,
-        Disc,
         Build,
         System,
         Equip,
@@ -146,7 +140,6 @@ public partial class PortraitHubScreen : Control
         Room,
         Party,
         Slot,
-        Item,
         World,
         PortraitPicker,
     }
@@ -285,8 +278,6 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawPartySheet);
         else if (_sheet == SheetKind.Slot)
             OpenSheetLayer(DrawSlotSheet);
-        else if (_sheet == SheetKind.Item)
-            OpenSheetLayer(DrawItemSheet);
         else if (_sheet == SheetKind.World)
             OpenSheetLayer(DrawWorldSheet);
         else if (_sheet == SheetKind.PortraitPicker)
@@ -317,7 +308,6 @@ public partial class PortraitHubScreen : Control
         switch (page)
         {
             case PushPage.Character: DrawCharacterPage(); break;
-            case PushPage.Disc: DrawSkillPage(); break;
             case PushPage.Build: DrawDevelopment(); break;
             case PushPage.Equip: DrawEquipmentPage(); break;
             case PushPage.Codex: DrawCodexPage(); break;
@@ -397,9 +387,9 @@ public partial class PortraitHubScreen : Control
         // 第二行＝一条状态缎带：季节日子 · 天气 · 时刻三段，段与段之间等距、正中各一枚小菱隔开；
         // 段宽按内容，剩下的空隙均分，所以无论字长短，三段的间距都一样齐。时刻是此刻最常看的，用亮字。
         var y = PortraitLayout.HudLine2;
-        var sysLeft = PortraitLayout.HudSystem.Position.X;
+        // 状态行右端让到图鉴钮左侧，时刻不再压在图鉴钮底下。
         var left = PortraitLayout.Pad + 20f;
-        var right = sysLeft - 28f;
+        var right = PortraitLayout.HudCodex.Position.X + 12f;
         var segments = new (System.Action<float> Glyph, string Text, Color Color)[]
         {
             (gx => PortraitGlyph.Leaf(this, gx, y, 18f, InkStyle.Dim),
@@ -421,7 +411,12 @@ public partial class PortraitHubScreen : Control
         xs[0] = left;
         xs[^1] = right - widths[^1];
         if (segments.Length == 3)
+        {
             xs[1] = PortraitLayout.CanvasWidth / 2f - widths[1] / 2f;
+            // 中段居中会顶到末段（右端让给了图鉴钮）时，改为三段间距均分。
+            if (xs[1] + widths[1] + 30f > xs[2] || xs[0] + widths[0] + 30f > xs[1])
+                xs[1] = xs[0] + widths[0] + (xs[2] - xs[0] - widths[0] - widths[1]) / 2f;
+        }
         for (var i = 0; i < segments.Length; i++)
         {
             segments[i].Glyph(xs[i] + 18f);
@@ -436,9 +431,8 @@ public partial class PortraitHubScreen : Control
         var codex = PortraitLayout.HudCodex;
         if (PortraitFrame.IsPressed(codex))
             PortraitFrame.PressMark(this, codex.Grow(-10f));
-        PortraitGlyph.Book(this, codex.GetCenter().X, codex.Position.Y + 31f, 18f, InkStyle.Line);
-        InkDraw.TextBounded(this, new Rect2(codex.Position.X, codex.Position.Y + 54f, codex.Size.X, codex.Size.Y - 54f),
-            "图鉴", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        // 图鉴钮与系统齿轮同一口径：只画一枚图标、与状态行同一中线，不再在图标下方挂一行字压到缎带线外。
+        PortraitGlyph.Book(this, codex.GetCenter().X, codex.GetCenter().Y, 24f, InkStyle.Line);
         _widgets.Add(new PortraitWidget(codex, PortraitAction.CodexOpen, 0, true, "图鉴"));
 
         var sys = PortraitLayout.HudSystem;
@@ -562,7 +556,7 @@ public partial class PortraitHubScreen : Control
             ResetListDrag();
             return;
         }
-        if (HandleWorldInput(e) || HandleSkillInput(e) || HandleListInput(e))
+        if (HandleWorldInput(e) || HandleListInput(e))
             return;
         if (e is InputEventMouseMotion { ButtonMask: not 0 } motion)
         {
@@ -648,16 +642,6 @@ public partial class PortraitHubScreen : Control
         if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
             || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w) || ExecuteCodex(w))
             return;
-        switch (w.Action)
-        {
-            case PortraitAction.SkillSector:
-            case PortraitAction.SkillNode:
-            case PortraitAction.SkillReset:
-            case PortraitAction.SkillPrevious:
-            case PortraitAction.SkillNext:
-                ExecuteSkillWidget(w);
-                break;
-        }
     }
 
     /// <summary>抽屉的收起：交互抽屉逐级退（赠礼 → 类别 → 关闭），存取抽屉关设施，其余直接收。</summary>
@@ -675,7 +659,7 @@ public partial class PortraitHubScreen : Control
     private void Back()
     {
         ResetSkillView();
-        if (_push is PushPage.Disc or PushPage.Equip)
+        if (_push == PushPage.Equip)
         {
             _push = PushPage.Character;
             return;

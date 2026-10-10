@@ -8,7 +8,7 @@ namespace Rimisekai.Portrait;
 
 /// <summary>
 /// 装备页（推入页，从角色状态段的装备格进入）：上半十格槽位（双列，点选＝切换当前槽），
-/// 下半「可换」列表＝主角背包里能进当前槽的件（点＝换上；当前槽有东西时首行是「卸下」）。
+/// 下半候选列表（节名即槽位名）＝主角背包里能进当前槽的件（点＝换上；当前槽有东西时首行是「卸下」）。
 /// 按住槽位或候选 0.5 秒弹详情（纯展示），松手不再触发点按。
 /// </summary>
 public partial class PortraitHubScreen
@@ -53,7 +53,7 @@ public partial class PortraitHubScreen
 
         var current = DisplayEquipSlots[_equipSlot];
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y,
-            $"{EquipSlots.Label(current)} 可换");
+            EquipSlots.Label(current));
         y += 50f;
         var rowStep = 150f;
         var occupied = EquipmentName(who, current, registry) != "空";
@@ -76,9 +76,8 @@ public partial class PortraitHubScreen
             _fog.Place(r.Grow(-6f), o.Quality, viewport: view);
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 14f, r.Size.X - 220f, 64f), o.Name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            var brief = string.Join(" · ", o.Details.Take(3).Select(d => d.Value));
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 76f, r.Size.X - 220f, 48f), brief,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            PortraitFrame.TagLine(this, r.Position.X + 40f, r.Position.Y + 100f, o.Details.Take(3).Select(d => d.Value).ToList(),
+                r.End.X - 180f, InkStyle.Dim);
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), $"×{o.Count}",
                 PortraitLayout.FontMeta, InkStyle.Dim, "rm");
             AddClipped(r, view, PortraitAction.EquipOption, i, true, o.ItemId);

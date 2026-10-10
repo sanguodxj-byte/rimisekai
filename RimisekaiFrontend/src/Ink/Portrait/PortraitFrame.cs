@@ -516,6 +516,70 @@ public static class PortraitFrame
         GothicArt.Corners(ci, r, 96f, 0.95f);
     }
 
+    /// <summary>
+    /// 题签行：几段短词左起排开，段间一枚小菱隔开（「长剑 ◆ 铁 ◆ 精良」）。
+    /// 取代「a · b · c」式的字段串；排到 maxRight 放不下的后段直接不画。返回实际画到的右端。
+    /// </summary>
+    public static float TagLine(CanvasItem ci, float x, float cy, IReadOnlyList<string> tags, float maxRight,
+        Color color, int size = PortraitLayout.FontMeta, bool continues = false)
+    {
+        // continues：接在前一段字后面续排，首段前也放一枚菱。
+        var first = !continues;
+        foreach (var tag in tags)
+        {
+            if (tag.Length == 0)
+                continue;
+            var w = InkDraw.Measure(tag, size).X;
+            var lead = first ? 0f : 40f;
+            if (x + lead + w > maxRight)
+                break;
+            if (!first)
+                InkDraw.Jewel(ci, new Vector2(x + 20f, cy), 6f, new Color(color, 0.8f));
+            InkDraw.Text(ci, new Vector2(x + lead, cy), tag, size, color, "lm");
+            x += lead + w;
+            first = false;
+        }
+        return x;
+    }
+
+    /// <summary>题签行排开后的总宽（段宽之和＋段间 40），供排版预先折行。</summary>
+    public static float TagWidth(IReadOnlyList<string> tags, int size = PortraitLayout.FontMeta)
+    {
+        var w = 0f;
+        for (var i = 0; i < tags.Count; i++)
+            w += InkDraw.Measure(tags[i], size).X + (i > 0 ? 40f : 0f);
+        return w;
+    }
+
+    /// <summary>
+    /// 计数签：暗字标签紧跟亮字数值（「仓 20」），用于一行里并排几组数字，取代「仓 20 · 包 0」的字段串。
+    /// 返回画到的右端。
+    /// </summary>
+    public static float CountTag(CanvasItem ci, float x, float cy, string label, string value, bool lit, int size = PortraitLayout.FontMeta)
+    {
+        InkDraw.Text(ci, new Vector2(x, cy), label, size, InkStyle.Dim, "lm");
+        x += InkDraw.Measure(label, size).X + 10f;
+        InkDraw.Text(ci, new Vector2(x, cy), value, size, lit ? InkStyle.Line : InkStyle.Dim, "lm");
+        return x + InkDraw.Measure(value, size).X;
+    }
+
+    /// <summary>一排计数签（「属性池 12–20 ◆ 经验池 5–9」）：组间小菱，排到 maxRight 放不下的后组不画。</summary>
+    public static float CountTags(CanvasItem ci, float x, float cy, IReadOnlyList<(string Label, string Value)> pairs, float maxRight,
+        int size = PortraitLayout.FontMeta)
+    {
+        for (var i = 0; i < pairs.Count; i++)
+        {
+            var lead = i == 0 ? 0f : 48f;
+            var w = InkDraw.Measure(pairs[i].Label, size).X + 10f + InkDraw.Measure(pairs[i].Value, size).X;
+            if (x + lead + w > maxRight)
+                break;
+            if (i > 0)
+                InkDraw.Jewel(ci, new Vector2(x + 24f, cy), 6f, new Color(InkStyle.Dim, 0.8f));
+            x = CountTag(ci, x + lead, cy, pairs[i].Label, pairs[i].Value, true, size);
+        }
+        return x;
+    }
+
     /// <summary>分节线「──◆ 标题 ◆──」：两侧银白渐隐线，标题两旁各一枚金菱嵌黑芯。label 空则只画渐隐线。</summary>
     public static void SectionRule(CanvasItem ci, float x1, float x2, float y, string label = "")
     {

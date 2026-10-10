@@ -577,8 +577,7 @@ public sealed partial class PortraitHubScreen
         var terrain = Rimisekai.WorldMap.Generators.NameGenerator.GenerateTerrainName(tile.Terrain).zh;
         var title = isHome ? TerritoryName() : poi != null ? poi.NameZh : map.TileName(x, y);
         var kind = isHome ? "你的领地" : poi != null ? PoiTypeName(poi.Type) : "野外";
-        if (poi != null && hub.IsDungeonCleared(poi.Id))
-            kind += " · 已肃清";
+        var cleared = poi != null && hub.IsDungeonCleared(poi.Id);
 
         var icon = new Rect2(PortraitLayout.Pad + 20f, top + 70f, 150f, 150f);
         DrawRect(icon, InkStyle.Bg);
@@ -593,8 +592,8 @@ public sealed partial class PortraitHubScreen
 
         InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 76f, 620f, 76f), title,
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 156f, 620f, 56f), $"{kind} · {terrain}",
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        PortraitFrame.TagLine(this, icon.End.X + 40f, top + 184f,
+            cleared ? new[] { kind, terrain, "已肃清" } : new[] { kind, terrain }, icon.End.X + 660f, InkStyle.Dim);
 
         var close = PortraitLayout.SheetClose(top);
         PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);

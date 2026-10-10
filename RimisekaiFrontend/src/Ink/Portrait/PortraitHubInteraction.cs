@@ -152,8 +152,11 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, icon, name[..1], PortraitLayout.FontMeta, InkStyle.Line, "cm");
             InkDraw.TextBounded(this, new Rect2(rect.Position.X + 120f, rect.Position.Y + 8f, 330f, 60f), name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 120f, rect.Position.Y + 64f, 330f, 52f),
-                $"仓 {row.InStorage} · 包 {row.InBag}", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            // 存量两组计数签：暗字「仓 / 包」＋亮字件数（为 0 时整组压暗），不再写成「仓 20 · 包 0」。
+            var countY = rect.Position.Y + 90f;
+            var cx0 = PortraitFrame.CountTag(this, rect.Position.X + 120f, countY, "仓", $"{row.InStorage}", row.InStorage > 0);
+            InkDraw.Jewel(this, new Vector2(cx0 + 24f, countY), 6f, new Color(InkStyle.Dim, 0.8f));
+            PortraitFrame.CountTag(this, cx0 + 48f, countY, "包", $"{row.InBag}", row.InBag > 0);
             for (var b = 0; b < 2; b++)
             {
                 var br = PortraitLayout.StorageButton(rect, b);

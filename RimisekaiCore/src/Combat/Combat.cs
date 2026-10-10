@@ -139,6 +139,9 @@ public sealed class Combatant
     public int DamageDealt { get; set; }
     public int Kills { get; set; }
 
+    /// <summary>本场各技能的使用次数（每次 Perform 记一次）；战后按它判定能否学会相连的新技能。</summary>
+    public Dictionary<string, int> SkillUses { get; } = new();
+
     /// <summary>击坠后的金钱与掉落，由目录行带入；掉落只从倒下者身上掷。</summary>
     public long MoneyReward { get; init; }
     public List<EnemyLoot> Loot { get; } = new();
@@ -655,6 +658,7 @@ public sealed class Battle
     private void Perform(Combatant actor, SkillDef def, int targetId, int column = 0)
     {
         CurrentActionName = def.Name;
+        actor.SkillUses[def.Id] = actor.SkillUses.GetValueOrDefault(def.Id) + 1;
         // 法术：进入咏唱。咏唱占用时间轴，到点自动施放；
         // 咏唱期间被任意控制状态命中即打断，法术作废。速咏被动缩短时长（下限一轮）。
         if (def.ChantRounds > 0)

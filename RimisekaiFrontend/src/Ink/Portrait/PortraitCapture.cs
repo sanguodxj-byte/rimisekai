@@ -120,6 +120,20 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 2));
         _steps.Enqueue(() => Shoot("store_craft", _root.HubScreen));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 0));
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            // 库存一件一条：点条弹结构化物品详情（字段条＋说明），不再是整段字。
+            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.StockItem) > 0, "stock rows registered");
+            Shoot("store_stock", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.StockItem, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.Current?.Item is { Lines.Count: > 0 }, "stock row opens structured item detail");
+            Shoot("stock_detail", _root.ModalLayer);
+            _root.ModalLayer.Dismiss();
+        });
         // 角色详情三段＋技能星盘
         _steps.Enqueue(() => _root.HubScreen.ShowTab(1));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RosterPick, _root.HubScreen.DebugHub.State.Roster.Master!.Id));
@@ -210,12 +224,19 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.ScheduleSlot), "schedule timeline blocks"); Shoot("char_schedule", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.CharacterSegment, 1));
         _steps.Enqueue(() => Shoot("char_skills", _root.HubScreen));
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.OpenDisc, 0));
-        _steps.Enqueue(() => ClickSkillPolygon(PortraitAction.SkillSector, 0));
-        _steps.Enqueue(() => { CheckSkills(); Shoot("skills_focus", _root.HubScreen); });
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SkillReset, 0));
-        _steps.Enqueue(() => Require(_root.HubScreen.DebugSkillSector == -1, "skill reset"));
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
+        _steps.Enqueue(() =>
+        {
+            // 熟练分组默认只露最高一项，点开整组。
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.SkillGroup), "skill groups collapse to their top entry");
+            _root.HubScreen.DebugPress(PortraitAction.SkillGroup, 0);
+        });
+        _steps.Enqueue(() => Shoot("char_skills_open", _root.HubScreen));
+        _steps.Enqueue(() => { _root.HubScreen.DebugPress(PortraitAction.SkillGroup, 0); _root.HubScreen.DebugPan("character", 0); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 1500));
+        _steps.Enqueue(() => { CheckSkills(); Shoot("skills_chart", _root.HubScreen); });
+        _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 2700));
+        _steps.Enqueue(() => Shoot("skills_detail", _root.HubScreen));
+        _steps.Enqueue(() => { _root.HubScreen.DebugPan("character", 0); _root.HubScreen.DebugPress(PortraitAction.Back, 0); });
         // 设施抽屉、建造、系统
         _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
@@ -663,6 +684,15 @@ public partial class PortraitCapture : Node
         var pager = screen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.NowPage);
         Require(pager.Rect.Size.X >= PortraitLayout.TouchMin && pager.Rect.Size.Y >= PortraitLayout.TouchMin
             && avatars.All(a => a.Rect.End.X <= pager.Rect.Position.X), "now strip pager sits right of the fourth avatar");
+        // 设施牌四角棋子：让同房的人都坐到第一件设施上（多于 4 人，右下角应换成「+」）。
+        var fixture = hub.FixturesIn(hub.PlayerRoomId)[0];
+        foreach (var worker in hub.Day.Workers.Where(w => hub.State.Roster.Find(w.CharacterId)!.Id != hub.State.Roster.Master!.Id).Take(5))
+        {
+            worker.FacilityId = fixture.Id;
+            worker.Phase = Rimisekai.Housing.WorkPhase.Working;
+            worker.Path.Clear();
+        }
+        Require(hub.WorkersAtFixture(fixture.Id).Count >= 4, "fixture corner pieces fixture");
     }
 
     /// <summary>满屋子人：每人写一行在做什么，看日志角色档是否只跟着「此刻」当前页的 3 人走。</summary>
@@ -798,7 +828,9 @@ public partial class PortraitCapture : Node
         foreach (var name in new[] { "木材", "铁矿", "药草", "书本", "面包" })
         {
             Require(InkIcon.Get(name) != null, $"icon resource {name}");
-            hub.State.Roster.Master!.Bag.Add(name, 5);
+            // 图标按中文名取，背包按物品 Id 记：面包的 Id 是 bread，不能把中文名当 Id 塞进背包。
+            var id = Rimisekai.Defs.Items.All().First(def => def.Label == name).DefName;
+            hub.State.Roster.Master!.Bag.Add(id, 5);
         }
     }
 
@@ -877,21 +909,19 @@ public partial class PortraitCapture : Node
 
     private void CheckSkills()
     {
-        Require(_root.HubScreen.DebugSkillSector == 0, "skill sector focus");
-        var expected = _root.HubScreen.DebugSkillIds;
-        Require(expected.Length > 0, "focused sector has real skill definitions");
-        var seen = new HashSet<string>();
-        for (var i = 0; i < expected.Length; i++)
+        // 星盘嵌在技能段里：每式一颗可点的星（含盘心的普通攻击），点星即选中。
+        var stars = _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.SkillNode).ToArray();
+        Require(stars.Length >= 10, $"skill chart shows its stars inline, got {stars.Length}");
+        Require(stars.All(w => w.Rect.Size.X >= PortraitLayout.TouchMin), "every star is touch-sized");
+        foreach (var star in stars)
         {
-            seen.Add(_root.HubScreen.DebugSelectedSkill);
-            _root.HubScreen.DebugPress(PortraitAction.SkillNext, 0);
+            _root.HubScreen.DebugPress(PortraitAction.SkillNode, star.Index);
+            Require(_root.HubScreen.DebugSelectedSkill == star.Label, "tapping a star selects its skill");
         }
-        Require(expected.All(seen.Contains), "navigation reaches every focused skill");
-        var selected = _root.HubScreen.DebugSelectedSkill;
-        _root.HubScreen.DebugPress(PortraitAction.SkillPrevious, 0);
-        _root.HubScreen.DebugPress(PortraitAction.SkillNext, 0);
-        Require(_root.HubScreen.DebugSelectedSkill == selected, "previous-next roundtrip");
+        var armor = stars.First(w => w.Label == "armor_break");
+        _root.HubScreen.DebugPress(PortraitAction.SkillNode, armor.Index);
     }
+
     private void OpenStorage()
     {
         _root.HubScreen.ShowTab(0);

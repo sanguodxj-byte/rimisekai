@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
 using Rimisekai.Character;
@@ -30,6 +31,8 @@ public sealed class MemberData
     public int[] WeaponExp { get; set; } = new int[System.Enum.GetValues<WeaponType>().Length];
     public int[] StyleExp { get; set; } = new int[System.Enum.GetValues<StyleType>().Length];
     public List<int> Talents { get; set; } = new();
+    /// <summary>已学习的战斗技能 Id。</summary>
+    public List<string> LearnedSkills { get; set; } = new();
     public WeaponType? MainWeapon { get; set; }
     public WeaponType? OffWeapon { get; set; }
     public bool OffHandShield { get; set; }
@@ -436,6 +439,7 @@ public static class SaveSystem
         WeaponExp = WeaponExps(c),
         StyleExp = StyleExps(c),
         Talents = new List<int>(c.Talents),
+        LearnedSkills = c.LearnedSkills.OrderBy(id => id, System.StringComparer.Ordinal).ToList(),
         MainWeapon = c.MainWeapon,
         OffWeapon = c.OffWeapon,
         OffHandShield = c.OffHandShield,
@@ -622,6 +626,7 @@ public static class SaveSystem
             });
         c.Condition.RestoreWetness(m.Wetness);
         c.RestoreEquipped(m.Equipped);
+        c.LearnedSkills.UnionWith(m.LearnedSkills);
         c.Affect.Mood = m.Mood;
         c.Affect.ChatDesire = m.ChatDesire;
         c.Affect.LastTalkAt = m.LastTalkAt;

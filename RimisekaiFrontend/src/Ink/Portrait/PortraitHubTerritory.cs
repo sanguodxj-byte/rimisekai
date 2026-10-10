@@ -503,11 +503,13 @@ public partial class PortraitHubScreen
             PortraitFrame.Bevel(this, r, 22f, pressed ? PortraitFrame.PressFill : new Color(InkStyle.Inset, 0.85f), InkStyle.Line, 3f);
             PortraitFrame.Bevel(this, r.Grow(-9f), 16f, null, new Color(InkStyle.Dim, 0.6f), 1.5f);
             var cx = r.GetCenter().X;
-            FixtureGlyph(f)(this, cx, r.Position.Y + 46f, 22f, InkStyle.Line);
-            var size = InkDraw.FitSize(f.Name, r.Size.X - 32f, PortraitLayout.FontMeta, PortraitLayout.FontMeta);
-            InkDraw.Text(this, new Vector2(cx, r.End.Y - 40f), f.Name, size, InkStyle.Line, "cm");
-            // 正在用这件设施的人：与领地格、「此刻」同款的棋子标识，右上角一排（2026-10-10 主人定，不另造标记）。
-            DrawFixturePieces(_vm.WorkersAtFixture(f.Id), r);
+            // 正在用这件设施的人：与领地格、「此刻」同款的棋子，一人占一角（2026-10-10 主人定，不另造标记）。
+            // 下两角有人时图标收到上两角之间、名字挪到上下两排角印正中的空带里，谁也不压谁。
+            var workers = _vm.WorkersAtFixture(f.Id);
+            var bottomTaken = workers.Count >= 3;
+            FixtureGlyph(f)(this, cx, r.Position.Y + (bottomTaken ? 28f : 46f), bottomTaken ? 18f : 22f, InkStyle.Line);
+            InkDraw.Text(this, new Vector2(cx, bottomTaken ? r.GetCenter().Y : r.End.Y - 40f), f.Name, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+            DrawFixturePieces(workers, r);
             if (!moving)
                 _widgets.Add(new PortraitWidget(r, PortraitAction.Fixture, f.Id, true, f.Name));
         }
@@ -516,19 +518,36 @@ public partial class PortraitHubScreen
     /// <summary>设施栏此刻摆的是哪间房的设施：主角落定时跟着主角，走动 / 过界期间停在出发那间。</summary>
     private int _stripRoom = -1;
 
-    /// <summary>设施牌右上角的使用者棋子：底线对齐、自右向左排，多于 3 人时最左一枚换成「+」。</summary>
+    private const float FixtureSealSize = 44f;
+    private const float FixtureSealInset = 6f;
+
+    /// <summary>
+    /// 设施牌的使用者棋子：一人一角，依次左上、右上、左下、右下；每枚坐在贴角的切角小印里（黑底暗线，
+    /// 朝牌角一侧加一道骨白折角线）。多于 4 人时右下角换成实心「+」。
+    /// </summary>
     private void DrawFixturePieces(IReadOnlyList<CharacterCard> cards, Rect2 plaque)
     {
-        if (cards.Count == 0)
-            return;
-        const float h = 34f, step = 24f, cap = 3;
-        var shown = cards.Count > cap ? (int)cap - 1 : cards.Count;
-        var baseY = plaque.Position.Y + 18f + h;
-        var x = plaque.End.X - 26f;
-        for (var i = 0; i < shown; i++, x -= step)
-            InkDraw.Chess(this, new Vector2(x, baseY), h, InkDraw.PieceFor(cards[i]));
-        if (cards.Count > cap)
-            PortraitGlyph.Plus(this, x, baseY - h * 0.4f, h * 0.32f, InkStyle.Line);
+        var slots = System.Math.Min(cards.Count, 4);
+        var overflow = cards.Count > 4;
+        for (var i = 0; i < slots; i++)
+        {
+            var right = i % 2 == 1;
+            var bottom = i >= 2;
+            var x = right ? plaque.End.X - FixtureSealInset - FixtureSealSize : plaque.Position.X + FixtureSealInset;
+            var y = bottom ? plaque.End.Y - FixtureSealInset - FixtureSealSize : plaque.Position.Y + FixtureSealInset;
+            var seal = new Rect2(x, y, FixtureSealSize, FixtureSealSize);
+            PortraitFrame.Poly(this, PortraitFrame.ChamferPoints(seal, 9f), InkStyle.Bg, new Color(InkStyle.Dim, 0.9f), 2f);
+            // 折角线：沿牌角两边各走 20，把小印「钉」在角上。
+            var corner = new Vector2(right ? seal.End.X : seal.Position.X, bottom ? seal.End.Y : seal.Position.Y);
+            var dx = right ? -20f : 20f;
+            var dy = bottom ? -20f : 20f;
+            DrawPolyline(new[] { corner + new Vector2(dx, 0f), corner, corner + new Vector2(0f, dy) }, InkStyle.Line, 3f);
+            var c = seal.GetCenter();
+            if (overflow && i == 3)
+                PortraitGlyph.Plus(this, c.X, c.Y, 13f, InkStyle.Line);
+            else
+                InkDraw.Chess(this, new Vector2(c.X, seal.End.Y - 3f), 40f, InkDraw.PieceFor(cards[i]));
+        }
     }
 
     /// <summary>设施牌上的小图标：按设施能做的事挑一枚，挑不出就是一颗菱。</summary>
@@ -578,9 +597,12 @@ public partial class PortraitHubScreen
         var people = _vm.Cards().Where(card => card.RoomId == room.Id).ToArray();
         InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 76f, 600f, 76f), room.Name,
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        var sub = $"设施 {fixtures.Count} · 在场 {people.Length}" + (here ? " · 你在这里" : "");
-        InkDraw.TextBounded(this, new Rect2(icon.End.X + 40f, top + 160f, 600f, 56f), sub,
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        var subY = top + 188f;
+        var sx = PortraitFrame.CountTag(this, icon.End.X + 40f, subY, "设施", $"{fixtures.Count}", fixtures.Count > 0);
+        InkDraw.Jewel(this, new Vector2(sx + 24f, subY), 6f, new Color(InkStyle.Dim, 0.8f));
+        sx = PortraitFrame.CountTag(this, sx + 48f, subY, "在场", $"{people.Length}", people.Length > 0);
+        if (here)
+            PortraitFrame.TagLine(this, sx, subY, new[] { "你在这里" }, icon.End.X + 640f, InkStyle.Line, continues: true);
 
         var close = PortraitLayout.SheetClose(top);
         PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);

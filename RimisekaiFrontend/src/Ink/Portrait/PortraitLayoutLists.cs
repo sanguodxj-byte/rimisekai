@@ -23,8 +23,11 @@ public static partial class PortraitLayout
     public static Rect2 StockSearch => new(Pad, BodySegment.End.Y + 24f, FullWidth, TouchMin);
     public static float StockChipsY => StockSearch.End.Y + 16f;
     public static Rect2 StockView => new(0, StockChipsY + TouchMin + 16f, CanvasWidth, TabTop - (StockChipsY + TouchMin + 16f));
-    public const float StockCardHeight = 260f;
-    public static float StockCardWidth => (FullWidth - 40f) / 3f;
+    /// <summary>库存条：一件一条，高 150（上行物名、下行题签），条距 14。</summary>
+    public const float StockRowHeight = 150f;
+    public const float StockRowGap = 14f;
+    public static Rect2 StockRow(int i, float offset) =>
+        new(Pad, StockView.Position.Y + i * (StockRowHeight + StockRowGap) - offset, FullWidth, StockRowHeight);
 
     /// <summary>交易：买卖段 / 行（带 − n + 步进）/ 底部结算条。</summary>
     public static Rect2 TradeSegment => new(Pad, BodySegment.End.Y + 24f, FullWidth, TouchMin);

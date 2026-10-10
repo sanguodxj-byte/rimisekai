@@ -13,7 +13,7 @@ namespace Rimisekai.Portrait;
 
 public partial class PortraitHubScreen
 {
-    private readonly record struct CodexEntry(string Label, string Summary, InkModalMonsterCodexData Detail);
+    private readonly record struct CodexEntry(string Label, IReadOnlyList<(string Label, string Value)> Summary, InkModalMonsterCodexData Detail);
 
     private void OpenCodexPage()
     {
@@ -57,9 +57,7 @@ public partial class PortraitHubScreen
             InkDraw.TextBounded(this, new Rect2(rect.Position.X + 166f, rect.Position.Y + 22f,
                     rect.Size.X - 196f, 62f), entry.Label,
                 PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 166f, rect.Position.Y + 92f,
-                    rect.Size.X - 196f, 54f), entry.Summary,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            PortraitFrame.CountTags(this, rect.Position.X + 166f, rect.Position.Y + 119f, entry.Summary, rect.End.X - 30f);
             AddClipped(rect, viewport, PortraitAction.CodexEntry, i, true, entry.Label);
         }
 
@@ -83,7 +81,12 @@ public partial class PortraitHubScreen
             .Select(group =>
             {
                 var variants = group.ToArray();
-                var summary = $"武器 {Range(variants.Select(enemy => WeaponName(enemy.Weapon)))} · 属性池 {Range(variants.Select(enemy => enemy.CorePool))} · 经验池 {Range(variants.Select(enemy => enemy.ExpPool))}";
+                var summary = new[]
+                {
+                    ("武器", Range(variants.Select(enemy => WeaponName(enemy.Weapon)))),
+                    ("属性池", Range(variants.Select(enemy => enemy.CorePool))),
+                    ("经验池", Range(variants.Select(enemy => enemy.ExpPool))),
+                };
                 var skills = variants.SelectMany(enemy => enemy.Skills).Distinct(StringComparer.Ordinal)
                     .Select(id => DefDatabase<SkillDef>.Get(id)!.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray();
                 var loot = variants.SelectMany(enemy => enemy.Loot).GroupBy(drop => drop.ItemId)
