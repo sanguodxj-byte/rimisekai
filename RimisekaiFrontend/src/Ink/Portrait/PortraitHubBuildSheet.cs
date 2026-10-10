@@ -11,7 +11,7 @@ namespace Rimisekai.Portrait;
 
 /// <summary>
 /// 全高建造抽屉（建造页点一格、或领地格长按进来）：
-/// 分段「可建 / 已有 / 门」→ 两行分类页签（每类「能建/总数」）→ 5 列格子（能建亮、缺料「缺」、挡住暗加锁，一项不藏）
+/// 分段「可建 / 已有 / 门」→ 两行分类页签（每类「能建/总数」）→ 4 列格子（能建骨白、建不了一律压暗，一项不藏）
 /// → 底部常驻详情卡（花费与条件逐条打勾打叉、自带设施、建造 / 开拓并建造 / 拆除，刚建的一笔可撤）。
 /// 条件、状态、排序全由 Core <see cref="HubSession.BuildOptions"/> 给出，这里只排版。
 /// </summary>
@@ -199,24 +199,14 @@ public partial class PortraitHubScreen
             row => _buildTileFirst = row, PortraitLayout.BuildTileStep);
     }
 
-    /// <summary>
-    /// 一格：卡片（选中走卡片选中态）＋类别线描图标＋名。三态只用现成语汇：
-    /// 能建＝骨白字与图标；缺料＝同样骨白，右上挂一枚亮签「缺」；挡住＝字与图标压成银灰，右上一把锁。
-    /// </summary>
+    /// <summary>一格：卡片（选中走卡片选中态）＋类别线描图标＋名。能建骨白；建不了（缺钱料、标签不合、设施位满、等级不够）一律压成银灰，原因看详情卡。</summary>
     private void DrawBuildTile(Rect2 r, string name, string category, BuildState state, bool selected)
     {
         PortraitFrame.Card(this, r, selected, 26f);
-        var color = state == BuildState.Locked ? InkStyle.Dim : InkStyle.Line;
+        var color = state == BuildState.Ready ? InkStyle.Line : InkStyle.Dim;
         BuildGlyph(category)(this, r.GetCenter().X, r.Position.Y + 98f, 50f, color);
         InkDraw.TextBounded(this, new Rect2(r.Position.X + 10f, r.End.Y - 82f, r.Size.X - 20f, 60f), name,
             PortraitLayout.FontBody, PortraitLayout.FontMeta, color, "cm");
-        if (state == BuildState.Short)
-        {
-            var w = PortraitFrame.ChipWidth(HubSession.ShortBadge) - 16f;
-            PortraitFrame.Tag(this, new Vector2(r.End.X - 14f - w, r.Position.Y + 14f), HubSession.ShortBadge, 58f, lit: true);
-        }
-        else if (state == BuildState.Locked)
-            PortraitGlyph.Lock(this, r.End.X - 44f, r.Position.Y + 40f, 22f, InkStyle.Dim);
     }
 
     private void DrawBuildCard(BuildOption option, BuildSite site)

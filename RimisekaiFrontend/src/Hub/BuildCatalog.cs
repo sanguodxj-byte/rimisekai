@@ -76,7 +76,6 @@ public sealed partial class HubSession
     public const string LevelLabel = "领地等级";
     public const string MoneyLabel = "钱";
     public const string AllCategoryLabel = "全部";
-    public const string ShortBadge = "缺";
     public const string BundledLabel = "自带";
 
     private BuildReceipt? _recording;
