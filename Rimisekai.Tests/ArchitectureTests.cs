@@ -484,7 +484,7 @@ public sealed class ArchitectureTests
         state.Clock.SetTime(1, 0);
         state.Clock.Advance(6 * 60);
         var logs = hub.PassTime(6 * 60);
-        // 矿脉不是仓储设施，同房也没有货架：产出退回采集者背包。
+        // 矿脉不是仓储设施，同房也没有箱子：产出退回采集者背包。
         Assert.True(worker.Bag.Get("ore") > 0);
         Assert.True(logs.Count > 0);
         Assert.Equal(12 * 60, state.Clock.Minutes);
@@ -1165,9 +1165,9 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         state.Territory.AddRoom(new Room { Id = 2, Name = "库房", Open = true });
         state.Territory.Link(1, 2);
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 2, CanStore = true, Built = true };
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 2, CanStore = true, Built = true };
         state.Territory.AddFacility(shelf);
-        w.Bag.Add("铁矿", 5);   // 背包里有货，库房有货架
+        w.Bag.Add("铁矿", 5);   // 背包里有货，库房有箱子
 
         var hub = new HubSession(state);
         hub.Enter(1);
@@ -1175,7 +1175,7 @@ public sealed class ArchitectureTests
         for (var i = 0; i < 20; i++)
             hub.PassTime(5);
 
-        // 角色自己把货搬进了货架，背包清空。
+        // 角色自己把货搬进了箱子，背包清空。
         Assert.Equal(5, shelf.Contents.Get("铁矿"));
         Assert.Equal(0, w.Bag.Get("铁矿"));
     }
@@ -1189,7 +1189,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
         state.Territory.AddRoom(new Room { Id = 2, Name = "工坊", Open = true });
         state.Territory.Link(1, 2);
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 1, CanStore = true, Built = true };
         shelf.Contents.Add("铁矿", 4);   // 料在库房
         state.Territory.AddFacility(shelf);
         state.Territory.AddFacility(new Facility { Id = 2, Name = "铁砧", RoomId = 2, Usage = FacilityUsage.Plain, Actions = { ActionKind.Forge }, Built = true });
@@ -1218,7 +1218,7 @@ public sealed class ArchitectureTests
     {
         var state = new GameState();
         var w = state.Roster.Add("工");
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 1, CanStore = true, Built = true };
         shelf.StorageFilter.Only(new[] { "铁矿" }); // 只收矿石
         shelf.StorageCapacity = 2;                 // 最多两件
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
@@ -1245,13 +1245,13 @@ public sealed class ArchitectureTests
         // 采掘吃力量：给到基准值，速度系数才是 100%（技能会影响干活快慢）。
         worker[CoreStat.Strength] = ActionKindMap.SpeedBaseline;
         state.Territory.AddRoom(new Room { Id = 1, Name = "房", Open = true });
-        // 采集点产矿；同房放一个货架（能存货）。
+        // 采集点产矿；同房放一个箱子（能存货）。
         state.Territory.AddFacility(new Facility
         {
             Id = 1, Name = "矿", RoomId = 1, Usage = FacilityUsage.Plain, Actions = { ActionKind.Mine },
             YieldItemId = "ore", Built = true,
         });
-        var shelf = new Facility { Id = 9, Name = "货架", RoomId = 1, CanStore = true, Built = true };
+        var shelf = new Facility { Id = 9, Name = "箱子", RoomId = 1, CanStore = true, Built = true };
         state.Territory.AddFacility(shelf);
         for (var slot = 0; slot < WorkSlot.Count; slot++)
             state.Territory.Assign(worker.Id, slot, SlotMode.Work, 1);
@@ -2081,7 +2081,7 @@ public sealed class ArchitectureTests
 
         var shelf = new Facility
         {
-            Id = 10, Name = "货架", RoomId = 1, Capacity = 2,
+            Id = 10, Name = "箱子", RoomId = 1, Capacity = 2,
             CanStore = true, StorageCapacity = 5, Built = true,
         };
         var bed = new Facility
@@ -2106,12 +2106,12 @@ public sealed class ArchitectureTests
         Assert.Contains(ActionKind.Sleep, bedActions);
         Assert.DoesNotContain(ActionKind.Store, bedActions);
 
-        // 坐到货架上：支持打开货架（Store 行动）。
+        // 坐到箱子上：支持打开箱子（Store 行动）。
         Assert.True(hub.Use(shelf.Id));
         var shelfActions = hub.ActionsAtCurrentFixture();
         Assert.Contains(ActionKind.Store, shelfActions);
 
-        // 执行打开货架行动：打开交互页，不推进游戏时间。
+        // 执行打开箱子行动：打开交互页，不推进游戏时间。
         var clockBefore = state.Clock.Minutes;
         Assert.True(hub.ActAtFixture(ActionKind.Store));
         Assert.Equal(clockBefore, state.Clock.Minutes);
@@ -2124,7 +2124,7 @@ public sealed class ArchitectureTests
         Assert.Equal(2, rows[0].InBag);
         Assert.Equal(0, rows[0].InStorage);
 
-        // 存入 1 份木材：货架内 +1，背包 -1，时间推进 5 分钟。
+        // 存入 1 份木材：箱子内 +1，背包 -1，时间推进 5 分钟。
         Assert.True(hub.StoreOne("木材"));
         Assert.Equal(1, shelf.Contents.Get("木材"));
         Assert.Equal(1, master.Bag.Get("木材"));
@@ -2142,7 +2142,7 @@ public sealed class ArchitectureTests
         Assert.Equal(2, shelf.Contents.Get("木材"));
         Assert.Equal(0, master.Bag.Get("木材"));
 
-        // 从货架取出 1 份木材。
+        // 从箱子取出 1 份木材。
         Assert.True(hub.TakeOne("木材"));
         Assert.Equal(1, shelf.Contents.Get("木材"));
         Assert.Equal(1, master.Bag.Get("木材"));
@@ -2349,8 +2349,8 @@ public sealed class ArchitectureTests
         state.Territory.Link(2, 3);
         state.Territory.Link(3, 4);
 
-        // 库房摆货架存料：炖菜的肉、洋葱、水各 2 份
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
+        // 库房摆箱子存料：炖菜的肉、洋葱、水各 2 份
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 1, CanStore = true, Built = true };
         shelf.Contents.Add("肉", 2);
         shelf.Contents.Add("洋葱", 2);
         shelf.Contents.Add("水", 2);
@@ -2388,7 +2388,7 @@ public sealed class ArchitectureTests
         hub.Place(cook.Id, 3);
         hub.Place(eater.Id, 4);
 
-        // 1. 推进时间：厨师发现灶台缺料，物理走去库房取料（禁止瞬移！途经庭院2，尚未抵达库房1，货架存料完好！）
+        // 1. 推进时间：厨师发现灶台缺料，物理走去库房取料（禁止瞬移！途经庭院2，尚未抵达库房1，箱子存料完好！）
         hub.PassTime(5);
         var worker = hub.Day.Workers.First(w => w.CharacterId == cook.Id);
         Assert.Equal(ActionKind.Haul, worker.Goal);
@@ -2396,7 +2396,7 @@ public sealed class ArchitectureTests
         Assert.Equal(shelf.Id, worker.HaulSourceId);
         Assert.Equal(stove.Id, worker.HaulTargetId);
         Assert.Equal(2, worker.RoomId); // 此时刚走到中途庭院(2)
-        Assert.Equal(2, shelf.Contents.Get("肉")); // 尚未抵达库房，货架原料绝无隔空被扣！
+        Assert.Equal(2, shelf.Contents.Get("肉")); // 尚未抵达库房，箱子原料绝无隔空被扣！
 
         // 推进到厨师走回厨房、完成炖菜烹饪并端到餐厅餐桌
         for (var i = 0; i < 40; i++)

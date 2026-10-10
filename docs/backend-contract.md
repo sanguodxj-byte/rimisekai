@@ -335,17 +335,17 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - 房间表 `RoomDef`、设施表 `FacilityDef` 放目录（`GameCatalog.Rooms/Facilities`，读档后内容侧重注册，说明文字只放表里）
 - 内容包 `world.json` 的房间/设施条目已加字段（区域、权限、用途、建造、效果、产出、技能、说明，全可选，老文件照读）；组装时先注册进目录再生成运行时对象
 - 设施行动**由内容包按设施声明**：`content/*.json` 里每件设施写 `actions: ["Sleep"]` 之类。
-  设施与行动解耦——同为 `Rest` 用途的“床”只声明 Sleep、“沙发”声明 Rest+Meal，行为因此不同。
+  设施与行动解耦——同为 `Rest` 用途的“床”只声明 Sleep、“长椅”声明 Rest+Meal，行为因此不同。
   不写 `actions` 才退回按用途查兜底表（`Territory.Actions`，默认厨房管饭、床管睡）；写空数组表示刻意不可交互（桌类）。
   桌类另标 `isTable: true`：自身无行动，但在有桌的房间吃饭不扣心情（无桌 -3）
 - NPC 找饭/找床优先查设施自己的行动集；睡觉只认声明了 Sleep 的设施（带床字的），吃饭只认声明了 Meal 的可坐设施，且优先与桌子同房
 - 内容分两层：`content/world.json` 是静态表（领地名/食物定义/5 房/5 通路/7 设施），`content/newgame.json` 是正常种子（玩家+女仆），`content/newgame_hard.json` 是困难种子（只有玩家）；开场日志不配表，按出生房间生成。读档世界重进时种子只补台词
-- 开局 5 房：庭院（水井/躺椅/篝火）、客厅（沙发）、卧室（床）、森林（草药丛）、山岳（矿脉）；起始木材×10、石材×10 在玩家背包，干粮×5 放在篝火里（NPC 够得着才有饭吃）
+- 开局 5 房：庭院（水井）、客厅（长椅、箱子）、卧室（床）、森林（草药丛）、山岳（矿脉）；起始木材×10、石材×10 在玩家背包，干粮×5 放在箱子里（NPC 够得着才有饭吃）
 - 开发（`HubSession`）：`AddRoomCopy/AddFacilityCopy`（照抄**可建造**类型，花材料）、`MoveRoom/MoveFacility`（空格子）、`SetRoomOpen`（开花钱/关免费）、`SetLink`（加拆通路）、`RemoveRoom/RemoveFacility`（材料按 60% 向下取整返还，拆房先挪人、级联拆设施、清通路；玩家在里面不给拆）。每次开发走 1 格时间；定义与运行时都有 `MaterialCost` + `Buildable`，存档保留
 - 开拓/安装（2026-10-01）：`DevelopEmptyRoom(roomId)`（已有实体、`Open == false`，花 `OpenCost` ＋ `MaterialCost`）、`DevelopVacantCell(x, y)`（空格子，越开越贵，生成 `Vacant` 空房）、`PlaceRoom(roomId, vacantRoomId)`（已建房间**只能装进空房**，空房被顶替）。`Room.Vacant` 随存档走
-- 建房与摆放（2026-10-10 主人定）：每类房间建成白送一件对口设施（`buildings.json` 房间行的 `bundledFacility`，如铁匠铺→铁砧、木工房→工作台、客卧→床、菜园→卷心菜田），**占房里 4 个设施位中的一个**，与自己建的一样能拆。设施的 `roomTag` 管摆放：家具（床、椅、桌、箱、柜、架、吧台、浴池等）只能摆在带「室内」标签的房间，田地、圈舍、资源点、井、营火、篝火、瞭望台、箭靶、操练场等只能建在「室外」；工作台、炉灶、窑、锯台这类留空，哪儿都能摆。建造页里不合的那行灰着，行尾写「只能摆在室内 / 只能建在室外」；不合规矩不扣料。房间行的 `bonusActions` 是对口工作：在这间房里干这些活进度 +20%（`Territory.RoomBonusPercent`；主人亲手干按耗时折短）。开局的躺椅挪到了卧室（庭院是室外）。铁砧 石材30＋铁矿20，缝纫台只要木材30
+- 建房与摆放（2026-10-10 主人定）：每类房间建成白送一件对口设施（`buildings.json` 房间行的 `bundledFacility`，如铁匠铺→铁砧、木工房→工作台、卧室→床、菜园→卷心菜田），**占房里 4 个设施位中的一个**，与自己建的一样能拆。设施的 `roomTag` 管摆放：家具（床、椅、桌、箱、柜、架、吧台、浴池等）只能摆在带「室内」标签的房间，田地、圈舍、资源点、井、营火、箭靶等只能建在「室外」；工作台、炉灶、工坊这类留空，哪儿都能摆。建造页里不合的那行灰着，行尾写「只能摆在室内 / 只能建在室外」；不合规矩不扣料。房间行的 `bonusActions` 是对口工作：在这间房里干这些活进度 +20%（`Territory.RoomBonusPercent`；主人亲手干按耗时折短）。开局的躺椅挪到了卧室（庭院是室外）。铁砧 石材30＋铁矿20，缝纫台只要木材30
 - 可建造名单：`Territory.BuildableRooms/BuildableFacilities`（按名去重，开发菜单直接读）。当前房间仅客厅/卧室，设施除草药丛/矿脉外全可建；地形与野外资源不可建，删了也不返材料
-- 设施用途一览：水井 Gather、躺椅/床/沙发 Rest、晾衣绳 Tailoring、灶/餐桌 Cooking、工作台 Woodwork、草药 Gather、矿脉 Mine、神龛/货架 Free；`Territory.RoomActions(roomId)` 直接给某房能支撑的行动并集
+- 设施用途一览：水井 Gather、躺椅/床/长椅 Rest、晾衣绳 Tailoring、灶/餐桌 Cooking、工作台 Woodwork、草药 Gather、矿脉 Mine、神龛/箱子 Free；`Territory.RoomActions(roomId)` 直接给某房能支撑的行动并集
 
 ## 7. 任务与战斗（骨架，UI 暂不要深入）
 

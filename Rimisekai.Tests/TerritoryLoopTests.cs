@@ -29,8 +29,8 @@ public sealed class TerritoryLoopTests
     private const int Forest = 4, Mountain = 5, Courtyard = 1, Parlor = 2;
     private const int Woodlot = 11, IronVein = 7, HerbBush = 6;
     private const int Pigsty = 1068;  // 猪圈：Tend → 肉
-    private const int GuestBed = 1019; // 客房床
-    private const int GuestRoom = 145;  // 卧室（12 木材）
+    private const int GuestBed = 5;     // 床
+    private const int GuestRoom = 3;    // 卧室（10 木材，建成自带床）
     private const int GuestCellX = 1, GuestCellY = 1; // 客厅西边、森林北边的空格
     private const int Grocery = 146;   // 杂货铺：室内、营业性，建成自带摊位（能摆货、能守摊）
     private const int ShopCellX = 2, ShopCellY = 3; // 庭院南边的空格
@@ -157,7 +157,7 @@ public sealed class TerritoryLoopTests
         GiveMaidABed(hub, state);
         var guest = state.Roster.Add("旅人", false);
         hub.Place(guest.Id, Parlor);
-        // 第二间卧室：开拓客厅西边的空格、装卧室、摆客房床。
+        // 第二间卧室：开拓客厅西边的空格、装卧室、再添一张床。
         state.Roster.Master!.Bag.Add("木材", 40);
         Assert.True(hub.DevelopVacantCell(0, GuestCellX, GuestCellY));
         var vacant = state.Territory.RoomAt(0, GuestCellX, GuestCellY)!.Id;
@@ -292,7 +292,7 @@ public sealed class TerritoryLoopTests
     /// 三个人的领地：玩家、开局女仆、第 3 天登门留下的随机旅人。没有雇佣，只有这三双手。照一个用心的玩家来走这条路：
     /// 1. 第 1 天：开局木材建采石点、猪圈；玩家亲手伐木，攒够 10 木材在卧室给女仆打一张床。
     ///    玩家自己排班养猪（出肉当口粮），女仆上午、下午伐木。
-    /// 2. 第 3 天旅人留下：开拓一格空地（1000G）建客卧——建成自带一张床，不用另打。旅人上午挖铁矿、下午缺石材采石。
+    /// 2. 第 3 天旅人留下：开拓一格空地（1000G）建卧室——建成自带一张床，不用另打。旅人上午挖铁矿、下午缺石材采石。
     /// 3. 工坊：石材、铁矿攒够就在庭院起铁砧（石 30 铁矿 20），旅人下午改去铁砧，铁砧指定冶铁锭。
     /// 4. 打装备：铁锭够一件就下一单（先给旅人打他那门兵器，再给玩家、旅人各配一身铁甲），打好的从仓储取出来穿上。
     /// 5. 委托：从第 4 天起每两天接一单板上空着的固定战斗委托（谷仓鼠患、北坡头狼、狼群夜袭），接单直接过 8 小时；
@@ -395,7 +395,7 @@ public sealed class TerritoryLoopTests
                 if (hour >= 20 && !built)
                 {
                     built = true;
-                    // 第三个人一来就给他开一间客卧：开拓空地 → 建客卧（自带床）
+                    // 第三个人一来就给他开一间卧室：开拓空地 → 建卧室（自带床）
                     if (visitorId >= 0 && guestRoomId < 0 && hub.DevelopVacantCell(0, GuestCellX, GuestCellY))
                         guestRoomId = state.Territory.RoomAt(0, GuestCellX, GuestCellY)!.Id;
                     if (guestRoomId >= 0 && guestBedId < 0 && state.Territory.Rooms.Find(r => r.Id == guestRoomId)!.Vacant
@@ -403,7 +403,7 @@ public sealed class TerritoryLoopTests
                     {
                         guestRoomId = state.Territory.RoomAt(0, GuestCellX, GuestCellY)!.Id;
                         guestBedId = state.Territory.Facilities.Single(f => f.RoomId == guestRoomId && f.Supports(ActionKind.Sleep)).Id;
-                        investDay["客卧"] = day;
+                        investDay["卧室"] = day;
                     }
                     // 工坊：石材、铁矿够了就起铁砧，旅人下午去冶铁
                     if (visitorId >= 0 && anvilId < 0 && hub.BuildFacilityDef(Anvil, Courtyard))
@@ -510,8 +510,8 @@ public sealed class TerritoryLoopTests
         Assert.True(visitorId >= 0, "第 3 天有旅人登门留下");
         Assert.All(state.Roster.Members, c => Assert.True(produced.GetValueOrDefault(c.Id) > 30, $"{c.Name} 30 天产出 {produced.GetValueOrDefault(c.Id)}"));
         Assert.True(maidSleptInHerBed, "女仆睡在第一天给她打的床上");
-        // 路线走通：客卧（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 杂货铺开张 → 养鸡场（自带鸡舍）出蛋
-        Assert.True(guestBedId >= 0 && anvilId >= 0 && coopId >= 0, $"客卧床 {guestBedId} 铁砧 {anvilId} 鸡舍 {coopId}");
+        // 路线走通：卧室（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 杂货铺开张 → 养鸡场（自带鸡舍）出蛋
+        Assert.True(guestBedId >= 0 && anvilId >= 0 && coopId >= 0, $"卧室床 {guestBedId} 铁砧 {anvilId} 鸡舍 {coopId}");
         Assert.True(investDay["铁砧"] <= 12, $"铁砧第 {investDay["铁砧"]} 天才起");
         Assert.True(worn.Count >= 5, $"穿上的装备 {worn.Count} 件");
         Assert.True(commissionsWon >= 8, $"委托赢了 {commissionsWon} 场");

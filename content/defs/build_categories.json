@@ -37,11 +37,6 @@
       "target": "facility"
     },
     {
-      "defName": "Build_Military",
-      "label": "军事",
-      "target": "facility"
-    },
-    {
       "defName": "BuildRoom_Living",
       "label": "居住",
       "target": "room"
@@ -64,11 +59,6 @@
     {
       "defName": "BuildRoom_Shop",
       "label": "商业",
-      "target": "room"
-    },
-    {
-      "defName": "BuildRoom_Military",
-      "label": "军事",
       "target": "room"
     }
   ]

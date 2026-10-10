@@ -33,8 +33,8 @@ public sealed class BuildCatalogTests
         ContentDefs.EnsureInitialized();
         var facilityCats = HubSession.BuildCategories(BuildTarget.Facility).Select(c => c.DefName).ToHashSet();
         var roomCats = HubSession.BuildCategories(BuildTarget.Room).Select(c => c.DefName).ToHashSet();
-        Assert.Equal(8, facilityCats.Count);
-        Assert.Equal(6, roomCats.Count);
+        Assert.Equal(7, facilityCats.Count);
+        Assert.Equal(5, roomCats.Count);
         foreach (var f in ContentDefs.BuildingFacilities.Where(f => f.Buildable))
             Assert.Contains(f.BuildCategory, facilityCats);
         foreach (var r in ContentDefs.BuildingRooms.Concat(ContentDefs.AreaRooms).Where(r => r.Buildable))

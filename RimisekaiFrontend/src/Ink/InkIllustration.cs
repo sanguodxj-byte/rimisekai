@@ -121,7 +121,7 @@ public static class InkIllustration
         EnsureConfig();
         var night = hour < 6 || hour >= 20;
 
-        if (roomName.Contains("卧") || roomName.Contains("寝") || roomName.Contains("诊所"))
+        if (roomName.Contains("卧") || roomName.Contains("寝"))
             return (night ? GetRoom("bedroom_night") : null) ?? GetRoom("bedroom_day") ?? GetRoom("bedroom_night");
 
         if (roomName.Contains("院") || roomName.Contains("草药") || roomName.Contains("池") || roomName.Contains("蜂") || roomName.Contains("果") || roomName.Contains("浴"))

@@ -179,7 +179,7 @@ public sealed class InkHubModel
     /// <summary>左下角入口当前展示的页面清单（有对话对象时含状态页）。</summary>
     public IReadOnlyList<InkPage> PageEntries { get; init; } = Array.Empty<InkPage>();
 
-    /// <summary>设施交互页是否开着（点设施行动“打开货架”后铺在左上角）。</summary>
+    /// <summary>设施交互页是否开着（点设施行动“打开箱子”后铺在左上角）。</summary>
     public bool StorageOpen { get; init; }
 
     /// <summary>设施交互页存储行的窗口首行（滑条用，构建时夹好）。</summary>
@@ -410,7 +410,7 @@ public sealed class InkHubModel
         else if (pageModel != null)
             BuildPage(pageModel, widgets);
 
-        // 设施交互页：玩家点了设施行动（如“打开货架”）后，在左上角铺开操作界面。
+        // 设施交互页：玩家点了设施行动（如“打开箱子”）后，在左上角铺开操作界面。
         // 它盖住地图网格，所以建好它的控件后就不再建地图那块的。
         var storageRows = (IReadOnlyList<InkStorageRow>)Array.Empty<InkStorageRow>();
         var storageFirst = 0;

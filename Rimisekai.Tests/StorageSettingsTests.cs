@@ -80,7 +80,7 @@ public sealed class StorageSettingsTests
         var well = t.Facilities.Single(f => f.Id == Well);
         well.StorageCapacity = well.StoredCount() + 5;
         Assert.Equal(Well, t.FindStorageFor("水")!.Id);            // 关键档的井先收水
-        var stove = DefDatabase<FacilityDef>.All.Single(d => d.Id == 1037).ToRuntime();   // 大灶
+        var stove = DefDatabase<FacilityDef>.All.Single(d => d.Id == 1059).ToRuntime();   // 烤炉
         stove.Id = 9999;
         stove.RoomId = Parlor;
         stove.Built = true;

@@ -36,7 +36,7 @@ public enum InkPage
     CombatLog,
 
     /// <summary>
-    /// 设施交互页：点设施行动（如“打开货架”）后，在左上角铺开这件设施的操作界面。
+    /// 设施交互页：点设施行动（如“打开箱子”）后，在左上角铺开这件设施的操作界面。
     /// 由 <see cref="InkHubModel"/> 按“当前打开的设施”填内容，不走通用列表页。
     /// </summary>
     Fixture,

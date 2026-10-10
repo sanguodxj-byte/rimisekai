@@ -62,34 +62,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1004",
-      "label": "菜地",
-      "id": 1004,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 250,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "小麦",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Till"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 3
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Farm"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1005",
       "label": "伐木点",
       "id": 1005,
@@ -146,32 +118,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1008",
-      "label": "木栅",
-      "id": 1008,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 300,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 4
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Military"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1011",
       "label": "麦田",
       "id": 1011,
@@ -200,36 +146,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1012",
-      "label": "磨盘",
-      "id": 1012,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 9000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 100
-        },
-        {
-          "itemId": "木材",
-          "count": 40
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1013",
       "label": "铁砧",
       "id": 1013,
@@ -255,38 +171,6 @@
         {
           "itemId": "铁矿",
           "count": 15
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1014",
-      "label": "熔炉",
-      "id": 1014,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 18000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Forge"
-      ],
-      "roomTag": "",
-      "craft": "锻",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 150
-        },
-        {
-          "itemId": "铁矿",
-          "count": 120
         }
       ],
       "marketValue": 0,
@@ -415,34 +299,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1019",
-      "label": "客房床",
-      "id": 1019,
-      "usage": "Rest",
-      "capacity": 2,
-      "buildCost": 1300,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Sleep"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 16
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1020",
       "label": "长椅",
       "id": 1020,
@@ -473,66 +329,6 @@
       ],
       "marketValue": 0,
       "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1021",
-      "label": "祭坛",
-      "id": 1021,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 9000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Pray"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 120
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Faith"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1022",
-      "label": "货架",
-      "id": 1022,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 1600,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": true,
-      "actions": [
-        "Store"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 20
-        }
-      ],
-      "marketValue": 0,
-      "storageFilter": [
-        "Root"
-      ],
-      "storagePriority": "normal",
-      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -601,96 +397,6 @@
       ],
       "storagePriority": "low",
       "buildCategory": "Build_Storage"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1025",
-      "label": "瞭望台",
-      "id": 1025,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 6000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Lookout"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 60
-        },
-        {
-          "itemId": "石材",
-          "count": 30
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Military"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1028",
-      "label": "丰饶麦田",
-      "id": 1028,
-      "usage": "Plain",
-      "capacity": 4,
-      "buildCost": 3000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "小麦",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Till"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 40
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Farm"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1029",
-      "label": "风车",
-      "id": 1029,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 18000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 150
-        },
-        {
-          "itemId": "铁矿",
-          "count": 80
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -766,34 +472,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1034",
-      "label": "操练场",
-      "id": 1034,
-      "usage": "Leisure",
-      "capacity": 4,
-      "buildCost": 9000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Train"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 120
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Military"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1035",
       "label": "书架",
       "id": 1035,
@@ -858,43 +536,6 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1037",
-      "label": "大灶",
-      "id": 1037,
-      "usage": "Plain",
-      "capacity": 3,
-      "buildCost": 13000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": true,
-      "actions": [
-        "Cook",
-        "Meal"
-      ],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 120
-        },
-        {
-          "itemId": "铁矿",
-          "count": 60
-        }
-      ],
-      "marketValue": 0,
-      "storageFilter": [
-        "Root"
-      ],
-      "storagePriority": "normal",
       "buildCategory": "Build_Production"
     },
     {
@@ -992,38 +633,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1041",
-      "label": "病床",
-      "id": 1041,
-      "usage": "Rest",
-      "capacity": 2,
-      "buildCost": 1500,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Sleep"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 14
-        },
-        {
-          "itemId": "布",
-          "count": 6
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1042",
       "label": "药柜",
       "id": 1042,
@@ -1057,100 +666,6 @@
       ],
       "storagePriority": "preferred",
       "buildCategory": "Build_Storage"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1043",
-      "label": "城门",
-      "id": 1043,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 30000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 500
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Military"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1044",
-      "label": "箭塔",
-      "id": 1044,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 15000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Lookout"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 150
-        },
-        {
-          "itemId": "木材",
-          "count": 60
-        },
-        {
-          "itemId": "铁矿",
-          "count": 40
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Military"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1046",
-      "label": "星象台",
-      "id": 1046,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 22000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Stargaze"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 180
-        },
-        {
-          "itemId": "铁矿",
-          "count": 100
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -1248,7 +763,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Military"
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -1348,104 +863,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1053",
-      "label": "锯台",
-      "id": 1053,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 4500,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Woodwork"
-      ],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 40
-        },
-        {
-          "itemId": "铁矿",
-          "count": 30
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1054",
-      "label": "王座",
-      "id": 1054,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 8000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Rest",
-        "Meal"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 60
-        },
-        {
-          "itemId": "石材",
-          "count": 60
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1055",
-      "label": "会议桌",
-      "id": 1055,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 2400,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": true,
-      "storage": true,
-      "actions": [
-        "Meal"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 30
-        }
-      ],
-      "marketValue": 0,
-      "storageCapacity": 12,
-      "storageFilter": [
-        "Meal"
-      ],
-      "storagePriority": "important",
-      "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1057",
       "label": "蜂箱",
       "id": 1057,
@@ -1535,36 +952,6 @@
         "Root"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1060",
-      "label": "酿酒桶",
-      "id": 1060,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 2200,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 24
-        },
-        {
-          "itemId": "铁矿",
-          "count": 10
-        }
-      ],
-      "marketValue": 0,
       "buildCategory": "Build_Production"
     },
     {
@@ -1659,41 +1046,6 @@
         "Till"
       ],
       "buildCategory": "BuildRoom_Farm"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_111",
-      "label": "磨坊",
-      "description": "巨大的石磨盘被齿轮机件平稳承托，倾料斗下堆着细密的麦粉，空气里浮着微尘般的麦香。",
-      "id": 111,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 12
-        },
-        {
-          "itemId": "石材",
-          "count": 8
-        }
-      ],
-      "illustration": "res://assets/settlement_village.png",
-      "bundledFacility": "Facility_1012",
-      "bonusActions": [
-        "Cook"
-      ],
-      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1881,7 +1233,7 @@
         }
       ],
       "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1021",
+      "bundledFacility": "Facility_1047",
       "bonusActions": [],
       "buildCategory": "BuildRoom_Leisure"
     },
@@ -1910,7 +1262,7 @@
         }
       ],
       "illustration": "res://assets/room_workshop.png",
-      "bundledFacility": "Facility_1022",
+      "bundledFacility": "箱子",
       "bonusActions": [],
       "buildCategory": "BuildRoom_Production"
     },
@@ -1942,70 +1294,6 @@
       "bundledFacility": "Facility_1023",
       "bonusActions": [
         "Tend"
-      ],
-      "buildCategory": "BuildRoom_Farm"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_120",
-      "label": "瞭望塔",
-      "description": "坚实的石砌螺旋楼梯通向塔顶，四面的射孔能将领地周边的动静尽收眼底。",
-      "id": 120,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室外",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 15
-        },
-        {
-          "itemId": "石材",
-          "count": 5
-        }
-      ],
-      "illustration": "res://assets/terrain_storm_mountains.png",
-      "bundledFacility": "Facility_1025",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Military"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_122",
-      "label": "大农场",
-      "description": "开阔的沃野向远方连绵铺展，规整的谷仓与草垛静立在地头，风吹过时草浪起伏。",
-      "id": 122,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室外",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 15
-        }
-      ],
-      "illustration": "res://assets/settlement_village.png",
-      "bundledFacility": "Facility_1028",
-      "bonusActions": [
-        "Till"
       ],
       "buildCategory": "BuildRoom_Farm"
     },
@@ -2085,7 +1373,7 @@
         }
       ],
       "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1019",
+      "bundledFacility": "床",
       "bonusActions": [],
       "buildCategory": "BuildRoom_Living"
     },
@@ -2159,37 +1447,6 @@
     },
     {
       "defType": "RoomDef",
-      "defName": "Room_127",
-      "label": "大食堂",
-      "description": "几排宽大的实木长桌并排横跨整个大厅，长凳摆放规整，粗陶餐具整齐收在洗涤架上。",
-      "id": 127,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "娱乐室"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 20
-        }
-      ],
-      "illustration": "res://assets/room_tavern.png",
-      "bundledFacility": "Facility_1038",
-      "bonusActions": [
-        "Cook"
-      ],
-      "buildCategory": "BuildRoom_Leisure"
-    },
-    {
-      "defType": "RoomDef",
       "defName": "Room_128",
       "label": "浴场",
       "description": "深砌的石池中盛满澄澈的热水，热气在粗石墙壁上升腾，条木长凳上放着干燥的麻布巾。",
@@ -2252,135 +1509,6 @@
     },
     {
       "defType": "RoomDef",
-      "defName": "Room_130",
-      "label": "诊所",
-      "description": "窄木床上铺着洁白的麻布被单，药柜抽屉按字母注好标签，案头备有清洁的绷带与剪刀。",
-      "id": 130,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 15
-        },
-        {
-          "itemId": "石材",
-          "count": 10
-        }
-      ],
-      "illustration": "res://assets/room_bedroom_day.png",
-      "bundledFacility": "Facility_1041",
-      "bonusActions": [
-        "Brew"
-      ],
-      "buildCategory": "BuildRoom_Production"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_131",
-      "label": "城墙",
-      "description": "宽阔的雉堞步道由坚硬花岗岩筑成，外侧箭垛齐胸，俯瞰着城外的开阔平原。",
-      "id": 131,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室外"
-      ],
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 40
-        }
-      ],
-      "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1044",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Military"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_132",
-      "label": "法师塔",
-      "description": "圆形石室中央刻有微光隐现的聚能符文，高处星图仪缓缓旋转，书架上尽是厚重皮书。",
-      "id": 132,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "娱乐室"
-      ],
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 40
-        },
-        {
-          "itemId": "铁矿",
-          "count": 10
-        }
-      ],
-      "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1035",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Leisure"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_133",
-      "label": "圣堂",
-      "description": "素白的石阶尽头伫立着古朴的神龛，两侧长明铜灯静静燃烧，整间石室安谧肃穆。",
-      "id": 133,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "娱乐室"
-      ],
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 35
-        },
-        {
-          "itemId": "铁矿",
-          "count": 5
-        }
-      ],
-      "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1047",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Leisure"
-    },
-    {
-      "defType": "RoomDef",
       "defName": "Room_134",
       "label": "酒窖",
       "description": "阴凉的地下石室里整齐排列着卧放的酒桶，通风口吹进干燥凉风，温湿度恰到好处。",
@@ -2435,7 +1563,7 @@
       "illustration": "res://assets/settlement_village.png",
       "bundledFacility": "Facility_1049",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Military"
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2536,74 +1664,6 @@
     },
     {
       "defType": "RoomDef",
-      "defName": "Room_139",
-      "label": "锯木厂",
-      "description": "重型水力长锯架在厚木基座上，排锯两侧是平滑的滚木滑道，满室尽是原木清香。",
-      "id": 139,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 15
-        },
-        {
-          "itemId": "铁矿",
-          "count": 5
-        }
-      ],
-      "illustration": "res://assets/room_workshop.png",
-      "bundledFacility": "Facility_1053",
-      "bonusActions": [
-        "Woodwork"
-      ],
-      "buildCategory": "BuildRoom_Production"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_140",
-      "label": "领主大厅",
-      "description": "拱形穹顶下铺着长条羊毛毯，雕花高背椅立在议事长桌尽头，两壁挂着铁艺烛台。",
-      "id": 140,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "娱乐室"
-      ],
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 30
-        },
-        {
-          "itemId": "木材",
-          "count": 20
-        }
-      ],
-      "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1054",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Leisure"
-    },
-    {
-      "defType": "RoomDef",
       "defName": "Room_141",
       "label": "养蜂场",
       "description": "几只精致的木箱蜂巢错落安置在向阳的花丛旁，蜜蜂在温暖的阳光下嗡嗡穿梭。",
@@ -2700,71 +1760,6 @@
     },
     {
       "defType": "RoomDef",
-      "defName": "Room_144",
-      "label": "酿酒坊",
-      "description": "几只巨大的陈年橡木酒桶规整固定在木架上，导管与滤布收拾得很干净，隐约有果酒的醇香。",
-      "id": 144,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 15
-        },
-        {
-          "itemId": "石材",
-          "count": 5
-        }
-      ],
-      "illustration": "res://assets/room_workshop.png",
-      "bundledFacility": "Facility_1060",
-      "bonusActions": [
-        "Brew"
-      ],
-      "buildCategory": "BuildRoom_Production"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_145",
-      "label": "客卧",
-      "description": "简单的实木单人床铺着素色被褥，靠窗的小案上摆着蜡烛，留有一只装行李的木箱。",
-      "id": 145,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "卧室",
-        "私人空间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 12
-        }
-      ],
-      "illustration": "res://assets/room_bedroom_day.png",
-      "bundledFacility": "床",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Living"
-    },
-    {
-      "defType": "RoomDef",
       "defName": "Room_146",
       "label": "杂货铺",
       "description": "临街的一间小铺，木柜台后摆着几排货架，门楣上挂着一盏铁皮风灯，往来的客人进门就能挑货。",
@@ -2830,65 +1825,6 @@
         {
           "itemId": "木材",
           "count": 5
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Furniture"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "篝火",
-      "label": "篝火",
-      "id": 3,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 200,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 2
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Leisure"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "沙发",
-      "label": "沙发",
-      "id": 4,
-      "usage": "Rest",
-      "capacity": 3,
-      "buildCost": 900,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Rest",
-        "Meal"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 8
-        },
-        {
-          "itemId": "布",
-          "count": 4
         }
       ],
       "marketValue": 0,

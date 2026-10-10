@@ -17,7 +17,7 @@
     },
     {
       "defType": "AreaFacilityDef",
-      "facilityDefName": "沙发",
+      "facilityDefName": "Facility_1020",
       "id": 4,
       "roomId": 2,
       "contents": {}

@@ -36,19 +36,19 @@ public partial class PortraitCapture
         _steps.Enqueue(() =>
         {
             var screen = _root.HubScreen;
-            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 9
+            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 8
                 && screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildSegment) == 3,
-                "a built room opens three segments and nine facility tabs");
+                "a built room opens three segments and eight facility tabs");
             Shoot("build_sheet_bedroom_living", screen);
-            ClickLabel(PortraitAction.BuildTile, "沙发");
+            ClickLabel(PortraitAction.BuildTile, "长椅");
         });
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
             var bedroom = hub.State.Territory.Room(BuildShotBedroom)!;
-            var sofa = hub.BuildOptions(0, bedroom.X, bedroom.Y).Single(o => o.Name == "沙发");
-            Require(sofa.State == BuildState.Short && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && !w.Enabled),
-                "sofa without cloth is short and cannot be built");
+            var bench = hub.BuildOptions(0, bedroom.X, bedroom.Y).Single(o => o.Name == "长椅");
+            Require(bench.State == BuildState.Short && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && !w.Enabled),
+                "a bench without cloth is short and cannot be built");
             Shoot("build_sheet_short", _root.HubScreen);
             ClickLabel(PortraitAction.BuildCategory, "农牧");
         });
@@ -136,7 +136,7 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 7
+            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 6
                 && _root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildSegment) == 1, "a plot lists room tabs only");
             Shoot("build_sheet_plot_rooms", _root.HubScreen);
             ClickLabel(PortraitAction.BuildCategory, "商业");

@@ -173,7 +173,7 @@ public sealed class PersonalityTraitTests
         Assert.False(forge.Supports(ActionKind.Sleep));
 
         // 能存货的设施天然支持存取，不必逐件声明。
-        var shelf = new Facility { Id = 2, Name = "货架", CanStore = true };
+        var shelf = new Facility { Id = 2, Name = "箱子", CanStore = true };
         Assert.True(shelf.Supports(ActionKind.Store));
 
         // 标签只剩三种纯角色：起居、消遣、摆设。

@@ -35,7 +35,7 @@ public sealed class PlayState : BaseWorkerState
         if (ctx.Worker.PlayTicks > 0)
             return false;
 
-        // 在箭靶、操练场上消遣完一回，就是练了一回。
+        // 在箭靶上消遣完一回，就是练了一回。
         if (ctx.Territory.Facilities.Find(f => f.Id == ctx.Worker.FacilityId)?.Supports(ActionKind.Train) == true)
             Territory.Drill(ctx.Character);
         return true;
