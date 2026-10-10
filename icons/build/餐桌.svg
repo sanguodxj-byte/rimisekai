@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 桌面上的汤碗与热气 -->
+    <path fill="#E9EFEA" d="M -90,-120 L 90,-120 C 85,-60 50,-40 0,-40 C -50,-40 -85,-60 -90,-120 Z"/>
+    <path fill="#E9EFEA" d="M -20,-210 C -45,-185 5,-170 -20,-140 L -6,-140 C 20,-170 -30,-185 -6,-210 Z"/>
+    <path fill="#E9EFEA" d="M 30,-200 C 5,-175 55,-165 30,-140 L 44,-140 C 70,-165 20,-175 44,-200 Z"/>
+    <!-- 桌面（带厚边） -->
+    <rect x="-220" y="-30" width="440" height="40" rx="10" fill="#E9EFEA"/>
+    <rect x="-200" y="10" width="400" height="22" fill="#E9EFEA"/>
+    <!-- 中柱与外撇三足 -->
+    <rect x="-28" y="32" width="56" height="130" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M -28,150 L 28,150 L 140,205 L 120,215 L 0,180 L -120,215 L -140,205 Z"/>
+  </g>
+</svg>
