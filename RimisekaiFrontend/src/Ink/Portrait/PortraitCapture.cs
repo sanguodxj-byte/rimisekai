@@ -671,7 +671,7 @@ public partial class PortraitCapture : Node
         });
         EnqueueEncounterChecks();
         // 战斗转场（2026-10-10）：定格在领地画面上开演，逐段停帧出图；开门段在战斗画面就位后出。
-        _steps.Enqueue(() => _root.BattleWipe.DebugBegin("交战", "斥候 ×2、巫师、石像鬼 等 5 名", 0.17f));
+        _steps.Enqueue(() => _root.BattleWipe.DebugBegin("交战", false, 0.17f));
         _steps.Enqueue(() => Shoot("battle_wipe_slash", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.58f));
         _steps.Enqueue(() => Shoot("battle_wipe_shatter", _root.HubScreen));
@@ -679,6 +679,26 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("battle_wipe_clash", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugSeek(1.45f));
         _steps.Enqueue(() => Shoot("battle_wipe_title", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugEnd());
+        // 首领专属转场（2026-10-11）：竖劈、裂成两半、巨剑插窗、首领名字。
+        _steps.Enqueue(() => _root.BattleWipe.DebugBegin("骸骨君主", true, 0.12f));
+        _steps.Enqueue(() => Shoot("boss_wipe_cleave", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.56f));
+        _steps.Enqueue(() => Shoot("boss_wipe_sword", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.70f));
+        _steps.Enqueue(() => Shoot("boss_wipe_impact", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(2.0f));
+        _steps.Enqueue(() => Shoot("boss_wipe_title", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugEnd());
+        // 继续游戏的入场雾（2026-10-11）：雾满屏、正中化开、将散尽。
+        _steps.Enqueue(() => _root.MistReveal.DebugSeek(0.05f));
+        _steps.Enqueue(() => Shoot("mist_full", _root.HubScreen));
+        _steps.Enqueue(() => _root.MistReveal.DebugSeek(0.7f));
+        _steps.Enqueue(() => Shoot("mist_open", _root.HubScreen));
+        _steps.Enqueue(() => _root.MistReveal.DebugSeek(1.2f));
+        _steps.Enqueue(() => Shoot("mist_fade", _root.HubScreen));
+        _steps.Enqueue(() => _root.MistReveal.DebugEnd());
+        _steps.Enqueue(() => _root.BattleWipe.DebugBegin("交战", false, 1.45f));
         foreach (var size in new[] { 1, 2, 3, 4 })
         {
             var capturedSize = size;
