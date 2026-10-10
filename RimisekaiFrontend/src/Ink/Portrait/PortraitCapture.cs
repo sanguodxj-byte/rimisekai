@@ -1327,6 +1327,8 @@ public partial class PortraitCapture : Node
     /// </summary>
     private void EnqueueFxChecks()
     {
+        Combatant? deathProbeFoe = null;
+        var deathProbeHp = 0;
         var cases = new (string Tag, string Skill, bool EnemyActs, CombatEventKind Kind, float At)[]
         {
             ("fx_attack", BattleSkills.AttackId, false, CombatEventKind.Hit, 0.18f),
@@ -1358,7 +1360,34 @@ public partial class PortraitCapture : Node
             });
             _steps.Enqueue(() => Shoot(fx.Tag, _root.CombatView));
         }
-        _steps.Enqueue(() => InkCombatFx.Clear());
+        _steps.Enqueue(() =>
+        {
+            var battle = _battleProbe.Battle;
+            var ally = battle.Members.First(m => m.Side == battle.ControlledSide && m.Alive);
+            var foe = battle.Members.First(m => m.Side != battle.ControlledSide && m.Alive);
+            var card = _root.CombatView.DebugUnitCard(foe);
+            deathProbeFoe = foe;
+            deathProbeHp = foe.Hp;
+            foe.Hp = 0;
+            Require(_root.CombatView.DebugUnitCenter(foe.Id).DistanceTo(card.GetCenter()) < 0.1f,
+                "dead enemy FX stays anchored to its card after leaving the live geometry");
+            _root.CombatView.DebugFx(new BattleEvent
+            {
+                Kind = CombatEventKind.Hit,
+                ActorId = ally.Id,
+                TargetId = foe.Id,
+                SkillId = BattleSkills.AttackId,
+                Amount = foe.MaxHp,
+                HpAfter = 0,
+            }, 0.18f);
+        });
+        _steps.Enqueue(() => Shoot("fx_death_slice", _root.CombatView));
+        _steps.Enqueue(() =>
+        {
+            if (deathProbeFoe != null)
+                deathProbeFoe.Hp = deathProbeHp;
+            InkCombatFx.Clear();
+        });
     }
 
     private void Shoot(string tag, Node source)

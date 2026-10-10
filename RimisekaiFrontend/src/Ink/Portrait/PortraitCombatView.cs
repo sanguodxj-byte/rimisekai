@@ -193,6 +193,8 @@ public partial class PortraitCombatView : Control
 
     public Rect2 DebugUnitCard(Combatant unit) => UnitCard(unit);
 
+    public Vector2 DebugUnitCenter(int unitId) => UnitCenter(unitId);
+
     /// <summary>
     /// 战斗单位在竖屏画布上的卡片矩形：敌方取占格方区，我方取底部头像卡。
     /// 剑光、受击光效与死亡斩裂都以它定位——此前一律按敌方格算，敌人砍我方时光效落在场上空格里。
@@ -212,15 +214,11 @@ public partial class PortraitCombatView : Control
     /// <summary>战斗单位在竖屏画布上的视觉中心：敌方取占格方区、我方取底部头像卡。</summary>
     private Vector2 UnitCenter(int unitId)
     {
-        foreach (var (unit, rect, _) in _enemies)
-            if (unit.Id == unitId)
-                return rect.GetCenter();
         if (B != null)
         {
-            var allies = B.Members.Where(m => m.Side == B.ControlledSide).Take(4).ToArray();
-            for (var i = 0; i < allies.Length; i++)
-                if (allies[i].Id == unitId)
-                    return PortraitLayout.AllyCard(i).GetCenter();
+            var unit = B.Members.Find(m => m.Id == unitId);
+            if (unit != null)
+                return UnitCard(unit).GetCenter();
         }
         return PortraitLayout.CombatField.GetCenter();
     }
