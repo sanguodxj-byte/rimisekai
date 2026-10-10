@@ -130,7 +130,15 @@ public partial class PortraitCapture
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "农牧"));
         _steps.Enqueue(() =>
         {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildTile && w.Label == "马槽")
+                && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildTile && w.Label == "羊圈"), "farm tab shows trough and sheep pen");
             Shoot("build_sheet_courtyard_farm", _root.HubScreen);
+            ClickLabel(PortraitAction.BuildCategory, "仓储");
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildTile && w.Label == "摊位"), "storage tab lists the stall");
+            Shoot("build_sheet_courtyard_storage", _root.HubScreen);
             _root.HubScreen.DebugPress(PortraitAction.Back, 0);
         });
         _steps.Enqueue(() =>
@@ -148,7 +156,12 @@ public partial class PortraitCapture
             Shoot("build_sheet_plot_rooms", _root.HubScreen);
             ClickLabel(PortraitAction.BuildCategory, "商业");
         });
-        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "杂货铺"));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildTile) == 2, "commerce tab lists market and grocery");
+            Shoot("build_sheet_plot_commerce", _root.HubScreen);
+            ClickLabel(PortraitAction.BuildTile, "杂货铺");
+        });
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && w.Label == "开拓并建造" && w.Enabled),
