@@ -86,15 +86,15 @@
       "parentCategory": "Root"
     },
     {
-      "defName": "Accessory",
-      "label": "饰品",
-      "description": "戒指与项链。",
-      "parentCategory": "Root"
-    },
-    {
       "defName": "Armor",
       "label": "防具",
       "description": "护身的甲胄。",
+      "parentCategory": "Root"
+    },
+    {
+      "defName": "Accessory",
+      "label": "饰品",
+      "description": "戒指与项链。",
       "parentCategory": "Root"
     }
   ]

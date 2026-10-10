@@ -103,6 +103,13 @@ public enum PortraitAction
     CrossGate,
     OpenPortraitPicker,
     PickPortraitDiff,
+    // ---- 2026-10-10 仓储设置 ----
+    StorageSettings,
+    StoragePriority,
+    StorageAllowAll,
+    StorageClearAll,
+    StorageFold,
+    StorageToggle,
 }
 
 /// <summary>一个可点块。命中判定按注册逆序（后注册者画在上、先命中）。</summary>
@@ -267,8 +274,10 @@ public partial class PortraitHubScreen : Control
             DrawRootTab();
         }
 
+        if (!_vm.StorageOpen)
+            _storageSettings = false;
         if (_vm.StorageOpen)
-            OpenSheetLayer(DrawStorageSheet);
+            OpenSheetLayer(_storageSettings ? DrawStorageSettingsSheet : DrawStorageSheet);
         else if (_interactionOpen)
             OpenSheetLayer(DrawInteractionSheet);
         else if (_sheet == SheetKind.Room)
@@ -626,7 +635,7 @@ public partial class PortraitHubScreen : Control
 
     private void Execute(PortraitWidget w)
     {
-        if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
+        if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteStorageSettings(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
             || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w) || ExecuteCodex(w))
             return;
     }
@@ -634,7 +643,9 @@ public partial class PortraitHubScreen : Control
     /// <summary>抽屉的收起：交互抽屉逐级退（赠礼 → 类别 → 关闭），存取抽屉关设施，其余直接收。</summary>
     private void CloseSheet()
     {
-        if (_vm.StorageOpen)
+        if (_vm.StorageOpen && _storageSettings)
+            _storageSettings = false;
+        else if (_vm.StorageOpen)
             _vm.Hub.CloseStorage();
         else if (_interactionOpen)
             InteractionBack();
