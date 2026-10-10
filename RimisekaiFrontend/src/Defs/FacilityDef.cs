@@ -41,6 +41,9 @@ public sealed class FacilityDef : Def, IIdentifiedDef
     /// </summary>
     public string RoomTag { get; init; } = "";
 
+    /// <summary>建造目录里归哪一类（<see cref="BuildCategoryDef"/> 的 DefName）。可建的必填。</summary>
+    public string BuildCategory { get; init; } = "";
+
     /// <summary>
     /// 手艺门类：同一门手艺（同为 Forge）分台子做——铁砧、熔炉是「锻」（冶铁、炼钢、打兵器与铁甲），
     /// 陶器坊是「窑」（拉坯、煅炼金尘）。配方的 <see cref="RecipeDef.Craft"/> 与之相同才在这座台子上做；都空串＝不分。

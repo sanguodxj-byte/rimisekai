@@ -129,7 +129,10 @@ public partial class PortraitHubScreen
         _flashMotion.Start();
     }
 
-    /// <summary>领地格长按：按住不拖满 0.45 秒即打开该房间的设施抽屉，松手不再派发。</summary>
+    /// <summary>
+    /// 领地格长按：按住不拖满 0.45 秒，领地里＝进建造页并选中这一格（2026-10-11 主人定）；
+    /// 兴趣点、地城里照旧打开该房间的设施抽屉。松手不再派发。
+    /// </summary>
     private bool StepLongPress(float d)
     {
         if (!_pressed || _dragging || _pressWidget is not { Action: PortraitAction.Cell, Enabled: true } w || WorldLayer)
@@ -140,7 +143,10 @@ public partial class PortraitHubScreen
         _pressed = false;
         _pressRect = null;
         _pressWidget = null;
-        OpenRoomSheet(w.Index);
+        if (_vm.Hub.Layer == Rimisekai.Hub.MapLayer.Territory)
+            OpenBuildAt(w.Index);
+        else
+            OpenRoomSheet(w.Index);
         return true;
     }
 
@@ -211,6 +217,12 @@ public partial class PortraitHubScreen
     /// <summary>返回：先让当前页向右滑出（下层页面跟着从左归位），演完再真正退。</summary>
     private void RequestBack()
     {
+        // 建造页开着建造抽屉时，顶栏返回只退回网格（「完成」才离开建造页）。
+        if (_push == PushPage.Build && BuildSheetOpen)
+        {
+            CloseBuildSheet();
+            return;
+        }
         if (PortraitMotion.Instant)
         {
             Back();

@@ -240,7 +240,7 @@ public sealed partial class HubSession
         var moneyCost = VacantCostMoney;
         var material = VacantCostMaterial();
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
-        if (!State.Territory.PayWith(State.Roster.Master, material))
+        if (!State.Territory.PayWith(State.Roster.Master, material, _recording?.Paid))
             return false;
         var id = 0;
         foreach (var room in State.Territory.Rooms)
@@ -256,12 +256,20 @@ public sealed partial class HubSession
         State.Territory.LinkNeighbors(added);
         State.Money -= moneyCost;
         State.Territory.VacantDevelopCount++;
+        if (_recording != null)
+        {
+            _recording.Money += moneyCost;
+            _recording.DevelopedRoom = added.Id;
+        }
         Write("开拓了一间空房。");
 
         // 铺满 → 解锁下一档。
         var opened = State.Territory.TryUnlockByFill();
         if (opened.Count > 0)
         {
+            // 解锁了新区域就不再能撤：区域一经打开不回收。
+            if (_recording != null)
+                _recording.Final = true;
             var names = new List<string>();
             foreach (var r in opened)
                 names.Add(Territory.RegionName(r));
@@ -466,12 +474,21 @@ public sealed partial class HubSession
 
     private void Refund(List<RecipeCost> costs)
     {
+        foreach (var back in DemolishRefund(costs))
+            State.Roster.Master?.Bag.Add(back.ItemId, back.Count);
+    }
+
+    /// <summary>拆除返还的材料：每样按 60% 取整，取整为 0 的不返。</summary>
+    public static List<RecipeCost> DemolishRefund(IReadOnlyList<RecipeCost> costs)
+    {
+        var list = new List<RecipeCost>();
         foreach (var cost in costs)
         {
             var back = cost.Count * 60 / 100;
             if (back > 0)
-                State.Roster.Master?.Bag.Add(cost.ItemId, back);
+                list.Add(new RecipeCost(cost.ItemId, back));
         }
+        return list;
     }
 
     private void ResetFacilityWorkers(int facilityId)
@@ -556,7 +573,7 @@ public sealed partial class HubSession
         if (!State.Territory.CanPayWith(State.Roster.Master, def.MaterialCost))
             return false;
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
-        if (!State.Territory.PayWith(State.Roster.Master, def.MaterialCost))
+        if (!State.Territory.PayWith(State.Roster.Master, def.MaterialCost, _recording?.Paid))
             return false;
         var id = 0;
         foreach (var room in State.Territory.Rooms)
@@ -577,11 +594,17 @@ public sealed partial class HubSession
         added.SetShop(def.SalesLevels, def.VisitorChance);
         if (!State.Territory.AddRoom(added))
             return false;
+        if (_recording != null)
+        {
+            _recording.NewRoom = added.Id;
+            _recording.Name = added.Name;
+        }
         // 房间建成白送一件对口的设施，占它的一个设施位。
         var bundled = DefDatabase<FacilityDef>.GetNamed(def.BundledFacility).ToRuntime();
         bundled.Id = NextFacilityId();
         bundled.RoomId = added.Id;
         State.Territory.AddFacility(bundled);
+        _recording?.NewFacilities.Add(bundled.Id);
         Write($"新建了{added.Name}，里头带着一件{bundled.Name}。");
         return true;
     }
@@ -602,7 +625,7 @@ public sealed partial class HubSession
         if (!State.Territory.CanPayWith(State.Roster.Master, def.MaterialCost))
             return false;
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
-        if (!State.Territory.PayWith(State.Roster.Master, def.MaterialCost))
+        if (!State.Territory.PayWith(State.Roster.Master, def.MaterialCost, _recording?.Paid))
             return false;
         var added = def.ToRuntime();
         added.Id = NextFacilityId();
@@ -610,6 +633,11 @@ public sealed partial class HubSession
         added.Built = true;
         if (!State.Territory.AddUnplacedFacility(added))
             return false;
+        if (_recording != null)
+        {
+            _recording.NewFacilities.Add(added.Id);
+            _recording.Name = added.Name;
+        }
         Write($"建造了{added.Name}（未放置）。");
         return true;
     }
@@ -625,9 +653,7 @@ public sealed partial class HubSession
             return false;
         if (DefDatabase<RoomDef>.GetById(defId) is not RoomDef def || !def.Buildable)
             return false;
-        if (!BuildRoomDef(defId))
-            return false;
-        return PlaceRoom(State.Territory.Rooms[^1].Id, vacantRoomId);
+        return Receipted(() => BuildRoomDef(defId) && PlaceRoom(State.Territory.Rooms[^1].Id, vacantRoomId));
     }
 
     public bool BuildFacilityDef(int defId, int roomId)
@@ -638,10 +664,7 @@ public sealed partial class HubSession
             return false;
         if (DefDatabase<FacilityDef>.GetById(defId) is not FacilityDef def || !Territory.Fits(room, def.RoomTag))
             return false;
-        if (!BuildFacilityDef(defId))
-            return false;
-        var last = State.Territory.Facilities[^1];
-        return PlaceFacility(last.Id, roomId);
+        return Receipted(() => BuildFacilityDef(defId) && PlaceFacility(State.Territory.Facilities[^1].Id, roomId));
     }
 
     /// <summary>开发：把未放置的设施放进房间。</summary>
@@ -672,6 +695,11 @@ public sealed partial class HubSession
         var x = vacant.X;
         var y = vacant.Y;
         State.Territory.Rooms.Remove(vacant);
+        if (_recording != null)
+        {
+            _recording.ReplacedVacant = vacant;
+            _recording.VacantLinks.AddRange(vacant.Links);
+        }
         if (!State.Territory.PlaceRoom(x, y, room))
         {
             State.Territory.Rooms.Add(vacant); // 放不回去就还原，别把空房弄丢

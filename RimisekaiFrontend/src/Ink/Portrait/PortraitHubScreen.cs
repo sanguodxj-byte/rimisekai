@@ -59,9 +59,6 @@ public enum PortraitAction
     CharacterPage,
     StatusAbilityToggle,
     DevelopmentCell,
-    DevelopmentFacility,
-    DevelopmentRoom,
-    DevelopmentAction,
     // ---- 2026-10-07 重设计新增 ----
     Rename,
     OpenSystem,
@@ -69,6 +66,12 @@ public enum PortraitAction
     SheetClose,
     RoomGo,
     DevelopmentDoor,
+    BuildSegment,
+    BuildCategory,
+    BuildTile,
+    BuildMain,
+    BuildUndo,
+    BuildDone,
     RoomDemolish,
     RoomLock,
     NowAvatar,
@@ -101,7 +104,6 @@ public enum PortraitAction
     QuestTake,
     SystemSegment,
     VolumeSet,
-    DevelopmentTab,
     CrossGate,
     OpenPortraitPicker,
     PickPortraitDiff,
@@ -185,8 +187,8 @@ public partial class PortraitHubScreen : Control
         _socialCategory = -1;
         _sheetRoom = -1;
         _nowPage = 0;
-        _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
-        _developmentFacilityFirst = _developmentRoomFirst = _developmentActionFirst = 0;
+        CloseBuildSheet();
+        _buildCategoryMemory.Clear();
         _tradeQty.Clear();
         _party.Clear();
         _questSel = -1;
@@ -326,16 +328,19 @@ public partial class PortraitHubScreen : Control
     }
 
     /// <summary>推入页顶栏：左返回、中标题（可带副行）、右侧可选一枚文字钮。不透明底，盖住滚上来的内容。</summary>
-    private void DrawPageTop(string title, string sub = "", string action = "", PortraitAction actionKind = PortraitAction.Back)
+    private void DrawPageTop(string title, string sub = "", string action = "", PortraitAction actionKind = PortraitAction.Back,
+        bool tall = false)
     {
         var top = PortraitLayout.PageTop;
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), InkStyle.Bg);
         GothicArt.Tile(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, top.End.Y), 0.7f);
+        // tall：建造页把返回与右上动作的命中块撑满顶栏高（画法不变），手机上一指就中。
         var back = PortraitLayout.PageBack;
-        if (PortraitFrame.IsPressed(back))
+        var backHit = tall ? PortraitLayout.BuildBack : back;
+        if (PortraitFrame.IsPressed(backHit))
             PortraitFrame.PressMark(this, back.Grow(-8f));
         PortraitGlyph.Back(this, back.Position.X + 64f, back.GetCenter().Y, 30f, InkStyle.Line);
-        _widgets.Add(new PortraitWidget(back, PortraitAction.Back, 0, true, "返回"));
+        _widgets.Add(new PortraitWidget(backHit, PortraitAction.Back, 0, true, "返回"));
         var cy = top.GetCenter().Y;
         var titleRect = new Rect2(200f, cy - (sub.Length > 0 ? 62f : 40f), PortraitLayout.CanvasWidth - 400f, 80f);
         InkDraw.TextBounded(this, titleRect, title, PortraitLayout.FontPlace, PortraitLayout.FontMeta, InkStyle.Line, "cm");
@@ -345,10 +350,11 @@ public partial class PortraitHubScreen : Control
         if (action.Length > 0)
         {
             var r = PortraitLayout.PageAction;
-            if (PortraitFrame.IsPressed(r))
+            var hit = tall ? PortraitLayout.BuildDoneHit : r;
+            if (PortraitFrame.IsPressed(hit))
                 PortraitFrame.PressMark(this, r.Grow(-8f));
             InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), action, PortraitLayout.FontBody, InkStyle.Line, "rm");
-            _widgets.Add(new PortraitWidget(r, actionKind, 0, true, action));
+            _widgets.Add(new PortraitWidget(hit, actionKind, 0, true, action));
         }
         DrawRect(new Rect2(0, top.End.Y - 4f, PortraitLayout.CanvasWidth, 3f), InkStyle.Dim);
         PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, top.End.Y - 2f);
@@ -671,7 +677,7 @@ public partial class PortraitHubScreen : Control
             return;
         }
         if (_push == PushPage.Build)
-            _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
+            CloseBuildSheet();
         _push = PushPage.None;
         _sheet = SheetKind.None;
     }

@@ -272,6 +272,8 @@ public static class DefLoader
         var raw = element.GetRawText();
         switch (type)
         {
+            case "BuildCategoryDef":
+                return Register(JsonSerializer.Deserialize<BuildCategoryDef>(raw, Options));
             case "ThingCategoryDef":
                 return Register(JsonSerializer.Deserialize<ThingCategoryDef>(raw, Options));
             case "ThingDef":

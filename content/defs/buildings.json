@@ -27,7 +27,8 @@
           "count": 2
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -56,7 +57,8 @@
       "storageFilter": [
         "水"
       ],
-      "storagePriority": "critical"
+      "storagePriority": "critical",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -83,7 +85,8 @@
           "count": 3
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -110,7 +113,8 @@
           "count": 3
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -137,7 +141,8 @@
           "count": 3
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -162,7 +167,8 @@
           "count": 4
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -189,7 +195,8 @@
           "count": 8
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -218,7 +225,8 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -249,7 +257,8 @@
           "count": 15
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -280,7 +289,8 @@
           "count": 120
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -311,7 +321,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -338,7 +349,8 @@
           "count": 30
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -365,7 +377,8 @@
           "count": 8
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -397,7 +410,8 @@
           "count": 20
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -424,7 +438,8 @@
           "count": 16
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -456,7 +471,8 @@
           "count": 2
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -483,7 +499,8 @@
           "count": 120
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -514,7 +531,8 @@
       "storageFilter": [
         "Root"
       ],
-      "storagePriority": "normal"
+      "storagePriority": "normal",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -545,7 +563,8 @@
       "storageFilter": [
         "马鬃"
       ],
-      "storagePriority": "low"
+      "storagePriority": "low",
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -580,7 +599,8 @@
       "storageFilter": [
         "Root"
       ],
-      "storagePriority": "low"
+      "storagePriority": "low",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -611,7 +631,8 @@
           "count": 30
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -638,7 +659,8 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -667,7 +689,8 @@
           "count": 80
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -700,7 +723,8 @@
       ],
       "marketValue": 0,
       "storageFilter": [],
-      "storagePriority": "preferred"
+      "storagePriority": "preferred",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -737,7 +761,8 @@
         "Armor",
         "Accessory"
       ],
-      "storagePriority": "important"
+      "storagePriority": "important",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -764,7 +789,8 @@
           "count": 120
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -795,7 +821,8 @@
           "count": 3
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -830,7 +857,8 @@
           "count": 30
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -866,7 +894,8 @@
       "storageFilter": [
         "Root"
       ],
-      "storagePriority": "normal"
+      "storagePriority": "normal",
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -899,7 +928,8 @@
       "storageFilter": [
         "Meal"
       ],
-      "storagePriority": "important"
+      "storagePriority": "important",
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -926,7 +956,8 @@
           "count": 150
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -957,7 +988,8 @@
           "count": 60
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -988,7 +1020,8 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -1023,7 +1056,8 @@
       "storageFilter": [
         "Medicine"
       ],
-      "storagePriority": "preferred"
+      "storagePriority": "preferred",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -1048,7 +1082,8 @@
           "count": 500
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -1083,7 +1118,8 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -1114,7 +1150,8 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -1145,7 +1182,8 @@
           "count": 100
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -1176,7 +1214,8 @@
           "count": 60
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -1208,7 +1247,8 @@
       "storageFilter": [
         "Food"
       ],
-      "storagePriority": "normal"
+      "storagePriority": "normal",
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -1239,7 +1279,8 @@
           "count": 4
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -1274,7 +1315,8 @@
           "count": 100
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -1301,7 +1343,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -1332,7 +1375,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -1363,7 +1407,8 @@
           "count": 30
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -1395,7 +1440,8 @@
           "count": 60
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -1427,7 +1473,8 @@
       "storageFilter": [
         "Meal"
       ],
-      "storagePriority": "important"
+      "storagePriority": "important",
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -1454,7 +1501,8 @@
           "count": 14
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -1481,7 +1529,8 @@
           "count": 80
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -1517,7 +1566,8 @@
       "storageFilter": [
         "Root"
       ],
-      "storagePriority": "normal"
+      "storagePriority": "normal",
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "FacilityDef",
@@ -1546,7 +1596,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Kitchen"
     },
     {
       "defType": "RoomDef",
@@ -1576,7 +1627,8 @@
       "bundledFacility": "Facility_1063",
       "bonusActions": [
         "Till"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1606,7 +1658,8 @@
       "bundledFacility": "Facility_1006",
       "bonusActions": [
         "Mine"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1636,7 +1689,8 @@
       "bundledFacility": "Facility_1011",
       "bonusActions": [
         "Till"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1670,7 +1724,8 @@
       "bundledFacility": "Facility_1012",
       "bonusActions": [
         "Cook"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -1704,7 +1759,8 @@
       "bundledFacility": "Facility_1013",
       "bonusActions": [
         "Forge"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -1734,7 +1790,8 @@
       "bundledFacility": "Facility_1015",
       "bonusActions": [
         "Woodwork"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -1764,7 +1821,8 @@
       "bundledFacility": "Facility_1016",
       "bonusActions": [
         "Sew"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -1794,7 +1852,8 @@
       "bundledFacility": "Facility_1017",
       "bonusActions": [
         "Till"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1826,7 +1885,8 @@
       ],
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1018",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -1854,7 +1914,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1021",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -1882,7 +1943,8 @@
       ],
       "illustration": "res://assets/room_workshop.png",
       "bundledFacility": "Facility_1022",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -1912,7 +1974,8 @@
       "bundledFacility": "Facility_1023",
       "bonusActions": [
         "Tend"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1944,7 +2007,8 @@
       ],
       "illustration": "res://assets/terrain_storm_mountains.png",
       "bundledFacility": "Facility_1025",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -1974,7 +2038,8 @@
       "bundledFacility": "Facility_1028",
       "bonusActions": [
         "Till"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2020,7 +2085,8 @@
         45,
         55,
         70
-      ]
+      ],
+      "buildCategory": "BuildRoom_Shop"
     },
     {
       "defType": "RoomDef",
@@ -2052,7 +2118,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1019",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Living"
     },
     {
       "defType": "RoomDef",
@@ -2084,7 +2151,8 @@
       ],
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1035",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2118,7 +2186,8 @@
       "bundledFacility": "Facility_1036",
       "bonusActions": [
         "Brew"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2148,7 +2217,8 @@
       "bundledFacility": "Facility_1038",
       "bonusActions": [
         "Cook"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2176,7 +2246,8 @@
       ],
       "illustration": "res://assets/room_courtyard.png",
       "bundledFacility": "Facility_1039",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2208,7 +2279,8 @@
       ],
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1040",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2242,7 +2314,8 @@
       "bundledFacility": "Facility_1041",
       "bonusActions": [
         "Brew"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2269,7 +2342,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1044",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2301,7 +2375,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1045",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2333,7 +2408,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1047",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2361,7 +2437,8 @@
       ],
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1048",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2389,7 +2466,8 @@
       ],
       "illustration": "res://assets/settlement_village.png",
       "bundledFacility": "Facility_1049",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2423,7 +2501,8 @@
       "bundledFacility": "Facility_1050",
       "bonusActions": [
         "Mine"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2453,7 +2532,8 @@
       "bundledFacility": "Facility_1051",
       "bonusActions": [
         "Till"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2483,7 +2563,8 @@
       "bundledFacility": "Facility_1052",
       "bonusActions": [
         "Tend"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2517,7 +2598,8 @@
       "bundledFacility": "Facility_1053",
       "bonusActions": [
         "Woodwork"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2549,7 +2631,8 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1054",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Leisure"
     },
     {
       "defType": "RoomDef",
@@ -2579,7 +2662,8 @@
       "bundledFacility": "Facility_1057",
       "bonusActions": [
         "Tend"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2608,7 +2692,8 @@
       "bundledFacility": "Facility_1058",
       "bonusActions": [
         "Tend"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Outdoor"
     },
     {
       "defType": "RoomDef",
@@ -2642,7 +2727,8 @@
       "bundledFacility": "Facility_1059",
       "bonusActions": [
         "Cook"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2676,7 +2762,8 @@
       "bundledFacility": "Facility_1060",
       "bonusActions": [
         "Brew"
-      ]
+      ],
+      "buildCategory": "BuildRoom_Workshop"
     },
     {
       "defType": "RoomDef",
@@ -2705,7 +2792,8 @@
       ],
       "illustration": "res://assets/room_bedroom_day.png",
       "bundledFacility": "床",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Living"
     },
     {
       "defType": "RoomDef",
@@ -2747,7 +2835,8 @@
         45,
         55,
         70
-      ]
+      ],
+      "buildCategory": "BuildRoom_Shop"
     },
     {
       "defType": "FacilityDef",
@@ -2775,7 +2864,8 @@
           "count": 5
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -2800,7 +2890,8 @@
           "count": 2
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Defense"
     },
     {
       "defType": "FacilityDef",
@@ -2832,7 +2923,8 @@
           "count": 4
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -2859,7 +2951,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -2954,7 +3047,8 @@
       "storageFilter": [
         "Root"
       ],
-      "storagePriority": "normal"
+      "storagePriority": "normal",
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -2990,7 +3084,8 @@
       "storageFilter": [
         "Meal"
       ],
-      "storagePriority": "important"
+      "storagePriority": "important",
+      "buildCategory": "Build_Living"
     },
     {
       "defType": "FacilityDef",
@@ -3017,7 +3112,8 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -3044,7 +3140,8 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -3071,7 +3168,8 @@
           "count": 5
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -3098,7 +3196,8 @@
           "count": 5
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -3125,7 +3224,8 @@
           "count": 5
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Field"
     },
     {
       "defType": "FacilityDef",
@@ -3156,7 +3256,8 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -3187,7 +3288,8 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -3218,7 +3320,8 @@
           "count": 8
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Gather"
     },
     {
       "defType": "FacilityDef",
@@ -3249,7 +3352,8 @@
           "count": 12
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -3280,7 +3384,8 @@
           "count": 16
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -3311,7 +3416,8 @@
           "count": 8
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Workshop"
     },
     {
       "defType": "FacilityDef",
@@ -3338,7 +3444,8 @@
           "count": 2
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "buildCategory": "Build_Living"
     }
   ]
 }

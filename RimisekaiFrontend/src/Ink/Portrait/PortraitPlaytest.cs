@@ -671,8 +671,9 @@ public partial class PortraitPlaytest : Node
         if (cell != null)
         {
             await Tap(cell.Value, "dev cell");
-            acted = await TapAction(PortraitAction.DevelopmentRoom, "dev room") || await TapAction(PortraitAction.DevelopmentAction, "dev action");
+            acted = await TapAction(PortraitAction.BuildTile, "build tile") && await TapAction(PortraitAction.BuildMain, "build main");
             for (var i = 0; i < 4 && ModalOn; i++) if (!await TapLabel("确定", "confirm build")) await Escape();
+            await TapAction(PortraitAction.BuildDone, "build done");
         }
         Shoot("build");
         Goal("建造页可操作", open && cell != null && acted && await GoHubRoot("建造收尾"));

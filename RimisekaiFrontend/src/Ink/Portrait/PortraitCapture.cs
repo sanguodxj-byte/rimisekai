@@ -327,7 +327,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
         _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "room sheet opens"); Shoot("room_sheet", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0));
-        // 点别的房间格＝当场前往（不弹抽屉）；长按房间格才弹设施抽屉；「此刻」只列同区的人。
+        // 点别的房间格＝当场前往（不弹抽屉）；长按房间格＝进建造页并选中那一格；「此刻」只列同区的人。
         _steps.Enqueue(TapOtherRoom);
         _steps.Enqueue(CheckMovedWithoutSheet);
         _steps.Enqueue(() => _root.HubScreen.ShowTab(4));
@@ -335,13 +335,11 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
         _steps.Enqueue(() => Hold(_root.HubScreen, _holdAt = CellCenter(_homeRoom)));
         _steps.Enqueue(() => _root.HubScreen._Process(PortraitMotion.LongPress + 0.05));
-        _steps.Enqueue(CheckLongPressSheet);
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RoomGo, _homeRoom));
+        _steps.Enqueue(CheckLongPressBuild);
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.BuildDone, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _homeRoom));
         _steps.Enqueue(() =>
-        {
-            Require(_root.HubScreen.DebugHub.PlayerRoomId == _homeRoom, "room sheet go returns home");
-            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
-        });
+            Require(_root.HubScreen.DebugHub.PlayerRoomId == _homeRoom, "tapping the home cell walks back home"));
         _steps.Enqueue(CheckMotion);
         _steps.Enqueue(() => _root.HubScreen._Process(0.06));
         _steps.Enqueue(() => Shoot("motion_sheet_mid", _root.HubScreen));
@@ -426,7 +424,18 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("build", _root.HubScreen));
         _steps.Enqueue(() =>
         {
-            // 建造页「操作」分段首几行是选中房间四面的门：点一下封墙、再点开门，Links 随之变化。
+            // 点主人所在那一格进建造抽屉，切到「门」分段。
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            var name = hub.State.Territory.Room(hub.PlayerRoomId)!.Name;
+            screen.DebugPress(PortraitAction.DevelopmentCell,
+                screen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == name).Index);
+            screen.QueueRedraw();
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.BuildSegment, 2));
+        _steps.Enqueue(() =>
+        {
+            // 「门」分段：选中房间四面的门，点一下封墙、再点开门，Links 随之变化。
             var screen = _root.HubScreen;
             var door = screen.DebugWidgets.FirstOrDefault(w => w.Action == PortraitAction.DevelopmentDoor && w.Enabled);
             Require(door.Rect.Size.Y >= PortraitLayout.TouchMin, "build page lists the selected room's doors");
@@ -443,7 +452,7 @@ public partial class PortraitCapture : Node
             Require(LinkCount() == _linkCount, "door row toggles back");
             _root.HubScreen.QueueRedraw();
         });
-        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.BuildDone, 0));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.OpenSystem, 0));
         _steps.Enqueue(() => Shoot("system", _root.HubScreen));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Back, 0));
@@ -738,6 +747,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => CheckTitlePage("load", InkSystemScreen.PageLoad));
         _steps.Enqueue(() => PressTitle(PortraitLayout.PageBack));
         EnqueueCrossChecks();
+        EnqueueBuildSheetShots();
         _steps.Enqueue(Quit);
     }
 
@@ -935,12 +945,17 @@ public partial class PortraitCapture : Node
     private void CheckNowPageWrapped() =>
         Require(NowIds().SequenceEqual(_nowFirstPage), "now pager wraps to the first page");
 
-    private void CheckLongPressSheet()
+    /// <summary>领地格长按：进建造页、建造抽屉直接开在那一格上（顶栏副行是房名）。</summary>
+    private void CheckLongPressBuild()
     {
         var screen = _root.HubScreen;
-        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo && w.Index == _homeRoom && w.Enabled),
-            "long press opens room sheet");
+        var room = screen.DebugHub.State.Territory.Room(_homeRoom)!;
+        Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildSegment)
+            && screen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildTile)
+            && screen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildDone),
+            $"long press opens the build sheet on {room.Name}");
         Release(screen, _holdAt);
+        Shoot("build_longpress", screen);
     }
 
     /// <summary>

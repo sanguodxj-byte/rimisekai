@@ -1,0 +1,70 @@
+{
+  "defType": "BuildCategoryDef",
+  "defs": [
+    {
+      "defName": "Build_Living",
+      "label": "起居",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Kitchen",
+      "label": "厨饮",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Workshop",
+      "label": "工坊",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Field",
+      "label": "田地",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Gather",
+      "label": "采集养殖",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Storage",
+      "label": "仓储营业",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Leisure",
+      "label": "娱乐信仰",
+      "target": "facility"
+    },
+    {
+      "defName": "Build_Defense",
+      "label": "防务户外",
+      "target": "facility"
+    },
+    {
+      "defName": "BuildRoom_Living",
+      "label": "居室",
+      "target": "room"
+    },
+    {
+      "defName": "BuildRoom_Workshop",
+      "label": "室内工坊",
+      "target": "room"
+    },
+    {
+      "defName": "BuildRoom_Outdoor",
+      "label": "户外产出",
+      "target": "room"
+    },
+    {
+      "defName": "BuildRoom_Leisure",
+      "label": "娱乐",
+      "target": "room"
+    },
+    {
+      "defName": "BuildRoom_Shop",
+      "label": "营业",
+      "target": "room"
+    }
+  ]
+}
