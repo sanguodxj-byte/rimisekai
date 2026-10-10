@@ -30,7 +30,6 @@ window/handheld/orientation="portrait"
 [dotnet]
 
 project/assembly_name="RimisekaiFrontend"
-project/solution="RimisekaiFrontend.sln"
 
 [rendering]
 

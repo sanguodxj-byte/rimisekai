@@ -39,11 +39,11 @@ public sealed class PersonalityTraitTests
         // 统一入口守卫：核心系统代码不允许直接读 Trait 枚举做判定。
         var allowed = new HashSet<string> { "Traits.cs", "PersonalityTraits.cs", "CharacterGenerator.cs", "VoiceGenerationHub.cs" };
         var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-        while (dir != null && !System.IO.Directory.Exists(System.IO.Path.Combine(dir.FullName, "RimisekaiCore", "src")))
+        while (dir != null && !System.IO.Directory.Exists(System.IO.Path.Combine(dir.FullName, "RimisekaiFrontend", "src")))
             dir = dir.Parent;
         Assert.NotNull(dir);
 
-        var src = System.IO.Path.Combine(dir!.FullName, "RimisekaiCore", "src");
+        var src = System.IO.Path.Combine(dir!.FullName, "RimisekaiFrontend", "src");
         var pattern = new System.Text.RegularExpressions.Regex(@"\bTrait\.[A-Z]");
         foreach (var file in System.IO.Directory.EnumerateFiles(src, "*.cs", System.IO.SearchOption.AllDirectories))
         {

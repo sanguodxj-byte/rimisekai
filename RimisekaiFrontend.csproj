@@ -8,10 +8,10 @@
     <AssemblyName>RimisekaiFrontend</AssemblyName>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="RimisekaiCore\RimisekaiCore.csproj" />
     <Compile Include="RimisekaiFrontend\src\**\*.cs" Exclude="RimisekaiFrontend\src\Tools\InkCapture.cs" />
   </ItemGroup>
 </Project>
