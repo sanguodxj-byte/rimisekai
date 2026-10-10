@@ -197,7 +197,7 @@ public partial class PortraitHubScreen
     private static int Depth(PushPage page) => page switch
     {
         PushPage.None => 0,
-        PushPage.Disc => 2,
+        PushPage.Disc or PushPage.Codex => 2,
         _ => 1,
     };
 
@@ -209,7 +209,12 @@ public partial class PortraitHubScreen
             Back();
             return;
         }
-        _pushUnder = _push == PushPage.Disc ? PushPage.Character : PushPage.None;
+        _pushUnder = _push switch
+        {
+            PushPage.Disc => PushPage.Character,
+            PushPage.Codex => PushPage.System,
+            _ => PushPage.None,
+        };
         _popping = true;
         _pushMotion.Start();
     }

@@ -83,13 +83,21 @@ public partial class PortraitCapture : Node
             _steps.Enqueue(() => Shoot($"tab{index}", _root.HubScreen));
         }
         // 图鉴只收录怪物表；装备实例属性运行时生成，物品定义不是图鉴目录。
+        // 图鉴入口在系统页「设置」段（2026-10-10 主人定：移出 HUD）。HUD 上不再有图鉴钮。
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.All(widget => widget.Action != PortraitAction.CodexOpen), "HUD carries no codex entry");
+            _root.HubScreen.DebugPress(PortraitAction.OpenSystem, 0);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SystemSegment, 1));
         _steps.Enqueue(() =>
         {
             var widgets = _root.HubScreen.DebugWidgets;
             var codex = widgets.First(widget => widget.Action == PortraitAction.CodexOpen);
-            var system = widgets.First(widget => widget.Action == PortraitAction.OpenSystem);
             Require(codex.Rect.Size.X >= PortraitLayout.TouchMin && codex.Rect.Size.Y >= PortraitLayout.TouchMin
-                && !codex.Rect.Intersects(system.Rect), "codex entry meets the touch minimum and stays clear of system");
+                && widgets.Where(widget => widget.Action != PortraitAction.CodexOpen).All(widget => !widget.Rect.Intersects(codex.Rect)),
+                "settings codex entry meets the touch minimum and overlaps no other target");
+            Shoot("system_settings", _root.HubScreen);
             _root.HubScreen.DebugPress(PortraitAction.CodexOpen, 0);
         });
         _steps.Enqueue(() =>
@@ -110,6 +118,11 @@ public partial class PortraitCapture : Node
                 $"monster codex entry opens structured details (attributes={detail?.MonsterCodex?.Attributes.Count}, body={detail?.Body.Length})");
             Shoot("codex_monster_detail", _root.ModalLayer);
             _root.ModalLayer.Dismiss();
+            _root.HubScreen.DebugPress(PortraitAction.Back, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(widget => widget.Action == PortraitAction.CodexOpen), "codex back returns to system settings");
             _root.HubScreen.DebugPress(PortraitAction.Back, 0);
         });
         // 仓储三段
@@ -140,6 +153,25 @@ public partial class PortraitCapture : Node
             var master = _root.HubScreen.DebugHub.State.Roster.Master!;
             Require(master.PortraitDiff == 4, $"portrait diff switched to 4 (actual={master.PortraitDiff})");
             Shoot("char_status_diff4", _root.HubScreen);
+        });
+        // 入库的身份立绘真能画出来：仓库里只有前 10 职业的 diff1（厨师在内），临时把主角身份换成厨师、差分回 1 拍一张，再换回。
+        var identityBefore = "";
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            identityBefore = master.Identity;
+            master.Identity = "cook";
+            master.PortraitDiff = 1;
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            Require(PortraitAvatars.Resolve(master) != null
+                && InkIllustration.LoadTexture(PortraitAvatars.PortraitPath("cook", 1)) != null, "committed identity portrait and avatar load");
+            Shoot("char_status_art", _root.HubScreen);
+            master.Identity = identityBefore;
+            _root.HubScreen.QueueRedraw();
         });
         // 特质签、装备格可点：各弹一枚纯展示弹窗（标题＝特质名 / 装备名或槽名）。
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.TraitInfo, 0));
