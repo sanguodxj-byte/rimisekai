@@ -273,7 +273,8 @@ public partial class PortraitHubScreen
         var undo = hub.CanUndoBuild;
         if (undo)
         {
-            PortraitFrame.Plaque(this, PortraitLayout.BuildUndo, $"撤销 {hub.LastBuildName}");
+            // 两行：「撤销」＋刚建的名（铭牌自带的次行），四字名在 340 宽的钮里也不挤。
+            PortraitFrame.Plaque(this, PortraitLayout.BuildUndo, "撤销", sub: hub.LastBuildName);
             _widgets.Add(new PortraitWidget(PortraitLayout.BuildUndo, PortraitAction.BuildUndo, 0, true, "撤销"));
         }
         var main = PortraitLayout.BuildMain(undo);
@@ -341,14 +342,14 @@ public partial class PortraitHubScreen
     /// <summary>分类图标：设施与房间各类一枚线描字形（数据里没有单件图标）。房间本身用城堡。</summary>
     private static Action<CanvasItem, float, float, float, Color> BuildGlyph(string category) => category switch
     {
-        "Build_Living" or "BuildRoom_Living" => PortraitGlyph.Person,
-        "Build_Kitchen" => PortraitGlyph.Bell,
-        "Build_Workshop" or "BuildRoom_Workshop" => PortraitGlyph.Hammer,
-        "Build_Field" or "BuildRoom_Outdoor" => PortraitGlyph.Leaf,
+        "Build_Furniture" or "BuildRoom_Living" => PortraitGlyph.Person,
+        "Build_Production" or "BuildRoom_Production" => PortraitGlyph.Hammer,
+        "Build_Farm" or "BuildRoom_Farm" => PortraitGlyph.Leaf,
         "Build_Gather" => PortraitGlyph.Sun,
         "Build_Storage" => PortraitGlyph.Chest,
         "Build_Leisure" or "BuildRoom_Leisure" => PortraitGlyph.Book,
-        "Build_Defense" => PortraitGlyph.Swords,
+        "Build_Faith" => PortraitGlyph.Bell,
+        "Build_Military" or "BuildRoom_Military" => PortraitGlyph.Swords,
         "BuildRoom_Shop" => PortraitGlyph.Coin,
         _ => PortraitGlyph.Castle,
     };

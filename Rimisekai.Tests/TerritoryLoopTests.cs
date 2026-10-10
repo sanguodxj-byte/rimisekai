@@ -21,7 +21,7 @@ namespace Rimisekai.Tests;
 public sealed class TerritoryLoopTests
 {
     private const int Quarry = 1006;  // 采石点：Mine → 石材
-    private const int Kiln = 1070;    // 陶器坊：Forge·窑（拉坯 3 石材 → 陶罐；煅炼金尘）
+    private const int Kiln = 1072;    // 工坊：Forge/Brew/Sew·工（拉坯 3 石材 → 陶罐；煅炼金尘、鞣皮、装订）
     private const int Anvil = 1013;   // 铁砧：石材 30 + 铁矿 15，Forge·锻（冶铁、炼钢、打兵器与铁甲）
     private const int ChickenYard = 138; // 养鸡场：建成自带鸡舍（Tend → 鸡蛋）
     private const int CoopCellX = 3, CoopCellY = 1; // 客厅东边、山脚北边的空格
@@ -261,7 +261,7 @@ public sealed class TerritoryLoopTests
     [Fact]
     public void Bench_materials_are_fetched_to_the_assigned_bench()
     {
-        // 两座陶器坊：排到后建的那座（庭院），料就该搬到它台上，先建的那座（森林）一直空着。
+        // 两座工坊：排到后建的那座（庭院），料就该搬到它台上，先建的那座（森林）一直空着。
         var hub = NewGame(out var state, 1);
         var maid = Maid(state);
         maid.Bag.Add("干粮", 30);
@@ -282,8 +282,8 @@ public sealed class TerritoryLoopTests
             fetched |= assigned.Contents.Get("石材") > 0;
         }
 
-        Assert.True(fetched, "石材被搬上了排班点名的那座陶器坊");
-        Assert.True(Total(state, "陶罐") > 0, "陶器坊出了陶罐");
+        Assert.True(fetched, "石材被搬上了排班点名的那座工坊");
+        Assert.True(Total(state, "陶罐") > 0, "工坊出了陶罐");
     }
 
     // ---------- 整条闭环 ----------

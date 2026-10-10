@@ -237,10 +237,10 @@ public partial class PortraitCapture
         {
             // 点空地＝建造抽屉列房间（一项不藏），页签带「能建/总数」；看一眼不扣钱。
             var screen = _root.HubScreen;
-            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 6
+            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 7
                 && screen.DebugHub.State.Territory.VacantDevelopCount == _developmentProbeCount,
                 "tapping a plot opens the room choices without charging");
-            ClickLabel(PortraitAction.BuildCategory, "居室");
+            ClickLabel(PortraitAction.BuildCategory, "居住");
         });
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "客厅"));
         _steps.Enqueue(() =>

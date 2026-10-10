@@ -352,7 +352,7 @@
     {
       "defName": "书本",
       "label": "书本",
-      "description": "抄写室装订成册的书，送礼和摆着都体面，书架要几册才像样。",
+      "description": "工坊装订成册的书，送礼和摆着都体面，书架要几册才像样。",
       "category": "Goods",
       "stackLimit": 999,
       "marketValue": 45,
@@ -364,7 +364,7 @@
     {
       "defName": "陶罐",
       "label": "陶罐",
-      "description": "陶器坊烧出来的罐子，腌菜、装药、盛香水都用得着。",
+      "description": "工坊烧出来的罐子，腌菜、装药、盛香水都用得着。",
       "category": "Goods",
       "stackLimit": 999,
       "marketValue": 14,

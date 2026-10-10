@@ -156,7 +156,7 @@ public sealed class FacilityData
     /// <summary>房间标签要求（室内/室外/空串）。</summary>
     public string RoomTag { get; set; } = "";
 
-    /// <summary>手艺门类（锻/窑/空串）。</summary>
+    /// <summary>手艺门类（锻/工/空串）。</summary>
     public string Craft { get; set; } = "";
 }
 

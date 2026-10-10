@@ -9,7 +9,7 @@ namespace Rimisekai.Housing;
 /// </summary>
 public enum FacilityUsage
 {
-    /// <summary>起居。床、躺椅、浴池、冥想室这类过夜与歇脚的地方。</summary>
+    /// <summary>起居。床、躺椅、浴池这类过夜与歇脚的地方。</summary>
     Rest = 0,
 
     /// <summary>消遣。戏台、吧台、书架这类闲时找乐子的去处。</summary>

@@ -28,7 +28,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -86,7 +86,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -168,7 +168,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -196,7 +196,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -226,7 +226,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -258,7 +258,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -290,7 +290,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -322,7 +322,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -350,7 +350,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -378,7 +378,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -411,7 +411,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -439,7 +439,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -472,7 +472,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -500,7 +500,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Faith"
     },
     {
       "defType": "FacilityDef",
@@ -564,7 +564,7 @@
         "马鬃"
       ],
       "storagePriority": "low",
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -632,7 +632,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -660,7 +660,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -690,7 +690,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -790,7 +790,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -858,7 +858,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -895,7 +895,7 @@
         "Root"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -912,7 +912,6 @@
       "isTable": true,
       "storage": true,
       "actions": [
-        "Cook",
         "Meal"
       ],
       "roomTag": "室内",
@@ -929,7 +928,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1021,7 +1020,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1083,7 +1082,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1119,39 +1118,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1045",
-      "label": "冥想室",
-      "id": 1045,
-      "usage": "Rest",
-      "capacity": 1,
-      "buildCost": 11000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Meditate"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 100
-        },
-        {
-          "itemId": "布",
-          "count": 40
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1200,7 +1167,8 @@
       "isTable": false,
       "storage": false,
       "actions": [
-        "Pray"
+        "Pray",
+        "Meditate"
       ],
       "roomTag": "室内",
       "craft": "",
@@ -1215,7 +1183,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Faith"
     },
     {
       "defType": "FacilityDef",
@@ -1248,7 +1216,7 @@
         "Food"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -1280,7 +1248,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1344,7 +1312,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1376,7 +1344,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1408,7 +1376,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -1441,7 +1409,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1474,7 +1442,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1502,7 +1470,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1530,7 +1498,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1567,7 +1535,7 @@
         "Root"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -1597,7 +1565,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "RoomDef",
@@ -1628,7 +1596,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1659,7 +1627,7 @@
       "bonusActions": [
         "Mine"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1690,7 +1658,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1725,7 +1693,7 @@
       "bonusActions": [
         "Cook"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1760,7 +1728,7 @@
       "bonusActions": [
         "Forge"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1791,7 +1759,7 @@
       "bonusActions": [
         "Woodwork"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1822,7 +1790,7 @@
       "bonusActions": [
         "Sew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1853,7 +1821,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1944,7 +1912,7 @@
       "illustration": "res://assets/room_workshop.png",
       "bundledFacility": "Facility_1022",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1975,7 +1943,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2008,7 +1976,7 @@
       "illustration": "res://assets/terrain_storm_mountains.png",
       "bundledFacility": "Facility_1025",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2039,7 +2007,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2187,7 +2155,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2315,7 +2283,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2343,7 +2311,7 @@
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1044",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2374,7 +2342,7 @@
         }
       ],
       "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1045",
+      "bundledFacility": "Facility_1035",
       "bonusActions": [],
       "buildCategory": "BuildRoom_Leisure"
     },
@@ -2438,7 +2406,7 @@
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1048",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2467,7 +2435,7 @@
       "illustration": "res://assets/settlement_village.png",
       "bundledFacility": "Facility_1049",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2502,7 +2470,7 @@
       "bonusActions": [
         "Mine"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2533,7 +2501,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2564,7 +2532,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2599,7 +2567,7 @@
       "bonusActions": [
         "Woodwork"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2663,7 +2631,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2693,7 +2661,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2728,7 +2696,7 @@
       "bonusActions": [
         "Cook"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2763,7 +2731,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2865,7 +2833,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -2891,7 +2859,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -2924,7 +2892,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -2952,7 +2920,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -3085,7 +3053,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -3113,7 +3081,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3141,7 +3109,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3169,7 +3137,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3197,7 +3165,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3225,7 +3193,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3257,7 +3225,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3289,7 +3257,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3321,13 +3289,13 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1069",
-      "label": "制革坊",
-      "id": 1069,
+      "defName": "Facility_1072",
+      "label": "工坊",
+      "id": 1072,
       "usage": "Plain",
       "capacity": 1,
       "buildCost": 3000,
@@ -3338,74 +3306,12 @@
       "isTable": false,
       "storage": false,
       "actions": [
-        "Brew"
-      ],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 16
-        },
-        {
-          "itemId": "石材",
-          "count": 12
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Workshop"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1070",
-      "label": "陶器坊",
-      "id": 1070,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 2200,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Forge"
-      ],
-      "roomTag": "",
-      "craft": "窑",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 12
-        },
-        {
-          "itemId": "石材",
-          "count": 16
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Workshop"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1071",
-      "label": "抄写室",
-      "id": 1071,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 3500,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
+        "Forge",
+        "Brew",
         "Sew"
       ],
       "roomTag": "",
-      "craft": "",
+      "craft": "工",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3413,11 +3319,11 @@
         },
         {
           "itemId": "石材",
-          "count": 8
+          "count": 16
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -3445,7 +3351,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     }
   ]
 }

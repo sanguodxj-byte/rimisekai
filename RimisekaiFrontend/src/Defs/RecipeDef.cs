@@ -31,7 +31,7 @@ public sealed class RecipeDef : Def
     /// </summary>
     public RecipeGear? Gear { get; init; }
 
-    /// <summary>手艺门类（「锻」「窑」或空串）：只在门类相同的台子上做，见 <see cref="FacilityDef.Craft"/>。</summary>
+    /// <summary>手艺门类（「锻」「工」或空串）：只在门类相同的台子上做，见 <see cref="FacilityDef.Craft"/>。</summary>
     public string Craft { get; init; } = "";
 
     /// <summary>转为运行时配方对象。</summary>
