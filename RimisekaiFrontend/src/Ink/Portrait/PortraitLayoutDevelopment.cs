@@ -68,8 +68,8 @@ public static partial class PortraitLayout
         top + i / BuildCols * BuildTileStep, BuildTileWidth, BuildTileHeight);
     public static Rect2 BuildTileArea(float top) => new(0, top, CanvasWidth, BuildTileRows(top) * BuildTileStep - BuildTileGap);
 
-    /// <summary>门行：148 高，行距 164。</summary>
-    public const float BuildRowStep = TouchComfort + 16f;
+    /// <summary>门行：148 高，行距 172（版式检查的已知档）。</summary>
+    public const float BuildRowStep = TouchComfort + 24f;
     public static Rect2 BuildRow(float top, int i) => new(Pad, top + i * BuildRowStep, FullWidth, TouchComfort);
 
     public const float BuildCondStep = 72f;

@@ -237,7 +237,7 @@ public partial class PortraitCapture
         {
             // 点空地＝建造抽屉列房间（一项不藏），页签带「能建/总数」；看一眼不扣钱。
             var screen = _root.HubScreen;
-            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 7
+            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 6
                 && screen.DebugHub.State.Territory.VacantDevelopCount == _developmentProbeCount,
                 "tapping a plot opens the room choices without charging");
             ClickLabel(PortraitAction.BuildCategory, "居住");
@@ -394,7 +394,7 @@ public partial class PortraitCapture
         });
     }
 
-    /// <summary>建造抽屉选中庭院（室外）：起居类里的「床」暗着加锁，详情卡「室内」打叉。</summary>
+    /// <summary>建造抽屉选中庭院（室外）：家具类里的「床」压暗，详情卡「室内」打叉。</summary>
     private void EnqueueIndoorOnlyRow()
     {
         _steps.Enqueue(() =>
@@ -402,7 +402,7 @@ public partial class PortraitCapture
             var cell = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == "庭院");
             ClickHub(cell.Action, cell.Index);
         });
-        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "起居"));
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "家具"));
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "床"));
         _steps.Enqueue(() =>
         {
