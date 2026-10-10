@@ -133,7 +133,7 @@ public sealed class BedroomRulesTests
     [Fact]
     public void Maid_never_climbs_into_the_bed_the_master_lies_in_without_affection()
     {
-        // 卧室只有主人躺着的那张床：女仆去别处的床——一张都没有就不睡（不睡地上，见 Sleep_needs_a_bed_and_never_happens_on_the_floor），也不往主人床上挤。
+        // 卧室只有主人躺着的那张床：女仆去别处的床——一张都没有就打地铺（见 No_bed_means_a_floor_in_an_indoor_room_and_never_outdoors），也不往主人床上挤。
         var hub = TerritoryLoopTests.NewGame(out var state, 14);
         var maid = Maid(state);
         hub.Enter(Bedroom);

@@ -121,8 +121,11 @@ public sealed class TerritoryLoopTests
         for (var i = 0; i < 3 * 24 * 6; i++)
         {
             var mood = maid.Affect.Mood;
+            // 她没床（开局那张是主人的），夜里打地铺，起床那一下的心情扣减不算漏饭。
+            var asleep = hub.Day.Workers.Single(w => w.CharacterId == maid.Id).Goal == ActionKind.Sleep;
             hub.PassTime(10);
-            if (maid.Affect.Mood <= mood - 8)
+            var woke = asleep && hub.Day.Workers.Single(w => w.CharacterId == maid.Id).Goal != ActionKind.Sleep;
+            if (!woke && maid.Affect.Mood <= mood - 8)
                 missed++;
             AnswerWhoeverWantsToTalk(hub, state);
         }

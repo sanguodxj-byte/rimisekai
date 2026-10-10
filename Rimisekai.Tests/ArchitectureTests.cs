@@ -1248,46 +1248,49 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Sleep_needs_a_bed_and_never_happens_on_the_floor()
+    public void No_bed_means_a_floor_in_an_indoor_room_and_never_outdoors()
     {
-        GameState Setup(bool withBed)
+        GameState Setup(bool withBed, string tag)
         {
             var state = new GameState();
             state.Roster.Add("你", master: true);
-            var worker = state.Roster.Add("工");
-            state.Territory.AddRoom(new Room { Id = 1, Name = "房", Open = true });
+            state.Roster.Add("工");
+            var room = new Room { Id = 1, Name = "房", Open = true };
+            room.AddTag(tag);
+            state.Territory.AddRoom(room);
             // 躺椅只能休息，不能睡。
             var chair = new Facility { Id = 1, Name = "躺椅", RoomId = 1, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Rest } };
-            chair.Actions.Add(ActionKind.Rest);
             state.Territory.AddFacility(chair);
             if (withBed)
             {
                 var bed = new Facility { Id = 2, Name = "床", RoomId = 1, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Sleep, ActionKind.Rest } };
-                bed.Actions.Add(ActionKind.Sleep);
                 state.Territory.AddFacility(bed);
             }
             state.Clock.SetTime(1, 23 * 60);   // 深夜，本该睡
             return state;
         }
 
-        // 没有床：不许在房间里凭空睡。
-        var noBed = Setup(withBed: false);
-        var hub1 = new HubSession(noBed);
-        hub1.Enter(1);
-        var w1 = noBed.Roster.Members.Find(c => !c.IsMaster)!;
-        hub1.Place(w1.Id, 1);
-        hub1.PassTime(30);
-        Assert.NotEqual(ActionKind.Sleep, hub1.Day.Workers[0].Goal);
+        Worker Night(GameState state)
+        {
+            var hub = new HubSession(state);
+            hub.Enter(1);
+            hub.Place(state.Roster.Members.Find(c => !c.IsMaster)!.Id, 1);
+            hub.PassTime(30);
+            return hub.Day.Workers[0];
+        }
+
+        // 室内没有床：打地铺（不占任何设施）。
+        var floor = Night(Setup(withBed: false, Territory.IndoorTag));
+        Assert.Equal(ActionKind.Sleep, floor.Goal);
+        Assert.Equal(-1, floor.FacilityId);
+
+        // 只有室外：不在露天睡。
+        Assert.NotEqual(ActionKind.Sleep, Night(Setup(withBed: false, Territory.OutdoorTag)).Goal);
 
         // 有床：到床上睡，并占用那张床。
-        var withBed = Setup(withBed: true);
-        var hub2 = new HubSession(withBed);
-        hub2.Enter(1);
-        var w2 = withBed.Roster.Members.Find(c => !c.IsMaster)!;
-        hub2.Place(w2.Id, 1);
-        hub2.PassTime(30);
-        Assert.Equal(ActionKind.Sleep, hub2.Day.Workers[0].Goal);
-        Assert.Equal(2, hub2.Day.Workers[0].FacilityId);
+        var bedded = Night(Setup(withBed: true, Territory.IndoorTag));
+        Assert.Equal(ActionKind.Sleep, bedded.Goal);
+        Assert.Equal(2, bedded.FacilityId);
     }
 
     [Fact]
@@ -2002,9 +2005,13 @@ public sealed class ArchitectureTests
         state.Clock.SetTime(1, 22 * 60);
         Assert.True(hub.ActAtFixture(ActionKind.Sleep));
         Assert.False(hub.ActAtFixture(ActionKind.Meal));
+        // 没床的人打地铺、锁着门：等都起了再过去。
+        while (hub.Day.Workers.Any(w => w.Goal == ActionKind.Sleep))
+            hub.PassTime(10);
 
         Assert.True(hub.Move(2));
         Assert.Equal(-1, hub.SelectedCharacterId);
+        hub.Place(stranger.Id, 2); // 一夜过去他可能走开了（找人说话），叫回乙屋
         Assert.True(hub.Select(stranger.Id));
         Assert.True(hub.Social(SocialAction.Talk));
         hub.CloseOverlay();

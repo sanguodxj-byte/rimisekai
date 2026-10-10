@@ -1159,7 +1159,7 @@ public sealed class TerritoryClock
             character.Affect.AddMood(-15);
 
         if (worker.FacilityId < 0)
-            character.Affect.AddMood(-5);
+            character.Affect.SleptOnFloor(ctx.Day);
     }
 
     private static int SeekThreshold(CharacterState character) =>
@@ -1242,7 +1242,8 @@ public sealed class TerritoryClock
     /// <summary>
     /// 找床睡：先找最近的、还没有外人睡着的卧处（与外人挤房醒来要扣心情，见 <see cref="WakeUp"/>）；
     /// 处处都有人了再退回最近的有空床的房间。有人锁门睡下的房间进不去，主人的床好感不够上不去
-    /// （见 <see cref="FreeBed"/>）。一张床都找不到就不睡——不在地上睡，退回日常决策（歇着/串门）。
+    /// （见 <see cref="FreeBed"/>）。一张床都找不到就在最近的进得去的室内打地铺（女仆先挑主人的房间），
+    /// 醒来心情受地铺之苦（见 <see cref="Affect.SleptOnFloor"/>）；连室内都进不去才不睡，退回日常决策。
     /// </summary>
     private bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
     {
@@ -1261,18 +1262,19 @@ public sealed class TerritoryClock
             bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
                 r => MaySleepIn(territory, r, character)
                     && FreeBed(territory, r.Id, character, ctx, used) != null);
+        var mattress = bed >= 0 ? FreeBed(territory, bed, character, ctx, used) : null;
+        if (bed < 0)
+            bed = FloorFor(character, worker, territory, roster, ctx);
         if (bed < 0)
             return false;
 
-        var mattress = FreeBed(territory, bed, character, ctx, used)!;
-
         Release(worker, used);
-        character.Affect.AddMood((Affect.Neutral - character.Affect.Mood) * 20 / 100);
+        character.Affect.AddMood((character.Affect.Baseline(ctx.Day) - character.Affect.Mood) * 20 / 100);
         worker.Goal = ActionKind.Sleep;
         worker.Task = ActionKind.None;
         worker.Progress = 0;
         worker.Path.Clear();
-        worker.FacilityId = mattress.Id;
+        worker.FacilityId = mattress?.Id ?? -1;
         GotoRoom(worker, territory, bed, character, ctx);
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
@@ -1286,6 +1288,24 @@ public sealed class TerritoryClock
             UsedFacilities = new HashSet<int>(used.Keys),
         });
         return true;
+    }
+
+    /// <summary>
+    /// 打地铺的地方：最近的、进得去的室内房间。女仆先挑主人的房间（与主人同屋不介意），
+    /// 其余人先挑没外人睡着的，都有人了再随便哪间。没有就返回 -1。
+    /// </summary>
+    private int FloorFor(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx)
+    {
+        bool Indoor(Room r) => r.HasTag(Territory.IndoorTag) && MaySleepIn(territory, r, character);
+        var room = character.SharesRoomWithMaster()
+            ? NearestRoomWith(territory, worker.RoomId, character, ctx, r => r.Id == territory.MasterBedroomId && Indoor(r))
+            : -1;
+        if (room < 0)
+            room = NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => Indoor(r) && !SleepsWithStranger(character, worker, territory, roster, r.Id));
+        if (room < 0)
+            room = NearestRoomWith(territory, worker.RoomId, character, ctx, Indoor);
+        return room;
     }
 
     /// <summary>
@@ -1529,9 +1549,10 @@ public sealed class TerritoryClock
         if (ctx.NowTotal % Affect.DriftPeriodMinutes != 0)
             return;
         var mood = character.Affect.Mood;
-        if (mood > Affect.Neutral)
+        var baseline = character.Affect.Baseline(ctx.Day);
+        if (mood > baseline)
             character.Affect.AddMood(-1);
-        else if (mood < Affect.Neutral)
+        else if (mood < baseline)
             character.Affect.AddMood(1);
         if (character.Condition.Stamina * 10 < character.Condition.MaxStamina * 3)
             character.Affect.AddMood(-1);

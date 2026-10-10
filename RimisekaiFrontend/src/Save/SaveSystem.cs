@@ -55,6 +55,9 @@ public sealed class MemberData
     public int[] IntimateRewards { get; set; } = new int[4];
     public int IgnoredChatDay { get; set; } = -1;
     public int IgnoredChatTaken { get; set; }
+
+    /// <summary>还在作用期内的地铺夜（日子）。</summary>
+    public List<int> FloorNights { get; set; } = new();
     public Dictionary<int, int> Flags { get; set; } = new();
     public Dictionary<int, int> Base { get; set; } = new();
     public Dictionary<int, int> MaxBase { get; set; } = new();
@@ -470,6 +473,7 @@ public static class SaveSystem
         IntimateRewards = (int[])c.Affect.IntimateRewards.Clone(),
         IgnoredChatDay = c.Affect.IgnoredChatDay,
         IgnoredChatTaken = c.Affect.IgnoredChatTaken,
+        FloorNights = new List<int>(c.Affect.FloorNights),
         Flags = new Dictionary<int, int>(c.Flags),
         Base = new Dictionary<int, int>(c.Base),
         MaxBase = new Dictionary<int, int>(c.MaxBase),
@@ -653,6 +657,7 @@ public static class SaveSystem
         c.Affect.IntimateDay = m.IntimateDay;
         c.Affect.IgnoredChatDay = m.IgnoredChatDay;
         c.Affect.IgnoredChatTaken = m.IgnoredChatTaken;
+        c.Affect.FloorNights.AddRange(m.FloorNights);
         if (m.IntimateRewards.Length == 4)
             m.IntimateRewards.CopyTo(c.Affect.IntimateRewards, 0);
         foreach (var pair in m.VoiceSaidAt)
