@@ -588,7 +588,8 @@ public sealed class TerritoryClock
         DriftMood(character, worker, ctx);
         GrowDesire(character, ctx);
         TrackTogether(character, worker, roster, ctx);
-        if (ctx.Day != character.Affect.LastBoredDay && ctx.Day - character.Affect.LastPlayDay > 2)
+        // 无聊只记 NPC：主人的消遣由玩家亲手安排，自动节律里没有主人去消遣的分支，记了只会越扣越低。
+        if (!character.IsMaster && ctx.Day != character.Affect.LastBoredDay && ctx.Day - character.Affect.LastPlayDay > 2)
         {
             character.Affect.LastBoredDay = ctx.Day;
             character.Affect.AddMood(-5);
@@ -1200,10 +1201,19 @@ public sealed class TerritoryClock
         return true;
     }
 
-    private static bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
+    /// <summary>
+    /// 找床睡：先找最近的、还没有外人睡着的卧处（与外人挤房醒来要扣心情，见 <see cref="WakeUp"/>）；
+    /// 处处都有人了再退回最近的有空床的房间。
+    /// </summary>
+    private bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
     {
         var bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
-            r => HasAction(territory, r.Id, ActionKind.Sleep));
+            r => HasAction(territory, r.Id, ActionKind.Sleep)
+                && FindFree(territory, r.Id, ActionKind.Sleep, used) != null
+                && !SleepsWithStranger(character, worker, territory, roster, r.Id));
+        if (bed < 0)
+            bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => HasAction(territory, r.Id, ActionKind.Sleep));
         if (bed < 0)
             return false;
 
@@ -1231,6 +1241,22 @@ public sealed class TerritoryClock
             UsedFacilities = new HashSet<int>(used.Keys),
         });
         return true;
+    }
+
+    /// <summary>这间房里已经有不是心仪同伴的人睡下了。</summary>
+    private bool SleepsWithStranger(CharacterState character, Worker worker, Territory territory, Roster roster, int roomId)
+    {
+        foreach (var other in _workers)
+        {
+            if (other.CharacterId == worker.CharacterId || other.Goal != ActionKind.Sleep)
+                continue;
+            if (territory.Facilities.Find(f => f.Id == other.FacilityId)?.RoomId != roomId)
+                continue;
+            var otherChar = roster.Find(other.CharacterId);
+            if (otherChar == null || !(character.Relations.Has(other.CharacterId, RelationFlag.Sworn) || otherChar.Condition.Bond == Bond.Lover))
+                return true;
+        }
+        return false;
     }
 
     private static bool StartMeal(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, int window, Dictionary<int, int> used)
