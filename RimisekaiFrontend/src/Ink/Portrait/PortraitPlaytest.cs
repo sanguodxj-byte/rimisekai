@@ -678,15 +678,26 @@ public partial class PortraitPlaytest : Node
         Goal("建造页可操作", open && cell != null && acted && await GoHubRoot("建造收尾"));
     }
 
+    /// <summary>领地里只看行情、点不了；走进最近城镇的商店（调试直达入口，路照走）才买得成。</summary>
     private async Task GoalTrade()
     {
         await GoHubRoot("交易");
         await TapAction(PortraitAction.Tab, "storage", w => w.Index == 3);
         await TapAction(PortraitAction.StoreSegment, "trade seg", w => w.Index == 1);
+        var lockedAtHome = !await TapAction(PortraitAction.TradePlus, "plus at home");
+        Shoot("trade_home");
+        var hub = _root.DebugVm!.Hub;
+        var town = hub.State.World.Pois.FirstOrDefault(p => p.Type is WorldMap.WorldPoiType.Village or WorldMap.WorldPoiType.Town or WorldMap.WorldPoiType.Capital);
+        var shop = town != null && hub.TravelToPoiDirect(town.Id)
+            ? hub.State.Territory.Rooms.FirstOrDefault(r => r.HasTag(Housing.Territory.CityShopTag))
+            : null;
+        var inShop = shop != null && (hub.PlayerRoomId == shop.Id || hub.Arrive(shop.Id)) && hub.AtCityShop;
+        await TapAction(PortraitAction.Tab, "storage", w => w.Index == 3);
+        await TapAction(PortraitAction.StoreSegment, "trade seg", w => w.Index == 1);
         var plus = await TapAction(PortraitAction.TradePlus, "plus");
         var run = await TapAction(PortraitAction.TradeRun, "deal");
         Shoot("trade");
-        Goal("交易买入", plus && run);
+        Goal("交易买入（只在城镇商店）", lockedAtHome && inShop && plus && run);
     }
 
     // ================= 随机乱点 =================

@@ -87,6 +87,8 @@ public sealed partial class HubSession
         if (room == null)
             return;
         WriteScene($"你来到了{room.Name}。");
+        if (room.HasTag(Territory.CityShopTag))
+            WriteScene("店里摆满了各色货物，可以在「仓储 · 交易」里买卖。");
         SeeAround();
         if (MeetReaction(roomId) is { } meet)
             WriteActivity(meet.Who, meet.Line);

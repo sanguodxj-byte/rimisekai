@@ -198,7 +198,7 @@ public partial class PortraitHubScreen : Control
         SetProcess(true);
     }
 
-    /// <summary>切到某个根页签：收起推入页与抽屉，离开交易段即散集。</summary>
+    /// <summary>切到某个根页签：收起推入页与抽屉，离开交易段即清掉没成交的数量。</summary>
     public void ShowTab(int i)
     {
         LeaveTradeIfOpen();
@@ -207,8 +207,6 @@ public partial class PortraitHubScreen : Control
         if (i != _tab)
             StartTabSlide(_tab);
         _tab = i;
-        if (_tab == 3 && _storeMode == 1)
-            _vm.Hub.OpenTrade();
         ResetListDrag();
         QueueRedraw();
     }
@@ -683,8 +681,6 @@ public partial class PortraitHubScreen : Control
             _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
         _push = PushPage.None;
         _sheet = SheetKind.None;
-        if (_tab == 3 && _storeMode == 1)
-            _vm.Hub.OpenTrade();
     }
 
     private void SetNotice(string text)

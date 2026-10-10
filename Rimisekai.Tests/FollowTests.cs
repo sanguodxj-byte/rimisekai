@@ -171,6 +171,8 @@ public sealed class FollowTests
         hub.Social(SocialAction.Invite);
         who[CoreStat.Charm] = 10;
         who.LifeExp[(int)LifeSkill.Social] = 1000; // 本领 = 10 + 10 = 20，加成 (10+20)/2 = 15，正好顶格
+        // 跟着进城：在商店里还价
+        CityTrip.ToShop(hub);
         state.Territory.MarketDay["陶罐"] = new Territory.MarketEntry(5, 100);
 
         // 陶罐基准 14、存货 5、系数 100：买 = 14×80/100 = 11，卖 = 14×60/100×75/100 = 6。
@@ -182,12 +184,12 @@ public sealed class FollowTests
         Assert.Equal(7, hub.TradePrices(herbRow, selling: true));
 
         state.Money = 1000;
-        hub.OpenTrade();
         Assert.True(hub.MarketTrade("陶罐", 1, selling: false));
         Assert.Equal(991, state.Money);
         Assert.Equal(1, state.Roster.Master!.Bag.Get("陶罐"));
 
         // 分开之后报价回到原样。
+        Assert.True(hub.Select(who.Id));
         Assert.True(hub.Social(SocialAction.Part));
         Assert.Equal(herbRow.BuyPrice, hub.TradePrices(herbRow, selling: false));
     }

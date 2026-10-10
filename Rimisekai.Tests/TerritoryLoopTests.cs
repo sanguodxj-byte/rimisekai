@@ -576,7 +576,8 @@ public sealed class TerritoryLoopTests
     private static long MarketRun(HubSession hub, GameState state, long spent)
     {
         var master = state.Roster.Master!;
-        hub.OpenTrade();
+        var leftAt = (state.Clock.Day - 1) * 1440 + state.Clock.Minutes;
+        CityTrip.ToShop(hub);
         var chest = state.Territory.Facilities.Single(f => f.Id == Chest);
         var need = 18 - chest.Contents.Items.Where(p => state.Territory.IsFood(p.Key)).Sum(p => p.Value);
         foreach (var food in Provisions)
@@ -590,7 +591,7 @@ public sealed class TerritoryLoopTests
                 need--;
             }
         }
-        hub.LeaveMarket();
+        CityTrip.Home(hub);
         var bought = Provisions.Where(f => master.Bag.Get(f) > 0).ToList();
         if (bought.Count > 0)
         {

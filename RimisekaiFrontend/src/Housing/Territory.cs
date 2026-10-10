@@ -1442,6 +1442,9 @@ public sealed class Territory
     /// <summary>室内房间的标签：家具只能摆这种房，打地铺也只在这种房里打。</summary>
     public const string IndoorTag = "室内";
 
+    /// <summary>城镇里的商店（聚落场景的房间标签）：人进了这一间才能买卖。</summary>
+    public const string CityShopTag = "商店";
+
     /// <summary>室外房间的标签：田地、圈舍、资源点、井与营火只能建在这种房里。</summary>
     public const string OutdoorTag = "室外";
 

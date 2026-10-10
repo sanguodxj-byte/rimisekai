@@ -129,7 +129,14 @@ public partial class PortraitCapture : Node
         // 仓储三段
         _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
-        _steps.Enqueue(() => Shoot("store_trade", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            // 领地里没有远程交易：行情照看，步进与成交都压暗（进城镇商店才能买卖，后面大地图那段核对）。
+            var widgets = _root.HubScreen.DebugWidgets;
+            Require(!widgets.Any(w => w.Action is PortraitAction.TradePlus or PortraitAction.TradeMinus && w.Enabled)
+                && widgets.Any(w => w.Action == PortraitAction.TradeRun && !w.Enabled), "trade steppers are dead at home");
+            Shoot("store_trade", _root.HubScreen);
+        });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 2));
         _steps.Enqueue(() => Shoot("store_craft", _root.HubScreen));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 0));
@@ -335,7 +342,9 @@ public partial class PortraitCapture : Node
         {
             _root.HubScreen.DebugPress(PortraitAction.WorldHome, 0);
             var world = _root.HubScreen.DebugHub.State.World;
-            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            // 最近一座开店的聚落（村、镇、王都）：进去还要走进商店拍交易页。
+            var poi = world.Pois.Where(p => p.Type is Rimisekai.WorldMap.WorldPoiType.Village or Rimisekai.WorldMap.WorldPoiType.Town or Rimisekai.WorldMap.WorldPoiType.Capital)
+                .OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
             _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
         });
         // 点格逻辑已移除（2026-10-10）：轻点兴趣点格不弹抽屉。
@@ -425,7 +434,9 @@ public partial class PortraitCapture : Node
             var world = hub.State.World;
             Require(hub.Layer == Rimisekai.Hub.MapLayer.World && hub.WorldPartyPosition == (world.HomeX, world.HomeY) && hub.PlayerRoomId == -1,
                 "travel puts the party on the home tile, out of every territory room");
-            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            // 最近一座开店的聚落（村、镇、王都）：进去还要走进商店拍交易页。
+            var poi = world.Pois.Where(p => p.Type is Rimisekai.WorldMap.WorldPoiType.Village or Rimisekai.WorldMap.WorldPoiType.Town or Rimisekai.WorldMap.WorldPoiType.Capital)
+                .OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
             // 走到兴趣点旁边一格（逐格耗时），再用方向键踩上去——踩上即自动弹出「进入」。
             var near = new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }
                 .Select(d => (X: poi.X - d.Item1, Y: poi.Y - d.Item2, Dir: System.Array.IndexOf(new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }, d)))
@@ -456,8 +467,31 @@ public partial class PortraitCapture : Node
         {
             Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the settlement");
             Shoot("world_poi_inside", _root.HubScreen);
-            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+            // 走进城里的商店：买卖只在这里做。
+            var hub = _root.HubScreen.DebugHub;
+            var shop = hub.State.Territory.Rooms.First(r => r.RegionId >= Rimisekai.Housing.Territory.MaxTerritoryRegions
+                && r.HasTag(Rimisekai.Housing.Territory.CityShopTag));
+            Require((hub.PlayerRoomId == shop.Id || hub.Arrive(shop.Id)) && hub.AtCityShop, "walk into the town shop");
+            _root.HubScreen.ShowTab(3);
         });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
+        _steps.Enqueue(() =>
+        {
+            var widgets = _root.HubScreen.DebugWidgets;
+            Require(widgets.Any(w => w.Action == PortraitAction.TradePlus && w.Enabled), "in the town shop the trade steppers are live");
+            Shoot("store_trade_city_shop", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.TradePlus, widgets.First(w => w.Action == PortraitAction.TradePlus && w.Enabled).Index);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.TradeRun && w.Enabled), "a stepped line can be dealt in the shop");
+            Shoot("store_trade_city_shop_picked", _root.HubScreen);
+            var bought = _root.HubScreen.DebugHub.State.Money;
+            _root.HubScreen.DebugPress(PortraitAction.TradeRun, 0);
+            Require(_root.HubScreen.DebugHub.State.Money < bought, "dealing in the shop pays for the goods");
+            _root.HubScreen.ShowTab(0);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.World, "leaving the settlement stands on its tile");

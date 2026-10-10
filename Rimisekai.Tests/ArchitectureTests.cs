@@ -295,11 +295,8 @@ public sealed class ArchitectureTests
         Assert.Equal(0, hub.State.Roster.Master!.Bag.Get("花"));
         Assert.True(hub.Craft("布"));
         Assert.Equal("布", hub.State.Territory.GetTargetCraftItem(ActionKind.Sew));
-        hub.State.Roster.Master!.Bag.Add("布", 1);
-        Assert.True(hub.Trade("布", 1, 15, selling: true));
-        Assert.Equal(115, state.Money);
         Assert.True(hub.Develop(3));
-        Assert.Equal(75, state.Money);
+        Assert.Equal(60, state.Money);
         Assert.True(locked.Open);
     }
 
@@ -505,15 +502,10 @@ public sealed class ArchitectureTests
         var hub = new HubSession(state);
         hub.Enter(1);
 
-        // 不在交易页买卖不了，且不耗时。
+        // 领地里没有远程交易：买卖只在城镇商店里做，这里点了不成交、不耗时。
         Assert.False(hub.MarketTrade("木材", 1, selling: false));
         Assert.Equal(0, state.Clock.Minutes);
-        // 点交易开页免费；首笔成交结算行程 6 小时，之后的成交免费。
-        hub.OpenTrade();
-        Assert.True(hub.MarketTrade("木材", 2, selling: false));
-        Assert.Equal(6 * 60, state.Clock.Minutes);
-        Assert.Equal(2, state.Roster.Master!.Bag.Get("木材"));
-        Assert.True(hub.MarketTrade("木材", 1, selling: true));
+        Assert.Equal(0, state.Roster.Master!.Bag.Get("木材"));
         Assert.Single(hub.GuestsHere());
     }
 

@@ -54,6 +54,9 @@ public sealed class PoiRoom
     /// <summary>是否为终点房间（必须位于边缘格）</summary>
     public bool IsEnd { get; set; }
 
+    /// <summary>城镇商店：进了这一间才能买卖。</summary>
+    public bool Shop { get; set; }
+
     /// <summary>是否已开放/开拓</summary>
     public bool Open { get; set; } = true;
 

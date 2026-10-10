@@ -126,6 +126,8 @@ public sealed partial class HubSession
             };
             foreach (var link in r.Links)
                 room.Links.Add(PoiRoomIdBase + link);
+            foreach (var tag in r.Tags)
+                room.AddTag(tag);
             room.EnsureDefaultTag();
             if (!State.Territory.AddRoom(room))
                 throw new System.InvalidOperationException($"场景房 {room.Id} 装不进领地表。");

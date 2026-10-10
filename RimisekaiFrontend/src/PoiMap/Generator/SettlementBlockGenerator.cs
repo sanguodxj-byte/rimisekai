@@ -107,7 +107,9 @@ public static class SettlementBlockGenerator
             centerRoom.Terrain = WorldTerrainType.Plains;
         }
 
-        // 5. 沿街与外围分布设施与自然地貌
+        // 5. 有商店的分区先在临街第一格开商店（买卖只在这里做），其余沿街与外围分布设施与自然地貌
+        if (catalog.ShopOf(district) is { } shop)
+            PlaceShop(block, shop);
         DecorateSettlement(block, catalog, district, rng);
 
         // 6. 开放式连通：确保全图 25 格完全连通，且草地、农田、庭院与道路之间自由通行
@@ -126,7 +128,7 @@ public static class SettlementBlockGenerator
             for (var x = 0; x < Size; x++)
             {
                 var r = block.Grid[x, y]!;
-                if (r.IsStart || r.IsEnd || r.Terrain == WorldTerrainType.Road || (x == 2 && y == 2))
+                if (r.IsStart || r.IsEnd || r.Shop || r.Terrain == WorldTerrainType.Road || (x == 2 && y == 2))
                     continue;
 
                 // 紧邻道路的格子优先作为工坊、酒馆、仓库、旅馆、教会
@@ -155,6 +157,35 @@ public static class SettlementBlockGenerator
                     r.Name = rng.NextBool(0.7f) ? "草地" : "庭院";
                     r.Terrain = WorldTerrainType.Grassland;
                 }
+            }
+        }
+    }
+
+    /// <summary>商店落在扫描顺序里第一格紧挨道路的空地上（不占大门、出口、道路与中央广场）。</summary>
+    private static void PlaceShop(PoiBlock block, FacilityTemplateDef shop)
+    {
+        for (var y = 0; y < Size; y++)
+        {
+            for (var x = 0; x < Size; x++)
+            {
+                var r = block.Grid[x, y]!;
+                if (r.IsStart || r.IsEnd || r.Terrain == WorldTerrainType.Road || (x == 2 && y == 2))
+                    continue;
+                var byRoad = false;
+                foreach (var (dx, dy) in Direction4Extensions.Offsets)
+                {
+                    var nx = x + dx;
+                    var ny = y + dy;
+                    byRoad |= nx >= 0 && nx < Size && ny >= 0 && ny < Size && block.Grid[nx, ny]!.Terrain == WorldTerrainType.Road;
+                }
+                if (!byRoad)
+                    continue;
+                r.Shop = true;
+                r.Name = shop.Name;
+                r.RoomTemplateId = shop.RoomIds[0];
+                r.Terrain = WorldTerrainType.Plains;
+                r.FacilityIds.Add(shop.Id);
+                return;
             }
         }
     }

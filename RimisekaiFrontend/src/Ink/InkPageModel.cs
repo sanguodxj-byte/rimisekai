@@ -150,7 +150,7 @@ public sealed class InkTradeModel
     /// <summary>右栏滚动首行。</summary>
     public int MarketFirst { get; init; }
 
-    /// <summary>今天是否还能成交（首笔成交即结算行程，0 点刷新）。</summary>
+    /// <summary>此刻能不能成交：人站在城镇商店里才行。</summary>
     public bool TradeAvailable { get; init; } = true;
 
     /// <summary>准备卖出的物品名称与单价。</summary>
