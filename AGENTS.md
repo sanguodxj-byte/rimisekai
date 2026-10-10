@@ -554,7 +554,7 @@
 ## 外部图像生成服务配置
 
 - API Endpoint: `https://xjbh.lol/v1`
-- API Key: `REDACTED_API_KEY`
+- API Key: 见 `tools/api_keys.txt`（不入库，本地维护，一行一条「名字=值」；脚本经 `tools/_keys.py` 读取，游戏运行时经 `Rimisekai.Voice.LocalApiKeys` 读同一份）
 - 默认生图模型: `gpt-image-2.5-sunburst` (或 `gptimage 2.5 sunburst` 对应映射标识)
 - 常用宽高比: 16:9
 

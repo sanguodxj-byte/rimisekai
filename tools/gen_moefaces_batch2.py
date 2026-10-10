@@ -19,7 +19,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 PROJ = r"D:\123\rimisekai"
 API = "https://sakiko.dev/v1/images/edits"
-API_KEY = "REDACTED_API_KEY"
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from _keys import get as _getkey
+API_KEY = _getkey("sakiko")
 MODEL = "image/chat2api-gpt-image-2.5"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 

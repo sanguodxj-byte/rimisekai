@@ -91,7 +91,7 @@ public static class InkWorldBootstrap
             LoadVoiceFile(state, path);
 
         // 挂接运行时 LLM 生成器（双模支持：有配置走动态生成，出错或无网络自动安全回退高质静态文案）
-        state.Voice.Generation.Generator ??= new Rimisekai.Voice.HttpVoiceGenerator();
+        state.Voice.Generation.Generator ??= new Rimisekai.Voice.HttpVoiceGenerator(apiKey: Rimisekai.Voice.LocalApiKeys.Get("xjbh"));
     }
 
     /// <summary>

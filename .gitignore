@@ -53,4 +53,5 @@ _pcap/
 /all_moe_generation_log.txt
 /monsters_*.txt
 
-
+# ===== 本地密钥（不入库） =====
+tools/api_keys.txt
