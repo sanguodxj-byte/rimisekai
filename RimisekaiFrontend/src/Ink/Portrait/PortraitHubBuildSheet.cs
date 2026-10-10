@@ -199,12 +199,12 @@ public partial class PortraitHubScreen
             row => _buildTileFirst = row, PortraitLayout.BuildTileStep);
     }
 
-    /// <summary>一格：卡片（选中走卡片选中态）＋类别线描图标＋名。能建骨白；建不了（缺钱料、标签不合、设施位满、等级不够）一律压成银灰，原因看详情卡。</summary>
+    /// <summary>一格：卡片（选中走卡片选中态）＋本件图标（icons/build/名.svg）＋名。能建骨白；建不了（缺钱料、标签不合、设施位满、等级不够）一律压成银灰，原因看详情卡。</summary>
     private void DrawBuildTile(Rect2 r, string name, string category, BuildState state, bool selected)
     {
         PortraitFrame.Card(this, r, selected, 26f);
         var color = state == BuildState.Ready ? InkStyle.Line : InkStyle.Dim;
-        BuildGlyph(category)(this, r.GetCenter().X, r.Position.Y + 98f, 50f, color);
+        InkIcon.DrawBuilding(this, name, new Rect2(r.GetCenter().X - 60f, r.Position.Y + 28f, 120f, 120f), color);
         InkDraw.TextBounded(this, new Rect2(r.Position.X + 10f, r.End.Y - 82f, r.Size.X - 20f, 60f), name,
             PortraitLayout.FontBody, PortraitLayout.FontMeta, color, "cm");
     }
@@ -338,20 +338,6 @@ public partial class PortraitHubScreen
             _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentDoor, (int)door.Dir, true, $"{Territory.DirName(door.Dir)}门"));
         }
     }
-
-    /// <summary>分类图标：设施与房间各类一枚线描字形（数据里没有单件图标）。房间本身用城堡。</summary>
-    private static Action<CanvasItem, float, float, float, Color> BuildGlyph(string category) => category switch
-    {
-        "Build_Furniture" or "BuildRoom_Living" => PortraitGlyph.Person,
-        "Build_Production" or "BuildRoom_Production" => PortraitGlyph.Hammer,
-        "Build_Farm" or "BuildRoom_Farm" => PortraitGlyph.Leaf,
-        "Build_Gather" => PortraitGlyph.Sun,
-        "Build_Storage" => PortraitGlyph.Chest,
-        "Build_Leisure" or "BuildRoom_Leisure" => PortraitGlyph.Book,
-        "Build_Faith" => PortraitGlyph.Bell,
-        "BuildRoom_Shop" => PortraitGlyph.Coin,
-        _ => PortraitGlyph.Castle,
-    };
 
     private bool ExecuteBuildSheet(PortraitWidget widget)
     {
