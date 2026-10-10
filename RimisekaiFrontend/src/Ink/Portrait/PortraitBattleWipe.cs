@@ -398,8 +398,8 @@ public sealed partial class PortraitBattleWipe : Control
         if (fall <= 0f)
             return;
         var e = EaseIn2(fall);
-        // 双手巨剑剑尖朝下（本地剑尖朝上 -y，转半圈）：剑尖自画面上方落到窗心下方 270（抵窗下缘），剑身贯穿整扇窗；剑首仍在上黑幕带之下。
-        var tipY = Mathf.Lerp(-120f, O.Y + 270f, e);
+        // 双手巨剑剑尖朝下（本地剑尖朝上 -y，转半圈）：剑尖自画面上方落到首领名上方的细线之上一点（C.Y + 405），剑身贯穿整扇窗，护手正好落在荆棘环上缘；剑首仍在上黑幕带之下。
+        var tipY = Mathf.Lerp(-120f, C.Y + 405f, e);
         SetT(ci, new Transform2D(Mathf.Pi, new Vector2(O.X, tipY - ZweiBlade)));
         DrawZweihander(ci);
         SetT(ci, Transform2D.Identity);
@@ -429,7 +429,7 @@ public sealed partial class PortraitBattleWipe : Control
     }
 
     /// <summary>巨剑剑身长（护手到剑尖）。</summary>
-    private const float ZweiBlade = 800f;
+    private const float ZweiBlade = 840f;
 
     /// <summary>
     /// 双手巨剑（本地坐标：剑尖朝上 -y，护手在原点）：宽长剑身自根部匀收到尖＋中脊与双血槽、近护手一段无刃根（一对短护钩）、
