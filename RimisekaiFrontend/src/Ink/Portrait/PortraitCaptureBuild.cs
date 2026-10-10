@@ -50,20 +50,25 @@ public partial class PortraitCapture
             Require(sofa.State == BuildState.Short && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && !w.Enabled),
                 "sofa without cloth is short and cannot be built");
             Shoot("build_sheet_short", _root.HubScreen);
-            ClickLabel(PortraitAction.BuildCategory, "采集养殖");
+            ClickLabel(PortraitAction.BuildCategory, "农牧");
         });
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "猪圈"));
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && !w.Enabled), "pigsty is locked indoors");
             Shoot("build_sheet_tag_locked", _root.HubScreen);
+            ClickLabel(PortraitAction.BuildCategory, "生产");
+        });
+        _steps.Enqueue(() =>
+        {
+            Shoot("build_sheet_production", _root.HubScreen);
             ClickLabel(PortraitAction.BuildCategory, HubSession.AllCategoryLabel);
         });
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildTile) == 16, "all tab fills a 4x4 screen");
             Shoot("build_sheet_all", _root.HubScreen);
-            ClickLabel(PortraitAction.BuildCategory, "起居");
+            ClickLabel(PortraitAction.BuildCategory, "家具");
         });
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "床"));
         _steps.Enqueue(() =>
@@ -115,7 +120,7 @@ public partial class PortraitCapture
             screen.DebugPress(PortraitAction.Back, 0);
         });
         _steps.Enqueue(() => ClickLabel(PortraitAction.DevelopmentCell, "山岳"));
-        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "采集养殖"));
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "采集"));
         _steps.Enqueue(() =>
         {
             Shoot("build_sheet_mountain_gather", _root.HubScreen);
@@ -131,10 +136,10 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 6
+            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 7
                 && _root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildSegment) == 1, "a plot lists room tabs only");
             Shoot("build_sheet_plot_rooms", _root.HubScreen);
-            ClickLabel(PortraitAction.BuildCategory, "营业");
+            ClickLabel(PortraitAction.BuildCategory, "商业");
         });
         _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "杂货铺"));
         _steps.Enqueue(() =>

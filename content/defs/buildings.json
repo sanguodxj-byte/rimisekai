@@ -28,7 +28,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -86,7 +86,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -168,7 +168,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -196,7 +196,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -226,7 +226,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -258,7 +258,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -290,7 +290,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -322,7 +322,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -350,7 +350,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -378,7 +378,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -411,7 +411,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -439,7 +439,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -472,7 +472,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -500,7 +500,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Faith"
     },
     {
       "defType": "FacilityDef",
@@ -564,7 +564,7 @@
         "马鬃"
       ],
       "storagePriority": "low",
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -632,7 +632,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -660,7 +660,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -690,7 +690,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -790,7 +790,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -858,7 +858,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -895,7 +895,7 @@
         "Root"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -929,7 +929,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -1021,7 +1021,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1083,7 +1083,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1119,7 +1119,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1151,7 +1151,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Faith"
     },
     {
       "defType": "FacilityDef",
@@ -1215,7 +1215,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Leisure"
+      "buildCategory": "Build_Faith"
     },
     {
       "defType": "FacilityDef",
@@ -1248,7 +1248,7 @@
         "Food"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Storage"
     },
     {
       "defType": "FacilityDef",
@@ -1280,7 +1280,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Military"
     },
     {
       "defType": "FacilityDef",
@@ -1344,7 +1344,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1376,7 +1376,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1408,7 +1408,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -1441,7 +1441,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1474,7 +1474,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1502,7 +1502,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1530,7 +1530,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -1567,7 +1567,7 @@
         "Root"
       ],
       "storagePriority": "normal",
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -1597,7 +1597,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Kitchen"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "RoomDef",
@@ -1628,7 +1628,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1659,7 +1659,7 @@
       "bonusActions": [
         "Mine"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1690,7 +1690,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1725,7 +1725,7 @@
       "bonusActions": [
         "Cook"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1760,7 +1760,7 @@
       "bonusActions": [
         "Forge"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1791,7 +1791,7 @@
       "bonusActions": [
         "Woodwork"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1822,7 +1822,7 @@
       "bonusActions": [
         "Sew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1853,7 +1853,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -1944,7 +1944,7 @@
       "illustration": "res://assets/room_workshop.png",
       "bundledFacility": "Facility_1022",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -1975,7 +1975,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2008,7 +2008,7 @@
       "illustration": "res://assets/terrain_storm_mountains.png",
       "bundledFacility": "Facility_1025",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2039,7 +2039,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2187,7 +2187,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2315,7 +2315,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2343,7 +2343,7 @@
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1044",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2438,7 +2438,7 @@
       "illustration": "res://assets/room_tavern.png",
       "bundledFacility": "Facility_1048",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2467,7 +2467,7 @@
       "illustration": "res://assets/settlement_village.png",
       "bundledFacility": "Facility_1049",
       "bonusActions": [],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Military"
     },
     {
       "defType": "RoomDef",
@@ -2502,7 +2502,7 @@
       "bonusActions": [
         "Mine"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2533,7 +2533,7 @@
       "bonusActions": [
         "Till"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2564,7 +2564,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2599,7 +2599,7 @@
       "bonusActions": [
         "Woodwork"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2663,7 +2663,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2693,7 +2693,7 @@
       "bonusActions": [
         "Tend"
       ],
-      "buildCategory": "BuildRoom_Outdoor"
+      "buildCategory": "BuildRoom_Farm"
     },
     {
       "defType": "RoomDef",
@@ -2728,7 +2728,7 @@
       "bonusActions": [
         "Cook"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2763,7 +2763,7 @@
       "bonusActions": [
         "Brew"
       ],
-      "buildCategory": "BuildRoom_Workshop"
+      "buildCategory": "BuildRoom_Production"
     },
     {
       "defType": "RoomDef",
@@ -2865,7 +2865,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -2891,7 +2891,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Defense"
+      "buildCategory": "Build_Leisure"
     },
     {
       "defType": "FacilityDef",
@@ -2924,7 +2924,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -2952,7 +2952,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -3085,7 +3085,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -3113,7 +3113,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3141,7 +3141,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3169,7 +3169,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3197,7 +3197,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3225,7 +3225,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Field"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3257,7 +3257,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3289,7 +3289,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3321,7 +3321,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Gather"
+      "buildCategory": "Build_Farm"
     },
     {
       "defType": "FacilityDef",
@@ -3353,7 +3353,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -3385,7 +3385,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -3417,7 +3417,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Workshop"
+      "buildCategory": "Build_Production"
     },
     {
       "defType": "FacilityDef",
@@ -3445,7 +3445,7 @@
         }
       ],
       "marketValue": 0,
-      "buildCategory": "Build_Living"
+      "buildCategory": "Build_Furniture"
     }
   ]
 }

@@ -34,11 +34,33 @@ public sealed class BuildCatalogTests
         var facilityCats = HubSession.BuildCategories(BuildTarget.Facility).Select(c => c.DefName).ToHashSet();
         var roomCats = HubSession.BuildCategories(BuildTarget.Room).Select(c => c.DefName).ToHashSet();
         Assert.Equal(8, facilityCats.Count);
-        Assert.Equal(5, roomCats.Count);
+        Assert.Equal(6, roomCats.Count);
         foreach (var f in ContentDefs.BuildingFacilities.Where(f => f.Buildable))
             Assert.Contains(f.BuildCategory, facilityCats);
         foreach (var r in ContentDefs.BuildingRooms.Concat(ContentDefs.AreaRooms).Where(r => r.Buildable))
             Assert.Contains(r.BuildCategory, roomCats);
+    }
+
+    [Fact]
+    public void Category_labels_are_two_characters_and_unique_per_target()
+    {
+        ContentDefs.EnsureInitialized();
+        foreach (var target in new[] { BuildTarget.Facility, BuildTarget.Room })
+        {
+            var labels = HubSession.BuildCategories(target).Select(c => c.Label).ToList();
+            Assert.All(labels, l => Assert.Equal(2, l.Length));
+            Assert.Equal(labels.Count, labels.Distinct().Count());
+        }
+    }
+
+    [Fact]
+    public void Every_station_that_takes_materials_is_under_production()
+    {
+        ContentDefs.EnsureInitialized();
+        var stations = DefDatabase<RecipeDef>.All.Select(r => r.Station).ToHashSet();
+        var crafting = ContentDefs.BuildingFacilities.Where(f => f.Buildable && f.Actions.Any(stations.Contains)).ToList();
+        Assert.NotEmpty(crafting);
+        Assert.All(crafting, f => Assert.Equal("Build_Production", f.BuildCategory));
     }
 
     [Fact]

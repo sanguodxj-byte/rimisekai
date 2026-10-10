@@ -31,7 +31,8 @@ public class DefUniquenessTests
     [Fact]
     public void No_duplicate_label_within_one_table()
     {
-        foreach (var (type, labels) in Duplicates(d => d.Label))
+        // 建造分类按对象（设施/房间）各成一套页签，两套之间同名（生产、农牧……）是有意的。
+        foreach (var (type, labels) in Duplicates(d => d is BuildCategoryDef b ? $"{b.Target}/{b.Label}" : d.Label))
             Assert.True(labels.Count == 0,
                 $"{type.Name} 表内有重复 label：{string.Join("、", labels)}");
     }
