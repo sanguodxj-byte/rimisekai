@@ -101,7 +101,7 @@ public sealed class Facility
     /// <summary>只能摆进带这个标签的房间（「室内」/「室外」）；空串哪儿都行。见 <see cref="Territory.Fits"/>。</summary>
     public string RoomTag { get; init; } = "";
 
-    /// <summary>手艺门类（「锻」「窑」或空串）：只做门类相同的配方。见 <see cref="Defs.FacilityDef.Craft"/>。</summary>
+    /// <summary>手艺门类（「锻」「工」或空串）：只做门类相同的配方。见 <see cref="Defs.FacilityDef.Craft"/>。</summary>
     public string Craft { get; init; } = "";
 
     /// <summary>

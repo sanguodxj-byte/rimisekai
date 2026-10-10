@@ -912,7 +912,6 @@
       "isTable": true,
       "storage": true,
       "actions": [
-        "Cook",
         "Meal"
       ],
       "roomTag": "室内",
@@ -929,7 +928,7 @@
         "Meal"
       ],
       "storagePriority": "important",
-      "buildCategory": "Build_Production"
+      "buildCategory": "Build_Furniture"
     },
     {
       "defType": "FacilityDef",
@@ -1123,38 +1122,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1045",
-      "label": "冥想室",
-      "id": 1045,
-      "usage": "Rest",
-      "capacity": 1,
-      "buildCost": 11000,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Meditate"
-      ],
-      "roomTag": "室内",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "石材",
-          "count": 100
-        },
-        {
-          "itemId": "布",
-          "count": 40
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Faith"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1046",
       "label": "星象台",
       "id": 1046,
@@ -1200,7 +1167,8 @@
       "isTable": false,
       "storage": false,
       "actions": [
-        "Pray"
+        "Pray",
+        "Meditate"
       ],
       "roomTag": "室内",
       "craft": "",
@@ -2374,7 +2342,7 @@
         }
       ],
       "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "Facility_1045",
+      "bundledFacility": "Facility_1035",
       "bonusActions": [],
       "buildCategory": "BuildRoom_Leisure"
     },
@@ -3325,9 +3293,9 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1069",
-      "label": "制革坊",
-      "id": 1069,
+      "defName": "Facility_1072",
+      "label": "工坊",
+      "id": 1072,
       "usage": "Plain",
       "capacity": 1,
       "buildCost": 3000,
@@ -3338,74 +3306,12 @@
       "isTable": false,
       "storage": false,
       "actions": [
-        "Brew"
-      ],
-      "roomTag": "",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 16
-        },
-        {
-          "itemId": "石材",
-          "count": 12
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1070",
-      "label": "陶器坊",
-      "id": 1070,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 2200,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Forge"
-      ],
-      "roomTag": "",
-      "craft": "窑",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 12
-        },
-        {
-          "itemId": "石材",
-          "count": 16
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Production"
-    },
-    {
-      "defType": "FacilityDef",
-      "defName": "Facility_1071",
-      "label": "抄写室",
-      "id": 1071,
-      "usage": "Plain",
-      "capacity": 1,
-      "buildCost": 3500,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
+        "Forge",
+        "Brew",
         "Sew"
       ],
       "roomTag": "",
-      "craft": "",
+      "craft": "工",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3413,7 +3319,7 @@
         },
         {
           "itemId": "石材",
-          "count": 8
+          "count": 16
         }
       ],
       "marketValue": 0,

@@ -68,7 +68,8 @@
           "itemId": "兽皮",
           "count": 2
         }
-      ]
+      ],
+      "craft": "工"
     },
     {
       "defName": "Recipe_SpinWool",
@@ -99,7 +100,7 @@
           "count": 3
         }
       ],
-      "craft": "窑"
+      "craft": "工"
     },
     {
       "defName": "Recipe_Book",
@@ -118,7 +119,8 @@
           "itemId": "炼金尘",
           "count": 1
         }
-      ]
+      ],
+      "craft": "工"
     },
     {
       "defName": "Recipe_Cloth",
@@ -206,7 +208,7 @@
           "count": 2
         }
       ],
-      "craft": "窑"
+      "craft": "工"
     },
     {
       "defName": "Recipe_WoodBowl",

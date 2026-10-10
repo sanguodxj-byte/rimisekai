@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 namespace Rimisekai.Tests;
 
 /// <summary>
-/// 台子分门类（铁砧只锻、陶器坊只烧窑）、接委托耗 8 小时、皮甲卖得比料值钱。
+/// 台子分门类（铁砧只锻、工坊只做杂项手艺）、接委托耗 8 小时、皮甲卖得比料值钱。
 /// </summary>
 [Collection("Quest definition state")]
 public sealed class StationRulesTests
@@ -24,7 +24,7 @@ public sealed class StationRulesTests
         var hub = TerritoryLoopTests.NewGame(out var state, 1);
         var territory = state.Territory;
         var anvil = new Facility { Craft = "锻" };
-        var kiln = new Facility { Craft = "窑" };
+        var kiln = new Facility { Craft = "工" };
         var pottery = territory.Recipes.Single(r => r.ItemId == "陶罐");
         var dust = territory.Recipes.Single(r => r.ItemId == "炼金尘");
         var iron = territory.Recipes.Single(r => r.ItemId == "铁");
@@ -37,12 +37,12 @@ public sealed class StationRulesTests
         Assert.True(territory.Makes(steel, ActionKind.Forge, anvil));
         Assert.False(territory.Makes(pottery, ActionKind.Forge, anvil));
         Assert.False(territory.Makes(dust, ActionKind.Forge, anvil));
-        // 每条 Forge 配方都归了门类，建出来的铁砧、熔炉、陶器坊带着门类
+        // 每条 Forge 配方都归了门类，建出来的铁砧、熔炉、工坊带着门类
         Assert.All(territory.Recipes.Where(r => r.Station == ActionKind.Forge), r => Assert.NotEqual("", r.Craft));
         ContentDefs.EnsureInitialized();
         Assert.Equal("锻", DefDatabase<FacilityDef>.Get("Facility_1013")!.ToRuntime().Craft);
         Assert.Equal("锻", DefDatabase<FacilityDef>.Get("Facility_1014")!.ToRuntime().Craft);
-        Assert.Equal("窑", DefDatabase<FacilityDef>.Get("Facility_1070")!.ToRuntime().Craft);
+        Assert.Equal("工", DefDatabase<FacilityDef>.Get("Facility_1072")!.ToRuntime().Craft);
         Assert.Equal(15, DefDatabase<FacilityDef>.Get("Facility_1013")!.MaterialCost.Single(c => c.ItemId == "铁矿").Count);
     }
 
