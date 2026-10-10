@@ -180,7 +180,7 @@ public sealed class EnemyDef
     /// <summary>经验池：一半给手持武器与流派、一半随机散发（落到生活轨的作废）。角色是 3000。</summary>
     public int ExpPool { get; init; } = Rimisekai.Character.CharacterGenerator.ExpPool;
 
-    /// <summary>威胁等级 1-5：越高越靠前（同列更高层级），敌方近战只打最前的玩家。</summary>
+    /// <summary>威胁等级 1-4：越高越靠前（同列更高层级），敌方近战只打最前的玩家。</summary>
     public int ThreatTier { get; init; } = 1;
 
     /// <summary>站位列 1-4：跨列的精英/首领以其最左列声明，整场最多 4x4。</summary>

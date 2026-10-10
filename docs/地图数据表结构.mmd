@@ -1,0 +1,10 @@
+flowchart LR
+    M[map_defs.json<br/>地貌 · 野外遭遇 · 地城]
+    P[poi_defs.json<br/>POI 类型与规模]
+    D[poi_defs.json<br/>分区 ID 与命名语法]
+    R[room_defs.json<br/>房间模板]
+    F[facility_defs.json<br/>设施模板]
+    P -->|districts: 分区 ID| D
+    D -->|roomIds：分区可用房间| R
+    D -->|facilityIds：分区可用设施| F
+    F -->|roomIds：绑定房间| R

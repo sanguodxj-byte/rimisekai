@@ -44,6 +44,9 @@ public sealed class InkModalPage
     /// <summary>战后结算结构化数据（可选，存在时渲染器走专属精美版式）。</summary>
     public InkModalSettlementData? Settlement { get; set; }
 
+    /// <summary>怪物图鉴结构化详情（可选，属性、技能与掉落分区绘制）。</summary>
+    public InkModalMonsterCodexData? MonsterCodex { get; set; }
+
     /// <summary>是否存在交互控件（输入框或选项）。若存在则点击空白处不跳过。</summary>
     public bool HasInteractiveControls => Input != null || Choices.Count > 0;
 }
@@ -69,6 +72,28 @@ public sealed class InkModalSettlementData
         public int StyleLevel { get; init; } = 1;
         public float StyleRatio { get; init; } = 0.5f;
         public int StyleExp { get; init; }
+    }
+}
+
+/// <summary>怪物图鉴详情的结构化内容，避免把不同类型的数据拼成无层级正文。</summary>
+public sealed class InkModalMonsterCodexData
+{
+    public int RecordCount { get; init; }
+    public List<Metric> Attributes { get; init; } = new();
+    public List<string> Skills { get; init; } = new();
+    public List<Drop> Drops { get; init; } = new();
+
+    public sealed class Metric
+    {
+        public string Label { get; init; } = "";
+        public string Value { get; init; } = "";
+    }
+
+    public sealed class Drop
+    {
+        public string Name { get; init; } = "";
+        public string Quantity { get; init; } = "";
+        public string Chance { get; init; } = "";
     }
 }
 

@@ -88,6 +88,8 @@ public enum PortraitAction
     EquipOption,
     EquipRemove,
     OpenDisc,
+    CodexOpen,
+    CodexEntry,
     StoreSegment,
     StockCategory,
     StockSearch,
@@ -133,6 +135,7 @@ public partial class PortraitHubScreen : Control
         Build,
         System,
         Equip,
+        Codex,
     }
 
     private enum SheetKind
@@ -301,6 +304,7 @@ public partial class PortraitHubScreen : Control
             case PushPage.Disc: DrawSkillPage(); break;
             case PushPage.Build: DrawDevelopment(); break;
             case PushPage.Equip: DrawEquipmentPage(); break;
+            case PushPage.Codex: DrawCodexPage(); break;
             default: DrawSystem(); break;
         }
     }
@@ -412,6 +416,14 @@ public partial class PortraitHubScreen : Control
         // 缎带上沿一道淡出细线，把状态行和地名行分开。
         // 两端对称，菱形落在画面正中（2026-10-10 主人定）。
         PortraitFrame.FadingRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y - 40f);
+
+        var codex = PortraitLayout.HudCodex;
+        if (PortraitFrame.IsPressed(codex))
+            PortraitFrame.PressMark(this, codex.Grow(-10f));
+        PortraitGlyph.Book(this, codex.GetCenter().X, codex.Position.Y + 31f, 18f, InkStyle.Line);
+        InkDraw.TextBounded(this, new Rect2(codex.Position.X, codex.Position.Y + 54f, codex.Size.X, codex.Size.Y - 54f),
+            "图鉴", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        _widgets.Add(new PortraitWidget(codex, PortraitAction.CodexOpen, 0, true, "图鉴"));
 
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))
@@ -593,6 +605,9 @@ public partial class PortraitHubScreen : Control
             case PortraitAction.Tab:
                 ShowTab(w.Index);
                 return;
+            case PortraitAction.CodexOpen:
+                OpenCodexPage();
+                return;
             case PortraitAction.OpenSystem:
                 OpenSystemPage(InkSystemScreen.PageSave);
                 return;
@@ -615,7 +630,7 @@ public partial class PortraitHubScreen : Control
     private void Execute(PortraitWidget w)
     {
         if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
-            || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w))
+            || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w) || ExecuteCodex(w))
             return;
         switch (w.Action)
         {

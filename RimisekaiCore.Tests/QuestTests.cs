@@ -9,6 +9,7 @@ namespace Rimisekai.Tests;
 /// <summary>
 /// 任务：难度星显示（半星镂空、超十星计数）、内容表装载、进度记录的可用性/冷却。
 /// </summary>
+[Collection("Quest definition state")]
 public sealed class QuestTests : IDisposable
 {
     // 测完把内置委托表原样放回，后面读内置表的测试才看得到真内容。

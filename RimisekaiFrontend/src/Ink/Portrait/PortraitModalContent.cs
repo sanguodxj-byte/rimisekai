@@ -33,6 +33,11 @@ public partial class PortraitModalLayer
             DrawSettlement(page, data);
             return;
         }
+        if (page.MonsterCodex is { } codex)
+        {
+            DrawMonsterCodex(page, codex);
+            return;
+        }
         var textWidth = PortraitLayout.ModalWidth - PortraitLayout.ModalPad * 2f;
         var lines = InkDraw.WrapLines(page.Body, textWidth, PortraitLayout.FontBody).ToList();
         if (page.Body.Length == 0)
@@ -106,6 +111,125 @@ public partial class PortraitModalLayer
             _hits.Add(new PortraitWidget(rect, PortraitAction.ModalChoice, i, choice.Enabled, choice.Id));
         }
         DrawBreathingArrow();
+    }
+
+    private void DrawMonsterCodex(InkModalPage page, InkModalMonsterCodexData data)
+    {
+        const float heading = 170f;
+        // Keep the long-standing 9-line modal rectangle; only reorganize what is drawn inside it.
+        const float bodyHeight = PortraitLayout.ModalLineHeight * 9f + 30f;
+        const float introHeight = 48f;
+        const float sectionHeight = 48f;
+        const float statHeight = 70f;
+        const float statGap = 8f;
+        const float contentGap = 12f;
+        const float infoHeight = 92f;
+        var statRows = (data.Attributes.Count + 1) / 2;
+        var statsHeight = statRows * statHeight + (statRows - 1) * statGap;
+        var contentHeight = introHeight + 8f + sectionHeight + statsHeight + contentGap
+            + sectionHeight + 8f + infoHeight;
+        var totalHeight = PortraitLayout.ModalPad * 2f + heading + bodyHeight + PortraitLayout.ModalArrowBand;
+
+        _modalBody = new Rect2();
+        _modalTotal = 0;
+        _modalVisible = 0;
+        _modalPanel = PortraitLayout.ModalBounds(totalHeight);
+        PortraitFrame.GothicFrame(this, _modalPanel, new Color(InkStyle.Panel, 1f), crest: true);
+
+        var textWidth = PortraitLayout.ModalWidth - PortraitLayout.ModalPad * 2f;
+        var top = _modalPanel.Position.Y + PortraitLayout.ModalPad;
+        InkDraw.TextBounded(this,
+            new Rect2(_modalPanel.Position.X + PortraitLayout.ModalPad, top, textWidth, 80f), page.Title,
+            PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        PortraitFrame.FadingRule(this, _modalPanel.Position.X + 160f, _modalPanel.End.X - 160f, top + 110f);
+        top += heading;
+
+        var innerX = _modalPanel.Position.X + PortraitLayout.ModalPad;
+        var innerWidth = textWidth;
+        top += (bodyHeight - contentHeight) / 2f;
+        InkDraw.TextBounded(this, new Rect2(innerX, top, innerWidth, introHeight),
+            $"汇总 {data.RecordCount} 条配置 · 数值以范围表示", PortraitLayout.FontMeta,
+            PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        top += introHeight + 8f;
+
+        PortraitFrame.SectionRule(this, innerX + 24f, innerX + innerWidth - 24f, top + sectionHeight / 2f, "战斗属性");
+        top += sectionHeight;
+        var statWidth = (innerWidth - 16f) / 2f;
+        for (var row = 0; row < statRows; row++)
+        {
+            var first = row * 2;
+            var remaining = data.Attributes.Count - first;
+            var fullWidth = remaining == 1;
+            var rowY = top + row * (statHeight + statGap);
+            DrawCodexMetric(this, new Rect2(innerX, rowY, fullWidth ? innerWidth : statWidth, statHeight), data.Attributes[first]);
+            if (!fullWidth)
+                DrawCodexMetric(this, new Rect2(innerX + statWidth + 16f, rowY, statWidth, statHeight), data.Attributes[first + 1]);
+        }
+        top += statsHeight + contentGap;
+
+        PortraitFrame.SectionRule(this, innerX + 24f, innerX + innerWidth - 24f, top + sectionHeight / 2f, "能力与掉落");
+        top += sectionHeight + 8f;
+        var infoWidth = (innerWidth - 16f) / 2f;
+        DrawCodexSkills(this, new Rect2(innerX, top, infoWidth, infoHeight), data.Skills);
+        DrawCodexDrops(this, new Rect2(innerX + infoWidth + 16f, top, infoWidth, infoHeight), data.Drops);
+        DrawBreathingArrow();
+    }
+
+    private static void DrawCodexMetric(CanvasItem ci, Rect2 rect, InkModalMonsterCodexData.Metric metric)
+    {
+        PortraitFrame.Card(ci, rect, radius: 22f);
+        var labelWidth = rect.Size.X * 0.46f;
+        InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 22f, rect.Position.Y + 6f, labelWidth - 30f, rect.Size.Y - 12f),
+            metric.Label, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        InkDraw.TextBounded(ci, new Rect2(rect.Position.X + labelWidth, rect.Position.Y + 6f,
+                rect.Size.X - labelWidth - 22f, rect.Size.Y - 12f),
+            metric.Value, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "rm");
+    }
+
+    private static void DrawCodexSkills(CanvasItem ci, Rect2 rect, IReadOnlyList<string> skills)
+    {
+        PortraitFrame.Card(ci, rect, radius: 22f);
+        InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, rect.Position.Y + 4f, rect.Size.X - 36f, 38f),
+            "额外技能", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        if (skills.Count == 0)
+        {
+            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, rect.Position.Y + 42f, rect.Size.X - 36f, 42f),
+                "暂无记录", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            return;
+        }
+
+        for (var i = 0; i < skills.Count; i++)
+        {
+            var y = rect.Position.Y + 42f + i * 44f;
+            InkDraw.Jewel(ci, new Vector2(rect.Position.X + 22f, y + 21f), 8f, InkStyle.Line);
+            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 40f, y, rect.Size.X - 56f, 42f),
+                skills[i], PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+        }
+    }
+
+    private static void DrawCodexDrops(CanvasItem ci, Rect2 rect, IReadOnlyList<InkModalMonsterCodexData.Drop> drops)
+    {
+        PortraitFrame.Card(ci, rect, radius: 22f);
+        InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, rect.Position.Y + 4f, rect.Size.X - 36f, 38f),
+            "掉落", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        if (drops.Count == 0)
+        {
+            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, rect.Position.Y + 42f, rect.Size.X - 36f, 42f),
+                "暂无记录", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            return;
+        }
+
+        for (var i = 0; i < drops.Count; i++)
+        {
+            var y = rect.Position.Y + 42f + i * 44f;
+            var drop = drops[i];
+            var text = $"{drop.Name} {drop.Quantity} · {drop.Chance}";
+            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, y, rect.Size.X - 36f, 42f),
+                text, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            if (i > 0)
+                ci.DrawLine(new Vector2(rect.Position.X + 16f, y - 4f),
+                    new Vector2(rect.End.X - 16f, y - 4f), InkStyle.Dim, 2f);
+        }
     }
 
     private void DrawBreathingArrow()
