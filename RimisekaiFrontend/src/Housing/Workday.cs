@@ -704,6 +704,9 @@ public sealed class TerritoryClock
             StartSeek(character, worker, used);
             return;
         }
+        // 搬运只让三餐与找人打断：半路改去干活，下一格又因包里有货重新起一趟搬运，人就在门口来回打转。
+        if (worker.Goal == ActionKind.Haul)
+            return;
 
         // 刚做好的热饭热菜优先送到餐桌储存，供全领地享用
         if (HasDeliverableMeal(character, territory))
@@ -805,33 +808,15 @@ public sealed class TerritoryClock
                 continue;
 
             var need = cost.Count - onBench;
-            worker.Goal = ActionKind.Haul;
-            worker.Task = ActionKind.None;
-            worker.Progress = 0;
-            worker.HaulItemId = cost.ItemId;
-            worker.HaulCount = need;
-            worker.HaulSourceId = source.Id;
-            worker.HaulTargetId = bench.Id;
-            worker.FacilityId = -1;
-
+            // 人已经在源设施所在的房间：当面取货，直接进入送往工作台阶段
+            var moved = 0;
             if (source.RoomId == worker.RoomId)
             {
-                // 人已经在源设施所在的房间：当面取货，进入送往工作台阶段
-                var moved = territory.TakeFrom(character, source, cost.ItemId, need);
+                moved = territory.TakeFrom(character, source, cost.ItemId, need);
                 if (moved <= 0)
                     continue;
-                worker.HaulCount = moved;
-                worker.HaulPhase = HaulPhase.Delivering;
-                GotoRoom(worker, territory, bench.RoomId, character, ctx);
             }
-            else
-            {
-                // 物理走去源设施所在房间取料，全局禁止隔空取物
-                worker.HaulPhase = HaulPhase.Fetching;
-                GotoRoom(worker, territory, source.RoomId, character, ctx);
-            }
-
-            worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+            // 先换状态再填搬运单：换出去的若是上一趟搬运，它的 Exit 会清空搬运字段。
             worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
             {
                 Territory = territory,
@@ -839,6 +824,28 @@ public sealed class TerritoryClock
                 Worker = worker,
                 StepContext = ctx,
             });
+            worker.Goal = ActionKind.Haul;
+            worker.Task = ActionKind.None;
+            worker.Progress = 0;
+            worker.HaulItemId = cost.ItemId;
+            worker.HaulSourceId = source.Id;
+            worker.HaulTargetId = bench.Id;
+            worker.FacilityId = -1;
+            if (moved > 0)
+            {
+                worker.HaulCount = moved;
+                worker.HaulPhase = HaulPhase.Delivering;
+                GotoRoom(worker, territory, bench.RoomId, character, ctx);
+            }
+            else
+            {
+                // 物理走去源设施所在房间取料，全局禁止隔空取物
+                worker.HaulCount = need;
+                worker.HaulPhase = HaulPhase.Fetching;
+                GotoRoom(worker, territory, source.RoomId, character, ctx);
+            }
+
+            worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             return true;
         }
         return false;
@@ -879,6 +886,14 @@ public sealed class TerritoryClock
             if (storage == null)
                 continue;
 
+            // 先换状态再填搬运单：换出去的若是上一趟搬运，它的 Exit 会清空搬运字段。
+            worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
+            {
+                Territory = territory,
+                Character = character,
+                Worker = worker,
+                StepContext = ctx,
+            });
             worker.Goal = ActionKind.Haul;
             worker.Task = ActionKind.None;
             worker.Progress = 0;
@@ -890,13 +905,6 @@ public sealed class TerritoryClock
             worker.FacilityId = -1;
             GotoRoom(worker, territory, storage.RoomId, character, ctx);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
-            worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
-            {
-                Territory = territory,
-                Character = character,
-                Worker = worker,
-                StepContext = ctx,
-            });
             return true;
         }
         return false;
