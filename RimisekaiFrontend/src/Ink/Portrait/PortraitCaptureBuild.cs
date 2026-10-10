@@ -126,6 +126,13 @@ public partial class PortraitCapture
             Shoot("build_sheet_mountain_gather", _root.HubScreen);
             _root.HubScreen.DebugPress(PortraitAction.Back, 0);
         });
+        _steps.Enqueue(() => ClickLabel(PortraitAction.DevelopmentCell, "庭院"));
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "农牧"));
+        _steps.Enqueue(() =>
+        {
+            Shoot("build_sheet_courtyard_farm", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.Back, 0);
+        });
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
