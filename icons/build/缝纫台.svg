@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 大线轴 -->
+    <rect x="-150" y="-190" width="200" height="36" rx="8" fill="#E9EFEA"/>
+    <rect x="-150" y="-10" width="200" height="36" rx="8" fill="#E9EFEA"/>
+    <rect x="-120" y="-154" width="140" height="144" fill="#E9EFEA"/>
+    <!-- 绕线纹（负形） -->
+    <rect x="-120" y="-125" width="140" height="10" fill="#000000"/>
+    <rect x="-120" y="-90" width="140" height="10" fill="#000000"/>
+    <rect x="-120" y="-55" width="140" height="10" fill="#000000"/>
+    <!-- 斜插的针与垂下的线 -->
+    <path fill="#E9EFEA" d="M 90,-215 L 106,-212 L 140,-20 L 130,10 L 120,-18 Z"/>
+    <ellipse cx="100" cy="-190" rx="5" ry="12" fill="#000000"/>
+    <path fill="#E9EFEA" d="M 50,-100 C 120,-80 90,-40 100,-30 L 92,-24 C 75,-45 110,-75 50,-88 Z"/>
+    <!-- 台面与台腿 -->
+    <rect x="-230" y="40" width="460" height="40" rx="6" fill="#E9EFEA"/>
+    <rect x="-200" y="80" width="36" height="130" fill="#E9EFEA"/>
+    <rect x="164" y="80" width="36" height="130" fill="#E9EFEA"/>
+  </g>
+</svg>
