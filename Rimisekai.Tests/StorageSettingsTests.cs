@@ -262,4 +262,62 @@ public sealed class StorageSettingsTests
         Assert.Equal(5 - sold, stall.Contents.Get("陶罐"));
         Assert.True(sold > 0);
     }
+
+    [Fact]
+    public void Stall_stock_is_for_sale_only_never_eaten_cooked_or_built_with()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 3);
+        var t = state.Territory;
+        var shop = OpenGrocery(hub, state);
+        var stall = Stall(state, shop);
+        stall.StorageFilter.Only(new[] { "肉", "木材" });
+        stall.Contents.Add("肉", 10);
+        stall.Contents.Add("木材", 50);
+        var master = state.Roster.Master!;
+        var woodAtHome = t.CountWith(null, "木材");
+        Assert.Equal(woodAtHome, t.Storages.Sum(f => f.Contents.Get("木材")));
+        Assert.DoesNotContain(stall, t.Storages);
+        var maid = TerritoryLoopTests.Maid(state);
+        foreach (var id in maid.Bag.Items.Keys.ToList())
+            maid.Bag.Add(id, -maid.Bag.Get(id));
+        Assert.Null(t.FindFoodIn(maid, shop.Id));
+        Assert.Null(t.FindStockOf("肉"));
+        Assert.Null(t.FindStockOf("肉", shop.Id));
+        Assert.False(t.PayWith(null, new[] { new RecipeCost("木材", woodAtHome + 1) }));
+        // 女仆在家过三天、饭点照吃：摊上的肉一块不少（家里没有肉）
+        foreach (var f in t.Storages)
+            f.Contents.Add("肉", -f.Contents.Get("肉"));
+        TerritoryLoopTests.GiveMaidABed(hub, state);
+        hub.PassTime(3 * 24 * 60);
+        Assert.Equal(0, shop.Sales);                       // 没人守摊，访客买不走
+        Assert.Equal(10, stall.Contents.Get("肉"));
+        Assert.True(stall.Contents.Get("木材") >= 50, "放行了木材：只会往摊上补，不会被拿走");
+    }
+
+    [Fact]
+    public void Crafted_gear_goes_to_the_weapon_rack_before_a_stall_that_allows_armour()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 3);
+        var t = state.Territory;
+        var shop = OpenGrocery(hub, state);
+        var stall = Stall(state, shop);
+        var rack = DefDatabase<FacilityDef>.All.Single(d => d.Id == 1033).ToRuntime();   // 武器架
+        rack.Id = 9998;
+        rack.RoomId = Parlor;
+        rack.Built = true;
+        t.Facilities.Add(rack);
+        Assert.Equal(StoragePriority.Important, rack.Priority);
+        Assert.True(rack.Priority > stall.Priority);
+        var armour = EquipForge.ForgeArmor(EquipSlot.Torso, "铁");
+        t.Equips.Add(armour);
+        Assert.Equal("Armor", t.CategoryOf(armour.Id));
+        stall.StorageFilter.Set("Armor", true);
+        Assert.Equal(rack.Id, t.FindStorageFor(armour.Id, shop.Id)!.Id);
+        // 摊上的甲会被倒回武器架：要卖甲就把摊位调到比武器架高
+        stall.Contents.Add(armour.Id, 1);
+        Assert.Same(rack, t.FindRehaul(shop.Id)!.Value.Target);
+        stall.Priority = StoragePriority.Critical;
+        Assert.Equal(stall.Id, t.FindStorageFor(armour.Id, Parlor)!.Id);
+        Assert.Null(t.FindRehaul(shop.Id));
+    }
 }

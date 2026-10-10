@@ -421,7 +421,14 @@ public sealed class Territory
     /// 领地内所有能存货的设施。物品只存在这些设施里（或角色背包里），
     /// 没有领地级的虚空库存——凡是要“查全据点有多少”的地方都遍历这里。
     /// </summary>
-    public IEnumerable<Facility> Storages => Facilities.FindAll(f => f.CanStore);
+    /// <summary>
+    /// 据点自用的仓储：能存东西的设施，**店里的不算**——摊位上的货只卖给访客（<see cref="IsShopStock"/>），
+    /// 建造、制作、下厨、吃饭都不从那里扣。
+    /// </summary>
+    public IEnumerable<Facility> Storages => Facilities.FindAll(f => f.CanStore && !IsShopStock(f));
+
+    /// <summary>是不是店里的货：营业性房间里的仓储（摊位等）。只供 <see cref="Commerce"/> 卖给访客。</summary>
+    public bool IsShopStock(Facility f) => Room(f.RoomId)?.Commercial == true;
 
     /// <summary>据点所有设施存货 + 某个角色背包里，某物品的总数。</summary>
     public int CountWith(CharacterState? who, string itemId)
@@ -492,9 +499,9 @@ public sealed class Territory
             if (pair.Value > 0 && IsFood(pair.Key))
                 return pair.Key;
         }
-        foreach (var facility in Facilities)
+        foreach (var facility in Storages)
         {
-            if (!facility.CanStore || !facility.Built || facility.RoomId != roomId)
+            if (!facility.Built || facility.RoomId != roomId)
                 continue;
             foreach (var pair in facility.Contents.Items)
             {
@@ -518,9 +525,9 @@ public sealed class Territory
             who.Bag.Add(food, -1);
             return food;
         }
-        foreach (var facility in Facilities)
+        foreach (var facility in Storages)
         {
-            if (!facility.CanStore || !facility.Built || facility.RoomId != roomId)
+            if (!facility.Built || facility.RoomId != roomId)
                 continue;
             if (facility.Contents.Get(food) > 0)
             {
@@ -836,7 +843,7 @@ public sealed class Territory
 
     /// <summary>
     /// 找一处能收下该物品的仓储：仓储网里过滤放行、还有空位的，**优先级最高**的那档里挑——
-    /// 同档里吃食先上餐桌、再进有餐桌那间房（餐厅）的仓储（人只在自己所在的房里找吃的），
+    /// 同档里吃食先上餐桌、再进有餐桌或灶的那间房（餐厅、厨房）的仓储（人只在自己所在的房里找吃的，厨子就近备料），
     /// 其余先本房（<paramref name="preferRoomId"/>），再按设施顺序。<paramref name="except"/> 不算（倒库时的源）。
     /// 找不到返回 null（没地方放）。
     /// </summary>
@@ -851,7 +858,7 @@ public sealed class Territory
             if (f == except || !InStorageNetwork(f) || !f.Accepts(itemId, category))
                 continue;
             var tie = food && f.IsTable ? 3
-                : food && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId) ? 2
+                : food && Facilities.Exists(t => t.Built && t.RoomId == f.RoomId && (t.IsTable || t.Supports(ActionKind.Cook))) ? 2
                 : f.RoomId == preferRoomId ? 1 : 0;
             var rank = ((int)f.Priority, tie);
             if (rank.CompareTo(bestRank) > 0)
@@ -888,18 +895,18 @@ public sealed class Territory
     }
 
     /// <summary>
-    /// 找一处存着该物品的设施：优先本房，其次据点内任意。
+    /// 找一处存着该物品的设施：优先本房，其次据点内任意；店里的货不算（只卖不用）。
     /// 找不到返回 null（没处可取）。
     /// </summary>
     public Facility? FindStockOf(string itemId, int preferRoomId = -1)
     {
         if (preferRoomId >= 0)
         {
-            var here = Facilities.Find(f => f.Built && f.Contents.Get(itemId) > 0 && f.RoomId == preferRoomId);
+            var here = Facilities.Find(f => f.Built && !IsShopStock(f) && f.Contents.Get(itemId) > 0 && f.RoomId == preferRoomId);
             if (here != null)
                 return here;
         }
-        return Facilities.Find(f => f.Built && f.Contents.Get(itemId) > 0);
+        return Facilities.Find(f => f.Built && !IsShopStock(f) && f.Contents.Get(itemId) > 0);
     }
 
     /// <summary>

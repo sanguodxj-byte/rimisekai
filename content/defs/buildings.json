@@ -737,7 +737,7 @@
         "Armor",
         "Accessory"
       ],
-      "storagePriority": "preferred"
+      "storagePriority": "important"
     },
     {
       "defType": "FacilityDef",

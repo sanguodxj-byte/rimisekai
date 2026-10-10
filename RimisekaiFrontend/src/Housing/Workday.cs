@@ -1685,7 +1685,7 @@ public sealed class TerritoryClock
             return true;
         if (character.Bag.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)))
             return true;
-        return territory.Facilities.Exists(f => f.Built && f.CanStore &&
+        return territory.Storages.Any(f => f.Built &&
             f.Contents.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)));
     }
 
