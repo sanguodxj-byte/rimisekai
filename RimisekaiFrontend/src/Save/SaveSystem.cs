@@ -104,6 +104,12 @@ public sealed class RoomData
 
     /// <summary>对口工作（进度加成）。</summary>
     public List<ActionKind> BonusActions { get; set; } = new();
+
+    /// <summary>营业性房间：升级门槛、各级引客几率、累计卖出件数。</summary>
+    public List<int> SalesLevels { get; set; } = new();
+    public List<int> VisitorChance { get; set; } = new();
+    public int Sales { get; set; }
+    public long Revenue { get; set; }
 }
 
 public sealed class FacilityData
@@ -163,12 +169,16 @@ public sealed class AssignmentData
     public int Facility { get; set; } = -1;
 }
 
-public sealed class GuestData
+/// <summary>一位正在领地里的访客：走到哪、去哪间店、从哪个口进来。</summary>
+public sealed class VisitData
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = "";
+    public int CharacterId { get; set; }
     public int RoomId { get; set; }
-    public string Purpose { get; set; } = "";
+    public int ShopRoomId { get; set; }
+    public int EntryRoomId { get; set; }
+    public VisitPhase Phase { get; set; }
+    public List<int> Path { get; set; } = new();
+    public int Waited { get; set; }
 }
 
 public sealed class TerritoryData
@@ -190,7 +200,7 @@ public sealed class TerritoryData
     public List<FacilityData> Facilities { get; set; } = new();
     public Dictionary<int, List<AssignmentData>> Schedules { get; set; } = new();
 
-    public List<GuestData> Guests { get; set; } = new();
+    public List<VisitData> Visits { get; set; } = new();
 
     /// <summary>今日集市行情：物品 Id → [存货, 价格系数]。</summary>
     public Dictionary<string, int[]> MarketDay { get; set; } = new();
@@ -266,6 +276,9 @@ public sealed class SaveData
     /// <summary>遗迹里走过的石室（地城迷雾按此揭开）。</summary>
     public List<long> DungeonVisited { get; set; } = new();
     public List<MemberData> Members { get; set; } = new();
+
+    /// <summary>访客名册：来过店里的外人（不是住户），下次还可能再来。</summary>
+    public List<MemberData> Visitors { get; set; } = new();
     public TerritoryData Territory { get; set; } = new();
     public Dictionary<int, int> ClearCount { get; set; } = new();
     public Dictionary<int, int> Cooldown { get; set; } = new();
@@ -319,6 +332,8 @@ public static class SaveSystem
         };
         foreach (var c in state.Roster.Members)
             data.Members.Add(CaptureMember(c));
+        foreach (var c in state.Roster.Visitors)
+            data.Visitors.Add(CaptureMember(c));
         var t = data.Territory;
         t.Name = state.Territory.Name;
         t.Level = state.Territory.Level;
@@ -344,6 +359,10 @@ public static class SaveSystem
                 Illustration = r.Illustration,
                 Vacant = r.Vacant,
                 BonusActions = new List<ActionKind>(r.BonusActions),
+                SalesLevels = new List<int>(r.SalesLevels),
+                VisitorChance = new List<int>(r.VisitorChance),
+                Sales = r.Sales,
+                Revenue = r.Revenue,
             });
         }
         foreach (var f in state.Territory.Facilities)
@@ -407,8 +426,12 @@ public static class SaveSystem
                 });
             t.Schedules[pair.Key] = slots;
         }
-        foreach (var g in state.Territory.Guests)
-            t.Guests.Add(new GuestData { Id = g.Id, Name = g.Name, RoomId = g.RoomId, Purpose = g.Purpose });
+        foreach (var v in state.Territory.Visits)
+            t.Visits.Add(new VisitData
+            {
+                CharacterId = v.CharacterId, RoomId = v.RoomId, ShopRoomId = v.ShopRoomId, EntryRoomId = v.EntryRoomId,
+                Phase = v.Phase, Path = new List<int>(v.Path), Waited = v.Waited,
+            });
         foreach (var pair in state.Territory.MarketDay)
             t.MarketDay[pair.Key] = new[] { pair.Value.Stock, pair.Value.PricePercent };
         t.WeaponPricePercent = state.Territory.WeaponPricePercent;
@@ -503,7 +526,10 @@ public static class SaveSystem
                 Buildable = r.Buildable,
                 Illustration = r.Illustration ?? "",
                 Vacant = r.Vacant,
+                Sales = r.Sales,
+                Revenue = r.Revenue,
             };
+            room.SetShop(r.SalesLevels, r.VisitorChance);
             foreach (var cost in r.Materials)
                 room.MaterialCost.Add(new RecipeCost(cost.ItemId, cost.Count));
             foreach (var action in r.BonusActions)
@@ -590,12 +616,22 @@ public static class SaveSystem
                 state.Territory.Assign(pair.Key, slot, a.Mode, a.Facility);
             }
         }
-        foreach (var g in data.Territory.Guests)
-            state.Territory.AddGuest(new Guest { Id = g.Id, Name = g.Name, RoomId = g.RoomId, Purpose = g.Purpose });
+        foreach (var v in data.Territory.Visits)
+        {
+            var visit = new Visit
+            {
+                CharacterId = v.CharacterId, RoomId = v.RoomId, ShopRoomId = v.ShopRoomId, EntryRoomId = v.EntryRoomId,
+                Phase = v.Phase, Waited = v.Waited,
+            };
+            visit.Path.AddRange(v.Path);
+            state.Territory.Visits.Add(visit);
+        }
         state.Territory.RestoreMarketDay(data.Territory.MarketDayEntries());
         state.Territory.RestoreWeaponMarket(data.Territory.WeaponPricePercent, data.Territory.MarketWeapons);
         foreach (var m in data.Members)
             state.Roster.Attach(RestoreMember(m));
+        foreach (var m in data.Visitors)
+            state.Roster.AttachVisitor(RestoreMember(m));
         foreach (var pair in data.ClearCount)
             state.Quests.ClearCount[pair.Key] = pair.Value;
         foreach (var pair in data.Cooldown)

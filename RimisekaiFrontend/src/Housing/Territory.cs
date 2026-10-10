@@ -79,6 +79,36 @@ public sealed class Room
 
     public bool HasTag(string tag) => Tags.Contains(tag);
 
+    /// <summary>营业性房间（带 <see cref="Territory.CommercialTag"/>）：开门做生意，引来访客。</summary>
+    public bool Commercial => HasTag(Territory.CommercialTag);
+
+    /// <summary>营业性房间的升级门槛（累计卖出件数，来自房间表 salesLevels）：第 i 项是升到 i+1 级要的件数，首项 0。</summary>
+    public List<int> SalesLevels { get; } = new();
+
+    /// <summary>各级每个整点引来一位访客的几率（百分比，来自房间表 visitorChance），与 <see cref="SalesLevels"/> 一一对应。</summary>
+    public List<int> VisitorChance { get; } = new();
+
+    /// <summary>累计卖出的件数（营业性房间的评级按它升）。</summary>
+    public int Sales { get; set; }
+
+    /// <summary>累计进账（金币）。店的流水账，不影响评级。</summary>
+    public long Revenue { get; set; }
+
+    /// <summary>店的等级：累计卖出越过几道门槛就是几级；不是营业性房间为 0。</summary>
+    public int ShopLevel => Commercial ? SalesLevels.Count(n => Sales >= n) : 0;
+
+    /// <summary>此刻每个整点引来访客的几率（百分比）；不营业为 0。</summary>
+    public int VisitorPercent => ShopLevel == 0 ? 0 : VisitorChance[ShopLevel - 1];
+
+    /// <summary>从房间表抄营业参数（建房、读档共用）。</summary>
+    public void SetShop(IEnumerable<int> levels, IEnumerable<int> chance)
+    {
+        SalesLevels.Clear();
+        SalesLevels.AddRange(levels);
+        VisitorChance.Clear();
+        VisitorChance.AddRange(chance);
+    }
+
     public void AddTag(string tag)
     {
         if (!string.IsNullOrWhiteSpace(tag))
@@ -373,7 +403,8 @@ public sealed class Territory
         set => SetTargetCraftItem(ActionKind.Cook, value);
     }
 
-    public List<Guest> Guests { get; } = new();
+    /// <summary>此刻正在领地里的访客（进店、买货、离开的途中）。人本身记在 <see cref="Character.Roster.Visitors"/>。</summary>
+    public List<Visit> Visits { get; } = new();
 
     /// <summary>
     /// 运行时武器实例登记表。由 GameState 装配时挂上——
@@ -783,16 +814,18 @@ public sealed class Territory
     /// <summary>
     /// 找一处能收下该物品的仓储设施：吃食优先送往餐桌，餐桌放不下就送进有餐桌的那间房（餐厅）的仓储
     /// ——人只在自己所在的房里找吃的，吃食放进别处的柜子就没人吃得着；其余物品优先本房，其次据点内任意。
+    /// 店里（营业性房间）的仓储是货架，摆什么卖什么由主人亲手放，自动入库与搬运都不往里塞。
     /// 找不到返回 null（没地方放）。
     /// </summary>
     public Facility? FindStorageFor(string itemId, int preferRoomId = -1)
     {
+        bool Takes(Facility f) => f.Built && f.Accepts(itemId, Weapons) && Room(f.RoomId)?.Commercial != true;
         if (IsFood(itemId))
         {
-            var table = Facilities.Find(f => f.Built && f.IsTable && f.CanStore && f.Accepts(itemId, Weapons));
+            var table = Facilities.Find(f => Takes(f) && f.IsTable);
             if (table != null)
                 return table;
-            var pantry = Facilities.Find(f => f.Built && f.Accepts(itemId, Weapons)
+            var pantry = Facilities.Find(f => Takes(f)
                 && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId));
             if (pantry != null)
                 return pantry;
@@ -800,11 +833,11 @@ public sealed class Territory
 
         if (preferRoomId >= 0)
         {
-            var here = Facilities.Find(f => f.Built && f.RoomId == preferRoomId && f.Accepts(itemId, Weapons));
+            var here = Facilities.Find(f => Takes(f) && f.RoomId == preferRoomId);
             if (here != null)
                 return here;
         }
-        return Facilities.Find(f => f.Built && f.Accepts(itemId, Weapons));
+        return Facilities.Find(Takes);
     }
 
     /// <summary>
@@ -882,16 +915,6 @@ public sealed class Territory
         // 不再夹到 MaxRegions——POI 区域从 MaxTerritoryRegions 起顺延，可能远超 3。
         UnlockedRegions = System.Math.Max(1, count);
     }
-
-    public bool AddGuest(Guest guest)
-    {
-        if (Guests.Exists(g => g.Id == guest.Id) || Rooms.Find(r => r.Id == guest.RoomId) == null)
-            return false;
-        Guests.Add(guest);
-        return true;
-    }
-
-    public bool RemoveGuest(int guestId) => Guests.RemoveAll(g => g.Id == guestId) > 0;
 
     /// <summary>
     /// 是不是能吃的东西。唯一判据是 ThingDef.IsFood——
@@ -1441,6 +1464,9 @@ public sealed class Territory
 
     /// <summary>室内房间的标签：家具只能摆这种房，打地铺也只在这种房里打。</summary>
     public const string IndoorTag = "室内";
+
+    /// <summary>营业性房间的标签：领地里自己开的店。有它才有访客上门。</summary>
+    public const string CommercialTag = "营业性";
 
     /// <summary>城镇里的商店（聚落场景的房间标签）：人进了这一间才能买卖。</summary>
     public const string CityShopTag = "商店";

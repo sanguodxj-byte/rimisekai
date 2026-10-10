@@ -526,7 +526,7 @@ public sealed partial class HubSession
 
     private CharacterState? PickPresent()
     {
-        var selected = State.Roster.Find(SelectedCharacterId);
+        var selected = State.Roster.Person(SelectedCharacterId);
         if (selected != null && !selected.IsMaster
             && _presence.GetValueOrDefault(selected.Id, -1) == PlayerRoomId)
         {

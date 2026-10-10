@@ -324,9 +324,11 @@ public sealed class TerritoryClock
                     var log = Finish(territory, character, worker, facility, yieldFor, ctx?.Season ?? Season.Spring);
                     if (log != null)
                         logs.Add(log);
-                    else if (!ActionKindMap.IsExtractive(worker.Task) && worker.Task != ActionKind.Perform && worker.Task != ActionKind.Trade)
+                    else if (!ActionKindMap.IsExtractive(worker.Task))
                     {
-                        // 制作中途原料耗尽（未能产出）：自然退出工作，回退决策
+                        // 制作中途原料耗尽（未能产出）：自然退出工作，回退决策。
+                        // 表演、看店没有产物：干满一轮也放下回决策——饭点、换班、找人说话都在这里接上，
+                        // 不然人会一直钉在台子上，从早站到晚、饭也不吃。
                         EndRoutine(worker);
                         Release(worker, used);
                     }

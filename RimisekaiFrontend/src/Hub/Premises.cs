@@ -6,8 +6,6 @@ namespace Rimisekai.Hub;
 
 public readonly record struct FixtureView(int Id, string Name, int SeatsLeft, int Occupants, bool PlayerHere);
 
-public readonly record struct GuestCard(int Id, string Name, string Purpose);
-
 public sealed partial class HubSession
 {
     public const int CostUse = 1;
@@ -172,17 +170,6 @@ public sealed partial class HubSession
         PlayerRoomId < 0
             ? new List<ActionKind>()
             : State.Territory.RoomActions(PlayerRoomId);
-
-    public IReadOnlyList<GuestCard> GuestsHere()
-    {
-        var list = new List<GuestCard>();
-        foreach (var guest in State.Territory.Guests)
-        {
-            if (guest.RoomId == PlayerRoomId)
-                list.Add(new GuestCard(guest.Id, guest.Name, guest.Purpose));
-        }
-        return list;
-    }
 
     private int Occupants(int fixtureId)
     {

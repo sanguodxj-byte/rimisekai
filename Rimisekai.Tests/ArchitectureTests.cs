@@ -491,14 +491,13 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Market_and_guests_serve_main_screen()
+    public void No_remote_trade_from_the_territory()
     {
         var state = new GameState { Money = 100 };
         state.Clock.SetTime(1, 0);
         state.Roster.Add("你", master: true);
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         state.Territory.MarketDay["木材"] = new Territory.MarketEntry(5, 100);
-        state.Territory.AddGuest(new Guest { Id = 1, Name = "行商", RoomId = 1, Purpose = "卖货" });
         var hub = new HubSession(state);
         hub.Enter(1);
 
@@ -506,7 +505,6 @@ public sealed class ArchitectureTests
         Assert.False(hub.MarketTrade("木材", 1, selling: false));
         Assert.Equal(0, state.Clock.Minutes);
         Assert.Equal(0, state.Roster.Master!.Bag.Get("木材"));
-        Assert.Single(hub.GuestsHere());
     }
 
     [Fact]
@@ -561,7 +559,6 @@ public sealed class ArchitectureTests
         state.Roster.Master!.Bag.Add("花", 3);
         state.Territory.Assign(friend.Id, 2, SlotMode.Work, 8);
         state.Territory.MarketDay["布"] = new Territory.MarketEntry(5, 100);
-        state.Territory.AddGuest(new Guest { Id = 1, Name = "行商", RoomId = 1, Purpose = "卖货" });
         state.Quests.ClearCount[3] = 2;
         var hub = new HubSession(state);
         hub.Enter(1);
@@ -584,7 +581,6 @@ public sealed class ArchitectureTests
         Assert.Equal(SlotMode.Work, loaded.Territory.ScheduleOf(friend.Id).Slots[2].Mode);
         Assert.Equal(8, loaded.Territory.ScheduleOf(friend.Id).Slots[2].FacilityId);
         Assert.Equal(5, loaded.Territory.MarketDay["布"].Stock);
-        Assert.Single(loaded.Territory.Guests);
         Assert.Equal(2, loaded.Quests.ClearCount[3]);
 
         var loadedMaster = loaded.Roster.Master;

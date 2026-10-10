@@ -447,4 +447,34 @@ public sealed class Roster
         if (character.Id >= _nextId)
             _nextId = character.Id + 1;
     }
+
+    /// <summary>
+    /// 访客名册：来过领地店里的外人。不是住户——不睡、不吃、不排班，不在 <see cref="Members"/> 里；
+    /// 记在这里是为了下次还能是同一个人再来（随存档走）。邀请入伙成功就挪进 <see cref="Members"/>。
+    /// </summary>
+    public List<CharacterState> Visitors { get; } = new();
+
+    public CharacterState? Visitor(int id) => Visitors.Find(c => c.Id == id);
+
+    /// <summary>住户或访客，按 Id 找人（交谈对象两边都可能）。</summary>
+    public CharacterState? Person(int id) => Find(id) ?? Visitor(id);
+
+    /// <summary>记下一位访客（Id 已向名册预约过）。</summary>
+    public void AttachVisitor(CharacterState visitor)
+    {
+        Visitors.Add(visitor);
+        if (visitor.Id >= _nextId)
+            _nextId = visitor.Id + 1;
+    }
+
+    /// <summary>访客入伙：从访客名册挪进住户名册。不是访客返回 false。</summary>
+    public bool Admit(int visitorId)
+    {
+        var visitor = Visitor(visitorId);
+        if (visitor == null)
+            return false;
+        Visitors.Remove(visitor);
+        Members.Add(visitor);
+        return true;
+    }
 }

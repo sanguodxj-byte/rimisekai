@@ -25,7 +25,7 @@ public sealed partial class HubSession
     {
         if (step <= 0)
             return true;
-        var who = State.Roster.Find(SelectedCharacterId);
+        var who = State.Roster.Person(SelectedCharacterId);
         if (who == null)
             return false;
         // 常识：恋人或誓约关系的同伴，所有亲密交互自然全解锁，无需从摸头重新打卡
@@ -221,8 +221,11 @@ public sealed partial class HubSession
         if (ScenePlaying)
             return false;
 
-        var who = State.Roster.Find(SelectedCharacterId);
+        var who = State.Roster.Person(SelectedCharacterId);
         if (who == null || who.IsMaster)
+            return false;
+        // 访客没跟着谁，谈不上分开。
+        if (action == SocialAction.Part && State.Roster.Visitor(who.Id) != null)
             return false;
         // 分开不用同房：人可能还落在后一间房里，照样能请回。
         if (action == SocialAction.Part)
@@ -387,6 +390,12 @@ public sealed partial class HubSession
                 break;
             case SocialAction.Invite:
             {
+                // 访客：邀请就是请他留下来入伙。
+                if (State.Roster.Visitor(who.Id) != null)
+                {
+                    InviteVisitor(who);
+                    break;
+                }
                 var follower = Day.Track(who.Id, PlayerRoomId);
                 if (follower.FollowsPlayer)
                 {
@@ -431,7 +440,7 @@ public sealed partial class HubSession
         if (ScenePlaying)
             return false;
 
-        var who = State.Roster.Find(SelectedCharacterId);
+        var who = State.Roster.Person(SelectedCharacterId);
         if (who == null || who.IsMaster)
             return false;
 
@@ -588,6 +597,11 @@ public sealed partial class HubSession
                 break;
             case SocialAction.Invite:
             {
+                if (State.Roster.Visitor(who.Id) != null)
+                {
+                    InviteVisitor(who);
+                    break;
+                }
                 var follower = Day.Track(who.Id, PlayerRoomId);
                 if (follower.FollowsPlayer)
                 {

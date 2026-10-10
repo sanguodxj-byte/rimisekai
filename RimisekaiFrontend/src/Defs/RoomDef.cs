@@ -49,6 +49,12 @@ public sealed class RoomDef : Def, IIdentifiedDef
     /// <summary>对口的工作：在这间房里干这些活，进度快 <see cref="Territory.RoomBonusPercent"/>%。</summary>
     public List<ActionKind> BonusActions { get; init; } = new();
 
+    /// <summary>营业性房间的升级门槛：累计卖出件数，首项 0（1 级）。见 <see cref="Room.SalesLevels"/>。</summary>
+    public List<int> SalesLevels { get; init; } = new();
+
+    /// <summary>营业性房间各级每整点引来访客的几率（百分比），与 <see cref="SalesLevels"/> 等长。</summary>
+    public List<int> VisitorChance { get; init; } = new();
+
     public Room ToRuntime()
     {
         var room = new Room
@@ -70,6 +76,7 @@ public sealed class RoomDef : Def, IIdentifiedDef
         foreach (var tag in Tags)
             room.AddTag(tag);
         room.EnsureDefaultTag();
+        room.SetShop(SalesLevels, VisitorChance);
         return room;
     }
 }

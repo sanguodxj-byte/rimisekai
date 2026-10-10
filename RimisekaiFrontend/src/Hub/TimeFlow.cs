@@ -65,12 +65,16 @@ public sealed partial class HubSession
             ctx.Weather = State.Weather;
             ctx.Season = State.Clock.Season;
             logs.AddRange(Day.Step(State.Territory, State.Roster, State.Clock.Slot, YieldFor, ctx));
+            // 自己开的店：访客进出、当班的人招呼生意（见 Commerce）。
+            SettleVisits(Commerce.Step(State.Territory, State.Roster, Day.Workers, ctx.NowTotal,
+                ctx.MasterId, ctx.PlayerRoomId, ctx.PlayerFixtureId, Day.Rng));
             // 主角的衣着干湿与 NPC 同口径：按此刻所在房间结算一格。
             if (master != null)
                 WorldEffects.SettleWetness(master, State.Territory, PlayerRoomId, State.Weather);
         }
         foreach (var w in Day.Workers)
             _presence[w.CharacterId] = w.RoomId;
+        PlaceVisitors();
         EvictMasterFromSleepersRoom();
         if (master != null)
         {

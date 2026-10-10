@@ -223,15 +223,6 @@ public static class FoodTiers
     };
 }
 
-/// <summary>领地里的客人。只记录人在哪、来干什么，不跑 AI。</summary>
-public sealed class Guest
-{
-    public int Id { get; init; }
-    public string Name { get; init; } = "";
-    public int RoomId { get; set; }
-    public string Purpose { get; init; } = "";
-}
-
 public sealed class Recipe
 {
     public string ItemId { get; init; } = "";

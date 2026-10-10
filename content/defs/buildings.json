@@ -666,7 +666,7 @@
       "yieldItemId": "",
       "buildable": true,
       "isTable": false,
-      "storage": false,
+      "storage": true,
       "actions": [
         "Trade"
       ],
@@ -1949,7 +1949,8 @@
       "startOpen": false,
       "buildable": true,
       "tags": [
-        "室外"
+        "室外",
+        "营业性"
       ],
       "materialCost": [
         {
@@ -1963,7 +1964,21 @@
       ],
       "illustration": "res://assets/settlement_town.png",
       "bundledFacility": "Facility_1030",
-      "bonusActions": []
+      "bonusActions": [],
+      "salesLevels": [
+        0,
+        20,
+        60,
+        150,
+        400
+      ],
+      "visitorChance": [
+        25,
+        35,
+        45,
+        55,
+        70
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2649,6 +2664,48 @@
       "illustration": "res://assets/room_bedroom_day.png",
       "bundledFacility": "床",
       "bonusActions": []
+    },
+    {
+      "defType": "RoomDef",
+      "defName": "Room_146",
+      "label": "杂货铺",
+      "description": "临街的一间小铺，木柜台后摆着几排货架，门楣上挂着一盏铁皮风灯，往来的客人进门就能挑货。",
+      "id": 146,
+      "minTerritoryLevel": 1,
+      "regionId": 0,
+      "x": 0,
+      "y": 0,
+      "openCost": 0,
+      "permission": "Public",
+      "startOpen": false,
+      "buildable": true,
+      "tags": [
+        "室内",
+        "营业性"
+      ],
+      "materialCost": [
+        {
+          "itemId": "木材",
+          "count": 15
+        }
+      ],
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1030",
+      "bonusActions": [],
+      "salesLevels": [
+        0,
+        20,
+        60,
+        150,
+        400
+      ],
+      "visitorChance": [
+        25,
+        35,
+        45,
+        55,
+        70
+      ]
     },
     {
       "defType": "FacilityDef",
