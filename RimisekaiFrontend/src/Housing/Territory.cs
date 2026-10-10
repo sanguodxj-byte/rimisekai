@@ -697,7 +697,8 @@ public sealed class Territory
     }
 
     /// <summary>
-    /// 找一处能收下该物品的仓储设施：熟食料理优先送往餐桌，其余物品优先本房，其次据点内任意。
+    /// 找一处能收下该物品的仓储设施：吃食优先送往餐桌，餐桌放不下就送进有餐桌的那间房（餐厅）的仓储
+    /// ——人只在自己所在的房里找吃的，吃食放进别处的柜子就没人吃得着；其余物品优先本房，其次据点内任意。
     /// 找不到返回 null（没地方放）。
     /// </summary>
     public Facility? FindStorageFor(string itemId, int preferRoomId = -1)
@@ -707,6 +708,10 @@ public sealed class Territory
             var table = Facilities.Find(f => f.Built && f.IsTable && f.CanStore && f.Accepts(itemId, Weapons));
             if (table != null)
                 return table;
+            var pantry = Facilities.Find(f => f.Built && f.Accepts(itemId, Weapons)
+                && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId));
+            if (pantry != null)
+                return pantry;
         }
 
         if (preferRoomId >= 0)
