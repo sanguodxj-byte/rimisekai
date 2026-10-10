@@ -416,8 +416,7 @@ public sealed class TerritoryClock
             {
                 if (!facility.Supports(task))
                     continue;
-                if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(task)!.Value))
-                    || !character.Affect.AcceptsWork())
+                if (!character.Affect.AcceptsWork())
                     return ActionKind.None;
                 if (task == ActionKind.Till
                     && territory.PlotState(facility, season, character)
@@ -1440,6 +1439,8 @@ public sealed class TerritoryClock
             character.Affect.AddMood(1);
         if (character.Condition.Stamina * 10 < character.Condition.MaxStamina * 3)
             character.Affect.AddMood(-1);
+        if (worker.Phase == WorkPhase.Working)
+            character.Affect.AddMood(-character.HardLaborMoodPenalty(worker.Task));
     }
 
     private static void GrowDesire(CharacterState character, StepContext ctx)

@@ -98,6 +98,13 @@ public static class PersonalityTraits
         if (c.Has(Trait.Artisan) && action is ActionKind.Woodwork or ActionKind.Sew or ActionKind.Forge) p += 10;
         if (c.Has(Trait.Alchemist) && action == ActionKind.Brew) p += 15;
 
+        // 重活（采掘、锻造）：懒散磨洋工、怕痛缩手缩脚。只拖慢，不拒干（2026-10-10 主人定）。
+        if (IsHardLabor(action))
+        {
+            if (c.Has(Trait.Lazy)) p -= 30;
+            if (c.Has(Trait.FearPain)) p -= 25;
+        }
+
         // 认知/手艺向的任务对口加成
         if (c.Has(Trait.DownToEarth) && action is ActionKind.Till or ActionKind.Mine or ActionKind.Fell) p += 10;
         if (c.Has(Trait.Bookish) && action == ActionKind.Brew) p += 15;
@@ -249,10 +256,22 @@ public static class PersonalityTraits
         return difficulty;
     }
 
-    public static bool WillWork(CharacterState c, bool hardLabor) =>
-        hardLabor
-            ? !c.Has(Trait.Lazy) && !c.Has(Trait.FearPain)
-            : true;
+    private static bool IsHardLabor(ActionKind action) =>
+        ActionKindMap.TypeOf(action) is { } type && WorkTypeMap.IsHard(type);
+
+    /// <summary>
+    /// 干重活时每个心情回落周期（<see cref="Affect.DriftPeriodMinutes"/>）额外扣的心情：懒散、怕痛各 1。
+    /// 不想干的活照干，只是越干越不痛快。
+    /// </summary>
+    public static int HardLaborMoodPenalty(CharacterState c, ActionKind action)
+    {
+        if (!IsHardLabor(action))
+            return 0;
+        var p = 0;
+        if (c.Has(Trait.Lazy)) p += 1;
+        if (c.Has(Trait.FearPain)) p += 1;
+        return p;
+    }
 
     public static bool RequiresWage(CharacterState c) => !c.Has(Trait.Maid);
 
@@ -357,8 +376,9 @@ public static class PersonalityTraits
         var morning = Diff(c => WorkProgressPercent(c, probeWork, 7)).Delta - baseDay;
         if (morning != 0)
             lines.Add($"清晨工作效率 {Signed(morning)}%");
-        if (!WillWork(Probe(true, false, false), true) && WillWork(Probe(false, false, false), true))
-            lines.Add("不肯干重活");
+        var hardMood = HardLaborMoodPenalty(Probe(true, false, false), ActionKind.Mine);
+        if (hardMood != 0)
+            lines.Add($"重活时每{Affect.DriftPeriodMinutes / 60}小时心情 {Signed(-hardMood)}");
 
         Add("心情收益", MoodGainPercent);
         Add("亲密接触门槛", TouchGatePercent);

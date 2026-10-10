@@ -1488,8 +1488,7 @@ public sealed class Territory
             var facility = Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
             if (facility == null || used.GetValueOrDefault(facility.Id) >= facility.Capacity)
                 continue;
-            if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(TaskOf(facility))!.Value))
-                || !character.Affect.AcceptsWork())
+            if (!character.Affect.AcceptsWork())
                 continue;
             used[facility.Id] = used.GetValueOrDefault(facility.Id) + 1;
             var task = TaskOf(facility);

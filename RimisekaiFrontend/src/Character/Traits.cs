@@ -36,8 +36,8 @@ public static class Traits
     public static int TalkDifficulty(this CharacterState character) =>
         PersonalityTraits.TalkDifficultyTotal(character);
 
-    public static bool WillWork(this CharacterState character, bool hardLabor) =>
-        PersonalityTraits.WillWork(character, hardLabor);
+    public static int HardLaborMoodPenalty(this CharacterState character, ActionKind action) =>
+        PersonalityTraits.HardLaborMoodPenalty(character, action);
 
     public static bool RequiresWage(this CharacterState character) =>
         PersonalityTraits.RequiresWage(character);

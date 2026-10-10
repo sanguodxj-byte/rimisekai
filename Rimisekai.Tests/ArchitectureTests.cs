@@ -385,7 +385,9 @@ public sealed class ArchitectureTests
         var day = new TerritoryClock();
         day.Track(lazy.Id, 1);
         day.Step(t, roster, 0);
-        Assert.Equal(WorkPhase.Idle, day.Workers[0].Phase);
+        // 懒散照样下矿（不拒干），只是重活进度打折。
+        Assert.Equal(WorkPhase.Working, day.Workers[0].Phase);
+        Assert.True(Traits.WorkProgressPercent(lazy, ActionKind.Mine, 12) < 100);
 
         var state = new GameState();
         state.Roster.Add("你", master: true);

@@ -98,7 +98,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - `Assignment`：`Task, WorkplaceId（-1=自动找空闲同类设施）, Fallback（做不成时的后备）, OrderItemId（制作订单）`
 - `WorkTask` 数值：Free=0, Rest=1, Gather=3, Mine=4, Craft=9, Woodwork=13, Smithing=14, Alchemy=15, Cooking=16, Tailoring=17
 - `WorkLog`：`CharacterId, Slot, Task, ItemId, Count, Skill, Exp, Fallback`
-- 太累（疲劳≥150）或懒散者拒绝重活；设施按 `Capacity` 先到先得，排不上走 `Fallback`
+- 太累（疲劳≥150）或心情 ≤10 拒绝工作；特质不拒活：懒散 / 怕痛干重活（采掘、锻造）进度 -30% / -25%，且每 4 小时心情各 -1；设施按 `Capacity` 先到先得，排不上走 `Fallback`
 
 ### 2.7b 自主节律（闲时）
 
@@ -283,7 +283,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 
 ### 3.4 素质、体力、关系
 
-- 素质 `Trait`（有/无）：学习快慢改经验 ±50%；懒散拒绝采矿/工作/锻造；冷漠/高傲首次交谈失败；好奇/坦率降低交谈难度；恢复快慢影响疲劳
+- 素质 `Trait`（有/无）：学习快慢改经验 ±50%；懒散 / 怕痛干重活变慢且扣心情（不拒干）；冷漠/高傲首次交谈失败；好奇/坦率降低交谈难度；恢复快慢影响疲劳
 - 女仆 `Trait.Maid`：`RequiresWage()` 为假（不要工资），`AcceptsInvite()` 无视好感恒为真
 - 体力 `Condition`：体力/气力上限 1000；`Spend/Recover/RecoverFull`；疲劳≥150 停工；好感分档 None/Fond(100)/Close(300)/Lover(600)，交谈+5、送礼+20
 - 关系 `Relations`：`Acquainted 相识 / Trusted 信任 / Sworn 誓约 / Rival 敌对 / Marked 刻印`，双向存 ID 对
