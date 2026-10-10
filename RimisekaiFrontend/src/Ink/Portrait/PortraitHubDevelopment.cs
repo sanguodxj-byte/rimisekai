@@ -3,38 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Rimisekai.Housing;
+using Rimisekai.Hub;
 using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
 /// <summary>
-/// 建造推入页（原开发页）：模型、开拓/安装/拆除逻辑不变，只换版式——
-/// 上＝缺角双线框里的 5×5 开发网格（已开放实底、可开拓虚线＋加号＋花费、空房暗、安装中高亮空房），
-/// 下＝常驻目录面板，分段 操作（门：选中房间四面开/封；拆/房/设/安）/ 设施（选中房间里的）/ 待安装（已建未装的房间）。
+/// 建造推入页的网格态：上＝缺角双线框里的 5×5 开发网格（已开放实底、可开拓虚线＋加号、空房暗），
+/// 下＝底座（建造常用的钱料计数；刚建的一笔可撤时多一枚撤销钮）。点一格进全高建造抽屉（见 PortraitHubBuildSheet）。
 /// </summary>
 public partial class PortraitHubScreen
 {
-    private int _developmentCell = -1;
-    private int _developmentFacility = -1;
-    private int _developmentRoom = -1;
-    private int _developmentPlacing = -1;
-    private int _developmentFacilityFirst;
-    private int _developmentRoomFirst;
-    private int _developmentActionFirst;
-    private int _developmentTab;
-
-    private static readonly string[] DevelopmentTabs = { "操作", "设施", "待安装" };
-
     private InkDevModel DevelopmentModel(int confirmCell = -1)
     {
-        var query = new InkPageQuery(_developmentCell, _developmentRoom, _developmentFacility,
-            "", false, 0, 0, false, -1, _developmentPlacing, ConfirmCell: confirmCell,
-            ActionFirst: _developmentActionFirst);
+        var query = new InkPageQuery(-1, -1, -1, "", false, 0, 0, false, -1, -1, ConfirmCell: confirmCell);
         return InkPageBuilder.Build(_vm, InkPage.Develop, in query).Dev!;
     }
 
     private void DrawDevelopment()
     {
+        if (BuildSheetOpen)
+        {
+            DrawBuildSheet();
+            return;
+        }
         var model = DevelopmentModel();
         PortraitFrame.GothicFrame(this, PortraitLayout.DevelopmentFrame, InkStyle.Bg);
         for (var y = 0; y < PortraitLayout.GridRows; y++)
@@ -45,118 +37,50 @@ public partial class PortraitHubScreen
             var cell = model.Rooms[i];
             var rect = PortraitLayout.DevelopmentCell(cell.X, cell.Y);
             var inner = rect.Grow(-6f);
-            var enabled = cell.Open || cell.CanDevelop;
+            var plot = cell.Id < 0;
+            var enabled = cell.Open || plot || cell.CanDevelop;
             var pressed = PortraitFrame.IsPressed(rect);
             if (cell.Open)
             {
-                var target = _developmentPlacing >= 0 && cell.Vacant;
-                DrawRect(inner, pressed ? PortraitFrame.PressFill : cell.Selected || target ? InkStyle.Hover : InkStyle.Panel);
-                if (target)
-                    DashedLoop(inner, InkStyle.Line);
-                else
-                    InkDraw.Ink(this, RectLoop(inner), cell.Vacant ? InkStyle.WoodDark : InkStyle.Dim, 3f);
+                DrawRect(inner, pressed ? PortraitFrame.PressFill : InkStyle.Panel);
+                InkDraw.Ink(this, RectLoop(inner), cell.Vacant ? InkStyle.WoodDark : InkStyle.Dim, 3f);
                 InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta,
                     cell.Vacant ? InkStyle.Dim : InkStyle.Line);
             }
-            else if (cell.CanDevelop)
+            else if (plot || cell.CanDevelop)
             {
                 if (pressed)
                     DrawRect(inner, PortraitFrame.PressFill);
                 DashedLoop(inner, InkStyle.Dim);
-                // 花费在确认弹窗里写全；格内只放加号，避免小于 44 的字。
                 PortraitGlyph.Plus(this, inner.GetCenter().X, inner.GetCenter().Y, 30f, InkStyle.Dim);
             }
             else if (cell.Name.Length > 0)
                 InkDraw.TextStacked(this, inner.Grow(-10f), inner.Grow(-10f), cell.Name, PortraitLayout.FontMeta, InkStyle.WoodDark);
-            if (cell.Selected)
-            {
-                InkDraw.Ink(this, RectLoop(rect.Grow(-1f)), InkStyle.Line, 7f);
-                foreach (var corner in new[] { rect.Position, new Vector2(rect.End.X, rect.Position.Y), new Vector2(rect.Position.X, rect.End.Y), rect.End })
-                    InkDraw.Jewel(this, corner, 12f, InkStyle.Line);
-            }
             _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentCell, i, enabled, cell.Name));
         }
         DrawDoors(PortraitLayout.DevelopmentCell, model.RegionId);
 
         var panel = PortraitLayout.DevelopmentPanel;
         PortraitFrame.Dock(this, new Rect2(panel.Position, panel.Size + new Vector2(0, 80f)));
-        var doors = DoorRows(model.RoomId);
-        var counts = new[] { doors.Count + model.ActionRows.Count, model.FacilityRows.Count, model.RoomRows.Count };
-        // 「操作」页是常备的整张目录（开门/封墙＋各类房），条数没有信息量，不标数；设施与待安装才标。
-        var labels = DevelopmentTabs.Select((t, i) => i > 0 && counts[i] > 0 ? $"{t} {counts[i]}" : t).ToArray();
-        var seg = PortraitLayout.DevelopmentSegment;
-        PortraitFrame.Segmented(this, seg, labels, _developmentTab);
-        for (var i = 0; i < labels.Length; i++)
-            _widgets.Add(new PortraitWidget(PortraitFrame.SegmentRect(seg, labels.Length, i), PortraitAction.DevelopmentTab, i, true, DevelopmentTabs[i]));
+        DrawBuildStock(PortraitLayout.DevelopmentStockY);
+        if (_vm.Hub.CanUndoBuild)
+        {
+            var undo = PortraitLayout.DevelopmentUndo;
+            PortraitFrame.Pill(this, undo, $"撤销 {_vm.Hub.LastBuildName}", glyph: PortraitGlyph.Back);
+            _widgets.Add(new PortraitWidget(undo, PortraitAction.BuildUndo, 0, true, "撤销"));
+        }
+        DrawPageTop("建造", "", "完成", PortraitAction.BuildDone);
+    }
 
-        var visible = PortraitLayout.DevelopmentRows;
-        var area = new Rect2(0, PortraitLayout.DevelopmentListTop, PortraitLayout.CanvasWidth, visible * PortraitLayout.SheetRowStep);
-        if (_developmentTab == 0)
-        {
-            var total = doors.Count + model.ActionRows.Count;
-            _developmentActionFirst = Math.Clamp(_developmentActionFirst, 0, Math.Max(0, total - visible));
-            for (var i = 0; i < visible && i + _developmentActionFirst < total; i++)
-            {
-                var rect = PortraitLayout.DevelopmentRow(i);
-                if (i + _developmentActionFirst < doors.Count)
-                {
-                    // 门：选中房间每个朝向上一行，点一下开 / 封。
-                    var door = doors[i + _developmentActionFirst];
-                    PortraitFrame.Card(this, rect, door.Open, 22f);
-                    PortraitFrame.Tag(this, new Vector2(rect.Position.X + 30f, rect.GetCenter().Y - 33f), "门", 66f, door.Open);
-                    InkDraw.TextBounded(this, new Rect2(rect.Position.X + 150f, rect.Position.Y, rect.Size.X * 0.55f, rect.Size.Y),
-                        $"{Territory.DirName(door.Dir)} · {door.Neighbor}", PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-                    InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.6f, rect.Position.Y, rect.Size.X * 0.4f - 40f, rect.Size.Y),
-                        door.Open ? "连通" : "墙", PortraitLayout.FontMeta, PortraitLayout.FontMeta, door.Open ? InkStyle.Line : InkStyle.Dim, "rm");
-                    _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentDoor, (int)door.Dir, true, $"{Territory.DirName(door.Dir)}门"));
-                    continue;
-                }
-                var index = i + _developmentActionFirst - doors.Count;
-                var row = model.ActionRows[index];
-                PortraitFrame.Card(this, rect, row.Selected, 22f);
-                if (row.Prefix.Length > 0)
-                    PortraitFrame.Tag(this, new Vector2(rect.Position.X + 30f, rect.GetCenter().Y - 33f), row.Prefix, 66f, row.Selected);
-                // 有缘由时与门行同一套分栏：名字占左 55%，缘由右对齐落在右 40%。
-                var nameWidth = row.Note.Length > 0 ? rect.Size.X * 0.55f : rect.Size.X - 190f;
-                InkDraw.TextBounded(this, new Rect2(rect.Position.X + 150f, rect.Position.Y, nameWidth, rect.Size.Y), row.Name,
-                    PortraitLayout.FontBody, PortraitLayout.FontMeta, row.Enabled ? InkStyle.Line : InkStyle.Dim, "lm");
-                if (row.Note.Length > 0)
-                    InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.6f, rect.Position.Y, rect.Size.X * 0.4f - 40f, rect.Size.Y),
-                        row.Note, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-                _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentAction, index, row.Enabled, row.Name));
-            }
-            RegisterScroll("development_actions", area, total, visible, _developmentActionFirst,
-                first => _developmentActionFirst = first, PortraitLayout.SheetRowStep);
-        }
-        else if (_developmentTab == 1)
-        {
-            _developmentFacilityFirst = Math.Clamp(_developmentFacilityFirst, 0, Math.Max(0, model.FacilityRows.Count - visible));
-            for (var i = 0; i < visible && i + _developmentFacilityFirst < model.FacilityRows.Count; i++)
-            {
-                var row = model.FacilityRows[i + _developmentFacilityFirst];
-                var rect = PortraitLayout.DevelopmentRow(i);
-                DrawDevRow(rect, row.Name, row.Value.Length > 0 ? row.Value : row.Note, row.Id == _developmentFacility, row.Enabled);
-                _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentFacility, row.Id, row.Enabled, row.Name));
-            }
-            RegisterScroll("development_facilities", area, model.FacilityRows.Count, visible, _developmentFacilityFirst,
-                first => _developmentFacilityFirst = first, PortraitLayout.SheetRowStep);
-        }
-        else
-        {
-            _developmentRoomFirst = Math.Clamp(_developmentRoomFirst, 0, Math.Max(0, model.RoomRows.Count - visible));
-            for (var i = 0; i < visible && i + _developmentRoomFirst < model.RoomRows.Count; i++)
-            {
-                var index = i + _developmentRoomFirst;
-                var row = model.RoomRows[index];
-                var rect = PortraitLayout.DevelopmentRow(i);
-                DrawDevRow(rect, row.Name, row.Value.Length > 0 ? row.Value : row.Note, row.Id == _developmentPlacing, row.Enabled);
-                _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentRoom, index, row.Enabled, row.Name));
-            }
-            RegisterScroll("development_rooms", area, model.RoomRows.Count, visible, _developmentRoomFirst,
-                first => _developmentRoomFirst = first, PortraitLayout.SheetRowStep);
-        }
-
-        DrawPageTop("建造", model.FacilityTitle, "完成", PortraitAction.Back);
+    /// <summary>钱与建造常用料的计数签（钱、木材、石材：现有多少）。</summary>
+    private void DrawBuildStock(float cy)
+    {
+        var hub = _vm.Hub;
+        var master = hub.State.Roster.Master;
+        var pairs = new List<(string, string)> { (HubSession.MoneyLabel, hub.State.Money.ToString()) };
+        foreach (var item in new[] { HubSession.VacantCostItemId, HubSession.VacantCostStoneItemId })
+            pairs.Add((item, hub.State.Territory.CountWith(master, item).ToString()));
+        PortraitFrame.CountTags(this, PortraitLayout.Pad + 20f, cy, pairs, PortraitLayout.CanvasWidth - PortraitLayout.Pad);
     }
 
     private readonly record struct DoorRow(RoomDir Dir, string Neighbor, bool Open);
@@ -174,118 +98,39 @@ public partial class PortraitHubScreen
         return rows;
     }
 
-    private void DrawDevRow(Rect2 rect, string name, string value, bool selected, bool enabled)
-    {
-        PortraitFrame.Card(this, rect, selected, 22f);
-        InkDraw.TextBounded(this, new Rect2(rect.Position.X + 40f, rect.Position.Y, rect.Size.X * 0.6f, rect.Size.Y), name,
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, enabled ? InkStyle.Line : InkStyle.Dim, "lm");
-        if (value.Length > 0)
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.6f + 60f, rect.Position.Y, rect.Size.X * 0.4f - 100f, rect.Size.Y),
-                value, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-    }
-
     private bool ExecuteDevelopment(PortraitWidget widget)
     {
         var hub = _vm.Hub;
-        if (widget.Action == PortraitAction.DevelopmentTab)
-        {
-            _developmentTab = widget.Index;
-            return true;
-        }
         if (widget.Action == PortraitAction.DevelopmentCell)
         {
             var cell = DevelopmentModel().Rooms[widget.Index];
-            _developmentCell = widget.Index;
-            _developmentFacility = -1;
-            _developmentFacilityFirst = 0;
-            if (_developmentPlacing >= 0 && cell.Open && cell.Vacant)
-            {
-                if (hub.PlaceRoom(_developmentPlacing, cell.Id))
-                {
-                    _developmentPlacing = _developmentRoom = -1;
-                    _developmentCell = -1;
-                }
-            }
+            var regionId = hub.RegionId;
+            if (hub.SiteAt(regionId, cell.X, cell.Y) != BuildSite.None)
+                OpenBuildSheet(regionId, cell.X, cell.Y);
             else if (cell.CanDevelop)
             {
+                // 已有实体但没开放的房（开局表里预置的格）：照旧花它自己的钱料开放。
                 var confirmation = DevelopmentModel(cell.Y * PortraitLayout.GridCols + cell.X);
                 Confirm(confirmation.ConfirmTitle, confirmation.ConfirmBody, () =>
                 {
                     hub.BeginOperation();
-                    if (cell.Id >= 0)
-                        hub.DevelopEmptyRoom(cell.Id);
-                    else
-                        hub.DevelopVacantCell(confirmation.RegionId, cell.X, cell.Y);
-                    _developmentCell = -1;
+                    hub.DevelopEmptyRoom(cell.Id);
                     QueueRedraw();
                 });
             }
-            else if (cell.Open)
-                _developmentTab = 0;
-            return true;
-        }
-        if (widget.Action == PortraitAction.DevelopmentFacility)
-        {
-            _developmentFacility = widget.Index;
-            _developmentTab = 0;
-            return true;
-        }
-        if (widget.Action == PortraitAction.DevelopmentRoom)
-        {
-            _developmentRoom = widget.Index;
-            _developmentPlacing = DevelopmentModel().RoomRows[widget.Index].Id;
             return true;
         }
         if (widget.Action == PortraitAction.DevelopmentDoor)
         {
-            var roomId = DevelopmentModel().RoomId;
+            var room = hub.State.Territory.RoomAt(_buildRegion, _buildX, _buildY)!;
             var dir = (RoomDir)widget.Index;
-            var room = hub.State.Territory.Room(roomId);
-            if (room != null)
-            {
-                hub.BeginOperation();
-                hub.SetDoor(roomId, dir, !hub.State.Territory.DoorOpen(room, dir));
-            }
+            hub.SetDoor(room.Id, dir, !hub.State.Territory.DoorOpen(room, dir));
             return true;
         }
-        if (widget.Action != PortraitAction.DevelopmentAction)
-            return false;
-        var model = DevelopmentModel();
-        var row = model.ActionRows[widget.Index];
-        switch (row.Action)
-        {
-            case InkAction.DevBuildRoom:
-                hub.BuildRoomDef(row.Index);
-                break;
-            case InkAction.DevBuildFacility:
-                hub.BuildFacilityDef(row.Index, model.RoomId);
-                break;
-            case InkAction.DevPlaceFacility:
-                hub.PlaceFacility(row.Index, model.RoomId);
-                break;
-            case InkAction.DevRemoveFacility:
-                Confirm("拆除", row.Name, () =>
-                {
-                    hub.BeginOperation();
-                    hub.RemoveFacility(row.Index);
-                    _developmentFacility = -1;
-                    QueueRedraw();
-                });
-                break;
-            case InkAction.DevDemolishRoom:
-                Confirm("拆除", row.Name, () =>
-                {
-                    hub.BeginOperation();
-                    hub.RemoveRoom(row.Index);
-                    _developmentCell = _developmentFacility = -1;
-                    QueueRedraw();
-                });
-                break;
-        }
-        return true;
+        return ExecuteBuildSheet(widget);
     }
 
-    private IReadOnlyList<PortraitRegion> DevelopmentRegions() => new[]
+    private IReadOnlyList<PortraitRegion> DevelopmentRegions() => BuildSheetOpen ? BuildSheetRegions() : new[]
     {
         new PortraitRegion("page_top", PortraitLayout.PageTop),
         new PortraitRegion("development_grid", PortraitLayout.DevelopmentFrame),

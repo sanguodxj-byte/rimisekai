@@ -235,52 +235,29 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() =>
         {
-            Shoot("develop_confirm", _root.ModalLayer);
-            ClickModal("cancel");
+            // 点空地＝建造抽屉列房间（一项不藏），页签带「能建/总数」；看一眼不扣钱。
+            var screen = _root.HubScreen;
+            Require(screen.DebugWidgets.Count(w => w.Action == PortraitAction.BuildCategory) == 6
+                && screen.DebugHub.State.Territory.VacantDevelopCount == _developmentProbeCount,
+                "tapping a plot opens the room choices without charging");
+            ClickLabel(PortraitAction.BuildCategory, "居室");
         });
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "客厅"));
         _steps.Enqueue(() =>
         {
-            Require(_root.HubScreen.DebugHub.State.Territory.VacantDevelopCount == _developmentProbeCount,
-                "development cancellation does not charge or develop");
-            var widget = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell &&
-                w.Rect.Position == PortraitLayout.DevelopmentCell(_developmentProbeX, _developmentProbeY).Position);
-            ClickHub(widget.Action, widget.Index);
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && w.Label == "开拓并建造" && w.Enabled),
+                "plot card offers open-and-build");
+            ClickHub(PortraitAction.BuildMain, 0);
         });
-        _steps.Enqueue(() => ClickModal("confirm"));
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
             var room = hub.State.Territory.RoomAt(hub.RegionId, _developmentProbeX, _developmentProbeY);
-            Require(room is { Vacant: true } && hub.State.Territory.VacantDevelopCount == _developmentProbeCount + 1,
-                "development confirmation creates vacant room through core");
-            _root.HubScreen.QueueRedraw();
-        });
-        _steps.Enqueue(() =>
-        {
-            var row = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentAction && w.Enabled);
-            ClickHub(row.Action, row.Index);
-        });
-        _steps.Enqueue(() => ClickHub(PortraitAction.DevelopmentTab, 2));
-        _steps.Enqueue(() =>
-        {
-            var hub = _root.HubScreen.DebugHub;
-            var room = hub.State.Territory.Rooms.Last(r => r.X < 0);
-            _developmentProbeRoom = room.Id;
-            var widget = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentRoom && w.Label == room.Name);
-            ClickHub(widget.Action, widget.Index);
-        });
-        _steps.Enqueue(() =>
-        {
-            var widget = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell &&
-                w.Rect.Position == PortraitLayout.DevelopmentCell(_developmentProbeX, _developmentProbeY).Position);
-            ClickHub(widget.Action, widget.Index);
-        });
-        _steps.Enqueue(() =>
-        {
-            var hub = _root.HubScreen.DebugHub;
-            Require(hub.State.Territory.RoomAt(hub.RegionId, _developmentProbeX, _developmentProbeY)?.Id == _developmentProbeRoom,
-                "development installs selected built room into vacant cell");
+            Require(room is { Name: "客厅", Vacant: false } && hub.State.Territory.VacantDevelopCount == _developmentProbeCount + 1,
+                "open-and-build develops the plot and builds the room in one step");
+            Require(hub.CanUndoBuild, "the build just made can be undone");
             Shoot("development_installed", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.Back, 0);
         });
         EnqueueIndoorOnlyRow();
         _steps.Enqueue(() =>
@@ -417,10 +394,7 @@ public partial class PortraitCapture
         });
     }
 
-    /// <summary>
-    /// 建造页选中庭院（室外）：「床」那行灰着，行尾写「只能摆在室内」。
-    /// 操作列表很长，逐格往上拖到「床」那行露出来再拍。
-    /// </summary>
+    /// <summary>建造抽屉选中庭院（室外）：起居类里的「床」暗着加锁，详情卡「室内」打叉。</summary>
     private void EnqueueIndoorOnlyRow()
     {
         _steps.Enqueue(() =>
@@ -428,32 +402,22 @@ public partial class PortraitCapture
             var cell = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == "庭院");
             ClickHub(cell.Action, cell.Index);
         });
-        _steps.Enqueue(() => ClickHub(PortraitAction.DevelopmentTab, 0));
-        for (var i = 0; i < 40; i++)
-            _steps.Enqueue(() =>
-            {
-                if (BedRow() != null)
-                    return;
-                var area = new Rect2(0, PortraitLayout.DevelopmentListTop, PortraitLayout.CanvasWidth,
-                    PortraitLayout.DevelopmentRows * PortraitLayout.SheetRowStep);
-                var from = new Vector2(area.GetCenter().X, area.End.Y - 8f);
-                var to = from - new Vector2(0, PortraitLayout.SheetRowStep * 3);
-                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = from });
-                _root.HubScreen._GuiInput(new InputEventMouseMotion { Position = to, ButtonMask = MouseButtonMask.Left });
-                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = to });
-                _root.HubScreen.QueueRedraw();
-            });
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildCategory, "起居"));
+        _steps.Enqueue(() => ClickLabel(PortraitAction.BuildTile, "床"));
         _steps.Enqueue(() =>
         {
-            var bed = BedRow();
-            Require(bed is { Enabled: false }, "bed row is greyed out in the courtyard");
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.BuildMain && !w.Enabled),
+                "bed cannot be built in the courtyard");
             Shoot("development_indoor_only", _root.HubScreen);
         });
     }
 
-    private PortraitWidget? BedRow() =>
-        _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.DevelopmentAction && w.Label == "床")
-            .Cast<PortraitWidget?>().FirstOrDefault();
+    /// <summary>按标签点一枚可用的命中块（建造抽屉里的页签、格子按名字找）。</summary>
+    private void ClickLabel(PortraitAction action, string label)
+    {
+        var widget = _root.HubScreen.DebugWidgets.First(w => w.Action == action && w.Label == label && w.Enabled);
+        Press(_root.HubScreen, widget.Rect.GetCenter());
+    }
 
     /// <summary>自己的房间（主人的床那间）的抽屉：左钮是门锁，点一下换一档，标签与提示签跟着变。</summary>
     private void EnqueueRoomLock()

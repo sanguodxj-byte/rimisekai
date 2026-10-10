@@ -727,7 +727,7 @@ public partial class PortraitHubScreen
                 return true;
             case PortraitAction.Build:
                 _push = PushPage.Build;
-                _developmentCell = _developmentFacility = _developmentRoom = _developmentPlacing = -1;
+                CloseBuildSheet();
                 return true;
             case PortraitAction.RoomGo:
                 GoTo(w.Index);
