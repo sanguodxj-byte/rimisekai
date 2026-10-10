@@ -19,9 +19,12 @@ public static class Deploy
     public static Combatant FromCharacter(CharacterState c, CombatSide side,
         Defs.WeaponRegistry? weapons = null, Defs.EquipRegistry? equips = null)
     {
-        var sheet = c.Combat;
-        var panel = weapons?.Get(c.EquippedId(Defs.EquipSlot.MainHand))?.Panel ?? 0;
-        var strike = c.ResolveStrike(panel);
+        // 饰品加成进属性；副手武器面板按 OffHandPanelPercent 折进出手（拟案，待主人核定）。
+        var sheet = c.CombatWith(equips);
+        var mainPanel = weapons?.Get(c.EquippedId(Defs.EquipSlot.MainHand))?.Panel ?? 0;
+        var offPanel = weapons?.Get(c.EquippedId(Defs.EquipSlot.OffHand))?.Panel ?? 0;
+        var panel = mainPanel + offPanel * BattleRules.OffHandPanelPercent / 100;
+        var strike = c.ResolveStrike(panel, equips);
         var armour = equips == null ? 0 : c.TotalDefence(equips) * BattleRules.GearArmourPercent / 100;
 
         // 能力表：普通攻击与防御架势玩家侧角色自带（敌人没有防御动作）；
@@ -58,8 +61,8 @@ public static class Deploy
             SpellPower = Math.Max(1, (int)Math.Round(sheet.SpellPower * tiredMult * BattleRules.PowerPercent / 100.0)),
             CritRate = Math.Min(
                 BattleRules.CritRateCap,
-                BattleRules.BaseCritRate + c[CoreStat.Perception] / 2),
-            Speed = Math.Max(1, c[CoreStat.Speed]),
+                BattleRules.BaseCritRate + c.Stat(CoreStat.Perception, equips) / 2),
+            Speed = Math.Max(1, c.Stat(CoreStat.Speed, equips)),
             ThreatTier = Math.Min(5, Math.Max(1, c.ThreatTier)),
             QuickChant = c.QuickChant(),
             Level = c.Level,

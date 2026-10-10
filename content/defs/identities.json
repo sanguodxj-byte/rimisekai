@@ -19,7 +19,8 @@
       "grants": [],
       "mainWeapon": "Sword",
       "offWeapon": null,
-      "offShield": true
+      "offShield": true,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "商人",
@@ -57,7 +58,8 @@
       ],
       "mainWeapon": "Staff",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "战士",
@@ -66,7 +68,8 @@
       "grants": [],
       "mainWeapon": "Sword",
       "offWeapon": "Sword",
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "护卫",
@@ -75,7 +78,8 @@
       "grants": [],
       "mainWeapon": "Spear",
       "offWeapon": null,
-      "offShield": true
+      "offShield": true,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "佣兵",
@@ -84,7 +88,8 @@
       "grants": [],
       "mainWeapon": "Axe",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "弓箭手",
@@ -93,7 +98,8 @@
       "grants": [],
       "mainWeapon": "Bow",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "猎人",
@@ -102,7 +108,8 @@
       "grants": [],
       "mainWeapon": "Crossbow",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "刺客",
@@ -111,7 +118,8 @@
       "grants": [],
       "mainWeapon": "Dagger",
       "offWeapon": "Sword",
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "盗贼",
@@ -120,7 +128,8 @@
       "grants": [],
       "mainWeapon": "Dagger",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "吟游诗人",
@@ -236,7 +245,8 @@
       "grants": [],
       "mainWeapon": "Staff",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "游侠",
@@ -245,7 +255,8 @@
       "grants": [],
       "mainWeapon": "Bow",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "圣骑士",
@@ -254,7 +265,8 @@
       "grants": [],
       "mainWeapon": "Sword",
       "offWeapon": null,
-      "offShield": true
+      "offShield": true,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "贵族",
@@ -299,7 +311,8 @@
       "grants": [],
       "mainWeapon": "Spear",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "魔剑士",
@@ -310,7 +323,8 @@
       ],
       "mainWeapon": "Sword",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     },
     {
       "defName": "驯兽师",
@@ -319,7 +333,8 @@
       "grants": [],
       "mainWeapon": "Crossbow",
       "offWeapon": null,
-      "offShield": false
+      "offShield": false,
+      "weaponMaterial": "木材"
     }
   ]
 }

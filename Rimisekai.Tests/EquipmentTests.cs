@@ -67,6 +67,45 @@ public sealed class EquipmentTests
     }
 
     [Fact]
+    public void Starting_weapons_are_real_instances_and_accessories_and_off_hand_count_in_battle()
+    {
+        DefLoader.EnsureInitialized();
+        var state = new GameState();
+        var c = state.Roster.Add("战士");
+        c.Identity = "战士";
+        Assert.True(c.Equip(WeaponType.Sword, WeaponType.Sword));
+
+        // 原配武器入伙即落成实例：主副手各一把普通品质的木剑，面板真实。
+        var armory = state.Weapons.All.Count;
+        state.Outfit(c);
+        var main = state.Weapons.Get(c.EquippedId(EquipSlot.MainHand))!;
+        var off = state.Weapons.Get(c.EquippedId(EquipSlot.OffHand))!;
+        Assert.Equal("木材", main.MaterialDefName);
+        Assert.Equal(Quality.Common, main.Quality);
+        Assert.True(main.Panel > 0);
+
+        // 再调不重复锻。
+        state.Outfit(c);
+        Assert.Equal(armory + 2, state.Weapons.All.Count);
+
+        // 副手面板按 OffHandPanelPercent 折进出手。
+        var unit = Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips);
+        var expected = c.ResolveStrike(main.Panel + off.Panel * BattleRules.OffHandPanelPercent / 100).Rounded;
+        Assert.Equal((int)System.Math.Round(expected * BattleRules.PowerPercent / 100.0), unit.StrikePower);
+
+        // 饰品加成进战斗属性。
+        var before = Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips);
+        var ring = EquipForge.ForgeAccessory(EquipSlot.Ring1, "Strength", "铁", Quality.Common, "", false, 0);
+        state.Equips.Add(ring);
+        c.SetEquippedId(EquipSlot.Ring1, ring.Id);
+        var after = Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips);
+        Assert.True(ring.BonusAmount > 0);
+        Assert.Equal(c.Stat(CoreStat.Strength, state.Equips), c[CoreStat.Strength] + ring.BonusAmount);
+        Assert.True(after.Attack > before.Attack);
+        Assert.True(after.StrikePower >= before.StrikePower);
+    }
+
+    [Fact]
     public void Gear_is_only_forged_on_order()
     {
         var hub = TerritoryLoopTests.NewGame(out var state, 1);

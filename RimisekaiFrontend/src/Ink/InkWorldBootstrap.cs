@@ -163,6 +163,7 @@ public static class InkWorldBootstrap
 
             // 生活履历：初始属性、身份装备、经验由生成器发；名字/主仆/好感/素质以种子为准。
             generator.Populate(character, entry.Traits);
+            state.Outfit(character);
         }
 
         // 开局物资进玩家背包（物品只在背包或设施里，没有领地虚空库存）。

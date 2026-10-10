@@ -72,6 +72,7 @@ public sealed partial class HubSession
         }
         State.Territory.Visits.RemoveAll(v => v.CharacterId == who.Id);
         State.Roster.Admit(who.Id);
+        State.Outfit(who);
         Day.Track(who.Id, PlayerRoomId).RoomId = PlayerRoomId;
         _presence[who.Id] = PlayerRoomId;
         Write($"{who.Name}答应留下来，成了领地的一员。");

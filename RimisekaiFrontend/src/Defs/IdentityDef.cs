@@ -23,6 +23,12 @@ public sealed class IdentityDef : Def
 
     /// <summary>初始副手是否持盾。</summary>
     public bool OffShield { get; init; }
+
+    /// <summary>
+    /// 原配武器的材料（拟案，待主人核定）：入伙时按主副手武器类型各锻一件普通品质的实例，
+    /// 带真实面板进战斗。没有初始武器的身份留空。
+    /// </summary>
+    public string WeaponMaterial { get; init; } = "";
 }
 
 /// <summary>

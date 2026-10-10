@@ -135,6 +135,7 @@ public sealed partial class HubSession
     public void AdmitStagedActor(string eventId, CharacterState actor, string logLine)
     {
         State.Roster.Attach(actor);
+        State.Outfit(actor);
         _staged.Remove(eventId);
         Place(actor.Id, ArrivalRoom());
         Write(logLine);

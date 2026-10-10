@@ -221,6 +221,9 @@ public static class BattleRules
     public const int DefCapPercent = 60;
     /// <summary>防具折护甲：五件甲的防御合计按此百分比折成护甲（每下伤害平减）。</summary>
     public const int GearArmourPercent = 50;
+
+    /// <summary>副手武器面板折进出手的百分比（拟案，待主人核定）。</summary>
+    public const int OffHandPanelPercent = 50;
     /// <summary>法术威力 = 法强 × Power% × 此系数。</summary>
     public const int SpellScale = 3;
     /// <summary>治疗量 = 法强 × Power% × 此系数。</summary>

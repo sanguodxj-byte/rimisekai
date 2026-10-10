@@ -9,7 +9,7 @@ public readonly record struct GearOption(string ItemId, string Name, int Count, 
 
 /// <summary>
 /// 换装：候选一律取主角背包（武器进 Weapons、防具饰品进 Equips 登记表，背包按实例 Id 记件数）。
-/// 换下的实例回背包；没有实例的原配武器（开局按身份配的武器类型）换下即不再保留。
+/// 换下的实例回背包；原配武器入伙时已落成实例（见 GameState.Outfit），同样回背包。
 /// </summary>
 public sealed partial class HubSession
 {

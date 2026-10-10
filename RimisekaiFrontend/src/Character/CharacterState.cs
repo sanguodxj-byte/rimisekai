@@ -299,18 +299,18 @@ public sealed class CharacterState
     /// 攻击结算。加数 = 武器面板 + 5×熟练等级 + 2×流派主属性 + 1×流派副属性；
     /// 乘数 = 1 + 0.05×流派主属性 + 0.2×熟练等级 + 流派系数。空手按格斗算。
     /// </summary>
-    public StrikeResult ResolveStrike(int weaponPanel) =>
-        Resolve(weaponPanel, MainWeapon ?? WeaponType.Unarmed);
+    public StrikeResult ResolveStrike(int weaponPanel, Rimisekai.Defs.EquipRegistry? gear = null) =>
+        Resolve(weaponPanel, MainWeapon ?? WeaponType.Unarmed, gear);
 
     public StrikeResult ResolveStrike(WeaponDef weapon) =>
-        Resolve(weapon.Panel, weapon.Type);
+        Resolve(weapon.Panel, weapon.Type, null);
 
-    private StrikeResult Resolve(int weaponPanel, WeaponType proficiencyType)
+    private StrikeResult Resolve(int weaponPanel, WeaponType proficiencyType, Rimisekai.Defs.EquipRegistry? gear)
     {
         var style = EquippedStyle ?? StyleType.Unarmed;
         var level = Weapons[(int)proficiencyType].Level;
-        var main = this[StyleMap.CoreOf(style)];
-        var secondary = this[StyleMap.SecondaryOf(style)];
+        var main = Stat(StyleMap.CoreOf(style), gear);
+        var secondary = Stat(StyleMap.SecondaryOf(style), gear);
         var addend = weaponPanel + 5 * level + 2 * main + secondary;
         var multiplier = 1 + 0.05 * main + 0.2 * level + StyleMap.FactorOf(style, this);
         return new StrikeResult(proficiencyType, style, level, addend, multiplier, addend * multiplier);
@@ -374,12 +374,19 @@ public sealed class CharacterState
             target[i] = source[i];
     }
 
-    public CombatSheet Combat => new(
-        Attack: this[CoreStat.Strength] + this[CoreStat.Dexterity] / 2,
-        MaxHp: BaseHp + this[CoreStat.Constitution] * HpPerConstitution + Level * HpPerLevel,
-        Defence: this[CoreStat.Constitution] + this[CoreStat.Strength] / 2,
-        Dodge: this[CoreStat.Dexterity] + this[CoreStat.Perception] / 2,
-        SpellPower: this[CoreStat.Intellect] + this[CoreStat.Perception] / 2);
+    public CombatSheet Combat => CombatWith(null);
+
+    /// <summary>带饰品加成的属性：核心属性 + 已装饰品对这一项的加成（不传登记表即裸属性）。</summary>
+    public int Stat(CoreStat stat, Rimisekai.Defs.EquipRegistry? gear) =>
+        this[stat] + (gear == null ? 0 : StatBonus(gear, stat));
+
+    /// <summary>战斗面板，按带饰品加成的属性算（不传登记表即裸属性）。</summary>
+    public CombatSheet CombatWith(Rimisekai.Defs.EquipRegistry? gear) => new(
+        Attack: Stat(CoreStat.Strength, gear) + Stat(CoreStat.Dexterity, gear) / 2,
+        MaxHp: BaseHp + Stat(CoreStat.Constitution, gear) * HpPerConstitution + Level * HpPerLevel,
+        Defence: Stat(CoreStat.Constitution, gear) + Stat(CoreStat.Strength, gear) / 2,
+        Dodge: Stat(CoreStat.Dexterity, gear) + Stat(CoreStat.Perception, gear) / 2,
+        SpellPower: Stat(CoreStat.Intellect, gear) + Stat(CoreStat.Perception, gear) / 2);
 
     public int Get(Dictionary<int, int> slot, int key) =>
         slot.TryGetValue(key, out var v) ? v : 0;

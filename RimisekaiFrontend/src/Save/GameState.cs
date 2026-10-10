@@ -74,6 +74,28 @@ public sealed class GameState
         Territory.RollMarketDay(new Random(WorldSeed));
     }
 
+    /// <summary>
+    /// 原配武器落成实例（拟案，待主人核定）：身份配了武器类型、槽里却没有实例的，
+    /// 按身份的 <see cref="Defs.IdentityDef.WeaponMaterial"/> 各锻一件普通品质、不附魔不祝福不强化的，
+    /// 登记进武器表并装进主手／副手，面板真实进战斗。入伙（开局、事件登场、访客入伙）时调一次。
+    /// </summary>
+    public void Outfit(CharacterState c)
+    {
+        var identity = Defs.DefDatabase<Defs.IdentityDef>.Get(c.Identity);
+        if (identity == null || identity.WeaponMaterial.Length == 0)
+            return;
+        void Arm(Defs.EquipSlot slot, WeaponType? type)
+        {
+            if (type == null || c.EquippedId(slot).Length > 0)
+                return;
+            var weapon = Defs.WeaponForge.Forge(identity.WeaponMaterial, type.Value, Defs.Quality.Common, "", false, 0);
+            Weapons.Add(weapon);
+            c.SetEquippedId(slot, weapon.Id);
+        }
+        Arm(Defs.EquipSlot.MainHand, c.MainWeapon);
+        Arm(Defs.EquipSlot.OffHand, c.OffWeapon);
+    }
+
     /// <summary>换一个世界种子重新生成大世界（新开局时掷一次；领地选址随之而定）。</summary>
     public void RegenerateWorld(int seed)
     {
