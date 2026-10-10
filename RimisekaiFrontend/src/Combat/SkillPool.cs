@@ -9,7 +9,7 @@ namespace Rimisekai.Combat;
 
 /// <summary>
 /// 身份技能池（拟案，待主人核定）。技能池按身份取索引（<see cref="IdentitySkillPoolDef"/>，每身份 20 基础＋3 核心）；
-/// 角色的池是从中抽出的 <see cref="PoolSize"/> 式：先必中一式核心，其余从剩下的 22 式里不放回地抽（可能再中核心）。
+/// 角色的池是从中抽出的 <see cref="PoolSize"/> 式：核心恰好一式（3 选 1），其余从 20 式基础技能里不放回地抽。
 /// 池里的技能直接会用（不走流派门槛与派生学习），机制点核心是被动、不进菜单。
 /// NPC 生成时按自己的身份抽一次；玩家角色特权：在领地里可随时自选身份重抽（<see cref="Hub.HubSession.RerollSkillPool"/>）。
 /// </summary>
@@ -38,12 +38,12 @@ public static class SkillPool
     public static SkillDef? Find(string id) =>
         Pools.SelectMany(p => p.Skills).FirstOrDefault(s => s.Id == id);
 
-    /// <summary>从某身份的池里抽 <see cref="PoolSize"/> 式：必中一式核心，余下随机。</summary>
+    /// <summary>从某身份的池里抽 <see cref="PoolSize"/> 式：核心恰好一式，余下全是基础技能。</summary>
     public static List<string> Draw(IdentitySkillPoolDef pool, Random rng)
     {
         var cores = pool.Skills.Where(s => s.Core != CoreKind.None).ToList();
         var first = cores[rng.Next(cores.Count)];
-        var rest = pool.Skills.Where(s => s != first).OrderBy(_ => rng.Next()).Take(PoolSize - 1);
+        var rest = pool.Skills.Where(s => s.Core == CoreKind.None).OrderBy(_ => rng.Next()).Take(PoolSize - 1);
         return new[] { first }.Concat(rest).Select(s => s.Id).ToList();
     }
 

@@ -1449,14 +1449,12 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// AI 估一式的出手价值：打击乘命中率（命中修正低的重击不再一味首选），咏唱的法术按占用的时间折算
+    /// AI 估一式的出手价值：咏唱的法术按占用的时间折算
     /// （咏唱 N 回合抵得上 N 回合里能出的几手）。
     /// </summary>
     private int ExpectedDamage(Combatant actor, Combatant foe, SkillDef def)
     {
         var damage = ResolveDamage(actor, foe, def);
-        if (def.Kind == SkillKind.Strike)
-            damage = damage * Math.Clamp(actor.BaseHit + def.HitMod - foe.EffDodge, BattleRules.MinHit, BattleRules.MaxHit) / 100;
         var busy = Math.Max(actor.ActInterval, def.ChantRounds * (long)BattleRules.RoundTicks);
         return (int)(damage * actor.ActInterval / busy);
     }

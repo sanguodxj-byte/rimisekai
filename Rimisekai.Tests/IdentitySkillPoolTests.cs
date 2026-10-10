@@ -62,7 +62,7 @@ public class IdentitySkillPoolTests
     }
 
     [Fact]
-    public void A_draw_always_holds_a_core_and_six_distinct_skills_of_that_identity()
+    public void A_draw_holds_exactly_one_core_and_six_distinct_skills_of_that_identity()
     {
         foreach (var pool in SkillPool.Pools)
             for (var seed = 0; seed < 50; seed++)
@@ -70,7 +70,7 @@ public class IdentitySkillPoolTests
                 var drawn = SkillPool.Draw(pool, new Random(seed));
                 Assert.Equal(SkillPool.PoolSize, drawn.Distinct().Count());
                 Assert.All(drawn, id => Assert.Contains(pool.Skills, s => s.Id == id));
-                Assert.Contains(drawn, id => SkillTable.Get(id)!.Core != CoreKind.None);
+                Assert.Single(drawn, id => SkillTable.Get(id)!.Core != CoreKind.None);
             }
     }
 

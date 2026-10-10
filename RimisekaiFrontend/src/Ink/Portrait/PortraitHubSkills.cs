@@ -85,7 +85,13 @@ public partial class PortraitHubScreen
         y += 56f;
         foreach (var def in SkillPool.Skills(who))
         {
-            var row = new Rect2(left, y, right - left, 150f);
+            // 说明整句折行显示，行多格就高，不截断。
+            var textWidth = right - left - 60f;
+            var lines = def.Description.Length > 0
+                ? InkDraw.WrapLines(def.Description, textWidth, PortraitLayout.FontMeta)
+                : PoolSkillLines(def, textWidth);
+            var lineHeight = PortraitLayout.FontMeta * 1.4f;
+            var row = new Rect2(left, y, right - left, 84f + lines.Count * lineHeight + 20f);
             PortraitFrame.Panel(this, row);
             var kind = InkText.CoreKind(def.Core);
             var chipWidth = InkDraw.Measure(kind, PortraitLayout.FontMeta).X + 56f;
@@ -95,10 +101,10 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, chip.GetCenter(), kind, PortraitLayout.FontMeta, core ? InkStyle.Line : InkStyle.Dim, "cm");
             InkDraw.TextBounded(this, new Rect2(row.Position.X + 30f, row.Position.Y + 10f, chip.Position.X - row.Position.X - 50f, 68f),
                 def.Name, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            var line = def.Description.Length > 0 ? def.Description : PoolSkillLine(def);
-            InkDraw.TextBounded(this, new Rect2(row.Position.X + 30f, row.Position.Y + 80f, row.Size.X - 60f, 60f),
-                line, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-            y += 166f;
+            for (var i = 0; i < lines.Count; i++)
+                InkDraw.Text(this, new Vector2(row.Position.X + 30f, row.Position.Y + 84f + (i + 0.5f) * lineHeight),
+                    lines[i], PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            y += row.Size.Y + 16f;
         }
 
         if (!who.IsMaster)
@@ -118,6 +124,21 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>基础技能的一行数值：种类、威力、咏唱、附加。</summary>
+    /// <summary>无说明的基础技能按「 · 」分段折行，一段（如「速度 -25% 2 回合」）不拆到两行。</summary>
+    private static List<string> PoolSkillLines(SkillDef def, float width)
+    {
+        var lines = new List<string>();
+        foreach (var part in PoolSkillLine(def).Split(" · "))
+        {
+            var joined = lines.Count == 0 ? part : lines[^1] + " · " + part;
+            if (lines.Count > 0 && InkDraw.Measure(joined, PortraitLayout.FontMeta).X <= width)
+                lines[^1] = joined;
+            else
+                lines.Add(part);
+        }
+        return lines;
+    }
+
     private static string PoolSkillLine(SkillDef def)
     {
         var parts = new List<string> { InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target) };

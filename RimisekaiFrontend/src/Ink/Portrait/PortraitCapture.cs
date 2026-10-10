@@ -284,7 +284,7 @@ public partial class PortraitCapture : Node
             // 开局身份是掷的；没有技能池的身份池为空，有的必是满池且含核心。
             Require(Rimisekai.Combat.SkillPool.PoolOf(master.Identity) == null ? master.SkillPool.Count == 0
                 : master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
-                  && master.SkillPool.Any(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None),
+                  && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 1,
                 "the master's pool follows the identity it was drawn from");
             Shoot("skills_pool", _root.HubScreen);
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.PoolIdentity && w.Enabled),
@@ -301,10 +301,14 @@ public partial class PortraitCapture : Node
             var master = _root.HubScreen.DebugHub.State.Roster.Master!;
             Require(master.PoolIdentity == "魔剑士" && master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
                 && master.SkillPool.All(id => id.StartsWith("spellblade_"))
-                && master.SkillPool.Any(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None),
+                && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 1,
                 "choosing an identity redraws the pool from it");
             Shoot("skills_pool_rerolled", _root.HubScreen);
         });
+        // 拉到底看池里各行：说明整句折行，不截断。
+        _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 99999));
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() => Shoot("skills_pool_rows", _root.HubScreen));
         _steps.Enqueue(() => { _root.HubScreen.DebugPan("character", 0); _root.HubScreen.DebugPress(PortraitAction.Back, 0); });
         // 设施抽屉、建造、系统
         _steps.Enqueue(() => _root.HubScreen.ShowTab(0));
