@@ -103,6 +103,25 @@ public static class InkIcon
         return true;
     }
 
+    private static readonly Dictionary<string, Texture2D?> BuildingCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// 设施与房间的图标：res://icons/build/{显示名}.svg，按名精确取、不走物品那套模糊归一
+    /// （否则「水井」会落到「水」、「铁砧」落到「铁」、「书架」落到「书本」）。
+    /// 白色墨层，按 <paramref name="color"/> 上色（能建＝墨线色，建不了＝压暗色）。
+    /// </summary>
+    public static bool DrawBuilding(CanvasItem ci, string name, Rect2 rect, Color color)
+    {
+        if (!BuildingCache.TryGetValue(name, out var tex))
+            BuildingCache[name] = tex = LoadSvg($"res://icons/build/{name}.svg", "build/" + name, Colors.White);
+        if (tex == null)
+            return false;
+        var scale = Mathf.Min(rect.Size.X / tex.GetWidth(), rect.Size.Y / tex.GetHeight());
+        var size = (new Vector2(tex.GetWidth(), tex.GetHeight()) * scale).Round();
+        ci.DrawTextureRect(tex, new Rect2(rect.GetCenter().Round() - size / 2f, size), false, color);
+        return true;
+    }
+
     private static string? ResolveName(string raw)
     {
         var clean = raw.Trim();
@@ -160,11 +179,12 @@ public static class InkIcon
         return null;
     }
 
-    private static Texture2D? LoadSvg(string name)
+    private static Texture2D? LoadSvg(string name) => LoadSvg($"res://icons/{name}.svg", name, InkStyle.Line);
+
+    private static Texture2D? LoadSvg(string resPath, string name, Color lineColor)
     {
         try
         {
-            var resPath = $"res://icons/{name}.svg";
             if (!ResourceLoader.Exists(resPath))
                 return null;
             var img = ResourceLoader.Load<Texture2D>(resPath).GetImage();
@@ -212,7 +232,6 @@ public static class InkIcon
             }
 
             // 4. 写回图像：骨白墨色 + 256级平滑亚像素羽化 Alpha
-            var lineColor = InkStyle.Line;
             for (var y = 0; y < h; y++)
             {
                 for (var x = 0; x < w; x++)
