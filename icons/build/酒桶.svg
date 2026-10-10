@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 横卧酒桶：鼓腹 -->
+    <path fill="#E9EFEA" d="M -200,-120 C -230,-60 -230,60 -200,120 L 200,120 C 230,60 230,-60 200,-120 Z"/>
+    <!-- 铁箍（负形） -->
+    <rect x="-150" y="-125" width="18" height="250" fill="#000000"/>
+    <rect x="132" y="-125" width="18" height="250" fill="#000000"/>
+    <rect x="-60" y="-125" width="10" height="250" fill="#000000"/>
+    <rect x="50" y="-125" width="10" height="250" fill="#000000"/>
+    <!-- 龙头 -->
+    <rect x="-14" y="-20" width="28" height="40" fill="#000000"/>
+    <rect x="-8" y="120" width="16" height="30" fill="#E9EFEA"/>
+    <!-- 支架 -->
+    <path fill="#E9EFEA" d="M -190,140 L -130,140 L -110,200 L -210,200 Z"/>
+    <path fill="#E9EFEA" d="M 130,140 L 190,140 L 210,200 L 110,200 Z"/>
+  </g>
+</svg>

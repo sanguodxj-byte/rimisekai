@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 树桩 -->
+    <path fill="#E9EFEA" d="M -150,40 L 150,40 L 160,170 L 210,200 L -210,200 L -160,170 Z"/>
+    <ellipse cx="0" cy="40" rx="150" ry="45" fill="#E9EFEA"/>
+    <!-- 年轮（负形） -->
+    <ellipse cx="0" cy="40" rx="110" ry="30" fill="#000000"/>
+    <ellipse cx="0" cy="40" rx="90" ry="22" fill="#E9EFEA"/>
+    <ellipse cx="0" cy="40" rx="50" ry="12" fill="#000000"/>
+    <!-- 劈进桩里的斧头 -->
+    <g transform="translate(20,-60) rotate(35)">
+      <rect x="-12" y="-170" width="24" height="200" rx="8" fill="#E9EFEA"/>
+      <path fill="#E9EFEA" d="M 12,-170 L 100,-200 C 120,-150 120,-110 100,-80 L 12,-110 Z"/>
+    </g>
+  </g>
+</svg>

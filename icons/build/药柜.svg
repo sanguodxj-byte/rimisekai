@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 柜顶冠线 -->
+    <rect x="-200" y="-215" width="400" height="30" rx="6" fill="#E9EFEA"/>
+    <!-- 柜身 -->
+    <rect x="-180" y="-185" width="360" height="370" fill="#E9EFEA"/>
+    <!-- 3×3 抽屉（负形框）与小拉手 -->
+    <g fill="#000000">
+      <rect x="-160" y="-165" width="100" height="95"/><rect x="-50" y="-165" width="100" height="95"/><rect x="60" y="-165" width="100" height="95"/>
+      <rect x="-160" y="-60" width="100" height="95"/><rect x="-50" y="-60" width="100" height="95"/><rect x="60" y="-60" width="100" height="95"/>
+    </g>
+    <g fill="#E9EFEA">
+      <circle cx="-110" cy="-118" r="12"/><circle cx="0" cy="-118" r="12"/><circle cx="110" cy="-118" r="12"/>
+      <circle cx="-110" cy="-13" r="12"/><circle cx="0" cy="-13" r="12"/><circle cx="110" cy="-13" r="12"/>
+    </g>
+    <!-- 下层柜门：十字药标（负形） -->
+    <rect x="-160" y="50" width="320" height="115" fill="#000000"/>
+    <rect x="-20" y="65" width="40" height="85" fill="#E9EFEA"/>
+    <rect x="-42" y="88" width="84" height="40" fill="#E9EFEA"/>
+    <rect x="-200" y="185" width="30" height="25" fill="#E9EFEA"/>
+    <rect x="170" y="185" width="30" height="25" fill="#E9EFEA"/>
+  </g>
+</svg>
