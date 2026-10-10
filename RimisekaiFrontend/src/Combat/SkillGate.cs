@@ -12,6 +12,9 @@ public enum SkillGateKind
     /// <summary>该流派的熟练等级下限。</summary>
     StyleLevel,
 
+    /// <summary>某种武器的熟练等级下限。</summary>
+    WeaponLevel,
+
     /// <summary>核心属性下限。</summary>
     CoreStat,
 
@@ -72,6 +75,15 @@ public sealed class SkillGate
     /// <summary>该流派的熟练等级下限。仅在 <see cref="Style"/> 非空时参与判定。</summary>
     public int StyleLevel { get; init; }
 
+    /// <summary>武器熟练门槛：哪种武器（不必此刻拿着，只看熟练），null = 不限。</summary>
+    public WeaponType? Weapon { get; init; }
+
+    /// <summary>该武器的熟练等级下限。仅在 <see cref="Weapon"/> 非空时参与判定。</summary>
+    public int WeaponLevel { get; init; }
+
+    /// <summary>角色此刻的流派：空手算格斗（与战斗里的取法一致）。</summary>
+    public static StyleType StyleOf(CharacterState c) => c.EquippedStyle ?? StyleType.Unarmed;
+
     /// <summary>核心属性下限，须全部满足。null/空 = 不限。</summary>
     public IReadOnlyList<CoreRequirement>? Core { get; init; }
 
@@ -92,11 +104,14 @@ public sealed class SkillGate
     {
         if (Style.HasValue)
         {
-            if (c.EquippedStyle != Style)
+            if (StyleOf(c) != Style)
                 return false;
             if (c.Styles[(int)Style.Value].Level < StyleLevel)
                 return false;
         }
+
+        if (Weapon.HasValue && c.Weapons[(int)Weapon.Value].Level < WeaponLevel)
+            return false;
 
         if (Core != null)
             foreach (var requirement in Core)
@@ -128,13 +143,16 @@ public sealed class SkillGate
 
         if (Style.HasValue)
         {
-            if (c.EquippedStyle != Style)
-                misses.Add(new SkillGateMiss(SkillGateKind.Style, (int)Style.Value, "",
-                    0, c.EquippedStyle.HasValue ? (int)c.EquippedStyle.Value : -1));
+            if (StyleOf(c) != Style)
+                misses.Add(new SkillGateMiss(SkillGateKind.Style, (int)Style.Value, "", 0, (int)StyleOf(c)));
             else if (c.Styles[(int)Style.Value].Level < StyleLevel)
                 misses.Add(new SkillGateMiss(SkillGateKind.StyleLevel, (int)Style.Value, "",
                     StyleLevel, c.Styles[(int)Style.Value].Level));
         }
+
+        if (Weapon.HasValue && c.Weapons[(int)Weapon.Value].Level < WeaponLevel)
+            misses.Add(new SkillGateMiss(SkillGateKind.WeaponLevel, (int)Weapon.Value, "",
+                WeaponLevel, c.Weapons[(int)Weapon.Value].Level));
 
         if (Core != null)
             foreach (var requirement in Core)

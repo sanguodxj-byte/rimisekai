@@ -24,8 +24,10 @@ public sealed class CombatSkillTableTests
     [Fact]
     public void Skill_table_has_three_tiers_per_style_plus_universal()
     {
-        // 通用三式（攻击、防御、饮药剂）+ 七流派技能（持盾系只定了铁壁一项）逐条都有名字与流派归属。
-        Assert.Equal(24, SkillTable.All.Count);
+        // 通用两式（攻击、防御）+ 七流派技能（持盾系只定了铁壁一项）逐条都有名字与流派归属；药剂是道具招式，不在技能表。
+        Assert.Equal(23, SkillTable.All.Count);
+        Assert.DoesNotContain(SkillTable.All, s => s.Item.Length > 0);
+        Assert.Equal("药剂", SkillTable.Get("药剂")!.Item);
         foreach (var skill in SkillTable.All)
             Assert.False(string.IsNullOrWhiteSpace(skill.Name));
         // 通用能力（attack/guard）无流派门槛，其余全部归属一个流派。
@@ -139,7 +141,7 @@ public sealed class CombatSkillTableTests
     public void Gates_by_style_proficiency_level()
     {
         // 熟练 1 级：门槛只够初级（疾斩）与通用两式。
-        var novice = SkillTable.MeetsGates(swordsman(1))
+        var novice = SkillTable.Known(swordsman(1))
             .Select(s => s.Id).ToList();
         Assert.Contains("slash", novice);
         Assert.Contains(BattleSkills.AttackId, novice);
@@ -147,13 +149,13 @@ public sealed class CombatSkillTableTests
         Assert.DoesNotContain("cross_slash", novice);
 
         // 熟练 3 级：进阶解锁。
-        var journeyman = SkillTable.MeetsGates(swordsman(3))
+        var journeyman = SkillTable.Known(swordsman(3))
             .Select(s => s.Id).ToList();
         Assert.Contains("armor_break", journeyman);
         Assert.DoesNotContain("cross_slash", journeyman);
 
         // 熟练 6 级：高级解锁。
-        var master = SkillTable.MeetsGates(swordsman(6))
+        var master = SkillTable.Known(swordsman(6))
             .Select(s => s.Id).ToList();
         Assert.Contains("cross_slash", master);
 
@@ -168,8 +170,7 @@ public sealed class CombatSkillTableTests
     [Fact]
     public void Deploy_carries_known_skills_of_the_equipped_style()
     {
-        var c = swordsman(3);   // 单手熟练 3：已学习疾斩与破甲
-        c.LearnedSkills.UnionWith(new[] { "slash", "armor_break" });
+        var c = swordsman(3);   // 单手熟练 3：疾斩与破甲自动激活
         var unit = Deploy.FromCharacter(c, CombatSide.Attacker);
 
         Assert.Contains(BattleSkills.AttackId, unit.Skills);
@@ -189,7 +190,6 @@ public sealed class CombatSkillTableTests
         var mage = new CharacterState(2) { Name = "法师" };
         mage.Equip(WeaponType.Staff);
         mage.Styles[(int)StyleType.Spell].AddExp(Proficiency.ExpPerLevel);
-        mage.LearnedSkills.Add("magic_missile");
         var unit = Deploy.FromCharacter(mage, CombatSide.Attacker);
 
         Assert.Contains(BattleSkills.AttackId, unit.Skills);
@@ -198,8 +198,8 @@ public sealed class CombatSkillTableTests
     }
 }
 
-/// <summary>派生学习：用派生源技能时按学习率学会派生技，门槛只定学习率。</summary>
-public sealed class SkillLearningTests
+/// <summary>自动激活与启发式连线：门槛达到即会，不必学习；连线按门槛高低现算，网上没有孤立技能。</summary>
+public sealed class SkillActivationTests
 {
     private static CharacterState Swordsman(int styleLevel)
     {
@@ -209,76 +209,37 @@ public sealed class SkillLearningTests
         return c;
     }
 
-    private static readonly Dictionary<string, int> AttackFive = new() { [BattleSkills.AttackId] = 5 };
-
     [Fact]
-    public void Meeting_the_gate_does_not_teach_the_skill()
+    public void Meeting_the_gate_activates_the_skill_and_use_needs_the_style()
     {
-        var c = Swordsman(6);
-        var known = SkillTable.Known(c).Select(s => s.Id).ToList();
-        Assert.Contains(BattleSkills.AttackId, known);
-        Assert.DoesNotContain("slash", known);
-        Assert.Equal(SkillLearning.ReadyPercent, SkillLearning.Chance(c, SkillTable.Get("slash")!));
-    }
-
-    [Fact]
-    public void Chance_needs_a_learned_source_and_scales_with_the_gate()
-    {
-        var gate = SkillTable.Get("cross_slash")!;
-        // 派生源（疾斩 / 破甲）一个都没学会：再熟练也派生不出来。
-        Assert.Equal(0, SkillLearning.Chance(Swordsman(9), gate));
-        CharacterState WithSlash(int level)
-        {
-            var c = Swordsman(level);
-            c.LearnedSkills.Add("slash");
-            return c;
-        }
-        Assert.Equal(0, SkillLearning.Chance(WithSlash(1), gate));
-        var near = (int)System.Math.Ceiling(gate.Gate.StyleLevel * SkillLearning.NearRatio);
-        Assert.Equal(SkillLearning.NearPercent, SkillLearning.Chance(WithSlash(near), gate));
-        Assert.Equal(SkillLearning.ReadyPercent, SkillLearning.Chance(WithSlash(gate.Gate.StyleLevel), gate));
-    }
-
-    [Fact]
-    public void Derivation_crosses_styles_but_use_needs_the_style()
-    {
-        // 重劈可派生单手的破甲：学习不要求此刻持单手，使用才要求。
-        var c = new CharacterState(2) { Name = "战士" };
-        c.Equip(WeaponType.Staff);
-        c.Styles[(int)StyleType.OneHand].AddExp(3 * Proficiency.ExpPerLevel);
-        c.LearnedSkills.Add("heavy_cleave");
-        var learned = SkillLearning.Roll(c, new Dictionary<string, int> { ["heavy_cleave"] = 1 }, () => 0);
-        Assert.Equal("armor_break", learned?.Id);
-        Assert.DoesNotContain("armor_break", SkillTable.Known(c).Select(s => s.Id));
-        c.Equip(WeaponType.Sword);
+        var c = Swordsman(3);
         Assert.Contains("armor_break", SkillTable.Known(c).Select(s => s.Id));
+        c.Equip(WeaponType.Staff);
+        Assert.DoesNotContain("armor_break", SkillTable.Known(c).Select(s => s.Id));
     }
 
     [Fact]
-    public void Roll_learns_at_most_one_skill_and_only_from_used_sources()
+    public void Weapon_level_gates_count_without_holding_that_weapon_style()
     {
-        var c = Swordsman(6);
-        var learned = SkillLearning.Roll(c, AttackFive, () => 0);
-        Assert.NotNull(learned);
-        Assert.Contains(BattleSkills.AttackId, learned!.DeriveFrom);
-        Assert.Single(c.LearnedSkills);
-        // 掷不中就什么也不学。
-        var unlucky = Swordsman(6);
-        Assert.Null(SkillLearning.Roll(unlucky, AttackFive, () => 99));
-        Assert.Empty(unlucky.LearnedSkills);
-        // 只用了防御架势：疾斩不是它的派生，学不到。
-        Assert.NotEqual("slash", SkillLearning.Roll(Swordsman(6), new Dictionary<string, int> { [BattleSkills.GuardId] = 5 }, () => 0)?.Id);
-        Assert.Null(SkillLearning.Roll(Swordsman(6), new Dictionary<string, int>(), () => 0));
+        var gate = new SkillGate { Style = StyleType.OneHand, StyleLevel = 5, Weapon = WeaponType.Sword, WeaponLevel = 1 };
+        var c = Swordsman(5);
+        Assert.False(gate.Meets(c, new HashSet<string>()));
+        c.Weapons[(int)WeaponType.Sword].AddExp(Proficiency.ExpPerLevel);
+        Assert.True(gate.Meets(c, new HashSet<string>()));
     }
 
     [Fact]
-    public void Every_learnable_skill_has_a_derivation_source()
+    public void Links_run_from_lower_gates_to_higher_and_leave_nothing_isolated()
     {
-        foreach (var skill in SkillTable.All.Where(s => !SkillLearning.Innate(s)))
-        {
-            Assert.NotEmpty(skill.DeriveFrom);
-            Assert.All(skill.DeriveFrom, id => Assert.NotNull(SkillTable.Get(id)));
-        }
+        var slots = SkillTree.Layout(new CharacterState(1));
+        var skills = slots.Select(s => s.Def).ToList();
+        var links = SkillTree.Links(slots);
+        // 单手一线：疾斩（单手 1）→ 破甲（单手 3）→ 二连斩（单手 6）。
+        Assert.Contains(links, l => l.Source.Id == "slash" && l.Target.Id == "armor_break");
+        Assert.Contains(links, l => l.Source.Id == "armor_break" && l.Target.Id == "cross_slash");
+        Assert.All(skills.Where(s => !SkillTable.Innate(s)), s => Assert.Contains(links, l => l.Target.Id == s.Id));
+        Assert.All(links, l => Assert.True(SkillTable.Innate(l.Source) || l.Source.Gate.Style == l.Target.Gate.Style, $"{l.Source.Id} → {l.Target.Id}"));
+        Assert.DoesNotContain(skills, s => s.Id == BattleSkills.GuardId);
     }
 }
 
@@ -388,7 +349,7 @@ public sealed class ChantTests
     {
         var c = new Rimisekai.Character.CharacterState(1) { PoolIdentity = "" };
         var slots = SkillTree.Layout(c);
-        Assert.Equal(SkillTable.All.Count(s => s.Item.Length == 0), slots.Count);
+        Assert.Equal(SkillTable.All.Count - 1, slots.Count);
         Assert.Equal(slots.Count, slots.Select(s => (s.Row, s.Column)).Distinct().Count());
     }
 }

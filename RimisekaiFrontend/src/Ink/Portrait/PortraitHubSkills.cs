@@ -44,17 +44,17 @@ public partial class PortraitHubScreen
             DrawLine(new Vector2(web.Position.X + 30f, ly), new Vector2(web.End.X - 30f, ly), new Color(InkStyle.Dim, 0.12f), 1f, true);
         }
 
-        // 连线：先画暗线，再画亮线（两端已学习 / 正可学习的呼吸线 / 与所选相连的），亮的压在上面。
-        var edges = all.SelectMany(t => t.Def.DeriveFrom.Where(byId.ContainsKey).Select(id => (Source: byId[id], Target: t))).ToList();
+        // 连线：先画暗线，再画亮线（两端已激活 / 来源已激活、下一式作数而未激活的呼吸线 / 与所选相连的），亮的压在上面。
+        var edges = SkillTree.Links(all.Select(s => new TreeSlot(s.Def, s.Row, s.Column)).ToList()).Select(l => (Source: byId[l.Source.Id], Target: byId[l.Target.Id])).ToList();
         foreach (var pass in new[] { false, true })
             foreach (var (source, target) in edges)
             {
                 var linked = source.Def.Id == _skillSelectedId || target.Def.Id == _skillSelectedId;
-                var lit = linked || source.Learned && (target.Learned || target.Chance > 0);
+                var lit = linked || source.Active && target.Eligible;
                 if (lit != pass)
                     continue;
                 var color = linked ? InkStyle.Line
-                    : source.Learned && target.Learned ? new Color(InkStyle.Line, 0.75f)
+                    : source.Active && target.Active ? new Color(InkStyle.Line, 0.75f)
                     : lit ? new Color(InkStyle.Line, 0.2f + 0.5f * pulse)
                     : new Color(InkStyle.Dim, 0.35f);
                 DrawEdge(At(source), At(target), source.Row, target.Row, source.Column == target.Column,
@@ -114,11 +114,26 @@ public partial class PortraitHubScreen
     private void DrawEdge(Vector2 from, Vector2 to, int fromRow, int toRow, bool sameColumn, Color color, float width)
     {
         var r = PortraitLayout.SkillNodeRadius;
-        var a = from + new Vector2(0f, r);
-        var b = to - new Vector2(0f, r);
-        var bend = sameColumn && toRow - fromRow > 1 ? new Vector2(96f, 0f) : Vector2.Zero;
-        var c1 = a + new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
-        var c2 = b - new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
+        // 自上而下出章底、入章顶；来源在下方（门槛低而估值高）就反过来；同一行从章侧横着连。
+        Vector2 a, b, c1, c2;
+        if (fromRow == toRow)
+        {
+            var side = new Vector2(Mathf.Sign(to.X - from.X) * r, 0f);
+            a = from + side;
+            b = to - side;
+            var lift = new Vector2(0f, -48f);
+            c1 = a + new Vector2((b.X - a.X) * 0.4f, 0f) + lift;
+            c2 = b - new Vector2((b.X - a.X) * 0.4f, 0f) + lift;
+        }
+        else
+        {
+            var dir = toRow > fromRow ? 1f : -1f;
+            a = from + new Vector2(0f, r * dir);
+            b = to - new Vector2(0f, r * dir);
+            var bend = sameColumn && System.Math.Abs(toRow - fromRow) > 1 ? new Vector2(96f, 0f) : Vector2.Zero;
+            c1 = a + new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
+            c2 = b - new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
+        }
         var pts = new Vector2[25];
         for (var k = 0; k < pts.Length; k++)
         {
@@ -127,7 +142,7 @@ public partial class PortraitHubScreen
             pts[k] = u * u * u * a + 3f * u * u * t * c1 + 3f * u * t * t * c2 + t * t * t * b;
         }
         DrawPolyline(pts, color, width, true);
-        // 目标端一枚小菱，标出方向（来源 → 学到）。
+        // 目标端一枚小菱，标出方向（门槛低 → 门槛高）。
         InkDraw.Jewel(this, b, 5f, color);
     }
 
@@ -142,20 +157,21 @@ public partial class PortraitHubScreen
         }
         // 核心技能多一道外环。
         if (s.Def.Core != CoreKind.None)
-            DrawArc(at, r + 9f, 0f, Mathf.Tau, 48, s.Learned ? InkStyle.Line : new Color(InkStyle.Dim, 0.7f), 2f, true);
+            DrawArc(at, r + 9f, 0f, Mathf.Tau, 48, s.Active ? InkStyle.Line : new Color(InkStyle.Dim, 0.7f), 2f, true);
         DrawCircle(at, r, InkStyle.Panel);
-        var rim = s.Learned ? InkStyle.Line : s.Chance > 0 ? new Color(InkStyle.Line, pulse) : new Color(InkStyle.Dim, 0.7f);
+        // 已激活实心；抽到（作数）而未达条件描边呼吸；没抽到的暗。
+        var rim = s.Active ? InkStyle.Line : s.Eligible ? new Color(InkStyle.Line, pulse) : new Color(InkStyle.Dim, 0.45f);
         DrawArc(at, r, 0f, Mathf.Tau, 40, rim, selected ? 4f : 2f, true);
         var star = StarPoints(at, r * 0.62f);
-        if (s.Learned)
-            DrawColoredPolygon(star, s.Usable ? InkStyle.Line : new Color(InkStyle.Line, 0.55f));
+        if (s.Active)
+            DrawColoredPolygon(star, InkStyle.Line);
         else
             InkDraw.Ink(this, star.Append(star[0]).ToArray(), rim, 1.5f);
         // 名字衬一块底色，压住从后面穿过的连线。
         var nameWidth = Mathf.Min(InkDraw.Measure(s.Def.Name, PortraitLayout.FontMeta).X, 184f) + 12f;
         DrawRect(new Rect2(at.X - nameWidth / 2f, at.Y + r + 6f, nameWidth, 48f), InkStyle.Panel);
         InkDraw.TextBounded(this, new Rect2(at.X - 92f, at.Y + r + 4f, 184f, 52f), s.Def.Name,
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, s.Learned || selected ? InkStyle.Line : InkStyle.Dim, "cm");
+            PortraitLayout.FontMeta, PortraitLayout.FontMeta, s.Active || selected ? InkStyle.Line : InkStyle.Dim, "cm");
     }
 
     private static Vector2[] StarPoints(Vector2 c, float r)
@@ -170,12 +186,11 @@ public partial class PortraitHubScreen
     private float DrawSkillDetail(CharacterState who, ChartSkill s, float y)
     {
         var def = s.Def;
-        var own = SkillPool.Find(def.Id) != null;
-        var reqs = own ? new List<(string Label, string Need, string Have, bool Met)>() : PortraitSkillChart.Requirements(who, def);
+        var reqs = PortraitSkillChart.Requirements(who, def);
         var lineHeight = PortraitLayout.FontMeta * 1.4f;
         var descLines = def.Description.Length > 0
             ? InkDraw.WrapLines(def.Description, PortraitLayout.FullWidth - 112f, PortraitLayout.FontMeta) : new List<string>();
-        var footer = !s.Learned && def.DeriveFrom.Count > 0;
+        var footer = !s.Active;
         var height = 70f + 72f + 64f + 64f + (def.Status.HasValue ? 64f : 0f) + descLines.Count * lineHeight + 20f + 56f
             + System.Math.Max(1, reqs.Count) * 64f + (footer ? 96f : 30f);
         var frame = new Rect2(PortraitLayout.Pad, y, PortraitLayout.FullWidth, height);
@@ -184,11 +199,10 @@ public partial class PortraitHubScreen
         var right = frame.End.X - 56f;
         y = frame.Position.Y + 70f;
 
-        var status = s.Drawn ? "已抽到" : own ? "未抽到"
-            : s.Learned ? s.Usable ? "已学习" : "已学习 · 未持流派" : s.Chance > 0 ? $"学习率 {s.Chance}%" : "未学习";
+        var status = s.Active ? "已激活" : s.Eligible ? "未达条件" : "未抽到";
         var statusWidth = InkDraw.Measure(status, PortraitLayout.FontMeta).X + 56f;
         var chip = new Rect2(right - statusWidth, y - 32f, statusWidth, 64f);
-        var lit = s.Learned || s.Chance > 0;
+        var lit = s.Eligible;
         PortraitFrame.Brackets(this, chip, lit ? InkStyle.Line : InkStyle.Dim);
         InkDraw.Text(this, chip.GetCenter(), status, PortraitLayout.FontMeta, lit ? InkStyle.Line : InkStyle.Dim, "cm");
         InkDraw.TextBounded(this, new Rect2(left, y - 40f, chip.Position.X - left - 20f, 80f), def.Name,
@@ -235,11 +249,11 @@ public partial class PortraitHubScreen
         }
 
         y += 20f;
-        PortraitFrame.SectionRule(this, left - 20f, right + 20f, y, "学习条件");
+        PortraitFrame.SectionRule(this, left - 20f, right + 20f, y, "激活条件");
         y += 56f;
         if (reqs.Count == 0)
         {
-            InkDraw.Text(this, new Vector2(left, y + 28f), own ? "身份技能，抽到即会，换身份或重抽可换" : "通用技能，人人都会",
+            InkDraw.Text(this, new Vector2(left, y + 28f), "通用技能，人人都会",
                 PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             y += 64f;
         }
@@ -260,7 +274,7 @@ public partial class PortraitHubScreen
         }
         if (footer)
             InkDraw.TextBounded(this, new Rect2(left, y + 10f, right - left, 56f),
-                "战斗中使用来源技能时有机会学会",
+                s.Eligible ? "条件达成即自动激活" : "没抽到，换身份或重抽才可能有",
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         return frame.End.Y + 30f;
     }

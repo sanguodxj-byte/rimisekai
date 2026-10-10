@@ -438,6 +438,7 @@
       "label": "药剂",
       "description": "药草熬煮后滤进陶罐的苦涩药汁，封口贴着手写的标签。",
       "category": "Medicine",
+      "battleHealPercent": 40,
       "stackLimit": 999,
       "marketValue": 40,
       "isFood": false,

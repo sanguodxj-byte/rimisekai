@@ -273,7 +273,7 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => { _root.HubScreen.DebugPress(PortraitAction.SkillGroup, 0); _root.HubScreen.DebugPan("character", 0); });
         _steps.Enqueue(() =>
         {
-            // 开局身份是掷的：先把主人定成骑士（池里并入了疾斩、破甲等通用技能），技能网才有确定的样子可核。
+            // 开局身份是掷的：先把主人定成骑士（池里并入了通用技能铁壁），技能网才有确定的样子可核。
             Require(_root.HubScreen.DebugHub.RerollSkillPool("骑士", new Random(1)), "the master can take the knight pool at home");
             _root.HubScreen.DebugPan("character", 1500);
         });
@@ -1153,8 +1153,11 @@ public partial class PortraitCapture : Node
             _root.HubScreen.DebugPress(PortraitAction.SkillNode, star.Index);
             Require(_root.HubScreen.DebugSelectedSkill == star.Label, "tapping a star selects its skill");
         }
-        var armor = stars.First(w => w.Label == "armor_break");
-        _root.HubScreen.DebugPress(PortraitAction.SkillNode, armor.Index);
+        // 选一式未激活的高阶技能，详情里看激活条件逐条。
+        var knight = Rimisekai.Combat.SkillPool.PoolOf("骑士")!;
+        var pick = stars.First(w => w.Label == knight.Skills.Where(s => s.Core == Rimisekai.Catalog.CoreKind.None)
+            .OrderByDescending(Rimisekai.Combat.SkillTier.Score).First().Id);
+        _root.HubScreen.DebugPress(PortraitAction.SkillNode, pick.Index);
     }
 
     private void OpenStorage()
@@ -1370,13 +1373,13 @@ public partial class PortraitCapture : Node
             .ToList();
         Require(labels.SequenceEqual(new[] { "攻击", "技能", "道具", "逃跑" }),
             "action panel lists attack skill item flee");
-        // 背包里带两瓶药剂进场：道具页多一枚「饮药剂」，技能页不重复列。
+        // 背包里带两瓶药剂进场：道具页按物品列「药剂 ×2」，技能页不重复列。
         _root.HubScreen.DebugHub.State.Roster.Master!.Bag.Add("药剂", 2);
         _battleProbe.Battle.Supplies["药剂"] = 2;
         _root.CombatView.DebugPress(PortraitAction.CombatMenu, 2);
         Require(_root.ModalLayer.Current?.Title == "道具"
             && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
-            && _root.ModalLayer.Current.Choices.Any(c => c.Id == "potion" && c.Label == "饮药剂 ×2"),
+            && _root.ModalLayer.Current.Choices.Any(c => c.Id == "药剂" && c.Label == "药剂 ×2"),
             "item button opens the item popup with the potion to drink");
     }
 
@@ -1389,7 +1392,7 @@ public partial class PortraitCapture : Node
         Require(!_root.ModalLayer.Current!.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.AttackId)
             && _root.ModalLayer.Current.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.GuardId)
             && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
-            && !_root.ModalLayer.Current.Choices.Any(c => c.Id == "potion"),
+            && !_root.ModalLayer.Current.Choices.Any(c => c.Id == "药剂"),
             "skill popup lists guard and back but neither the basic attack nor the potion");
     }
 

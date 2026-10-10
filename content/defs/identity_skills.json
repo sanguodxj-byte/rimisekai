@@ -6,9 +6,6 @@
    "defName": "骑士",
    "label": "骑士",
    "sharedSkills": [
-    "slash",
-    "armor_break",
-    "cross_slash",
     "iron_wall"
    ],
    "skills": [
@@ -28,7 +25,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -46,7 +49,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -64,7 +73,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -82,7 +97,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -100,7 +121,13 @@
      "statusStat": "Defence",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -118,7 +145,13 @@
      "statusStat": "Attack",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -136,7 +169,13 @@
      "statusStat": "Defence",
      "statusPercent": 40,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -154,7 +193,11 @@
      "statusStat": "Attack",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -172,7 +215,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -190,7 +239,13 @@
      "statusStat": "Defence",
      "statusPercent": -10,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -208,7 +263,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -226,7 +287,11 @@
      "statusStat": "Defence",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -244,7 +309,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -262,7 +333,11 @@
      "statusStat": "Attack",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -280,7 +355,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -298,7 +379,11 @@
      "statusStat": "Attack",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -316,7 +401,13 @@
      "statusStat": "Speed",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -334,7 +425,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -352,7 +449,11 @@
      "statusStat": "Dodge",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -370,7 +471,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -401,7 +508,13 @@
        "percent": 0,
        "flat": -3
       }
-     ]
+     ],
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -429,7 +542,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 5
+     "maxStacks": 5,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -453,7 +572,13 @@
      "reactKind": "Strike",
      "reactTarget": "Enemy",
      "reactPower": 200,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -464,8 +589,7 @@
    "sharedSkills": [
     "slash",
     "armor_break",
-    "magic_missile",
-    "flame_burst"
+    "cross_slash"
    ],
    "skills": [
     {
@@ -484,7 +608,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -502,7 +632,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -520,7 +656,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -538,7 +678,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 6,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -556,7 +702,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -574,7 +726,13 @@
      "statusStat": "Speed",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -592,7 +750,13 @@
      "statusStat": "SpellPower",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -610,7 +774,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -628,7 +798,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -646,7 +822,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -664,7 +846,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -682,7 +870,11 @@
      "statusStat": "Dodge",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -700,7 +892,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -718,7 +916,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -736,7 +940,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -754,7 +962,11 @@
      "statusStat": "Attack",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -772,7 +984,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -790,7 +1008,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -808,7 +1032,11 @@
      "statusStat": "Defence",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -826,7 +1054,13 @@
      "statusStat": "Dodge",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -854,7 +1088,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 3
+     "maxStacks": 3,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -885,7 +1125,13 @@
        "percent": 0,
        "flat": 5
       }
-     ]
+     ],
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -909,7 +1155,13 @@
      "reactKind": "Strike",
      "reactTarget": "AllEnemies",
      "reactPower": 300,
-     "reactUses": 1
+     "reactUses": 1,
+     "gate": {
+      "style": "OneHand",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -920,7 +1172,8 @@
    "sharedSkills": [
     "magic_missile",
     "flame_burst",
-    "frost_bind"
+    "frost_bind",
+    "mend"
    ],
    "skills": [
     {
@@ -939,7 +1192,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -957,7 +1216,13 @@
      "statusStat": "Speed",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 12,
+      "weapon": "Staff",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -975,7 +1240,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -993,7 +1264,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 9,
+      "weapon": "Staff",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1011,7 +1288,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1029,7 +1310,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 5,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1047,7 +1332,13 @@
      "statusStat": "SpellPower",
      "statusPercent": 35,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 9,
+      "weapon": "Staff",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1065,7 +1356,13 @@
      "statusStat": "Speed",
      "statusPercent": -30,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1083,7 +1380,11 @@
      "statusStat": "Attack",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1101,7 +1402,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1119,7 +1426,13 @@
      "statusStat": "Speed",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 12,
+      "weapon": "Staff",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1137,7 +1450,13 @@
      "statusStat": "Defence",
      "statusPercent": 40,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 12,
+      "weapon": "Staff",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1155,7 +1474,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 12,
+      "weapon": "Staff",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1173,7 +1498,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -1191,7 +1520,13 @@
      "statusStat": "Speed",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1209,7 +1544,13 @@
      "statusStat": "Defence",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 9,
+      "weapon": "Staff",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1227,7 +1568,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1245,7 +1592,11 @@
      "statusStat": "SpellPower",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 4
+     "statusRounds": 4,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1263,7 +1614,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1281,7 +1638,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 6,
+      "weapon": "Staff",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1309,7 +1672,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 4
+     "maxStacks": 4,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 5,
+      "weapon": "Staff",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -1340,7 +1709,13 @@
        "percent": -20,
        "flat": 0
       }
-     ]
+     ],
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 5,
+      "weapon": "Staff",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -1364,7 +1739,13 @@
      "reactKind": "Spell",
      "reactTarget": "Enemy",
      "reactPower": 150,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Spell",
+      "styleLevel": 5,
+      "weapon": "Staff",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -1395,7 +1776,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 9,
+      "weapon": "Dagger",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1413,7 +1800,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 6,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 12,
+      "weapon": "Dagger",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1431,7 +1824,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1449,7 +1846,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1467,7 +1868,13 @@
      "statusStat": "Speed",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 12,
+      "weapon": "Dagger",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1485,7 +1892,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 4,
-     "statusRounds": 4
+     "statusRounds": 4,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1503,7 +1916,13 @@
      "statusStat": "Dodge",
      "statusPercent": 35,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1521,7 +1940,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1539,7 +1964,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 9,
+      "weapon": "Dagger",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1557,7 +1988,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 5,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1575,7 +2012,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1593,7 +2036,11 @@
      "statusStat": "Attack",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1611,7 +2058,13 @@
      "statusStat": "Dodge",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 12,
+      "weapon": "Dagger",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1629,7 +2082,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 9,
+      "weapon": "Dagger",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1647,7 +2106,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1665,7 +2130,11 @@
      "statusStat": "Dodge",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1683,7 +2152,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 9,
+      "weapon": "Dagger",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1701,7 +2176,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1719,7 +2200,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 8,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 12,
+      "weapon": "Dagger",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1737,7 +2224,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 6,
+      "weapon": "Dagger",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1770,7 +2263,13 @@
        "flat": 2
       }
      ],
-     "maxStacks": 3
+     "maxStacks": 3,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 5,
+      "weapon": "Dagger",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -1801,7 +2300,13 @@
        "percent": 0,
        "flat": 10
       }
-     ]
+     ],
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 5,
+      "weapon": "Dagger",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -1825,7 +2330,13 @@
      "reactKind": "Strike",
      "reactTarget": "Enemy",
      "reactPower": 250,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "DualWield",
+      "styleLevel": 5,
+      "weapon": "Dagger",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -1855,7 +2366,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1873,7 +2388,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1891,7 +2412,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 12,
+      "weapon": "Bow",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1909,7 +2436,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 6,
+      "weapon": "Bow",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -1927,7 +2460,13 @@
      "statusStat": "Speed",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 12,
+      "weapon": "Bow",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -1945,7 +2484,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 5,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -1963,7 +2508,11 @@
      "statusStat": "Attack",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1981,7 +2530,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -1999,7 +2552,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2017,7 +2574,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2035,7 +2598,13 @@
      "statusStat": "Defence",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 12,
+      "weapon": "Bow",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -2053,7 +2622,11 @@
      "statusStat": "Attack",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2071,7 +2644,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 6,
+      "weapon": "Bow",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2089,7 +2668,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2107,7 +2692,11 @@
      "statusStat": "Dodge",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2125,7 +2714,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 6,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 6,
+      "weapon": "Bow",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2143,7 +2738,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2161,7 +2762,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2179,7 +2784,13 @@
      "statusStat": "Attack",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 9,
+      "weapon": "Bow",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2197,7 +2808,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 6,
+      "weapon": "Bow",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2225,7 +2842,13 @@
        "flat": 6
       }
      ],
-     "maxStacks": 5
+     "maxStacks": 5,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 5,
+      "weapon": "Bow",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -2256,7 +2879,13 @@
        "percent": 15,
        "flat": 0
       }
-     ]
+     ],
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 5,
+      "weapon": "Bow",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -2280,7 +2909,13 @@
      "reactKind": "Strike",
      "reactTarget": "Enemy",
      "reactPower": 180,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Ranged",
+      "styleLevel": 5,
+      "weapon": "Bow",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -2288,10 +2923,7 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "神官",
    "label": "神官",
-   "sharedSkills": [
-    "mend",
-    "iron_wall"
-   ],
+   "sharedSkills": [],
    "skills": [
     {
      "defType": "SkillDef",
@@ -2309,7 +2941,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2327,7 +2963,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2345,7 +2985,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2363,7 +3007,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2381,7 +3029,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2399,7 +3053,11 @@
      "statusStat": "Attack",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2417,7 +3075,13 @@
      "statusStat": "Defence",
      "statusPercent": 35,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2435,7 +3099,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 60,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2453,7 +3121,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2471,7 +3145,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2489,7 +3169,11 @@
      "statusStat": "Speed",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2507,7 +3191,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2525,7 +3213,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2543,7 +3235,11 @@
      "statusStat": "Defence",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2561,7 +3257,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 5,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2579,7 +3281,13 @@
      "statusStat": "SpellPower",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2597,7 +3305,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2615,7 +3329,11 @@
      "statusStat": "Defence",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2633,7 +3351,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2651,7 +3373,11 @@
      "statusStat": "Attack",
      "statusPercent": 12,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2682,7 +3408,13 @@
        "percent": 10,
        "flat": 0
       }
-     ]
+     ],
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -2710,7 +3442,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 5
+     "maxStacks": 5,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -2734,7 +3472,13 @@
      "reactKind": "Heal",
      "reactTarget": "Self",
      "reactPower": 80,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -2764,7 +3508,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2782,7 +3532,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2800,7 +3556,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2818,7 +3580,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2836,7 +3602,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2854,7 +3624,13 @@
      "statusStat": "Defence",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2872,7 +3648,11 @@
      "statusStat": "Attack",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2890,7 +3670,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2908,7 +3694,11 @@
      "statusStat": "Attack",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -2926,7 +3716,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2944,7 +3738,11 @@
      "statusStat": "Dodge",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -2962,7 +3760,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -2980,7 +3784,13 @@
      "statusStat": "Dodge",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -2998,7 +3808,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3016,7 +3830,11 @@
      "statusStat": "Speed",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3034,7 +3852,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3052,7 +3876,13 @@
      "statusStat": "Speed",
      "statusPercent": -25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 12,
+      "weapon": "Unarmed",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -3070,7 +3900,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3088,7 +3924,11 @@
      "statusStat": "Attack",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3106,7 +3946,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3137,7 +3983,13 @@
        "percent": 10,
        "flat": 0
       }
-     ]
+     ],
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -3170,7 +4022,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 5
+     "maxStacks": 5,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -3194,7 +4052,13 @@
      "reactKind": "Strike",
      "reactTarget": "Enemy",
      "reactPower": 180,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -3202,9 +4066,7 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "吟游诗人",
    "label": "吟游诗人",
-   "sharedSkills": [
-    "aimed_shot"
-   ],
+   "sharedSkills": [],
    "skills": [
     {
      "defType": "SkillDef",
@@ -3222,7 +4084,13 @@
      "statusStat": "Attack",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3240,7 +4108,13 @@
      "statusStat": "Defence",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3258,7 +4132,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3276,7 +4154,11 @@
      "statusStat": "Speed",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3294,7 +4176,11 @@
      "statusStat": "Speed",
      "statusPercent": -30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3312,7 +4198,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3330,7 +4220,13 @@
      "statusStat": "Attack",
      "statusPercent": -10,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 9,
+      "weapon": "Unarmed",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3348,7 +4244,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3366,7 +4268,11 @@
      "statusStat": "Defence",
      "statusPercent": -20,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3384,7 +4290,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3402,7 +4312,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3420,7 +4336,11 @@
      "statusStat": "Attack",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3438,7 +4358,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3456,7 +4380,11 @@
      "statusStat": "Dodge",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3474,7 +4402,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3492,7 +4426,11 @@
      "statusStat": "Defence",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3510,7 +4448,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3528,7 +4472,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 6,
+      "weapon": "Unarmed",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3546,7 +4496,13 @@
      "statusStat": "Attack",
      "statusPercent": 20,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 12,
+      "weapon": "Unarmed",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -3564,7 +4520,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 5,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3595,7 +4555,13 @@
        "percent": 0,
        "flat": 2
       }
-     ]
+     ],
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -3628,7 +4594,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 4
+     "maxStacks": 4,
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -3659,7 +4631,13 @@
        "percent": 0,
        "flat": 8
       }
-     ]
+     ],
+     "gate": {
+      "style": "Unarmed",
+      "styleLevel": 5,
+      "weapon": "Unarmed",
+      "weaponLevel": 1
+     }
     }
    ]
   },
@@ -3668,11 +4646,7 @@
    "defName": "圣骑士",
    "label": "圣骑士",
    "sharedSkills": [
-    "heavy_cleave",
-    "sweep",
-    "shatter",
-    "iron_wall",
-    "mend"
+    "iron_wall"
    ],
    "skills": [
     {
@@ -3691,7 +4665,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3709,7 +4689,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3727,7 +4713,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3745,7 +4735,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3763,7 +4757,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3781,7 +4781,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3799,7 +4805,13 @@
      "statusStat": "Defence",
      "statusPercent": 40,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3817,7 +4829,13 @@
      "statusStat": "Attack",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3835,7 +4853,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3853,7 +4877,13 @@
      "statusStat": "Defence",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -3871,7 +4901,13 @@
      "statusStat": "Defence",
      "statusPercent": 30,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3889,7 +4925,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -3907,7 +4949,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3925,7 +4973,11 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -3943,7 +4995,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3961,7 +5019,11 @@
      "statusStat": "Attack",
      "statusPercent": 25,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 3
+     }
     },
     {
      "defType": "SkillDef",
@@ -3979,7 +5041,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 6,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 6,
+      "weapon": "Sword",
+      "weaponLevel": 2
+     }
     },
     {
      "defType": "SkillDef",
@@ -3997,7 +5065,13 @@
      "statusStat": "Attack",
      "statusPercent": -15,
      "statusPower": 0,
-     "statusRounds": 2
+     "statusRounds": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 12,
+      "weapon": "Sword",
+      "weaponLevel": 8
+     }
     },
     {
      "defType": "SkillDef",
@@ -4015,7 +5089,11 @@
      "statusStat": "Dodge",
      "statusPercent": 15,
      "statusPower": 0,
-     "statusRounds": 3
+     "statusRounds": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 0
+     }
     },
     {
      "defType": "SkillDef",
@@ -4033,7 +5111,13 @@
      "statusStat": "None",
      "statusPercent": 0,
      "statusPower": 0,
-     "statusRounds": 0
+     "statusRounds": 0,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 9,
+      "weapon": "Sword",
+      "weaponLevel": 5
+     }
     },
     {
      "defType": "SkillDef",
@@ -4064,7 +5148,13 @@
        "percent": 10,
        "flat": 0
       }
-     ]
+     ],
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -4097,7 +5187,13 @@
        "flat": 0
       }
      ],
-     "maxStacks": 3
+     "maxStacks": 3,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     },
     {
      "defType": "SkillDef",
@@ -4121,7 +5217,13 @@
      "reactKind": "Spell",
      "reactTarget": "Enemy",
      "reactPower": 220,
-     "reactUses": 2
+     "reactUses": 2,
+     "gate": {
+      "style": "Shield",
+      "styleLevel": 5,
+      "weapon": "Sword",
+      "weaponLevel": 1
+     }
     }
    ]
   }

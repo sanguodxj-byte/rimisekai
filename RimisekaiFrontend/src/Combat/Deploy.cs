@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Catalog;
 using Rimisekai.Character;
 
@@ -26,7 +27,8 @@ public static class Deploy
         // 能力表：普通攻击与防御架势玩家侧角色自带（敌人没有防御动作）；
         // 流派能力按门槛解锁（流派＋熟练，必要时还有属性／生活技能／素质／前置）——
         // 换武器就换一套能力。
-        // 身份技能池里抽到的也在 Known 里：机制点核心是被动，单列，不进菜单。
+        // 身份技能池里抽到并激活的也在 Known 里：机制点核心是被动，单列，不进菜单。
+        // 道具招式（用一个药剂之类）人人带着，没存货时菜单里自然不出现。
         var skills = new List<string> { BattleSkills.AttackId, BattleSkills.GuardId };
         var passives = new List<string>();
         foreach (var known in SkillTable.Known(c))
@@ -34,6 +36,7 @@ public static class Deploy
                 passives.Add(known.Id);
             else if (!skills.Contains(known.Id))
                 skills.Add(known.Id);
+        skills.AddRange(ItemActions.All.Select(a => a.Id));
 
         var isTired = c.Condition.Tired;
         var tiredMult = isTired ? 0.5 : 1.0;

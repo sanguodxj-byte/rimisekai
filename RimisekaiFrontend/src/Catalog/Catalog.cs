@@ -137,12 +137,6 @@ public sealed class SkillDef : Defs.Def
     /// </summary>
     public SkillGate Gate { get; init; } = SkillGate.Open;
 
-    /// <summary>
-    /// 派生源：在战斗里使用这些技能时，有几率派生学习本技能（星盘上画成连线）。
-    /// 可跨流派、跨属性扇区；通用两式之外的技能至少要有一个派生源，否则永远学不到。
-    /// </summary>
-    public IReadOnlyList<string> DeriveFrom { get; init; } = System.Array.Empty<string>();
-
     /// <summary>射程：近程打最前排，远程选列后按威胁权重落点。</summary>
     public SkillRange Range { get; init; } = SkillRange.Melee;
 
@@ -183,7 +177,7 @@ public sealed class SkillDef : Defs.Def
     public int StatusRounds { get; init; }
 
     /// <summary>
-    /// 每用一次耗掉的物品（DefName，如「药剂」）。空串 = 不耗东西。
+    /// 每用一次耗掉的物品（DefName，如「药剂」）。空串 = 不耗东西。道具招式由物品表现造（见 <see cref="Combat.ItemActions"/>），不进技能表。
     /// 耗物品的治疗按目标最大生命的 <see cref="Power"/>% 回，不看法强；只有控制方带着存货时可用。
     /// </summary>
     public string Item { get; init; } = "";

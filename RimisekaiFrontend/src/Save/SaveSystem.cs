@@ -31,8 +31,6 @@ public sealed class MemberData
     public int[] WeaponExp { get; set; } = new int[System.Enum.GetValues<WeaponType>().Length];
     public int[] StyleExp { get; set; } = new int[System.Enum.GetValues<StyleType>().Length];
     public List<int> Talents { get; set; } = new();
-    /// <summary>已学习的战斗技能 Id。</summary>
-    public List<string> LearnedSkills { get; set; } = new();
     /// <summary>技能池按哪个身份抽的。</summary>
     public string PoolIdentity { get; set; } = "";
     /// <summary>抽到的身份技能 Id（按池序）。</summary>
@@ -470,7 +468,6 @@ public static class SaveSystem
         WeaponExp = WeaponExps(c),
         StyleExp = StyleExps(c),
         Talents = new List<int>(c.Talents),
-        LearnedSkills = c.LearnedSkills.OrderBy(id => id, System.StringComparer.Ordinal).ToList(),
         PoolIdentity = c.PoolIdentity,
         SkillPool = new List<string>(c.SkillPool),
         MainWeapon = c.MainWeapon,
@@ -670,7 +667,6 @@ public static class SaveSystem
             });
         c.Condition.RestoreWetness(m.Wetness);
         c.RestoreEquipped(m.Equipped);
-        c.LearnedSkills.UnionWith(m.LearnedSkills);
         c.PoolIdentity = m.PoolIdentity;
         c.SkillPool.AddRange(m.SkillPool);
         c.Affect.Mood = m.Mood;

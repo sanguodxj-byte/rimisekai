@@ -191,21 +191,21 @@ public sealed class EquipmentTests
         master.Bag.Add("药剂", 1);
         var battle = new Battle(d100: () => 0);
         var hero = new Combatant { Id = master.Id, Side = CombatSide.Attacker, Hp = 10, MaxHp = 100, StrikePower = 5, Speed = 50, BaseHit = 100 };
-        hero.Skills.Add("potion");
+        hero.Skills.Add("药剂");
         battle.Add(hero);
         var foe = new Combatant { Id = 9, Side = CombatSide.Defender, Hp = 1, MaxHp = 1, Speed = 1 };
         battle.Add(foe);
         Encounters.Pack(state, battle);
         Assert.Equal(1, battle.Supplies["药剂"]);
-        Assert.Contains(battle.Menu(), s => s.Id == "potion");
+        Assert.Contains(battle.Menu(), s => s.Id == "药剂");
 
-        Assert.True(battle.Act(new CombatAction { ActorId = hero.Id, SkillId = "potion", TargetId = hero.Id }));
+        Assert.True(battle.Act(new CombatAction { ActorId = hero.Id, SkillId = "药剂", TargetId = hero.Id }));
         Assert.Equal(10 + 40, hero.Hp);
         Assert.Equal(0, battle.Supplies["药剂"]);
         Assert.Equal(1, battle.Consumed["药剂"]);
         // 喝光了：菜单里没有，也出不了这一招
-        Assert.DoesNotContain(battle.Menu(), s => s.Id == "potion");
-        Assert.False(battle.CanAct(new CombatAction { ActorId = hero.Id, SkillId = "potion", TargetId = hero.Id }));
+        Assert.DoesNotContain(battle.Menu(), s => s.Id == "药剂");
+        Assert.False(battle.CanAct(new CombatAction { ActorId = hero.Id, SkillId = "药剂", TargetId = hero.Id }));
 
         Assert.True(battle.Act(new CombatAction { ActorId = hero.Id, TargetId = foe.Id }));
         Assert.Equal(CombatOutcome.AttackerWin, battle.Outcome);
@@ -218,7 +218,7 @@ public sealed class EquipmentTests
     {
         var battle = new Battle(d100: () => 99) { AutoBattle = true };
         var hero = new Combatant { Id = 1, Side = CombatSide.Attacker, Hp = 30, MaxHp = 100, StrikePower = 1, Speed = 50 };
-        hero.Skills.Add("potion");
+        hero.Skills.Add("药剂");
         battle.Add(hero);
         battle.Add(new Combatant { Id = 9, Side = CombatSide.Defender, Hp = 500, MaxHp = 500, Speed = 1 });
         battle.Supplies["药剂"] = 2;
@@ -234,7 +234,7 @@ public sealed class EquipmentTests
     {
         ContentDefs.EnsureInitialized();
         var wolf = DefDatabase<QuestDef>.All.Single(q => q.Name == "北坡头狼").Foes[1];
-        Assert.DoesNotContain("potion", Deploy.FromEnemy(wolf, 1, CombatSide.Defender).Skills);
+        Assert.DoesNotContain("药剂", Deploy.FromEnemy(wolf, 1, CombatSide.Defender).Skills);
     }
 
     [Fact]

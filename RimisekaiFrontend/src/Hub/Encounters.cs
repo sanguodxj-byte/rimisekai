@@ -22,7 +22,7 @@ public static class Encounters
     private static int _nextEnemyId = 1000;
 
     /// <summary>
-    /// 把主人背包里的消耗品（耗物品技能要的那几样，如药剂）点数带进战斗；
+    /// 把主人背包里的消耗品（能在战斗里用的那几样，如药剂，见 ItemActions）点数带进战斗；
     /// 用掉多少由 <see cref="CombatSettlement.Settle"/> 从背包扣。
     /// </summary>
     public static void Pack(GameState state, Battle battle)
@@ -30,8 +30,8 @@ public static class Encounters
         var bag = state.Roster.Master?.Bag;
         if (bag == null)
             return;
-        foreach (var skill in SkillTable.All)
-            if (skill.Item.Length > 0 && bag.Get(skill.Item) > 0)
+        foreach (var skill in ItemActions.All)
+            if (bag.Get(skill.Item) > 0)
                 battle.Supplies[skill.Item] = bag.Get(skill.Item);
     }
 

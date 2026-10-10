@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Rimisekai.Catalog;
 using Rimisekai.Combat;
 using Rimisekai.Hub;
@@ -78,7 +79,27 @@ public class IdentitySkillPoolTests
     public void Shared_skills_are_existing_general_skills()
     {
         foreach (var pool in SkillPool.Pools)
-            Assert.All(pool.SharedSkills, id => Assert.Contains(SkillTable.All, s => s.Id == id && !SkillLearning.Innate(s)));
+            Assert.All(pool.SharedSkills, id => Assert.Contains(SkillTable.All, s => s.Id == id && !SkillTable.Innate(s)));
+    }
+
+    [Fact]
+    public void Identity_skill_gates_follow_the_tier_and_shared_skills_share_the_style()
+    {
+        // 一到五阶：（流派熟练, 武器熟练）＝(0,0) (3,0) (6,2) (9,5) (12,8)；核心 (5,1)。拟案。
+        var levels = new[] { (0, 0), (3, 0), (6, 2), (9, 5), (12, 8) };
+        foreach (var pool in SkillPool.Pools)
+        {
+            var style = pool.Skills[0].Gate.Style;
+            Assert.NotNull(style);
+            foreach (var s in pool.Skills)
+            {
+                Assert.Equal(style, s.Gate.Style);
+                var (sl, wl) = s.Core != CoreKind.None ? (5, 1) : levels[SkillTier.Of(s) - 1];
+                Assert.Equal(sl, s.Gate.StyleLevel);
+                Assert.Equal(wl, s.Gate.WeaponLevel);
+            }
+            Assert.All(pool.SharedSkills, id => Assert.Equal(style, SkillTable.Get(id)!.Gate.Style));
+        }
     }
 
     [Fact]
@@ -93,14 +114,18 @@ public class IdentitySkillPoolTests
             Assert.Equal(slots.Count, slots.Select(s => s.Def.Id).Distinct().Count());
             Assert.Equal(slots.Count, slots.Select(s => (s.Row, s.Column)).Distinct().Count());
             Assert.All(slots, s => Assert.InRange(s.Column, 0f, SkillTree.Columns - 1));
-            var basics = slots.Where(s => s.Def.Core == CoreKind.None).OrderBy(s => s.Row).ToList();
+            Assert.Equal(new[] { BattleSkills.AttackId }, slots.Where(s => s.Row == 0).Select(s => s.Def.Id));
+            var basics = slots.Where(s => s.Def.Core == CoreKind.None && s.Row > 0).OrderBy(s => s.Row).ToList();
             for (var i = 1; i < basics.Count; i++)
                 Assert.True(SkillTier.Of(basics[i - 1].Def) <= SkillTier.Of(basics[i].Def), $"{pool.DefName}: {basics[i - 1].Def.Id} → {basics[i].Def.Id}");
             var cores = slots.Where(s => s.Def.Core != CoreKind.None).ToList();
             Assert.Equal(3, cores.Count);
             Assert.Single(cores.Select(s => s.Row).Distinct());
-            var rows = slots.Max(s => s.Row) + 1;
-            Assert.Equal((rows - 1) / 2, cores[0].Row);
+            var rows = slots.Max(s => s.Row);   // 除去顶行（普通攻击）的行数
+            Assert.Equal(1 + (rows - 1) / 2, cores[0].Row);
+            // 连线：网上每式（普通攻击除外）至少一条进线。
+            var links = SkillTree.Links(slots);
+            Assert.All(slots.Where(s => s.Row > 0), s => Assert.Contains(links, l => l.Target.Id == s.Def.Id));
             Assert.All(pool.SharedSkills, id => Assert.Contains(slots, s => s.Def.Id == id));
         }
     }
@@ -190,7 +215,10 @@ public class IdentitySkillPoolTests
         Assert.True(hub.RerollSkillPool("魔剑士", new Random(1)));
         Assert.Equal("魔剑士", master.PoolIdentity);
         Assert.All(master.SkillPool, id => Assert.True(id.StartsWith("spellblade_") || SkillPool.PoolOf("魔剑士")!.SharedSkills.Contains(id)));
-        Assert.Contains(SkillTable.Known(master), s => s.Id == master.SkillPool[0]);
+        // 抽到的也不是直接会：只有门槛达到的才激活；没抽到的身份技能永不激活。
+        Assert.All(SkillTable.Known(master), s => Assert.True(SkillTable.Innate(s) || master.SkillPool.Contains(s.Id), s.Id));
+        Assert.Equal(master.SkillPool.Where(id => SkillTable.Get(id)!.Gate.Meets(master, new HashSet<string>())).OrderBy(id => id),
+            SkillTable.Known(master).Where(s => !SkillTable.Innate(s)).Select(s => s.Id).OrderBy(id => id));
         hub.SetLayer(MapLayer.World);
         Assert.False(hub.RerollSkillPool("魔法师"));
         Assert.Equal("魔剑士", master.PoolIdentity);

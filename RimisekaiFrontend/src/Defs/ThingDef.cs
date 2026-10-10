@@ -30,6 +30,9 @@ public class ThingDef : Def
     /// <summary>食用后提供的心情加成（可正可负）。</summary>
     public int MoodBonus { get; init; }
 
+    /// <summary>战斗里用掉一个回目标最大生命的百分之几；0 = 不能在战斗里用（见 <see cref="Combat.ItemActions"/>）。</summary>
+    public int BattleHealPercent { get; init; }
+
     /// <summary>快速查询当前物品是否属于指定品类（含子级继承）。</summary>
     public bool IsInCategory(string categoryDefName)
     {

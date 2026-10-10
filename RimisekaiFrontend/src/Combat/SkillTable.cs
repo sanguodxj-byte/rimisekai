@@ -22,22 +22,17 @@ public static class SkillTable
     }
 
     /// <summary>
-    /// 角色此刻能用的战斗技能：网上（<see cref="SkillTree"/>）已学会的（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派），
-    /// 再加身份技能池里抽到的（<see cref="SkillPool"/>，不看流派）。
+    /// 角色此刻能用的战斗技能＝技能网上已激活的（见 <see cref="SkillTree.Active"/>）：门槛（流派、熟练、属性……）达到即自动激活，不必学习。
     /// </summary>
-    public static IEnumerable<SkillDef> Known(CharacterState character)
-    {
-        var tree = SkillTree.Skills(character).Select(s => s.Id).ToHashSet();
-        return All.Where(s => (tree.Contains(s.Id) || s.Item.Length > 0) && SkillLearning.Learned(character, s)
-                && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style))
-            .Concat(SkillPool.Skills(character)).DistinctBy(s => s.Id);
-    }
+    public static IEnumerable<SkillDef> Known(CharacterState character) => SkillTree.Active(character);
 
-    /// <summary>
-    /// 门槛全满足的技能（不论是否学会）。开局生成角色时据此「出身即会」：老兵带着本事入伍，不必从零悟起。
-    /// </summary>
-    public static IEnumerable<SkillDef> MeetsGates(CharacterState character) =>
-        MeetsGates(character, All);
+    /// <summary>无任何门槛的通用技能（普通攻击、防御架势）：人人自带。</summary>
+    public static bool Innate(SkillDef skill)
+    {
+        var g = skill.Gate;
+        return !g.Style.HasValue && !g.Weapon.HasValue && (g.Core == null || g.Core.Count == 0) && (g.Life == null || g.Life.Count == 0)
+            && (g.Traits == null || g.Traits.Count == 0) && (g.Prerequisites == null || g.Prerequisites.Count == 0);
+    }
 
     /// <summary>
     /// 求一组技能里角色已解锁的那些，按传入顺序输出。
@@ -73,10 +68,10 @@ public static class SkillTable
         return result;
     }
 
-    /// <summary>按 Id 查能力，权威数据源为 DefDatabase：先查技能网的 SkillDef，再查身份技能池。</summary>
+    /// <summary>按 Id 查能力，权威数据源为 DefDatabase：先查通用技能，再查身份技能池，再查道具招式。</summary>
     public static SkillDef? Get(string id)
     {
         Defs.DefLoader.EnsureInitialized();
-        return Defs.DefDatabase<SkillDef>.Get(id) ?? SkillPool.Find(id);
+        return Defs.DefDatabase<SkillDef>.Get(id) ?? SkillPool.Find(id) ?? ItemActions.Find(id);
     }
 }

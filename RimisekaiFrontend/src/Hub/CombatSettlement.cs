@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Combat;
 using Rimisekai.Quest;
 using Rimisekai.Save;
@@ -28,7 +30,7 @@ public static class CombatSettlement
     /// 结算并落账。战斗仍在进行中（未分胜负）时返回 null——那是中途撤离，不该出结算单。
     /// <paramref name="questRun"/> 为本场对应的任务运行时，传 null 表示测试战斗。
     /// </summary>
-    public static Outcome? Settle(GameState state, Battle battle, QuestRun? questRun = null, System.Func<int>? d100 = null)
+    public static Outcome? Settle(GameState state, Battle battle, QuestRun? questRun = null)
     {
         if (battle.Outcome == CombatOutcome.Ongoing)
             return null;
@@ -38,6 +40,9 @@ public static class CombatSettlement
         var loot = BattleLoot.Roll(battle, CombatSide.Defender);
 
         // 2. 落账：名册回写武器/流派经验与心情，金钱进账，缴获进产出者背包（无虚空库存）。
+        // 熟练涨了，门槛够了的技能自动激活：落账前后各记一次已激活的技能，多出来的记进结算单。
+        var before = result.Rows.ToDictionary(r => r.CharacterId,
+            r => state.Roster.Find(r.CharacterId) is { } who ? SkillTable.Known(who).Select(s => s.Id).ToHashSet() : new HashSet<string>());
         BattleRewards.Apply(battle, state.Roster, CombatSide.Attacker);
         // 结算单记下落账后的熟练累计，界面据此画进度条、判升级。
         foreach (var row in result.Rows)
@@ -45,8 +50,7 @@ public static class CombatSettlement
             {
                 row.WeaponTotalExp = c.Weapons[(int)row.Weapon].Exp;
                 row.StyleTotalExp = c.Styles[(int)row.Style].Exp;
-                // 派生学习：按本场用过的技能逐次掷其派生技，一场至多学习一式。
-                if (SkillLearning.Roll(c, row.SkillUses, d100 ?? (() => System.Random.Shared.Next(100))) is { } skill)
+                if (SkillTable.Known(c).FirstOrDefault(s => !before[row.CharacterId].Contains(s.Id)) is { } skill)
                     row.NewSkill = skill.Id;
             }
         state.Money += loot.Money;
