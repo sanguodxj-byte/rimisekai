@@ -171,21 +171,21 @@ public sealed class FollowTests
         hub.Social(SocialAction.Invite);
         who[CoreStat.Charm] = 10;
         who.LifeExp[(int)LifeSkill.Social] = 1000; // 本领 = 10 + 10 = 20，加成 (10+20)/2 = 15，正好顶格
-        state.Territory.MarketDay["药草"] = new Territory.MarketEntry(5, 100);
+        state.Territory.MarketDay["陶罐"] = new Territory.MarketEntry(5, 100);
 
-        // 药草基准 3、存货 5、系数 100：买 = 3×80/100 = 2，卖 = 3×60%×75/100 = 1。
-        // 跟随加成 15：买 = max(1, 2×85/100) = 1，卖 = max(1,(1×115+50)/100) = 1。
-        var herbRow = state.Territory.Listing("药草")!.Value;
-        Assert.Equal(2, herbRow.BuyPrice);
-        Assert.Equal(1, herbRow.SellPrice);
-        Assert.Equal(1, hub.TradePrices(herbRow, selling: false));
-        Assert.Equal(1, hub.TradePrices(herbRow, selling: true));
+        // 陶罐基准 14、存货 5、系数 100：买 = 14×80/100 = 11，卖 = 14×60/100×75/100 = 6。
+        // 跟随加成 15：买 = 11×85/100 = 9，卖 = (6×115+50)/100 = 7。
+        var herbRow = state.Territory.Listing("陶罐")!.Value;
+        Assert.Equal(11, herbRow.BuyPrice);
+        Assert.Equal(6, herbRow.SellPrice);
+        Assert.Equal(9, hub.TradePrices(herbRow, selling: false));
+        Assert.Equal(7, hub.TradePrices(herbRow, selling: true));
 
         state.Money = 1000;
         hub.OpenTrade();
-        Assert.True(hub.MarketTrade("药草", 1, selling: false));
-        Assert.Equal(999, state.Money);
-        Assert.Equal(1, state.Roster.Master!.Bag.Get("药草"));
+        Assert.True(hub.MarketTrade("陶罐", 1, selling: false));
+        Assert.Equal(991, state.Money);
+        Assert.Equal(1, state.Roster.Master!.Bag.Get("陶罐"));
 
         // 分开之后报价回到原样。
         Assert.True(hub.Social(SocialAction.Part));

@@ -19,14 +19,18 @@
     {
       "defName": "Recipe_Stew",
       "label": "炖菜",
-      "description": "炖煮一锅热腾腾的丰盛蔬菜浓汤，提振心情。",
+      "description": "鲜肉、洋葱加水慢炖一锅浓汤，丰盛提神。",
       "itemId": "stew",
       "station": "Cook",
       "outputCount": 2,
       "skill": "Cooking",
       "costs": [
         {
-          "itemId": "小麦",
+          "itemId": "肉",
+          "count": 1
+        },
+        {
+          "itemId": "洋葱",
           "count": 1
         },
         {
@@ -125,6 +129,192 @@
       "costs": [
         {
           "itemId": "纤维",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_RoastMeat",
+      "label": "烤肉",
+      "description": "把鲜肉穿上铁签在火上烤熟。",
+      "itemId": "烤肉",
+      "station": "Cook",
+      "outputCount": 1,
+      "skill": "Cooking",
+      "costs": [
+        {
+          "itemId": "肉",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_VegSoup",
+      "label": "菜汤",
+      "description": "卷心菜与萝卜加水煮一锅清汤。",
+      "itemId": "菜汤",
+      "station": "Cook",
+      "outputCount": 2,
+      "skill": "Cooking",
+      "costs": [
+        {
+          "itemId": "卷心菜",
+          "count": 1
+        },
+        {
+          "itemId": "萝卜",
+          "count": 1
+        },
+        {
+          "itemId": "水",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Pickle",
+      "label": "腌菜",
+      "description": "卷心菜切丝加盐压进陶罐，腌成耐放的酸菜。",
+      "itemId": "腌菜",
+      "station": "Cook",
+      "outputCount": 4,
+      "skill": "Cooking",
+      "costs": [
+        {
+          "itemId": "卷心菜",
+          "count": 2
+        },
+        {
+          "itemId": "陶罐",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_AlchemyDust",
+      "label": "煅炼金尘",
+      "description": "把晾干的草药送进窑里煅烧，筛出微光的晶粉。",
+      "itemId": "炼金尘",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "herb",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_WoodBowl",
+      "label": "旋木碗",
+      "description": "把木料锯段上旋床，旋出一只木碗。",
+      "itemId": "木碗",
+      "station": "Woodwork",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "木材",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Umbrella",
+      "label": "做雨伞",
+      "description": "削木作骨，蒙上两幅布，做一把遮雨的伞。",
+      "itemId": "雨伞",
+      "station": "Woodwork",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "木材",
+          "count": 1
+        },
+        {
+          "itemId": "布",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Raincoat",
+      "label": "缝雨衣",
+      "description": "两幅布衬一张皮，缝成挡雨的斗篷。",
+      "itemId": "雨衣",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "布",
+          "count": 2
+        },
+        {
+          "itemId": "皮",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Haircloth",
+      "label": "织马鬃布",
+      "description": "把梳下的马鬃纺线织成粗硬耐磨的布。",
+      "itemId": "布",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "马鬃",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Potion",
+      "label": "熬药剂",
+      "description": "药草加水熬煮，滤进陶罐封好。",
+      "itemId": "药剂",
+      "station": "Brew",
+      "outputCount": 1,
+      "skill": "Research",
+      "costs": [
+        {
+          "itemId": "药草",
+          "count": 2
+        },
+        {
+          "itemId": "水",
+          "count": 1
+        },
+        {
+          "itemId": "陶罐",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "defName": "Recipe_Perfume",
+      "label": "蒸香水",
+      "description": "野花加水蒸馏，香露滴进小陶罐。",
+      "itemId": "香水",
+      "station": "Brew",
+      "outputCount": 1,
+      "skill": "Research",
+      "costs": [
+        {
+          "itemId": "花",
+          "count": 3
+        },
+        {
+          "itemId": "水",
+          "count": 1
+        },
+        {
+          "itemId": "陶罐",
           "count": 1
         }
       ]

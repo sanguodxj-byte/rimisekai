@@ -2315,9 +2315,10 @@ public sealed class ArchitectureTests
         state.Territory.Link(2, 3);
         state.Territory.Link(3, 4);
 
-        // 库房摆货架存料：小麦 2 份，水 2 份
+        // 库房摆货架存料：炖菜的肉、洋葱、水各 2 份
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
-        shelf.Contents.Add("小麦", 2);
+        shelf.Contents.Add("肉", 2);
+        shelf.Contents.Add("洋葱", 2);
         shelf.Contents.Add("水", 2);
         state.Territory.AddFacility(shelf);
 
@@ -2360,7 +2361,7 @@ public sealed class ArchitectureTests
         Assert.Equal(shelf.Id, worker.HaulSourceId);
         Assert.Equal(stove.Id, worker.HaulTargetId);
         Assert.Equal(2, worker.RoomId); // 此时刚走到中途庭院(2)
-        Assert.Equal(2, shelf.Contents.Get("小麦")); // 尚未抵达库房，货架原料绝无隔空被扣！
+        Assert.Equal(2, shelf.Contents.Get("肉")); // 尚未抵达库房，货架原料绝无隔空被扣！
 
         // 推进到厨师走回厨房、完成炖菜烹饪并端到餐厅餐桌
         for (var i = 0; i < 40; i++)
@@ -2369,10 +2370,9 @@ public sealed class ArchitectureTests
             if (table.Contents.Get("stew") > 0)
                 break;
         }
-
         // 炖菜已被成功端到餐桌上储存，库房材料被消耗，整个过程物理流转无瞬移！
         Assert.True(table.Contents.Get("stew") > 0);
-        Assert.True(shelf.Contents.Get("小麦") < 2);
+        Assert.True(shelf.Contents.Get("肉") < 2);
 
         // 2. 推进到午餐时间（12:00 = 720 分钟），食客坐在餐桌旁优雅享用炖菜
         state.Clock.Advance(12 * 60 - state.Clock.Minutes);

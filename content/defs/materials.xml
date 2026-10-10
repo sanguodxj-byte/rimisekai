@@ -16,7 +16,7 @@
     <description>布制。最便宜也最不经打，刚出门那身就是它。</description>
     <category>Cloth</category>
     <stackLimit>999</stackLimit>
-    <marketValue>2</marketValue>
+    <marketValue>8</marketValue>
     <tier>0</tier>
     <weaponUsable>false</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -30,7 +30,7 @@
     <description>皮革。比布韧，猎户与游侠常穿。</description>
     <category>Cloth</category>
     <stackLimit>999</stackLimit>
-    <marketValue>4</marketValue>
+    <marketValue>20</marketValue>
     <tier>1</tier>
     <weaponUsable>false</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -44,7 +44,7 @@
     <description>伐木取得的原木料，也能削成木器。</description>
     <category>RawMaterial</category>
     <stackLimit>999</stackLimit>
-    <marketValue>1</marketValue>
+    <marketValue>3</marketValue>
     <tier>2</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
@@ -58,7 +58,7 @@
     <description>海底采来的珊瑚骨，质脆却锋利。</description>
     <category>RawMaterial</category>
     <stackLimit>999</stackLimit>
-    <marketValue>3</marketValue>
+    <marketValue>10</marketValue>
     <tier>3</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
@@ -72,7 +72,7 @@
     <description>铜锡合铸的古料，比铁软，胜在好铸。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>6</marketValue>
+    <marketValue>20</marketValue>
     <tier>4</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
@@ -86,7 +86,7 @@
     <description>铁制。锋利耐用，要铁匠铺才打得出。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>8</marketValue>
+    <marketValue>16</marketValue>
     <tier>5</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -100,7 +100,7 @@
     <description>钢。反复锻打出来的好料，佣兵们的标配。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>14</marketValue>
+    <marketValue>40</marketValue>
     <tier>6</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -114,7 +114,7 @@
     <description>秘银。轻得像没有重量，锋利却不下钢。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>30</marketValue>
+    <marketValue>90</marketValue>
     <tier>7</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -128,7 +128,7 @@
     <description>精金。铸起来极难，一旦成型便无坚不摧。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>50</marketValue>
+    <marketValue>150</marketValue>
     <tier>8</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
@@ -142,7 +142,7 @@
     <description>以太。不属此世的物质，握着能听见回声。</description>
     <category>Metal</category>
     <stackLimit>999</stackLimit>
-    <marketValue>90</marketValue>
+    <marketValue>270</marketValue>
     <tier>9</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>

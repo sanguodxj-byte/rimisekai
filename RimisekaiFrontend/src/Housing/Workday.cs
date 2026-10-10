@@ -795,11 +795,17 @@ public sealed class TerritoryClock
         return false;
     }
 
+    /// <summary>
+    /// 包里有没有刚做好、该送上餐桌的饭菜：只认灶上做出来的（烹饪配方的产物）。
+    /// 生肉、卷心菜这类能直接啃的食材也算食物，但它们是正往灶台搬的料——
+    /// 当成「热饭」送回仓储，备料就会在库房与灶台之间来回搬个没完。
+    /// </summary>
     private static bool HasDeliverableMeal(CharacterState character, Territory territory)
     {
         foreach (var pair in character.Bag.Items)
         {
-            if (pair.Value > 0 && territory.IsFood(pair.Key))
+            if (pair.Value > 0 && territory.IsFood(pair.Key)
+                && territory.Recipes.Exists(r => r.Station == ActionKind.Cook && r.ItemId == pair.Key))
             {
                 var storage = territory.FindStorageFor(pair.Key);
                 if (storage != null)

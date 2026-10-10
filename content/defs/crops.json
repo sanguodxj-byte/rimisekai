@@ -35,6 +35,13 @@
       "produceItemId": "药草",
       "growthDays": 4,
       "seasons": ["Spring", "Summer"]
+    },
+    {
+      "defName": "亚麻",
+      "seedItemId": "亚麻种子",
+      "produceItemId": "纤维",
+      "growthDays": 4,
+      "seasons": ["Spring", "Summer"]
     }
   ]
 }
