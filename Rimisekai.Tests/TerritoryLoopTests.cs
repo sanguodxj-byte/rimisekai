@@ -300,7 +300,7 @@ public sealed class TerritoryLoopTests
     ///    玩家带旅人去、女仆留家干活，两人真打一场（骰子按天定），
     ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
     /// 6. 钱够了再开拓一格建杂货铺（自带摊位）：女仆上午改去守摊、下午去采石（下一格开拓要石材），
-    ///    玩家每晚把仓里的兽皮、多出来的肉摆上摊；
+    ///    开张那天玩家在摊位的存储设置里勾上兽皮、肉、陶罐、防具，搬运的人自己往摊上补货；
     ///    访客从森林进门、走到店里买，钱进账——进项是委托加自己的店。
     /// 7. 钱再够就再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
     /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天进城一趟（走到最近城镇的商店），箱里口粮不够就买。
@@ -444,10 +444,10 @@ public sealed class TerritoryLoopTests
                         // 女仆上午守摊；下午先采石攒第三格，石材够了下午也改守摊（店多卖才能盖完还回本）
                         Assert.True(hub.Assign(maidId, 1, SlotMode.Work, Stall(state, shopId).Id));
                         Assert.True(hub.Assign(maidId, 2, SlotMode.Work, quarry.Id));
+                        SetShopFilter(hub, state, Stall(state, shopId));
                     }
                     if (shopId >= 0)
                     {
-                        StockShop(hub, state, Stall(state, shopId));
                         if (coopId < 0 && Total(state, "石材") >= hub.VacantCostStone + 5)
                             Assert.True(hub.Assign(maidId, 2, SlotMode.Work, Stall(state, shopId).Id));
                     }
@@ -536,37 +536,23 @@ public sealed class TerritoryLoopTests
     private static Facility Stall(GameState state, int shopId) =>
         state.Territory.Facilities.Single(f => f.RoomId == shopId && f.Supports(ActionKind.Trade));
 
-    /// <summary>摆上摊的货：兽皮（打怪掉的）全摆，肉在全领地留 12 块当口粮。</summary>
-    private static readonly (string Item, int Keep)[] ShopGoods = { ("兽皮", 0), ("肉", 12) };
+    /// <summary>摊位上放行的货：兽皮、肉、陶罐、防具（皮甲之类）。</summary>
+    internal static readonly string[] ShopGoods = { "兽皮", "肉", "陶罐", "Armor" };
 
     /// <summary>
-    /// 每晚把多出来的货摆上自家店的摊位：从各处仓储取进背包（人得走过去开柜子），再走进店里亲手放上摊。
-    /// 摊位不收自动入库，摆什么卖什么由玩家定。
+    /// 店开张那天：玩家走进店、打开摊位的存储设置，勾上要卖的货（摊位起手什么都不收）。
+    /// 之后不用再管——搬运的人把这些货从别的仓储倒上摊（摊位是「优先」档，高过箱子的「普通」），新产出的也直接送来。
     /// </summary>
-    private static void StockShop(HubSession hub, GameState state, Facility stall)
+    private static void SetShopFilter(HubSession hub, GameState state, Facility stall)
     {
-        var master = state.Roster.Master!;
-        foreach (var (item, keep) in ShopGoods)
-        {
-            var surplus = Total(state, item) - stall.Contents.Get(item) - keep;
-            foreach (var store in state.Territory.Facilities.Where(f => f.CanStore && f.Id != stall.Id && f.Contents.Get(item) > 0).ToList())
-            {
-                if (master.Bag.Get(item) >= surplus)
-                    break;
-                MoveTo(hub, store.RoomId);
-                Assert.True(hub.OpenStorage(store.Id));
-                Assert.True(hub.TakeOne(item, Math.Min(store.Contents.Get(item), surplus - master.Bag.Get(item))));
-                hub.CloseStorage();
-            }
-        }
-        var goods = ShopGoods.Where(g => master.Bag.Get(g.Item) > 0).ToList();
-        if (goods.Count == 0)
-            return;
+        Assert.Empty(stall.StorageFilter.Rules);
         MoveTo(hub, stall.RoomId);
         Assert.True(hub.OpenStorage(stall.Id));
-        foreach (var (item, _) in goods)
-            Assert.True(hub.StoreOne(item, master.Bag.Get(item)));
+        Assert.True(hub.StorageConfigurable);
+        foreach (var entry in ShopGoods)
+            Assert.True(hub.ToggleStorageFilter(entry));
         hub.CloseStorage();
+        Assert.All(ShopGoods.Where(g => g != "Armor"), g => Assert.True(state.Territory.Allows(stall, g)));
     }
 
     /// <summary>旅人那门兵器的铁货（弓、杖是木工活，不在铁砧上打）。</summary>

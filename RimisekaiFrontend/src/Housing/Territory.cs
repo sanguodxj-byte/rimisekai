@@ -786,7 +786,7 @@ public sealed class Territory
     /// </summary>
     public int StoreFrom(CharacterState who, Facility storage, string itemId, int count)
     {
-        if (!storage.Accepts(itemId, Weapons) || count <= 0)
+        if (!storage.Accepts(itemId, CategoryOf(itemId)) || count <= 0)
             return 0;
         var moved = System.Math.Min(count, System.Math.Min(who.Bag.Get(itemId), storage.FreeSpace()));
         if (moved <= 0)
@@ -811,33 +811,80 @@ public sealed class Territory
         return moved;
     }
 
+    /// <summary>一件东西的品类：物品定义的品类，或实例的大类（Weapon / Armor / Accessory）。认不出返回空串。</summary>
+    public string CategoryOf(string itemId) => Defs.Items.Info(this, itemId)?.Category ?? "";
+
+    /// <summary>这件设施过滤放不放行这件东西（不看容量）。</summary>
+    public bool Allows(Facility storage, string itemId) => storage.Allows(itemId, CategoryOf(itemId));
+
     /// <summary>
-    /// 找一处能收下该物品的仓储设施：吃食优先送往餐桌，餐桌放不下就送进有餐桌的那间房（餐厅）的仓储
-    /// ——人只在自己所在的房里找吃的，吃食放进别处的柜子就没人吃得着；其余物品优先本房，其次据点内任意。
-    /// 店里（营业性房间）的仓储是货架，摆什么卖什么由主人亲手放，自动入库与搬运都不往里塞。
+    /// 是不是工作台：支持某个配方的工位（灶、炉……）。台上的存货是备料，由备料搬运点名送来，
+    /// 不进搬运的仓储网——不往里塞杂物，也不从里面往外倒。
+    /// </summary>
+    public bool IsWorkbench(Facility f) => Recipes.Exists(r => f.Supports(r.Station));
+
+    /// <summary>
+    /// 搬运的仓储网：领地里（不是兴趣点里）建好的、能存东西的设施，工作台除外（桌子算仓储：熟食往桌上送）。
+    /// 店里的摊位也在网里——过滤放行什么，搬运的人就往摊上补什么，摊上有什么就卖什么。
+    /// </summary>
+    public bool InStorageNetwork(Facility f) =>
+        f.Built && f.CanStore && (f.IsTable || !IsWorkbench(f))
+        && Room(f.RoomId) is { } room && room.X >= 0 && room.RegionId < MaxTerritoryRegions;
+
+    /// <summary>玩家能不能改这件设施的存储设置（过滤与优先级）：仓储网里的、不是水井。</summary>
+    public bool StorageConfigurable(Facility f) => InStorageNetwork(f) && !f.IsWell;
+
+    /// <summary>
+    /// 找一处能收下该物品的仓储：仓储网里过滤放行、还有空位的，**优先级最高**的那档里挑——
+    /// 同档里吃食先上餐桌、再进有餐桌那间房（餐厅）的仓储（人只在自己所在的房里找吃的），
+    /// 其余先本房（<paramref name="preferRoomId"/>），再按设施顺序。<paramref name="except"/> 不算（倒库时的源）。
     /// 找不到返回 null（没地方放）。
     /// </summary>
-    public Facility? FindStorageFor(string itemId, int preferRoomId = -1)
+    public Facility? FindStorageFor(string itemId, int preferRoomId = -1, Facility? except = null)
     {
-        bool Takes(Facility f) => f.Built && f.Accepts(itemId, Weapons) && Room(f.RoomId)?.Commercial != true;
-        if (IsFood(itemId))
+        var category = CategoryOf(itemId);
+        var food = IsFood(itemId);
+        Facility? best = null;
+        var bestRank = (-1, -1);
+        foreach (var f in Facilities)
         {
-            var table = Facilities.Find(f => Takes(f) && f.IsTable);
-            if (table != null)
-                return table;
-            var pantry = Facilities.Find(f => Takes(f)
-                && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId));
-            if (pantry != null)
-                return pantry;
+            if (f == except || !InStorageNetwork(f) || !f.Accepts(itemId, category))
+                continue;
+            var tie = food && f.IsTable ? 3
+                : food && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId) ? 2
+                : f.RoomId == preferRoomId ? 1 : 0;
+            var rank = ((int)f.Priority, tie);
+            if (rank.CompareTo(bestRank) > 0)
+            {
+                best = f;
+                bestRank = rank;
+            }
         }
+        return best;
+    }
 
-        if (preferRoomId >= 0)
+    /// <summary>一趟倒库：从 Source 取 Count 件 ItemId 送进 Target。</summary>
+    public readonly record struct Rehaul(Facility Source, string ItemId, int Count, Facility Target);
+
+    /// <summary>
+    /// 找一趟该倒的库（RimWorld 式）：仓储网里某件东西所在的仓储，若有档更高、也收它、有空位的仓储，就往那里倒；
+    /// 过滤已不再放行的东西（比如刚取消勾选）算最低档，有地方收就搬走。本房的源先看。没得倒返回 null。
+    /// </summary>
+    public Rehaul? FindRehaul(int preferRoomId)
+    {
+        foreach (var source in Facilities.Where(InStorageNetwork).OrderBy(f => f.RoomId == preferRoomId ? 0 : 1))
         {
-            var here = Facilities.Find(f => Takes(f) && f.RoomId == preferRoomId);
-            if (here != null)
-                return here;
+            foreach (var pair in source.Contents.Items.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                if (pair.Value <= 0)
+                    continue;
+                var rank = Allows(source, pair.Key) ? (int)source.Priority : 0;
+                var target = FindStorageFor(pair.Key, source.RoomId, source);
+                if (target != null && (int)target.Priority > rank)
+                    return new Rehaul(source, pair.Key, Math.Min(pair.Value, target.FreeSpace()), target);
+            }
         }
-        return Facilities.Find(Takes);
+        return null;
     }
 
     /// <summary>

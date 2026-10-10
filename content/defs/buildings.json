@@ -52,7 +52,11 @@
           "count": 30
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "水"
+      ],
+      "storagePriority": "critical"
     },
     {
       "defType": "FacilityDef",
@@ -506,7 +510,11 @@
           "count": 20
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Root"
+      ],
+      "storagePriority": "normal"
     },
     {
       "defType": "FacilityDef",
@@ -533,7 +541,11 @@
           "count": 18
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "马鬃"
+      ],
+      "storagePriority": "low"
     },
     {
       "defType": "FacilityDef",
@@ -564,7 +576,11 @@
           "count": 20
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Root"
+      ],
+      "storagePriority": "low"
     },
     {
       "defType": "FacilityDef",
@@ -682,7 +698,9 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [],
+      "storagePriority": "preferred"
     },
     {
       "defType": "FacilityDef",
@@ -713,7 +731,13 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Weapon",
+        "Armor",
+        "Accessory"
+      ],
+      "storagePriority": "preferred"
     },
     {
       "defType": "FacilityDef",
@@ -838,7 +862,11 @@
           "count": 60
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Root"
+      ],
+      "storagePriority": "normal"
     },
     {
       "defType": "FacilityDef",
@@ -870,7 +898,8 @@
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
-      ]
+      ],
+      "storagePriority": "important"
     },
     {
       "defType": "FacilityDef",
@@ -990,7 +1019,11 @@
           "count": 10
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Medicine"
+      ],
+      "storagePriority": "preferred"
     },
     {
       "defType": "FacilityDef",
@@ -1171,7 +1204,11 @@
           "count": 20
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Food"
+      ],
+      "storagePriority": "normal"
     },
     {
       "defType": "FacilityDef",
@@ -1389,7 +1426,8 @@
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
-      ]
+      ],
+      "storagePriority": "important"
     },
     {
       "defType": "FacilityDef",
@@ -1475,7 +1513,11 @@
           "count": 40
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Root"
+      ],
+      "storagePriority": "normal"
     },
     {
       "defType": "FacilityDef",
@@ -2908,7 +2950,11 @@
           "count": 6
         }
       ],
-      "marketValue": 0
+      "marketValue": 0,
+      "storageFilter": [
+        "Root"
+      ],
+      "storagePriority": "normal"
     },
     {
       "defType": "FacilityDef",
@@ -2943,7 +2989,8 @@
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
-      ]
+      ],
+      "storagePriority": "important"
     },
     {
       "defType": "FacilityDef",

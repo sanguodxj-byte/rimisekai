@@ -16,7 +16,6 @@ public sealed class FacilityExtraData
 {
     public int Id { get; set; }
     public int StorageCapacity { get; set; }
-    public List<string> StorageFilter { get; set; } = new();
     public List<ActionKind> Actions { get; set; } = new();
     public bool DeclaredActions { get; set; }
     public bool IsTable { get; set; }
@@ -101,7 +100,6 @@ public static class InkSaveStore
             {
                 Id = f.Id,
                 StorageCapacity = f.StorageCapacity,
-                StorageFilter = new List<string>(f.StorageFilter),
                 Actions = new List<ActionKind>(f.Actions),
                 IsTable = f.IsTable,
             });
@@ -278,9 +276,6 @@ public static class InkSaveStore
                 if (extraMap.TryGetValue(facility.Id, out var extra))
                 {
                     facility.StorageCapacity = extra.StorageCapacity;
-                    facility.StorageFilter.Clear();
-                    foreach (var filterItem in extra.StorageFilter)
-                        facility.StorageFilter.Add(filterItem);
 
                     facility.IsTable = extra.IsTable;
                     facility.Actions.Clear();

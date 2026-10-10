@@ -96,8 +96,14 @@ public sealed class FacilityDef : Def, IIdentifiedDef
     /// <summary>设施的仓储容量上限。</summary>
     public int StorageCapacity { get; init; } = 999;
 
-    /// <summary>允许存入的品类或物品白名单（空表示不限）。</summary>
+    /// <summary>
+    /// 开局允许存入的品类或物品（「Root」＝全收）。**空表＝什么都不收**——店里的摊位就是这样起手的，
+    /// 玩家在存储设置里勾了什么，搬运的人才往里补什么。
+    /// </summary>
     public List<string> StorageFilter { get; init; } = new();
+
+    /// <summary>开局的仓储优先级。</summary>
+    public StoragePriority StoragePriority { get; init; } = StoragePriority.Normal;
 
     /// <summary>开局时这件设施里已存着的东西。</summary>
     public Dictionary<string, int> Contents { get; init; } = new();
@@ -123,8 +129,8 @@ public sealed class FacilityDef : Def, IIdentifiedDef
             Craft = Craft,
         };
         facility.MaterialCost.AddRange(MaterialCost);
-        foreach (var filter in StorageFilter)
-            facility.StorageFilter.Add(filter);
+        facility.StorageFilter.Only(StorageFilter);
+        facility.Priority = StoragePriority;
         foreach (var action in Actions)
             facility.Actions.Add(action);
         foreach (var pair in Contents)

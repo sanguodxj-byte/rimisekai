@@ -1186,7 +1186,7 @@ public sealed class ArchitectureTests
         var state = new GameState();
         var w = state.Roster.Add("工");
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
-        shelf.StorageFilter.Add("铁矿");          // 只收矿石
+        shelf.StorageFilter.Only(new[] { "铁矿" }); // 只收矿石
         shelf.StorageCapacity = 2;                 // 最多两件
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
         state.Territory.AddFacility(shelf);
@@ -2099,12 +2099,12 @@ public sealed class ArchitectureTests
 
         // 设置白名单过滤：排除木材后，再存入木材被拒绝。
         Assert.True(hub.ToggleStorageFilter("木材"));
-        Assert.DoesNotContain("木材", shelf.StorageFilter);
+        Assert.False(state.Territory.Allows(shelf, "木材"));
         Assert.False(hub.StoreOne("木材"));
 
         // 恢复允许后即可存入。
         Assert.True(hub.ToggleStorageFilter("木材"));
-        Assert.Contains("木材", shelf.StorageFilter);
+        Assert.True(state.Territory.Allows(shelf, "木材"));
         Assert.True(hub.StoreOne("木材"));
         Assert.Equal(2, shelf.Contents.Get("木材"));
         Assert.Equal(0, master.Bag.Get("木材"));
@@ -2331,8 +2331,9 @@ public sealed class ArchitectureTests
         var table = new Facility
         {
             Id = 3, Name = "餐桌", RoomId = 4, Capacity = 4, Built = true,
-            IsTable = true, CanStore = true, StorageCapacity = 12, StorageFilter = { "Meal" }
+            IsTable = true, CanStore = true, StorageCapacity = 12,
         };
+        table.StorageFilter.Only(new[] { "Meal" });
         var chair = new Facility
         {
             Id = 4, Name = "餐椅", RoomId = 4, Capacity = 2, Built = true,
@@ -2525,15 +2526,15 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
 
         var rack = new Facility { Id = 1, Name = "武器架", RoomId = 1, Capacity = 10, CanStore = true, Built = true };
-        rack.StorageFilter.Add("Weapon");
+        rack.StorageFilter.Only(new[] { "Weapon" });
         state.Territory.AddFacility(rack);
 
         var weapon = WeaponForge.Forge("秘银", WeaponType.Spear, enchant: "", blessed: false, enhance: 0);
         state.Territory.Weapons.Add(weapon);
 
         // 实例归属武器大类，按品类收；材料不是兵器，仍被拒。
-        Assert.True(rack.FilterAccepts(weapon.Id, state.Territory.Weapons));
-        Assert.False(rack.FilterAccepts("木材", state.Territory.Weapons));
+        Assert.True(state.Territory.Allows(rack, weapon.Id));
+        Assert.False(state.Territory.Allows(rack, "木材"));
     }
 
     [Fact]

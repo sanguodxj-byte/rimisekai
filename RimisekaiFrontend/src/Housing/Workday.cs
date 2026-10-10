@@ -761,6 +761,9 @@ public sealed class TerritoryClock
         // 搬运优先于娱乐——否则「每日一娱」无限重入，劳动产出永远躺在背包里。
         if (StartHaul(character, worker, territory, ctx, used))
             return;
+        // 手上空了：仓储之间倒库——低档里的东西倒进档更高、也收它的仓储（店里的摊位就是这样补货的）。
+        if (StartRehaul(character, worker, territory, ctx))
+            return;
         // 娱乐时段：到点名的那件消遣设施去消遣。
         if (assignment.Mode == SlotMode.Entertainment)
         {
@@ -907,6 +910,51 @@ public sealed class TerritoryClock
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 倒库（<see cref="Territory.FindRehaul"/>）：走到源仓储当面取货，再送进目标仓储。人已在源那间房就当场取。
+    /// 没得倒返回 false。
+    /// </summary>
+    private static bool StartRehaul(CharacterState character, Worker worker, Territory territory, StepContext ctx)
+    {
+        if (territory.FindRehaul(worker.RoomId) is not { } job)
+            return false;
+        var moved = 0;
+        if (job.Source.RoomId == worker.RoomId)
+        {
+            moved = territory.TakeFrom(character, job.Source, job.ItemId, job.Count);
+            if (moved <= 0)
+                return false;
+        }
+        worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
+        {
+            Territory = territory,
+            Character = character,
+            Worker = worker,
+            StepContext = ctx,
+        });
+        worker.Goal = ActionKind.Haul;
+        worker.Task = ActionKind.None;
+        worker.Progress = 0;
+        worker.HaulItemId = job.ItemId;
+        worker.HaulSourceId = job.Source.Id;
+        worker.HaulTargetId = job.Target.Id;
+        worker.FacilityId = -1;
+        if (moved > 0)
+        {
+            worker.HaulCount = moved;
+            worker.HaulPhase = HaulPhase.Delivering;
+            GotoRoom(worker, territory, job.Target.RoomId, character, ctx);
+        }
+        else
+        {
+            worker.HaulCount = job.Count;
+            worker.HaulPhase = HaulPhase.Fetching;
+            GotoRoom(worker, territory, job.Source.RoomId, character, ctx);
+        }
+        worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+        return true;
     }
 
     /// <summary>收尾搬运状态，回决策。</summary>

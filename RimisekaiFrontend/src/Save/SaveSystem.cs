@@ -138,8 +138,9 @@ public sealed class FacilityData
     /// <summary>存储容量（0 = 不限）。</summary>
     public int StorageCapacity { get; set; }
 
-    /// <summary>存储过滤：物品 Id 与品类 DefName 混存。</summary>
-    public List<string> StorageFilter { get; set; } = new();
+    /// <summary>存储过滤的规则表（条目 → 收 / 不收）。</summary>
+    public Dictionary<string, bool> StorageRules { get; set; } = new();
+    public StoragePriority StoragePriority { get; set; }
 
     /// <summary>设施里存着的东西。</summary>
     public Dictionary<string, int> Contents { get; set; } = new();
@@ -377,7 +378,8 @@ public static class SaveSystem
                 Buildable = f.Buildable,
                 Storage = f.CanStore,
                 StorageCapacity = f.StorageCapacity,
-                StorageFilter = new List<string>(f.StorageFilter),
+                StorageRules = new Dictionary<string, bool>(f.StorageFilter.Rules),
+                StoragePriority = f.Priority,
                 Contents = new Dictionary<string, int>(f.Contents.Items),
                 Actions = new List<ActionKind>(f.Actions),
                 IsTable = f.IsTable,
@@ -569,8 +571,8 @@ public static class SaveSystem
             foreach (var pair in f.Contents)
                 facility.Contents.Add(pair.Key, pair.Value);
             facility.StorageCapacity = f.StorageCapacity;
-            foreach (var entry in f.StorageFilter)
-                facility.StorageFilter.Add(entry);
+            facility.StorageFilter.Restore(f.StorageRules);
+            facility.Priority = f.StoragePriority;
             // 未放置的设施（RoomId=-1）走专用入口，AddFacility 会因找不到房间而拒绝。
             // 旧存档里超过 Room.MaxFacilities 的那几件，退回未放置，东西不丢。
             if (facility.RoomId >= 0 && !state.Territory.AddFacility(facility))

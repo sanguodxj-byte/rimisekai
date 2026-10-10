@@ -33,6 +33,9 @@ public sealed class ShopRoomTests
         Assert.True(hub.DevelopVacantCell(0, x, y));
         Assert.True(hub.BuildRoomDef(GroceryDef, state.Territory.RoomAt(0, x, y)!.Id));
         var shop = state.Territory.RoomAt(0, x, y)!;
+        // 摊位起手什么都不收：放行布与陶罐再摆上
+        Assert.Empty(Stall(state, shop).StorageFilter.Rules);
+        Stall(state, shop).StorageFilter.Only(new[] { "布", "陶罐" });
         Stall(state, shop).Contents.Add("布", 40);
         Stall(state, shop).Contents.Add("陶罐", 40);
         return shop;
@@ -305,7 +308,7 @@ public sealed class ShopRoomTests
     }
 
     [Fact]
-    public void Haulers_never_stock_the_shop_shelves()
+    public void Haulers_put_only_allowed_goods_on_the_stall()
     {
         var hub = TerritoryLoopTests.NewGame(out var state, 3);
         var shop = OpenShop(hub, state);

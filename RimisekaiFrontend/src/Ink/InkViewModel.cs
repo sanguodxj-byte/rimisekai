@@ -300,7 +300,7 @@ public sealed class InkViewModel
     public bool StorageAccepts(string itemId)
     {
         var facility = Hub.OpenStorageFacility;
-        return facility != null && facility.FilterAccepts(itemId);
+        return facility != null && Hub.State.Territory.Allows(facility, itemId);
     }
 
     /// <summary>该物品的品类名（用于在存储行上标注归属）。没有定义则空串。</summary>
