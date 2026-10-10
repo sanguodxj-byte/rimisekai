@@ -467,7 +467,10 @@ public sealed partial class HubSession
         State.Territory.MasterRoomId = roomId;
         var master = State.Roster.Master;
         if (master != null)
+        {
             _presence[master.Id] = roomId;
+            Day.PlaceMaster(master.Id, roomId);
+        }
         // 跨场景的落位（如进入 POI）不是走路：跟着的人直接被带到身边。
         // 门锁着的地方不带人——主人进了自家卧室，跟班的留在外头。
         foreach (var worker in Day.Workers)

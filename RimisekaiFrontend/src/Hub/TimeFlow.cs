@@ -86,6 +86,7 @@ public sealed partial class HubSession
             if (masterWorker != null && masterWorker.RoomId >= 0 && masterWorker.Goal != ActionKind.None)
             {
                 PlayerRoomId = masterWorker.RoomId;
+                State.Territory.MasterRoomId = masterWorker.RoomId;
                 UsingFixtureId = masterWorker.FacilityId >= 0 ? masterWorker.FacilityId : null;
             }
         }

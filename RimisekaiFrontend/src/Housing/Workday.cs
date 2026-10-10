@@ -652,9 +652,11 @@ public sealed class TerritoryClock
             return;
         }
 
+        // 这一段排了工作：夜里也上工，只有累了才睡。
+        var onDuty = assignment.Mode == SlotMode.Work && assignment.FacilityId >= 0;
         if (worker.Goal == ActionKind.Sleep)
         {
-            if (!night && !character.Condition.Tired)
+            if ((!night || onDuty) && !character.Condition.Tired)
             {
                 WakeUp(character, worker, roster, ctx);
                 EndRoutine(worker);
@@ -664,7 +666,8 @@ public sealed class TerritoryClock
 
         // 睡觉打断一切（含闲时活动）。但睡觉必须到床上——
         // 没有床就睡不成，退回下面的日常决策（歇着/串门/零活），不在地上睡。
-        if (character.Condition.Tired || night)
+        // 主人睡不睡由玩家亲手决定（见 DailyActions），自动节律不替他上床。
+        if (!character.IsMaster && (character.Condition.Tired || (night && !onDuty)))
         {
             // 已在睡的那一支在上面就返回了，走到这里一定是刚决定要睡。
             if (StartSleep(character, worker, territory, roster, ctx, used))
@@ -696,7 +699,7 @@ public sealed class TerritoryClock
             }
         }
         // 主人出了领地（人在大地图上，PlayerRoomId < 0）：家里的人找不到他，不起意去搭话。
-        if (ctx.PlayerRoomId >= 0 && character.Affect.ChatDesire >= SeekThreshold(character))
+        if (!character.IsMaster && ctx.PlayerRoomId >= 0 && character.Affect.ChatDesire >= SeekThreshold(character))
         {
             StartSeek(character, worker, used);
             return;
@@ -1073,6 +1076,19 @@ public sealed class TerritoryClock
         worker.HaulTargetId = -1;
         worker.HaulSourceId = -1;
         worker.HaulPhase = HaulPhase.Delivering;
+    }
+
+    /// <summary>
+    /// 主人亲手走到了别处：节律里他的身子跟到这间房，手头的活收尾回决策层。
+    /// 否则下一格结算会拿旧位置覆盖主人所在的房间（瞬移回去）。
+    /// </summary>
+    public void PlaceMaster(int characterId, int roomId)
+    {
+        var worker = _workers.Find(w => w.CharacterId == characterId);
+        if (worker == null || worker.RoomId == roomId)
+            return;
+        EndRoutine(worker);
+        worker.RoomId = roomId;
     }
 
     /// <summary>让某人的当前活动立刻收尾回决策层（解除跟随时用）。不动跟随标记本身。</summary>

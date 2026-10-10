@@ -432,6 +432,7 @@ public sealed partial class HubSession
             if (UsingFixtureId == fixture.Id)
                 LeaveFixture();
             ResetFacilityWorkers(fixture.Id);
+            State.Territory.Unassign(fixture.Id);
             State.Territory.Facilities.Remove(fixture);
         }
         foreach (var link in new List<int>(room.Links))
@@ -455,6 +456,7 @@ public sealed partial class HubSession
         if (UsingFixtureId == facilityId)
             LeaveFixture();
         State.Territory.RemoveEffect(facility);
+        State.Territory.Unassign(facilityId);
         State.Territory.Facilities.Remove(facility);
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
         Refund(facility.MaterialCost);

@@ -1636,6 +1636,19 @@ public sealed class Territory
         return true;
     }
 
+    /// <summary>设施拆了：排到它的时段一律退回空闲。</summary>
+    public void Unassign(int facilityId)
+    {
+        foreach (var schedule in Schedules.Values)
+        {
+            for (var slot = 0; slot < WorkSlot.Count; slot++)
+            {
+                if (schedule.Slots[slot].FacilityId == facilityId)
+                    schedule.Slots[slot] = SlotAssignment.Free;
+            }
+        }
+    }
+
     /// <summary>某角色某段的安排。</summary>
     public SlotAssignment AssignmentOf(int characterId, int slot) =>
         ScheduleOf(characterId).Slots[slot];
