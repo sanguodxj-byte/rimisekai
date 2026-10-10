@@ -457,7 +457,7 @@ public sealed class Territory
     /// 扣材料：先扣角色背包，不够的再从各设施存货里补。
     /// 调用前应先用 <see cref="CanPayWith"/> 确认付得起。
     /// </summary>
-    public bool PayWith(CharacterState? who, IReadOnlyList<RecipeCost> costs)
+    public bool PayWith(CharacterState? who, IReadOnlyList<RecipeCost> costs, List<PaidItem>? ledger = null)
     {
         if (!CanPayWith(who, costs))
             return false;
@@ -470,6 +470,7 @@ public sealed class Territory
                 if (fromBag > 0)
                 {
                     who.Bag.Add(cost.ItemId, -fromBag);
+                    ledger?.Add(new PaidItem(PaidItem.FromBag, cost.ItemId, fromBag));
                     left -= fromBag;
                 }
             }
@@ -481,6 +482,7 @@ public sealed class Territory
                 if (take > 0)
                 {
                     storage.Contents.Add(cost.ItemId, -take);
+                    ledger?.Add(new PaidItem(storage.Id, cost.ItemId, take));
                     left -= take;
                 }
             }

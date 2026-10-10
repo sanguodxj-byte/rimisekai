@@ -124,7 +124,8 @@
         }
       ],
       "bundledFacility": "餐桌",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Living"
     },
     {
       "defType": "RoomDef",
@@ -153,7 +154,8 @@
         }
       ],
       "bundledFacility": "床",
-      "bonusActions": []
+      "bonusActions": [],
+      "buildCategory": "BuildRoom_Living"
     },
     {
       "defType": "RoomDef",

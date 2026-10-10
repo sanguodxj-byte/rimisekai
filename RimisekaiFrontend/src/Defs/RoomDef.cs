@@ -43,6 +43,9 @@ public sealed class RoomDef : Def, IIdentifiedDef
     /// <summary>房间细分标签（至少 1 个，无上限，如室内/室外/工作间/娱乐室/卧室）。</summary>
     public List<string> Tags { get; init; } = new();
 
+    /// <summary>建造目录里归哪一类（<see cref="BuildCategoryDef"/> 的 DefName）。可建的必填。</summary>
+    public string BuildCategory { get; init; } = "";
+
     /// <summary>建成时白送的一件设施（FacilityDef 的 DefName）。占房里的设施位，与自己建的一样算数。</summary>
     public string BundledFacility { get; init; } = "";
 
