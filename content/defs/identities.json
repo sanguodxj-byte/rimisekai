@@ -270,7 +270,7 @@
       "mainWeapon": "Sword",
       "offWeapon": null,
       "offShield": true,
-      "mainMaterial": "钢",
+      "mainMaterial": "铁",
       "offMaterial": "铁"
     },
     {
@@ -317,7 +317,7 @@
       "mainWeapon": "Spear",
       "offWeapon": null,
       "offShield": false,
-      "mainMaterial": "钢"
+      "mainMaterial": "铁"
     },
     {
       "defName": "魔剑士",
@@ -329,7 +329,7 @@
       "mainWeapon": "Sword",
       "offWeapon": null,
       "offShield": false,
-      "mainMaterial": "钢"
+      "mainMaterial": "铁"
     },
     {
       "defName": "驯兽师",
