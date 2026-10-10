@@ -3,7 +3,7 @@
 后端只改数据、不建任何控件。UI 只读视图结构、调返回 `bool` 的操作，
 `false` = 非法操作（直接按失败处理或禁用按钮即可）。
 
-程序集：`RimisekaiCore`（纯逻辑）；`RimisekaiFrontend` 只有流程节点。
+程序集：单一 `RimisekaiFrontend`（Godot 工程程序集），源码全在 `RimisekaiFrontend/src/`；纯逻辑模块（Hub、Character、Combat、Defs 等）不引用 Godot API，`Flow` 等是流程节点。
 
 ## 1. 启动与阶段
 
@@ -180,7 +180,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - 挑选用 `Weight` 加权随机；`Chance` 是百分比掷骰；命中即记账，因此同一步内不会把一次性台词说两遍
 - 记忆 `CharacterState.Voice: VoiceMemory`：`SaidAt`（台词 Id→时刻）、`LastSpokeAt`（时机→时刻），随存档走
 - 闲时氛围同一角色两次之间至少隔 `HubSession.AmbientGapMinutes`（默认 60 分钟）
-- 内容文件格式见 `content/voice.json`，解析器 `VoicePackJson.TryParse`（在 Core，可脱离 Godot 测）
+- 内容文件格式见 `content/voice.json`，解析器 `VoicePackJson.TryParse`（纯逻辑，可脱离 Godot 测）
 
 #### 2.11a 场景维度（同一时机，不同处境说不同的话）
 

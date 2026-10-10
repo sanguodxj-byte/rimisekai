@@ -11,9 +11,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RimisekaiCore\RimisekaiCore.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\RimisekaiFrontend\src\Ink\InkModal.cs" Link="InkModal.cs" />
+    <ProjectReference Include="..\RimisekaiFrontend.csproj" />
   </ItemGroup>
 </Project>
