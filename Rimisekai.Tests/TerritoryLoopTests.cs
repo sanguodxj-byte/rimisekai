@@ -32,6 +32,8 @@ public sealed class TerritoryLoopTests
     private const int GuestBed = 1019; // 客房床
     private const int GuestRoom = 145;  // 卧室（12 木材）
     private const int GuestCellX = 1, GuestCellY = 1; // 客厅西边、森林北边的空格
+    private const int Grocery = 146;   // 杂货铺：室内、营业性，建成自带摊位（能摆货、能守摊）
+    private const int ShopCellX = 2, ShopCellY = 3; // 庭院南边的空格
     private const int Sofa = 4;        // 客厅沙发（娱乐时段去歇着）
     private const int Bed = 5;         // 床：木材 10
     private const int Bedroom = 3;
@@ -297,8 +299,12 @@ public sealed class TerritoryLoopTests
     /// 5. 委托：从第 4 天起每两天接一单板上空着的固定战斗委托（谷仓鼠患、北坡头狼、狼群夜袭），接单直接过 8 小时；
     ///    玩家带旅人去、女仆留家干活，两人真打一场（骰子按天定），
     ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
-    /// 6. 钱够了再开拓一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
-    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。跑 30 天，第 16 天存读档一次。
+    /// 6. 钱够了再开拓一格建杂货铺（自带摊位）：女仆上午改去守摊、下午去采石（下一格开拓要石材），
+    ///    玩家每晚把仓里的兽皮、多出来的肉摆上摊；
+    ///    访客从森林进门、走到店里买，钱进账——进项是委托加自己的店。
+    /// 7. 钱再够就再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
+    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天进城一趟（走到最近城镇的商店），箱里口粮不够就买。
+    /// 跑 30 天，第 16 天存读档一次。
     /// </summary>
     [Fact]
     public void Three_people_territory_loop_runs_thirty_days_with_save_load_midway()
@@ -341,6 +347,7 @@ public sealed class TerritoryLoopTests
         var guestBedId = -1;
         var anvilId = -1;
         var coopId = -1;
+        var shopId = -1;
         var visitorId = -1;
         var maidSleptInHerBed = false;
         long spent = 0;
@@ -425,8 +432,23 @@ public sealed class TerritoryLoopTests
                             Assert.True(hub.Craft("铁"));
                     }
                     worn.AddRange(WearNewGear(hub, state, visitorId));
+                    // 铁砧起来、钱够再开一格建杂货铺：女仆上午守摊
+                    if (shopId < 0 && guestBedId >= 0 && anvilId >= 0 && state.Money >= hub.VacantCostMoney + 200
+                        && state.Territory.CountWith(master, "木材") >= 15
+                        && hub.DevelopVacantCell(0, ShopCellX, ShopCellY)
+                        && hub.BuildRoomDef(Grocery, state.Territory.RoomAt(0, ShopCellX, ShopCellY)!.Id))
+                    {
+                        shopId = state.Territory.RoomAt(0, ShopCellX, ShopCellY)!.Id;
+                        investDay["杂货铺"] = day;
+                        Assert.True(state.Territory.Room(shopId)!.Commercial);
+                        Assert.True(hub.Assign(maidId, 1, SlotMode.Work, Stall(state, shopId).Id));
+                        // 第三格起开拓要石材：铁砧把石头用光了，女仆下午改去采石，攒够了再开养鸡场
+                        Assert.True(hub.Assign(maidId, 2, SlotMode.Work, quarry.Id));
+                    }
+                    if (shopId >= 0)
+                        StockShop(hub, state, Stall(state, shopId));
                     // 钱够再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡
-                    if (coopId < 0 && guestBedId >= 0 && anvilId >= 0 && state.Money >= hub.VacantCostMoney + 200
+                    if (coopId < 0 && shopId >= 0 && state.Money >= hub.VacantCostMoney + 200
                         && hub.DevelopVacantCell(0, CoopCellX, CoopCellY)
                         && hub.BuildRoomDef(ChickenYard, state.Territory.RoomAt(0, CoopCellX, CoopCellY)!.Id))
                     {
@@ -471,7 +493,10 @@ public sealed class TerritoryLoopTests
             _out.WriteLine($"第{day}天 金钱={h.Money} 委托收入={commissionPay} 木材={h.Wood} 石材={h.Stone} 铁矿={h.Ore} 铁={h.Iron} 鸡蛋={h.Eggs} 肉={Total(state, "肉")} 兽皮={Total(state, "兽皮")} 干粮={Total(state, "干粮")} 装备={worn.Count} "
                 + string.Join(" ", state.Roster.Members.Select(c => $"{c.Name}心情={c.Affect.Mood} 产出={produced.GetValueOrDefault(c.Id)}")));
         }
-        _out.WriteLine($"30 天：委托 胜{commissionsWon} 负{commissionsLost} 入账 {commissionPay}G；买口粮 {spent}G；金钱 {startMoney} → {state.Money}；"
+        var shop = state.Territory.Room(shopId);
+        _out.WriteLine($"30 天：委托 胜{commissionsWon} 负{commissionsLost} 入账 {commissionPay}G；"
+            + $"自家店 {shop?.ShopLevel} 级 卖出 {shop?.Sales} 件 进账 {shop?.Revenue}G、来过 {state.Roster.Visitors.Count} 位访客；"
+            + $"买口粮 {spent}G；金钱 {startMoney} → {state.Money}；"
             + $"投资 {string.Join(" ", investDay.Select(p => $"{p.Key}@第{p.Value}天"))}；穿上 {worn.Count} 件；"
             + string.Join(" ", state.Roster.Members.Select(c => $"{c.Name}产出={produced.GetValueOrDefault(c.Id)}")));
 
@@ -479,15 +504,21 @@ public sealed class TerritoryLoopTests
         Assert.True(visitorId >= 0, "第 3 天有旅人登门留下");
         Assert.All(state.Roster.Members, c => Assert.True(produced.GetValueOrDefault(c.Id) > 30, $"{c.Name} 30 天产出 {produced.GetValueOrDefault(c.Id)}"));
         Assert.True(maidSleptInHerBed, "女仆睡在第一天给她打的床上");
-        // 路线走通：客卧（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 养鸡场（自带鸡舍）出蛋
+        // 路线走通：客卧（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 杂货铺开张 → 养鸡场（自带鸡舍）出蛋
         Assert.True(guestBedId >= 0 && anvilId >= 0 && coopId >= 0, $"客卧床 {guestBedId} 铁砧 {anvilId} 鸡舍 {coopId}");
         Assert.True(investDay["铁砧"] <= 12, $"铁砧第 {investDay["铁砧"]} 天才起");
-        Assert.True(worn.Count >= 6, $"穿上的装备 {worn.Count} 件");
+        Assert.True(worn.Count >= 5, $"穿上的装备 {worn.Count} 件");
         Assert.True(commissionsWon >= 8, $"委托赢了 {commissionsWon} 场");
         Assert.True(eggs > 0, "鸡舍出了鸡蛋");
-        // 钱：只有委托一个进项（不卖产物）。它付得起两格开拓、口粮，30 天后比开局还多
-        var invested = startMoney + commissionPay - spent - state.Money;
-        Assert.True(commissionPay > spent + invested / 2, $"委托 {commissionPay}G 撑起开销：口粮 {spent}G 开拓 {invested}G");
+        // 自家店开起来、有人上门、卖出了东西
+        Assert.True(shop != null && shop.Sales > 0 && shop.Revenue > 0, $"杂货铺 卖出 {shop?.Sales} 件 进账 {shop?.Revenue}G");
+        Assert.True(investDay["杂货铺"] <= 24, $"杂货铺第 {investDay["杂货铺"]} 天才开");
+        Assert.NotEmpty(state.Roster.Visitors);
+        Assert.Equal(3, state.Roster.Members.Count);
+        // 钱：进项是委托与自家的店（城里不卖产物）。它们付得起三格开拓、口粮，30 天后比开局还多
+        var income = commissionPay + shop!.Revenue;
+        var invested = startMoney + income - spent - state.Money;
+        Assert.True(income > spent + invested / 2, $"委托 {commissionPay}G + 店 {shop.Revenue}G 撑起开销：口粮 {spent}G 开拓 {invested}G");
         Assert.True(history.All(h => h.Money > 0), "金钱从未见底");
         Assert.True(state.Money > startMoney, $"金钱 {startMoney} → {state.Money}");
         // 后半月比前半月攒得快：领地的钱与铁一直在涨
@@ -496,6 +527,42 @@ public sealed class TerritoryLoopTests
         Assert.True(history[^1].Wood + history[^1].Stone > 0, $"木材 {history[^1].Wood} 石材 {history[^1].Stone}");
         // 没人心情崩到罢工（玩家自己也算）
         Assert.All(moods, m => Assert.True(m.Value > Affect.RefuseWorkAt, $"#{m.Key} 最低心情 {m.Value}"));
+    }
+
+    private static Facility Stall(GameState state, int shopId) =>
+        state.Territory.Facilities.Single(f => f.RoomId == shopId && f.Supports(ActionKind.Trade));
+
+    /// <summary>摆上摊的货：兽皮（打怪掉的）全摆，肉在全领地留 12 块当口粮。</summary>
+    private static readonly (string Item, int Keep)[] ShopGoods = { ("兽皮", 0), ("肉", 12) };
+
+    /// <summary>
+    /// 每晚把多出来的货摆上自家店的摊位：从各处仓储取进背包（人得走过去开柜子），再走进店里亲手放上摊。
+    /// 摊位不收自动入库，摆什么卖什么由玩家定。
+    /// </summary>
+    private static void StockShop(HubSession hub, GameState state, Facility stall)
+    {
+        var master = state.Roster.Master!;
+        foreach (var (item, keep) in ShopGoods)
+        {
+            var surplus = Total(state, item) - stall.Contents.Get(item) - keep;
+            foreach (var store in state.Territory.Facilities.Where(f => f.CanStore && f.Id != stall.Id && f.Contents.Get(item) > 0).ToList())
+            {
+                if (master.Bag.Get(item) >= surplus)
+                    break;
+                MoveTo(hub, store.RoomId);
+                Assert.True(hub.OpenStorage(store.Id));
+                Assert.True(hub.TakeOne(item, Math.Min(store.Contents.Get(item), surplus - master.Bag.Get(item))));
+                hub.CloseStorage();
+            }
+        }
+        var goods = ShopGoods.Where(g => master.Bag.Get(g.Item) > 0).ToList();
+        if (goods.Count == 0)
+            return;
+        MoveTo(hub, stall.RoomId);
+        Assert.True(hub.OpenStorage(stall.Id));
+        foreach (var (item, _) in goods)
+            Assert.True(hub.StoreOne(item, master.Bag.Get(item)));
+        hub.CloseStorage();
     }
 
     /// <summary>旅人那门兵器的铁货（弓、杖是木工活，不在铁砧上打）。</summary>
