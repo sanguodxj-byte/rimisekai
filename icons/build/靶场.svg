@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <path fill="#E9EFEA" d="M -250,-120 L -170,-190 L -110,-140 L -20,-230 L 80,-150 L 150,-200 L 250,-120 L 250,-105 L -250,-105 Z"/>
+    <rect x="-250" y="195" width="500" height="20" fill="#E9EFEA"/>
+    <g transform="translate(90,10) scale(0.6) translate(0,0)">
+    <!-- 靶面：同心环 -->
+    <circle cx="0" cy="-30" r="180" fill="#E9EFEA"/>
+    <circle cx="0" cy="-30" r="140" fill="#000000"/>
+    <circle cx="0" cy="-30" r="110" fill="#E9EFEA"/>
+    <circle cx="0" cy="-30" r="72" fill="#000000"/>
+    <circle cx="0" cy="-30" r="44" fill="#E9EFEA"/>
+    <!-- 支腿 -->
+    <path fill="#E9EFEA" d="M -100,120 L -70,130 L -150,215 L -180,205 Z"/>
+    <path fill="#E9EFEA" d="M 100,120 L 70,130 L 150,215 L 180,205 Z"/>
+    <!-- 正中一箭 -->
+    <g transform="translate(0,-30) rotate(-35)">
+      <rect x="0" y="-6" width="230" height="12" fill="#E9EFEA"/>
+      <path fill="#E9EFEA" d="M 200,-6 L 245,-35 L 260,-35 L 225,0 L 260,35 L 245,35 L 200,6 Z"/>
+    </g>
+</g><g transform="translate(-120,30) scale(0.55) translate(-256,-256)">
+  <g transform="translate(218, 256) scale(0.90)">
+    <!-- 强壮饱满的实心反曲大长弓弓臂（加厚加宽，彻底消除细碎断线与锯齿） -->
+    <path fill="#E9EFEA" d="
+      M -105,-220
+      C -5,-185 55,-110 55,-15
+      L 55,15
+      C 55,110 -5,185 -105,220
+      C -120,225 -128,208 -115,196
+      C -20,135 15,75 15,0
+      C 15,-75 -20,-135 -115,-196
+      C -128,-208 -120,-225 -105,-220
+      Z
+    "/>
+    <!-- 弓把手握厚实握柄 -->
+    <rect x="18" y="-38" width="46" height="76" rx="10" fill="#E9EFEA"/>
+
+    <!-- 坚挺连续实心弓弦（厚度达 18px，保证缩放下清晰连贯不虚断） -->
+    <polygon fill="#E9EFEA" points="-118,-215 -100,-215 -100,215 -118,215"/>
+
+    <!-- 搭在弓弦上的粗壮猎兽穿甲箭 -->
+    <!-- 坚固箭杆（厚度达 22px） -->
+    <rect x="-120" y="-11" width="280" height="22" rx="4" fill="#E9EFEA"/>
+    <!-- 威武厚重的阔头宽刃箭镞 -->
+    <polygon fill="#E9EFEA" points="150,-38 238,0 150,38 175,0"/>
+    <!-- 尾部饱满三角大箭羽 -->
+    <polygon fill="#E9EFEA" points="-95,-11 -155,-42 -125,-11"/>
+    <polygon fill="#E9EFEA" points="-95,11 -155,42 -125,11"/>
+  </g>
+
+</g>
+  </g>
+</svg>

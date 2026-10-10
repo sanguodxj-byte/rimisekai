@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 尖塔与十字 -->
+    <rect x="-10" y="-250" width="20" height="60" fill="#E9EFEA"/><rect x="-30" y="-235" width="60" height="16" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M -70,-90 L 0,-200 L 70,-90 Z"/>
+    <rect x="-70" y="-95" width="140" height="300" fill="#E9EFEA"/>
+    <!-- 两翼中殿 -->
+    <path fill="#E9EFEA" d="M -240,20 L -150,-70 L -70,-70 L -70,205 L -240,205 Z"/>
+    <path fill="#E9EFEA" d="M 240,20 L 150,-70 L 70,-70 L 70,205 L 240,205 Z"/>
+    <!-- 玫瑰窗与尖拱门（负形） -->
+    <circle cx="0" cy="-30" r="42" fill="#000000"/><circle cx="0" cy="-30" r="18" fill="#E9EFEA"/>
+    <rect x="-3" y="-72" width="6" height="84" fill="#E9EFEA"/><rect x="-42" y="-33" width="84" height="6" fill="#E9EFEA"/>
+    <path fill="#000000" d="M -45,205 L -45,90 C -45,60 -20,40 0,30 C 20,40 45,60 45,90 L 45,205 Z"/>
+    <path fill="#000000" d="M -195,190 L -195,90 C -195,70 -180,55 -170,50 C -160,55 -145,70 -145,90 L -145,190 Z"/>
+    <path fill="#000000" d="M -125,190 L -125,90 C -125,70 -110,55 -100,50 C -90,55 -75,70 -75,90 L -75,190 Z" transform="translate(5,0)"/>
+    <path fill="#000000" d="M 195,190 L 195,90 C 195,70 180,55 170,50 C 160,55 145,70 145,90 L 145,190 Z"/>
+    <path fill="#000000" d="M 125,190 L 125,90 C 125,70 110,55 100,50 C 90,55 75,70 75,90 L 75,190 Z" transform="translate(-5,0)"/>
+  </g>
+</svg>
