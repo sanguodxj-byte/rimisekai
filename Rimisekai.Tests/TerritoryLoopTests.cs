@@ -300,10 +300,10 @@ public sealed class TerritoryLoopTests
     ///    玩家带旅人去、女仆留家干活，两人真打一场（骰子按天定），
     ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
     /// 6. 钱够了再开拓一格建杂货铺（自带摊位）：女仆上午改去守摊、下午去采石（下一格开拓要石材），
-    ///    开张那天玩家在摊位的存储设置里勾上兽皮、肉、陶罐、防具，搬运的人自己往摊上补货；
+    ///    开张那天玩家在摊位的存储设置里勾上兽皮、陶罐，搬运的人自己往摊上补货；
     ///    访客从森林进门、走到店里买，钱进账——进项是委托加自己的店。
     /// 7. 钱再够就再开一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
-    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天进城一趟（走到最近城镇的商店），箱里口粮不够就买。
+    /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天进城一趟（走到最近城镇的商店），家里（自用仓储）能吃的不够 18 份才买——肉、鸡蛋都算。
     /// 跑 30 天，第 16 天存读档一次。
     /// </summary>
     [Fact]
@@ -466,7 +466,12 @@ public sealed class TerritoryLoopTests
                         Assert.True(hub.Assign(visitorId, 2, SlotMode.Work, Total(state, "石材") < 30 ? quarry.Id : IronVein));
                 }
                 if (hour >= 21 && !traded && day % 2 == 0 && (traded = true))
+                {
+                    var spentBefore = spent;
                     spent = MarketRun(hub, state, spent);
+                    if (spent > spentBefore)
+                        _out.WriteLine($"第{day}天 进城买口粮 {spent - spentBefore}G");
+                }
                 foreach (var log in hub.PassTime(10))
                 {
                     produced[log.CharacterId] = produced.GetValueOrDefault(log.CharacterId) + log.Count;
@@ -500,7 +505,7 @@ public sealed class TerritoryLoopTests
         var shop = state.Territory.Room(shopId);
         _out.WriteLine($"30 天：委托 胜{commissionsWon} 负{commissionsLost} 入账 {commissionPay}G；"
             + $"自家店 {shop?.ShopLevel} 级 卖出 {shop?.Sales} 件 进账 {shop?.Revenue}G、来过 {state.Roster.Visitors.Count} 位访客；"
-            + $"买口粮 {spent}G；金钱 {startMoney} → {state.Money}；"
+            + $"买口粮 {spent}G（剩肉 {Total(state, "肉")}、鸡蛋 {Total(state, "鸡蛋")}）；金钱 {startMoney} → {state.Money}；"
             + $"投资 {string.Join(" ", investDay.Select(p => $"{p.Key}@第{p.Value}天"))}；穿上 {worn.Count} 件；"
             + string.Join(" ", state.Roster.Members.Select(c => $"{c.Name}产出={produced.GetValueOrDefault(c.Id)}")));
 
@@ -522,6 +527,8 @@ public sealed class TerritoryLoopTests
         // 钱：进项是委托与自家的店（城里不卖产物）。它们付得起三格开拓、口粮，30 天后比开局还多
         var income = commissionPay + shop!.Revenue;
         var invested = startMoney + income - spent - state.Money;
+        // 家里的肉、鸡蛋够吃：口粮几乎不用买——开局猪圈刚起时补一趟，之后偶尔补几份（骰子不同差几十 G）
+        Assert.True(spent < 150, $"口粮 {spent}G");
         Assert.True(income > spent + invested / 2, $"委托 {commissionPay}G + 店 {shop.Revenue}G 撑起开销：口粮 {spent}G 开拓 {invested}G");
         Assert.True(history.All(h => h.Money > 0), "金钱从未见底");
         Assert.True(state.Money > startMoney, $"金钱 {startMoney} → {state.Money}");
@@ -536,8 +543,8 @@ public sealed class TerritoryLoopTests
     private static Facility Stall(GameState state, int shopId) =>
         state.Territory.Facilities.Single(f => f.RoomId == shopId && f.Supports(ActionKind.Trade));
 
-    /// <summary>摊位上放行的货：兽皮、肉、陶罐、防具（皮甲之类）。</summary>
-    internal static readonly string[] ShopGoods = { "兽皮", "肉", "陶罐", "Armor" };
+    /// <summary>摊位上放行的货：兽皮、陶罐（肉留着自家吃；甲打出来要穿）。</summary>
+    internal static readonly string[] ShopGoods = { "兽皮", "陶罐" };
 
     /// <summary>
     /// 店开张那天：玩家走进店、打开摊位的存储设置，勾上要卖的货（摊位起手什么都不收）。
@@ -552,7 +559,7 @@ public sealed class TerritoryLoopTests
         foreach (var entry in ShopGoods)
             Assert.True(hub.ToggleStorageFilter(entry));
         hub.CloseStorage();
-        Assert.All(ShopGoods.Where(g => g != "Armor"), g => Assert.True(state.Territory.Allows(stall, g)));
+        Assert.All(ShopGoods, g => Assert.True(state.Territory.Allows(stall, g)));
     }
 
     /// <summary>旅人那门兵器的铁货（弓、杖是木工活，不在铁砧上打）。</summary>
@@ -629,14 +636,15 @@ public sealed class TerritoryLoopTests
             TalkTo(hub, state, w.CharacterId);
     }
 
-    /// <summary>集市一趟：客厅箱子口粮不足 18 就买到 18（不卖产物，钱另有来路）。返回累计花销。</summary>
+    /// <summary>集市一趟：家里（自用仓储）能吃的不足 18 就买到 18（不卖产物，钱另有来路）。返回累计花销。</summary>
     private static long MarketRun(HubSession hub, GameState state, long spent)
     {
         var master = state.Roster.Master!;
         var leftAt = (state.Clock.Day - 1) * 1440 + state.Clock.Minutes;
         CityTrip.ToShop(hub);
         var chest = state.Territory.Facilities.Single(f => f.Id == Chest);
-        var need = 18 - chest.Contents.Items.Where(p => state.Territory.IsFood(p.Key)).Sum(p => p.Value);
+        // 家里所有自用仓储里能吃的（生肉、鸡蛋、干粮、熟食都算；店里摆着卖的不算）
+        var need = 18 - state.Territory.Storages.Sum(f => f.Contents.Items.Where(p => state.Territory.IsFood(p.Key)).Sum(p => p.Value));
         foreach (var food in Provisions)
         {
             while (need > 0)
