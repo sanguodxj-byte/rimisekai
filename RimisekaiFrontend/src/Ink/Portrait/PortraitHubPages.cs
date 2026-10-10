@@ -434,6 +434,12 @@ public partial class PortraitHubScreen
             _widgets.Add(new PortraitWidget(hit.Intersection(new Rect2(track.Position.X - 60f, y, track.Size.X + 120f, PortraitLayout.TouchMin)),
                 PortraitAction.VolumeSet, i, true, $"{i * 25}"));
         }
+
+        var codex = PortraitLayout.SettingsCodex(y);
+        PortraitFrame.Bevel(this, codex, 18f, PortraitFrame.IsPressed(codex) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
+        PortraitGlyph.Book(this, codex.GetCenter().X, codex.Position.Y + 72f, 30f, InkStyle.Line);
+        InkDraw.Text(this, new Vector2(codex.GetCenter().X, codex.Position.Y + 150f), "怪物图鉴", PortraitLayout.FontBody, InkStyle.Line, "cm");
+        _widgets.Add(new PortraitWidget(codex, PortraitAction.CodexOpen, 0, true, "图鉴"));
     }
 
     private void LoadSave(string path)

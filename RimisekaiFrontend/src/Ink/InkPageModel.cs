@@ -354,6 +354,9 @@ public sealed record InkDevActionRow
 
     public bool Enabled { get; init; } = true;
 
+    /// <summary>点不动时的缘由（如「只能摆在室内」），画在行尾。空 = 不写。</summary>
+    public string Note { get; init; } = "";
+
     /// <summary>是否处于选中态（如当前选中的设施）。只影响画法。</summary>
     public bool Selected { get; init; }
 }

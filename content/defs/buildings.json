@@ -19,13 +19,14 @@
         "Cook",
         "Meal"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 2
         }
       ],
-      "marketValue": 200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -42,13 +43,14 @@
       "isTable": false,
       "storage": true,
       "actions": [],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 30
         }
       ],
-      "marketValue": 2000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -67,13 +69,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 3
         }
       ],
-      "marketValue": 250
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -92,13 +95,14 @@
       "actions": [
         "Fell"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 3
         }
       ],
-      "marketValue": 250
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -117,13 +121,14 @@
       "actions": [
         "Mine"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 3
         }
       ],
-      "marketValue": 250
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -140,13 +145,14 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 4
         }
       ],
-      "marketValue": 300
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -165,13 +171,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 8
         }
       ],
-      "marketValue": 600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -188,6 +195,7 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -198,7 +206,7 @@
           "count": 40
         }
       ],
-      "marketValue": 9000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -217,17 +225,18 @@
       "actions": [
         "Forge"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "石材",
-          "count": 60
+          "count": 30
         },
         {
           "itemId": "铁矿",
-          "count": 80
+          "count": 20
         }
       ],
-      "marketValue": 8000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -246,6 +255,7 @@
       "actions": [
         "Forge"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -256,7 +266,7 @@
           "count": 120
         }
       ],
-      "marketValue": 18000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -275,6 +285,7 @@
       "actions": [
         "Woodwork"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -285,7 +296,7 @@
           "count": 10
         }
       ],
-      "marketValue": 4000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -304,17 +315,14 @@
       "actions": [
         "Sew"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 30
-        },
-        {
-          "itemId": "布",
-          "count": 20
         }
       ],
-      "marketValue": 3000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -333,13 +341,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 8
         }
       ],
-      "marketValue": 600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -359,6 +368,7 @@
         "Drink",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -369,7 +379,7 @@
           "count": 20
         }
       ],
-      "marketValue": 4000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -388,13 +398,14 @@
       "actions": [
         "Sleep"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 16
         }
       ],
-      "marketValue": 1300
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -414,6 +425,7 @@
         "Rest",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -424,7 +436,7 @@
           "count": 2
         }
       ],
-      "marketValue": 600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -443,13 +455,14 @@
       "actions": [
         "Pray"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 120
         }
       ],
-      "marketValue": 9000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -468,13 +481,14 @@
       "actions": [
         "Store"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 20
         }
       ],
-      "marketValue": 1600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -486,20 +500,21 @@
       "buildCost": 1400,
       "startBuilt": true,
       "effectId": "",
-      "yieldItemId": "",
+      "yieldItemId": "马鬃",
       "buildable": true,
       "isTable": false,
       "storage": true,
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 18
         }
       ],
-      "marketValue": 1400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -518,6 +533,7 @@
       "actions": [
         "Store"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -528,7 +544,7 @@
           "count": 20
         }
       ],
-      "marketValue": 1200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -547,6 +563,7 @@
       "actions": [
         "Lookout"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -557,7 +574,7 @@
           "count": 30
         }
       ],
-      "marketValue": 6000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -576,13 +593,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 40
         }
       ],
-      "marketValue": 3000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -599,6 +617,7 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -609,7 +628,7 @@
           "count": 80
         }
       ],
-      "marketValue": 18000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -628,6 +647,7 @@
       "actions": [
         "Trade"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -638,7 +658,7 @@
           "count": 6
         }
       ],
-      "marketValue": 1800
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -657,6 +677,7 @@
       "actions": [
         "Store"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -667,7 +688,7 @@
           "count": 40
         }
       ],
-      "marketValue": 4000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -686,13 +707,14 @@
       "actions": [
         "Train"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 120
         }
       ],
-      "marketValue": 9000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -711,13 +733,18 @@
       "actions": [
         "Read"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
-          "count": 30
+          "count": 20
+        },
+        {
+          "itemId": "书本",
+          "count": 3
         }
       ],
-      "marketValue": 2400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -736,6 +763,7 @@
       "actions": [
         "Brew"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -750,7 +778,7 @@
           "count": 30
         }
       ],
-      "marketValue": 4500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -770,6 +798,7 @@
         "Cook",
         "Meal"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -780,7 +809,7 @@
           "count": 60
         }
       ],
-      "marketValue": 13000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -800,13 +829,14 @@
         "Cook",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 20
         }
       ],
-      "marketValue": 1600,
+      "marketValue": 0,
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
@@ -829,13 +859,14 @@
       "actions": [
         "Bathe"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 150
         }
       ],
-      "marketValue": 12000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -854,6 +885,7 @@
       "actions": [
         "Watch"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -864,7 +896,7 @@
           "count": 60
         }
       ],
-      "marketValue": 10000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -883,6 +915,7 @@
       "actions": [
         "Sleep"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -893,7 +926,7 @@
           "count": 6
         }
       ],
-      "marketValue": 1500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -912,6 +945,7 @@
       "actions": [
         "Store"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -922,7 +956,7 @@
           "count": 10
         }
       ],
-      "marketValue": 1800
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -939,13 +973,14 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 500
         }
       ],
-      "marketValue": 30000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -964,6 +999,7 @@
       "actions": [
         "Lookout"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
@@ -978,7 +1014,7 @@
           "count": 40
         }
       ],
-      "marketValue": 15000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -997,6 +1033,7 @@
       "actions": [
         "Meditate"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1007,7 +1044,7 @@
           "count": 40
         }
       ],
-      "marketValue": 11000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1026,6 +1063,7 @@
       "actions": [
         "Stargaze"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1036,7 +1074,7 @@
           "count": 100
         }
       ],
-      "marketValue": 22000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1055,6 +1093,7 @@
       "actions": [
         "Pray"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1065,7 +1104,7 @@
           "count": 60
         }
       ],
-      "marketValue": 16000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1085,13 +1124,14 @@
         "Drink",
         "Store"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 20
         }
       ],
-      "marketValue": 1600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1110,6 +1150,7 @@
       "actions": [
         "Train"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1120,7 +1161,7 @@
           "count": 4
         }
       ],
-      "marketValue": 900
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1139,6 +1180,7 @@
       "actions": [
         "Mine"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1153,7 +1195,7 @@
           "count": 100
         }
       ],
-      "marketValue": 16000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1172,13 +1214,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 10
         }
       ],
-      "marketValue": 800
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1197,6 +1240,7 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1207,7 +1251,7 @@
           "count": 10
         }
       ],
-      "marketValue": 2200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1226,6 +1270,7 @@
       "actions": [
         "Woodwork"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1236,7 +1281,7 @@
           "count": 30
         }
       ],
-      "marketValue": 4500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1256,6 +1301,7 @@
         "Rest",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1266,7 +1312,7 @@
           "count": 60
         }
       ],
-      "marketValue": 8000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1285,13 +1331,14 @@
       "actions": [
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 30
         }
       ],
-      "marketValue": 2400,
+      "marketValue": 0,
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
@@ -1314,13 +1361,14 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 14
         }
       ],
-      "marketValue": 1100
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1339,13 +1387,14 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "石材",
           "count": 80
         }
       ],
-      "marketValue": 6000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1365,6 +1414,7 @@
         "Cook",
         "Meal"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1375,7 +1425,7 @@
           "count": 40
         }
       ],
-      "marketValue": 8000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -1392,6 +1442,7 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1402,7 +1453,7 @@
           "count": 10
         }
       ],
-      "marketValue": 2200
+      "marketValue": 0
     },
     {
       "defType": "RoomDef",
@@ -1428,7 +1479,11 @@
           "count": 3
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1063",
+      "bonusActions": [
+        "Till"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1454,7 +1509,11 @@
           "count": 2
         }
       ],
-      "illustration": "res://assets/terrain_storm_mountains.png"
+      "illustration": "res://assets/terrain_storm_mountains.png",
+      "bundledFacility": "Facility_1006",
+      "bonusActions": [
+        "Mine"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1480,7 +1539,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1011",
+      "bonusActions": [
+        "Till"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1510,7 +1573,11 @@
           "count": 8
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1012",
+      "bonusActions": [
+        "Cook"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1540,7 +1607,11 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1013",
+      "bonusActions": [
+        "Forge"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1566,7 +1637,11 @@
           "count": 12
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1015",
+      "bonusActions": [
+        "Woodwork"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1592,7 +1667,11 @@
           "count": 12
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1016",
+      "bonusActions": [
+        "Sew"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1618,7 +1697,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/room_courtyard.png"
+      "illustration": "res://assets/room_courtyard.png",
+      "bundledFacility": "Facility_1017",
+      "bonusActions": [
+        "Till"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1648,7 +1731,9 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1018",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1674,7 +1759,9 @@
           "count": 25
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1021",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1700,7 +1787,9 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1022",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1726,7 +1815,11 @@
           "count": 12
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1023",
+      "bonusActions": [
+        "Tend"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1756,7 +1849,9 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/terrain_storm_mountains.png"
+      "illustration": "res://assets/terrain_storm_mountains.png",
+      "bundledFacility": "Facility_1025",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1782,7 +1877,11 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1028",
+      "bonusActions": [
+        "Till"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1811,7 +1910,9 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1030",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1841,7 +1942,9 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1019",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1871,7 +1974,9 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1035",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1901,7 +2006,11 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1036",
+      "bonusActions": [
+        "Brew"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1927,7 +2036,11 @@
           "count": 20
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1038",
+      "bonusActions": [
+        "Cook"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -1953,7 +2066,9 @@
           "count": 25
         }
       ],
-      "illustration": "res://assets/room_courtyard.png"
+      "illustration": "res://assets/room_courtyard.png",
+      "bundledFacility": "Facility_1039",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -1983,7 +2098,9 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1040",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2013,7 +2130,11 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/room_bedroom_day.png"
+      "illustration": "res://assets/room_bedroom_day.png",
+      "bundledFacility": "Facility_1041",
+      "bonusActions": [
+        "Brew"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2038,7 +2159,9 @@
           "count": 40
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1044",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2068,7 +2191,9 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1045",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2098,7 +2223,9 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1047",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2124,7 +2251,9 @@
           "count": 20
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1048",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2150,7 +2279,9 @@
           "count": 15
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1049",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2180,7 +2311,11 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/combat_natural_cave.png"
+      "illustration": "res://assets/combat_natural_cave.png",
+      "bundledFacility": "Facility_1050",
+      "bonusActions": [
+        "Mine"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2206,7 +2341,11 @@
           "count": 8
         }
       ],
-      "illustration": "res://assets/room_courtyard.png"
+      "illustration": "res://assets/room_courtyard.png",
+      "bundledFacility": "Facility_1051",
+      "bonusActions": [
+        "Till"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2232,7 +2371,11 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/settlement_village.png"
+      "illustration": "res://assets/settlement_village.png",
+      "bundledFacility": "Facility_1052",
+      "bonusActions": [
+        "Tend"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2262,7 +2405,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1053",
+      "bonusActions": [
+        "Woodwork"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2292,7 +2439,9 @@
           "count": 20
         }
       ],
-      "illustration": "res://assets/settlement_town.png"
+      "illustration": "res://assets/settlement_town.png",
+      "bundledFacility": "Facility_1054",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -2318,7 +2467,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/room_courtyard.png"
+      "illustration": "res://assets/room_courtyard.png",
+      "bundledFacility": "Facility_1057",
+      "bonusActions": [
+        "Tend"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2343,7 +2496,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/room_courtyard.png"
+      "illustration": "res://assets/room_courtyard.png",
+      "bundledFacility": "Facility_1058",
+      "bonusActions": [
+        "Tend"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2373,7 +2530,11 @@
           "count": 10
         }
       ],
-      "illustration": "res://assets/room_tavern.png"
+      "illustration": "res://assets/room_tavern.png",
+      "bundledFacility": "Facility_1059",
+      "bonusActions": [
+        "Cook"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2403,7 +2564,11 @@
           "count": 5
         }
       ],
-      "illustration": "res://assets/room_workshop.png"
+      "illustration": "res://assets/room_workshop.png",
+      "bundledFacility": "Facility_1060",
+      "bonusActions": [
+        "Brew"
+      ]
     },
     {
       "defType": "RoomDef",
@@ -2430,7 +2595,9 @@
           "count": 12
         }
       ],
-      "illustration": "res://assets/room_bedroom_day.png"
+      "illustration": "res://assets/room_bedroom_day.png",
+      "bundledFacility": "床",
+      "bonusActions": []
     },
     {
       "defType": "FacilityDef",
@@ -2450,13 +2617,14 @@
         "Rest",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 5
         }
       ],
-      "marketValue": 400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2473,13 +2641,14 @@
       "isTable": false,
       "storage": false,
       "actions": [],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 2
         }
       ],
-      "marketValue": 200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2499,6 +2668,7 @@
         "Rest",
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2509,7 +2679,7 @@
           "count": 4
         }
       ],
-      "marketValue": 900
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2528,13 +2698,14 @@
       "actions": [
         "Sleep"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 10
         }
       ],
-      "marketValue": 1000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2546,13 +2717,16 @@
       "buildCost": 2000,
       "startBuilt": true,
       "effectId": "",
-      "yieldItemId": "药草",
+      "yieldItemId": "herb",
       "buildable": false,
       "isTable": false,
       "storage": false,
-      "actions": [],
+      "actions": [
+        "Till"
+      ],
+      "roomTag": "室外",
       "materialCost": [],
-      "marketValue": 2000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2571,8 +2745,9 @@
       "actions": [
         "Mine"
       ],
+      "roomTag": "室外",
       "materialCost": [],
-      "marketValue": 8000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2591,8 +2766,9 @@
       "actions": [
         "Fell"
       ],
+      "roomTag": "室外",
       "materialCost": [],
-      "marketValue": 8000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2609,13 +2785,14 @@
       "isTable": false,
       "storage": true,
       "actions": [],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 6
         }
       ],
-      "marketValue": 500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2634,6 +2811,7 @@
       "actions": [
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2644,7 +2822,7 @@
           "count": 4
         }
       ],
-      "marketValue": 1800,
+      "marketValue": 0,
       "storageCapacity": 12,
       "storageFilter": [
         "Meal"
@@ -2667,13 +2845,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 6
         }
       ],
-      "marketValue": 400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2692,13 +2871,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 6
         }
       ],
-      "marketValue": 500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2717,13 +2897,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 5
         }
       ],
-      "marketValue": 400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2742,13 +2923,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 5
         }
       ],
-      "marketValue": 400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2767,13 +2949,14 @@
       "actions": [
         "Till"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 5
         }
       ],
-      "marketValue": 400
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2792,6 +2975,7 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2802,7 +2986,7 @@
           "count": 6
         }
       ],
-      "marketValue": 2200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2821,6 +3005,7 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2831,7 +3016,7 @@
           "count": 10
         }
       ],
-      "marketValue": 2600
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2850,6 +3035,7 @@
       "actions": [
         "Tend"
       ],
+      "roomTag": "室外",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2860,7 +3046,7 @@
           "count": 8
         }
       ],
-      "marketValue": 2000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2879,6 +3065,7 @@
       "actions": [
         "Brew"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2889,7 +3076,7 @@
           "count": 12
         }
       ],
-      "marketValue": 3000
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2908,6 +3095,7 @@
       "actions": [
         "Forge"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2918,7 +3106,7 @@
           "count": 16
         }
       ],
-      "marketValue": 2200
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2937,6 +3125,7 @@
       "actions": [
         "Sew"
       ],
+      "roomTag": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2947,7 +3136,7 @@
           "count": 8
         }
       ],
-      "marketValue": 3500
+      "marketValue": 0
     },
     {
       "defType": "FacilityDef",
@@ -2966,13 +3155,14 @@
       "actions": [
         "Meal"
       ],
+      "roomTag": "室内",
       "materialCost": [
         {
           "itemId": "木材",
           "count": 2
         }
       ],
-      "marketValue": 200
+      "marketValue": 0
     }
   ]
 }

@@ -73,6 +73,7 @@ public enum PortraitAction
     RoomGo,
     DevelopmentDoor,
     RoomDemolish,
+    RoomLock,
     NowAvatar,
     NowPage,
     WorldZoomIn,
@@ -433,14 +434,6 @@ public partial class PortraitHubScreen : Control
         // 两端对称，菱形落在画面正中（2026-10-10 主人定）。
         PortraitFrame.FadingRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y - 40f);
 
-        var codex = PortraitLayout.HudCodex;
-        if (PortraitFrame.IsPressed(codex))
-            PortraitFrame.PressMark(this, codex.Grow(-10f));
-        PortraitGlyph.Book(this, codex.GetCenter().X, codex.Position.Y + 31f, 18f, InkStyle.Line);
-        InkDraw.TextBounded(this, new Rect2(codex.Position.X, codex.Position.Y + 54f, codex.Size.X, codex.Size.Y - 54f),
-            "图鉴", PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-        _widgets.Add(new PortraitWidget(codex, PortraitAction.CodexOpen, 0, true, "图鉴"));
-
         var sys = PortraitLayout.HudSystem;
         if (PortraitFrame.IsPressed(sys))
             PortraitFrame.PressMark(this, sys.Grow(-10f));
@@ -678,6 +671,12 @@ public partial class PortraitHubScreen : Control
         if (_push is PushPage.Disc or PushPage.Equip)
         {
             _push = PushPage.Character;
+            return;
+        }
+        // 图鉴从系统页「设置」段进来，返回回到那里。
+        if (_push == PushPage.Codex)
+        {
+            _push = PushPage.System;
             return;
         }
         if (_push == PushPage.Build)

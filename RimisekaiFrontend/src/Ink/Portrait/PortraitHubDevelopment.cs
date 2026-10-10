@@ -116,8 +116,13 @@ public partial class PortraitHubScreen
                 PortraitFrame.Card(this, rect, row.Selected, 22f);
                 if (row.Prefix.Length > 0)
                     PortraitFrame.Tag(this, new Vector2(rect.Position.X + 30f, rect.GetCenter().Y - 33f), row.Prefix, 66f, row.Selected);
-                InkDraw.TextBounded(this, new Rect2(rect.Position.X + 150f, rect.Position.Y, rect.Size.X - 190f, rect.Size.Y), row.Name,
+                // 有缘由时与门行同一套分栏：名字占左 55%，缘由右对齐落在右 40%。
+                var nameWidth = row.Note.Length > 0 ? rect.Size.X * 0.55f : rect.Size.X - 190f;
+                InkDraw.TextBounded(this, new Rect2(rect.Position.X + 150f, rect.Position.Y, nameWidth, rect.Size.Y), row.Name,
                     PortraitLayout.FontBody, PortraitLayout.FontMeta, row.Enabled ? InkStyle.Line : InkStyle.Dim, "lm");
+                if (row.Note.Length > 0)
+                    InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.6f, rect.Position.Y, rect.Size.X * 0.4f - 40f, rect.Size.Y),
+                        row.Note, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
                 _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentAction, index, row.Enabled, row.Name));
             }
             RegisterScroll("development_actions", area, total, visible, _developmentActionFirst,

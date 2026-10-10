@@ -64,8 +64,8 @@ public sealed partial class HubSession
         var room = Room(roomId);
         if (character == null || room == null)
             return;
-        // 私人空间锁着时，除了主人谁都进不去。
-        if (!character.IsMaster && State.Territory.IsLocked(room))
+        // 门锁着、这人进不去（见 Territory.BarsEntry）。
+        if (State.Territory.BarsEntry(room, character))
         {
             Write($"{character.Name}进不了{room.Name}——门锁着。");
             return;

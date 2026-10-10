@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Rimisekai.Housing;
+using Rimisekai.Character;
 
 namespace Rimisekai.Hub;
 
@@ -60,23 +61,25 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 玩家所在这间房是不是私人空间（卧室类）。行动面板据此决定要不要画门锁那个钮。
+    /// 玩家所在这间房是不是自己的房间（摆着主人的床，<see cref="Territory.MasterBedroomId"/>）。门锁只在这间拧得动，
+    /// 界面据此决定要不要画门锁那个钮。
     /// </summary>
-    public bool CurrentRoomIsPrivate() =>
-        Room(PlayerRoomId)?.HasTag(Territory.PrivateTag) == true;
+    public bool CurrentRoomLockable() =>
+        PlayerRoomId >= 0 && PlayerRoomId == State.Territory.MasterBedroomId;
 
     /// <summary>玩家所在这间房此刻锁没锁。</summary>
     public bool CurrentRoomLocked() =>
         Room(PlayerRoomId) is { } room && State.Territory.IsLocked(room);
 
     /// <summary>
-    /// 拧门锁。只能在卧室类房间里操作，且人得在屋里——锁的是"主人自己动手"这件事。
-    /// 三档循环：自动 → 手动锁 → 手动解锁 → 自动。
+    /// 拧门锁。只能在自己的房间里操作，且人得在屋里——锁的是"主人自己动手"这件事。
+    /// 三档循环：自动 → 手动锁 → 手动敞开 → 自动。手动锁只在主人待在屋里时有效：一出门就回到自动
+    /// （见 <see cref="Enter"/>），不会把女仆的床、别人的路长期锁死。
     /// </summary>
     public bool ToggleRoomLock()
     {
         var room = Room(PlayerRoomId);
-        if (room == null || !room.HasTag(Territory.PrivateTag))
+        if (room == null || !CurrentRoomLockable())
             return false;
         room.Lock = room.Lock switch
         {
@@ -84,25 +87,65 @@ public sealed partial class HubSession
             RoomLock.Locked => RoomLock.Unlocked,
             _ => RoomLock.Auto,
         };
-        var locked = State.Territory.IsLocked(room);
-        Write(locked ? $"你把{room.Name}的门锁上了。" : $"你把{room.Name}的门打开了。");
+        Write(room.Lock switch
+        {
+            RoomLock.Locked => $"你把{room.Name}的门锁上了。",
+            RoomLock.Unlocked => $"你把{room.Name}的门敞开了。",
+            _ => $"你把{room.Name}的门带上，人不在时自动上锁。",
+        });
         return true;
     }
+
+    /// <summary>门锁钮上的字：当前这一档。</summary>
+    public string RoomLockLabel() =>
+        Room(PlayerRoomId)?.Lock switch
+        {
+            RoomLock.Locked => "门·锁着",
+            RoomLock.Unlocked => "门·敞开",
+            _ => "门·自动",
+        };
 
     /// <summary>设施名；找不到返回空串。</summary>
     public string FacilityName(int facilityId) =>
         State.Territory.Facilities.Find(f => f.Id == facilityId)?.Name ?? "";
 
+    /// <summary>
+    /// 上一次 <see cref="Use"/> 被人拒在外头的那句话（如被睡在床上的人踢下床）；没被拒是空串。
+    /// 不进日志，界面弹成提示签。
+    /// </summary>
+    public string UseRefusal { get; private set; } = "";
+
     public bool Use(int fixtureId)
     {
+        UseRefusal = "";
         var facility = Fixture(fixtureId);
         if (facility == null || facility.RoomId != PlayerRoomId)
             return false;
+        // 往有人睡着的床上钻：好感不够同床（Intimacy.SharesBed），被人一脚踢下床，人不上床。
+        if (facility.Supports(ActionKind.Sleep) && BedHolderRefusing(facility) is { } holder)
+        {
+            UseRefusal = $"你刚钻进{facility.Name}，就被{holder.Name}一脚踢了下来。";
+            return false;
+        }
         LeaveFixture();
         UsingFixtureId = fixtureId;
         PassTime(CostUse * TerritoryClock.StepMinutes);
         Write($"你在{facility.Name}。");
         return true;
+    }
+
+    /// <summary>睡在这张床上、又不肯和主人同床的人；没有就是 null。</summary>
+    private CharacterState? BedHolderRefusing(Facility bed)
+    {
+        foreach (var worker in Day.Workers)
+        {
+            if (worker.FacilityId != bed.Id || worker.Goal != ActionKind.Sleep || worker.Path.Count > 0)
+                continue;
+            var who = State.Roster.Find(worker.CharacterId);
+            if (who != null && !who.IsMaster && !Intimacy.SharesBed(who))
+                return who;
+        }
+        return null;
     }
 
     /// <summary>

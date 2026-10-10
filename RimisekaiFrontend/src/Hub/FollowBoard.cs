@@ -15,8 +15,8 @@ namespace Rimisekai.Hub;
 /// </summary>
 public sealed partial class HubSession
 {
-    /// <summary>同床的好感门槛。比亲吻（600）更高：一起过夜是更亲近的事。</summary>
-    public const int FavorCoSleep = 800;
+    /// <summary>同床的好感门槛（见 <see cref="Intimacy.ShareBed"/>）。</summary>
+    public const int FavorCoSleep = Intimacy.ShareBed;
 
     /// <summary>退出跟随：收掉当前活动，人回自己的日子。日志由调用方写。</summary>
     private void EndFollow(Worker worker)

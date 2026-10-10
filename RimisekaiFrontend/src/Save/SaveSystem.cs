@@ -53,6 +53,11 @@ public sealed class MemberData
     public int LastBoredDay { get; set; } = -1;
     public int IntimateDay { get; set; } = -1;
     public int[] IntimateRewards { get; set; } = new int[4];
+    public int IgnoredChatDay { get; set; } = -1;
+    public int IgnoredChatTaken { get; set; }
+
+    /// <summary>还在作用期内的地铺夜（日子）。</summary>
+    public List<int> FloorNights { get; set; } = new();
     public Dictionary<int, int> Flags { get; set; } = new();
     public Dictionary<int, int> Base { get; set; } = new();
     public Dictionary<int, int> MaxBase { get; set; } = new();
@@ -93,6 +98,9 @@ public sealed class RoomData
 
     /// <summary>开拓出来的空房（可被已建房间安装顶替）。</summary>
     public bool Vacant { get; set; }
+
+    /// <summary>对口工作（进度加成）。</summary>
+    public List<ActionKind> BonusActions { get; set; } = new();
 }
 
 public sealed class FacilityData
@@ -132,6 +140,9 @@ public sealed class FacilityData
 
     /// <summary>是不是桌子。</summary>
     public bool IsTable { get; set; }
+
+    /// <summary>房间标签要求（室内/室外/空串）。</summary>
+    public string RoomTag { get; set; } = "";
 }
 
 public sealed class RecipeData
@@ -173,6 +184,9 @@ public sealed class TerritoryData
 
     /// <summary>开拓过几格空地（定价按它每级涨 20%）。</summary>
     public int VacantDevelopCount { get; set; }
+
+    /// <summary>主人的床（设施 Id，-1 = 没有）。</summary>
+    public int MasterBedId { get; set; } = -1;
 
     public List<RoomData> Rooms { get; set; } = new();
     public List<FacilityData> Facilities { get; set; } = new();
@@ -315,6 +329,7 @@ public static class SaveSystem
         t.UnlockedRegions = hub?.TerritoryUnlockedRegions ?? state.Territory.UnlockedRegions;
         t.UnlockedRegionMask = state.Territory.UnlockedRegionMask;
         t.VacantDevelopCount = state.Territory.VacantDevelopCount;
+        t.MasterBedId = state.Territory.MasterBedId;
         // 兴趣点的房间是进场时按种子现生成的临时房，不进存档（读档即人在据点）。
         foreach (var r in state.Territory.Rooms)
         {
@@ -331,6 +346,7 @@ public static class SaveSystem
                 Tags = new List<string>(r.Tags),
                 Illustration = r.Illustration,
                 Vacant = r.Vacant,
+                BonusActions = new List<ActionKind>(r.BonusActions),
             });
         }
         foreach (var f in state.Territory.Facilities)
@@ -349,6 +365,7 @@ public static class SaveSystem
                 Contents = new Dictionary<string, int>(f.Contents.Items),
                 Actions = new List<ActionKind>(f.Actions),
                 IsTable = f.IsTable,
+                RoomTag = f.RoomTag,
             });
         }
         foreach (var r in state.Territory.Recipes)
@@ -454,6 +471,9 @@ public static class SaveSystem
         LastBoredDay = c.Affect.LastBoredDay,
         IntimateDay = c.Affect.IntimateDay,
         IntimateRewards = (int[])c.Affect.IntimateRewards.Clone(),
+        IgnoredChatDay = c.Affect.IgnoredChatDay,
+        IgnoredChatTaken = c.Affect.IgnoredChatTaken,
+        FloorNights = new List<int>(c.Affect.FloorNights),
         Flags = new Dictionary<int, int>(c.Flags),
         Base = new Dictionary<int, int>(c.Base),
         MaxBase = new Dictionary<int, int>(c.MaxBase),
@@ -483,6 +503,7 @@ public static class SaveSystem
         state.Territory.SetUnlockedRegions(data.Territory.UnlockedRegions);
         state.Territory.SetUnlockedRegionMask(data.Territory.UnlockedRegionMask);
         state.Territory.VacantDevelopCount = data.Territory.VacantDevelopCount;
+        state.Territory.MasterBedId = data.Territory.MasterBedId;
         foreach (var r in data.Territory.Rooms)
         {
             var room = new Room
@@ -496,6 +517,8 @@ public static class SaveSystem
             };
             foreach (var cost in r.Materials)
                 room.MaterialCost.Add(new RecipeCost(cost.ItemId, cost.Count));
+            foreach (var action in r.BonusActions)
+                room.BonusActions.Add(action);
             if (r.Tags != null)
             {
                 foreach (var tag in r.Tags)
@@ -518,6 +541,7 @@ public static class SaveSystem
                 Built = f.Built, BuildCost = f.BuildCost, EffectId = f.EffectId,
                 Buildable = f.Buildable, CanStore = f.Storage,
                 IsTable = f.IsTable,
+                RoomTag = f.RoomTag,
             };
             if (f.Actions != null)
             {
@@ -631,6 +655,9 @@ public static class SaveSystem
         c.Affect.LastPlayDay = m.LastPlayDay;
         c.Affect.LastBoredDay = m.LastBoredDay;
         c.Affect.IntimateDay = m.IntimateDay;
+        c.Affect.IgnoredChatDay = m.IgnoredChatDay;
+        c.Affect.IgnoredChatTaken = m.IgnoredChatTaken;
+        c.Affect.FloorNights.AddRange(m.FloorNights);
         if (m.IntimateRewards.Length == 4)
             m.IntimateRewards.CopyTo(c.Affect.IntimateRewards, 0);
         foreach (var pair in m.VoiceSaidAt)

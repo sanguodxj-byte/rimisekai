@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Godot;
+using Rimisekai.Character;
 using Rimisekai.Combat;
 using Rimisekai.Defs;
 using Rimisekai.Housing;
@@ -120,6 +121,7 @@ public partial class PortraitCapture
             Shoot("fixture_actions", _root.HubScreen);
             _root.HubScreen.ShowTab(0);
         });
+        EnqueueBedKickout();
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -279,6 +281,10 @@ public partial class PortraitCapture
             Require(hub.State.Territory.RoomAt(hub.RegionId, _developmentProbeX, _developmentProbeY)?.Id == _developmentProbeRoom,
                 "development installs selected built room into vacant cell");
             Shoot("development_installed", _root.HubScreen);
+        });
+        EnqueueIndoorOnlyRow();
+        _steps.Enqueue(() =>
+        {
             _root.ModalLayer.Show(InkModalFactory.CreateQuestion("标题", "正文",
                 new[] { ("first", "选项一"), ("second", "选项二") }, id => _modalChoices = id == "second" ? 2 : 1));
         });
@@ -360,6 +366,125 @@ public partial class PortraitCapture
     }
 
     private string _sortedTop = "";
+    private int _kickBed = -1;
+    private int _kickFrom = -1;
+
+    /// <summary>
+    /// 被踢下床：女仆睡在卧室她自己那张床上（好感不够同床），玩家点那张床——不上床，底部弹提示签。
+    /// </summary>
+    private void EnqueueBedKickout()
+    {
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            var territory = hub.State.Territory;
+            var bedroom = territory.Facilities.First(f => f.Id == territory.MasterBedId).RoomId;
+            var maid = hub.State.Roster.Members.First(m => !m.IsMaster && m.IsMaid());
+            Require(!Intimacy.SharesBed(maid), "kick-out fixture: maid below the share-bed tier");
+            hub.State.Roster.Master!.Bag.Add("木材", 10);
+            Require(hub.BuildFacilityDef(DefDatabase<FacilityDef>.GetNamed("床").Id, bedroom), "kick-out fixture: maid bed built");
+            _kickBed = territory.Facilities[^1].Id;
+            var worker = hub.Day.Track(maid.Id, bedroom);
+            hub.Day.EndRoutineOf(maid.Id);
+            worker.RoomId = bedroom;
+            worker.FacilityId = _kickBed;
+            worker.Goal = ActionKind.Sleep;
+            worker.Phase = WorkPhase.Working;
+            _kickFrom = hub.PlayerRoomId;
+            hub.Enter(bedroom);
+            _root.HubScreen.ShowTab(0);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() => ClickHub(PortraitAction.Fixture, _kickBed));
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.UsingFixtureId != _kickBed, "kicked-out player is not placed in the bed");
+            Require(hub.UseRefusal.Contains("踢") && screen.DebugNotice == hub.UseRefusal, "kick-out shows as a toast");
+            Require(!hub.Log.Any(e => e.Text == hub.UseRefusal), "kick-out toast is not also logged");
+            Shoot("bed_kickout", screen);
+            hub.Day.EndRoutineOf(hub.State.Roster.Members.First(m => !m.IsMaster && m.IsMaid()).Id);
+            screen.ShowTab(0);
+        });
+        EnqueueRoomLock();
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugHub.Enter(_kickFrom); // 回到摆满设施的那间，后面的开发探针按它来
+            _root.HubScreen.ShowTab(0);
+        });
+    }
+
+    /// <summary>
+    /// 建造页选中庭院（室外）：「床」那行灰着，行尾写「只能摆在室内」。
+    /// 操作列表很长，逐格往上拖到「床」那行露出来再拍。
+    /// </summary>
+    private void EnqueueIndoorOnlyRow()
+    {
+        _steps.Enqueue(() =>
+        {
+            var cell = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == "庭院");
+            ClickHub(cell.Action, cell.Index);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.DevelopmentTab, 0));
+        for (var i = 0; i < 40; i++)
+            _steps.Enqueue(() =>
+            {
+                if (BedRow() != null)
+                    return;
+                var area = new Rect2(0, PortraitLayout.DevelopmentListTop, PortraitLayout.CanvasWidth,
+                    PortraitLayout.DevelopmentRows * PortraitLayout.SheetRowStep);
+                var from = new Vector2(area.GetCenter().X, area.End.Y - 8f);
+                var to = from - new Vector2(0, PortraitLayout.SheetRowStep * 3);
+                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = from });
+                _root.HubScreen._GuiInput(new InputEventMouseMotion { Position = to, ButtonMask = MouseButtonMask.Left });
+                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = to });
+                _root.HubScreen.QueueRedraw();
+            });
+        _steps.Enqueue(() =>
+        {
+            var bed = BedRow();
+            Require(bed is { Enabled: false }, "bed row is greyed out in the courtyard");
+            Shoot("development_indoor_only", _root.HubScreen);
+        });
+    }
+
+    private PortraitWidget? BedRow() =>
+        _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.DevelopmentAction && w.Label == "床")
+            .Cast<PortraitWidget?>().FirstOrDefault();
+
+    /// <summary>自己的房间（主人的床那间）的抽屉：左钮是门锁，点一下换一档，标签与提示签跟着变。</summary>
+    private void EnqueueRoomLock()
+    {
+        _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.CurrentRoomLockable(), "room lock fixture: player stands in own bedroom");
+            Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomLock && w.Label == "门·自动" && w.Enabled),
+                "own room sheet shows the door lock in place of demolish");
+            Require(!screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomDemolish), "lock replaces demolish");
+            ClickHub(PortraitAction.RoomLock, hub.PlayerRoomId);
+        });
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId).Lock == RoomLock.Locked, "lock click locks the door");
+            Require(screen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomLock && w.Label == "门·锁着"), "lock label follows state");
+            Require(screen.DebugNotice.StartsWith("门锁上了"), "lock shows a toast");
+            Shoot("room_lock", screen);
+            ClickHub(PortraitAction.RoomLock, hub.PlayerRoomId);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.RoomLock, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.State.Territory.Rooms.First(r => r.Id == hub.PlayerRoomId).Lock == RoomLock.Auto, "lock cycles back to auto");
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        });
+    }
 
     private void ClickHub(PortraitAction action, int index)
     {

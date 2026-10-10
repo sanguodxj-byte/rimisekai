@@ -12,7 +12,7 @@
       "defType": "AreaFacilityDef",
       "facilityDefName": "躺椅",
       "id": 2,
-      "roomId": 1,
+      "roomId": 3,
       "contents": {}
     },
     {
@@ -27,7 +27,8 @@
       "facilityDefName": "床",
       "id": 5,
       "roomId": 3,
-      "contents": {}
+      "contents": {},
+      "masterBed": true
     },
     {
       "defType": "AreaFacilityDef",
@@ -54,7 +55,7 @@
       "defType": "AreaFacilityDef",
       "facilityDefName": "箱子",
       "id": 8,
-      "roomId": 3,
+      "roomId": 2,
       "contents": {
         "木材": 10,
         "石材": 10,
@@ -79,7 +80,7 @@
       "defType": "RoomDef",
       "defName": "庭院",
       "label": "",
-      "description": "青石板路的中央立着一口带木篷的水井，回廊尖拱下放着歇脚的躺椅，石墙上的铁壁灯照亮了四周。",
+      "description": "青石板路的中央立着一口带木篷的水井，回廊尖拱下靠着几只汲水的木桶，石墙上的铁壁灯照亮了四周。",
       "id": 1,
       "minTerritoryLevel": 1,
       "regionId": 0,
@@ -93,13 +94,15 @@
       "tags": [
         "室外"
       ],
-      "materialCost": []
+      "materialCost": [],
+      "bundledFacility": "",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
       "defName": "客厅",
       "label": "",
-      "description": "石砌壁炉里的余炭泛着微光，几张结实的橡木长桌整齐排开，空气中弥漫着麦酒与陈木的气息。",
+      "description": "石砌壁炉里的余炭泛着微光，几张结实的橡木长桌整齐排开，空气中弥漫着麦酒与陈木的气息，墙角搁着一口包铁木箱。",
       "id": 2,
       "minTerritoryLevel": 1,
       "regionId": 0,
@@ -119,13 +122,15 @@
           "itemId": "木材",
           "count": 10
         }
-      ]
+      ],
+      "bundledFacility": "餐桌",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
       "defName": "卧室",
       "label": "",
-      "description": "尖拱石窗前放着厚重的橡木书桌，四柱木床上的被褥整理得十分平整，床尾摆着一口包铁木箱。",
+      "description": "尖拱石窗前放着厚重的橡木书桌，四柱木床上的被褥整理得十分平整，窗边还摆着一张晒太阳的躺椅。",
       "id": 3,
       "minTerritoryLevel": 1,
       "regionId": 0,
@@ -146,7 +151,9 @@
           "itemId": "木材",
           "count": 10
         }
-      ]
+      ],
+      "bundledFacility": "床",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -167,7 +174,9 @@
         "室外",
         "工作间"
       ],
-      "materialCost": []
+      "materialCost": [],
+      "bundledFacility": "",
+      "bonusActions": []
     },
     {
       "defType": "RoomDef",
@@ -188,7 +197,9 @@
         "室外",
         "工作间"
       ],
-      "materialCost": []
+      "materialCost": [],
+      "bundledFacility": "",
+      "bonusActions": []
     }
   ]
 }

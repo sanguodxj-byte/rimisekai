@@ -504,16 +504,19 @@ public static class InkPageBuilder
             });
         }
         // 建造设施：直接建进当前选中的房间（没选房间、或房里已摆满 Room.MaxFacilities 件就点不动）。
+        // 家具只能摆室内、田地圈舍只能建室外：不合的那行灰掉，行尾写明缘由。
         var roomHasSlot = pickedRoom != null && territory.HasFacilitySlot(pickedRoom.Id);
         foreach (var def in DefDatabase<FacilityDef>.All)
         {
             if (!def.Buildable)
                 continue;
+            var fits = pickedRoom == null || Territory.Fits(pickedRoom, def.RoomTag);
             actions.Add(new InkDevActionRow
             {
                 Name = def.Name, Prefix = "设",
                 Action = InkAction.DevBuildFacility, Index = def.Id,
-                Enabled = roomHasSlot && territory.CanPayWith(payer, def.MaterialCost),
+                Enabled = roomHasSlot && fits && territory.CanPayWith(payer, def.MaterialCost),
+                Note = fits ? "" : Territory.FitReason(def.RoomTag),
             });
         }
         // 建成却还没安装的设施（老存档可能留下）：选中房间后可以直接安置。
@@ -521,11 +524,13 @@ public static class InkPageBuilder
         {
             if (f.RoomId >= 0)
                 continue;
+            var fits = pickedRoom == null || Territory.Fits(pickedRoom, f.RoomTag);
             actions.Add(new InkDevActionRow
             {
                 Name = f.Name, Prefix = "安",
                 Action = InkAction.DevPlaceFacility, Index = f.Id,
-                Enabled = roomHasSlot,
+                Enabled = roomHasSlot && fits,
+                Note = fits ? "" : Territory.FitReason(f.RoomTag),
             });
         }
 

@@ -123,9 +123,11 @@ public sealed class PersonalityTraitTests
         Assert.True(Traits.WorkProgressPercent(With(Trait.Defiant), ActionKind.Mine, 12) < 100);
         Assert.True(With(Trait.Defiant).TalkDifficulty() > With().TalkDifficulty());
 
-        // 怕痛拒重活。
-        Assert.False(With(Trait.FearPain).WillWork(hardLabor: true));
-        Assert.True(With(Trait.FearPain).WillWork(hardLabor: false));
+        // 怕痛不拒重活，只是重活慢、干着扣心情；轻活不受影响。
+        Assert.True(Traits.WorkProgressPercent(With(Trait.FearPain), ActionKind.Mine, 12) < 100);
+        Assert.Equal(100, Traits.WorkProgressPercent(With(Trait.FearPain), ActionKind.Cook, 12));
+        Assert.Equal(1, With(Trait.FearPain).HardLaborMoodPenalty(ActionKind.Mine));
+        Assert.Equal(0, With(Trait.FearPain).HardLaborMoodPenalty(ActionKind.Cook));
 
         // 工匠手艺 +10、炼金 +15。
         Assert.True(Traits.WorkProgressPercent(With(Trait.Artisan), ActionKind.Forge, 12) > 100);

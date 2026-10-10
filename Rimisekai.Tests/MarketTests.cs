@@ -60,9 +60,10 @@ public sealed class MarketTests
         Assert.Equal(6 * 60, afterFirst);
 
         var money = state.Money;
+        var price = hub.TradePrices(state.Territory.Listing("干粮")!.Value, selling: false);
         Assert.True(hub.MarketTrade("干粮", 1, selling: false));
         Assert.Equal(afterFirst, state.Clock.Minutes);
-        Assert.Equal(money - state.Territory.Listing("干粮")!.Value.BuyPrice, state.Money);
+        Assert.Equal(money - price, state.Money);
     }
 
     [Fact]

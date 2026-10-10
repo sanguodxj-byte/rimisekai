@@ -385,7 +385,9 @@ public sealed class ArchitectureTests
         var day = new TerritoryClock();
         day.Track(lazy.Id, 1);
         day.Step(t, roster, 0);
-        Assert.Equal(WorkPhase.Idle, day.Workers[0].Phase);
+        // 懒散照样下矿（不拒干），只是重活进度打折。
+        Assert.Equal(WorkPhase.Working, day.Workers[0].Phase);
+        Assert.True(Traits.WorkProgressPercent(lazy, ActionKind.Mine, 12) < 100);
 
         var state = new GameState();
         state.Roster.Add("你", master: true);
@@ -1246,46 +1248,49 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
-    public void Sleep_needs_a_bed_and_never_happens_on_the_floor()
+    public void No_bed_means_a_floor_in_an_indoor_room_and_never_outdoors()
     {
-        GameState Setup(bool withBed)
+        GameState Setup(bool withBed, string tag)
         {
             var state = new GameState();
             state.Roster.Add("你", master: true);
-            var worker = state.Roster.Add("工");
-            state.Territory.AddRoom(new Room { Id = 1, Name = "房", Open = true });
+            state.Roster.Add("工");
+            var room = new Room { Id = 1, Name = "房", Open = true };
+            room.AddTag(tag);
+            state.Territory.AddRoom(room);
             // 躺椅只能休息，不能睡。
             var chair = new Facility { Id = 1, Name = "躺椅", RoomId = 1, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Rest } };
-            chair.Actions.Add(ActionKind.Rest);
             state.Territory.AddFacility(chair);
             if (withBed)
             {
                 var bed = new Facility { Id = 2, Name = "床", RoomId = 1, Usage = FacilityUsage.Rest, Built = true, Actions = { ActionKind.Sleep, ActionKind.Rest } };
-                bed.Actions.Add(ActionKind.Sleep);
                 state.Territory.AddFacility(bed);
             }
             state.Clock.SetTime(1, 23 * 60);   // 深夜，本该睡
             return state;
         }
 
-        // 没有床：不许在房间里凭空睡。
-        var noBed = Setup(withBed: false);
-        var hub1 = new HubSession(noBed);
-        hub1.Enter(1);
-        var w1 = noBed.Roster.Members.Find(c => !c.IsMaster)!;
-        hub1.Place(w1.Id, 1);
-        hub1.PassTime(30);
-        Assert.NotEqual(ActionKind.Sleep, hub1.Day.Workers[0].Goal);
+        Worker Night(GameState state)
+        {
+            var hub = new HubSession(state);
+            hub.Enter(1);
+            hub.Place(state.Roster.Members.Find(c => !c.IsMaster)!.Id, 1);
+            hub.PassTime(30);
+            return hub.Day.Workers[0];
+        }
+
+        // 室内没有床：打地铺（不占任何设施）。
+        var floor = Night(Setup(withBed: false, Territory.IndoorTag));
+        Assert.Equal(ActionKind.Sleep, floor.Goal);
+        Assert.Equal(-1, floor.FacilityId);
+
+        // 只有室外：不在露天睡。
+        Assert.NotEqual(ActionKind.Sleep, Night(Setup(withBed: false, Territory.OutdoorTag)).Goal);
 
         // 有床：到床上睡，并占用那张床。
-        var withBed = Setup(withBed: true);
-        var hub2 = new HubSession(withBed);
-        hub2.Enter(1);
-        var w2 = withBed.Roster.Members.Find(c => !c.IsMaster)!;
-        hub2.Place(w2.Id, 1);
-        hub2.PassTime(30);
-        Assert.Equal(ActionKind.Sleep, hub2.Day.Workers[0].Goal);
-        Assert.Equal(2, hub2.Day.Workers[0].FacilityId);
+        var bedded = Night(Setup(withBed: true, Territory.IndoorTag));
+        Assert.Equal(ActionKind.Sleep, bedded.Goal);
+        Assert.Equal(2, bedded.FacilityId);
     }
 
     [Fact]
@@ -1772,7 +1777,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         var vacant = new Room { Id = 2, Name = "空房", X = 3, Y = 3, Open = true, Vacant = true };
         state.Territory.AddRoom(vacant);
-        var roomDef = new RoomDef { Id = 101, Name = "测试菜园", Buildable = true };
+        var roomDef = new RoomDef { Id = 101, Name = "测试菜园", Buildable = true, BundledFacility = "测试菜地" };
         roomDef.MaterialCost.Add(new RecipeCost("木材", 3));
         var facilityDef = new FacilityDef
         {
@@ -1797,11 +1802,15 @@ public sealed class ArchitectureTests
         Assert.True(added.Open);
         Assert.True(added.Buildable);
         Assert.Null(state.Territory.Room(vacant.Id)); // 空房被顶替掉
+        // 房间建成白送一件对口设施，不另扣料。
+        var bundled = Assert.Single(state.Territory.Facilities);
+        Assert.Equal(added.Id, bundled.RoomId);
+        Assert.True(bundled.Supports(ActionKind.Till));
+        Assert.Equal("小麦", bundled.YieldItemId);
 
         Assert.True(hub.BuildFacilityDef(1001, added.Id));
         Assert.Equal(0, state.Roster.Master!.Bag.Get("木材"));
-        Assert.True(state.Territory.Facilities[0].Supports(ActionKind.Till));
-        Assert.Equal("小麦", state.Territory.Facilities[0].YieldItemId);
+        Assert.Equal(2, state.Territory.Facilities.Count(f => f.RoomId == added.Id));
         Assert.False(hub.BuildFacilityDef(1001, added.Id));
     }
 
@@ -1996,9 +2005,13 @@ public sealed class ArchitectureTests
         state.Clock.SetTime(1, 22 * 60);
         Assert.True(hub.ActAtFixture(ActionKind.Sleep));
         Assert.False(hub.ActAtFixture(ActionKind.Meal));
+        // 没床的人打地铺、锁着门：等都起了再过去。
+        while (hub.Day.Workers.Any(w => w.Goal == ActionKind.Sleep))
+            hub.PassTime(10);
 
         Assert.True(hub.Move(2));
         Assert.Equal(-1, hub.SelectedCharacterId);
+        hub.Place(stranger.Id, 2); // 一夜过去他可能走开了（找人说话），叫回乙屋
         Assert.True(hub.Select(stranger.Id));
         Assert.True(hub.Social(SocialAction.Talk));
         hub.CloseOverlay();
@@ -2313,9 +2326,10 @@ public sealed class ArchitectureTests
         state.Territory.Link(2, 3);
         state.Territory.Link(3, 4);
 
-        // 库房摆货架存料：小麦 2 份，水 2 份
+        // 库房摆货架存料：炖菜的肉、洋葱、水各 2 份
         var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, CanStore = true, Built = true };
-        shelf.Contents.Add("小麦", 2);
+        shelf.Contents.Add("肉", 2);
+        shelf.Contents.Add("洋葱", 2);
         shelf.Contents.Add("水", 2);
         state.Territory.AddFacility(shelf);
 
@@ -2358,7 +2372,7 @@ public sealed class ArchitectureTests
         Assert.Equal(shelf.Id, worker.HaulSourceId);
         Assert.Equal(stove.Id, worker.HaulTargetId);
         Assert.Equal(2, worker.RoomId); // 此时刚走到中途庭院(2)
-        Assert.Equal(2, shelf.Contents.Get("小麦")); // 尚未抵达库房，货架原料绝无隔空被扣！
+        Assert.Equal(2, shelf.Contents.Get("肉")); // 尚未抵达库房，货架原料绝无隔空被扣！
 
         // 推进到厨师走回厨房、完成炖菜烹饪并端到餐厅餐桌
         for (var i = 0; i < 40; i++)
@@ -2367,10 +2381,9 @@ public sealed class ArchitectureTests
             if (table.Contents.Get("stew") > 0)
                 break;
         }
-
         // 炖菜已被成功端到餐桌上储存，库房材料被消耗，整个过程物理流转无瞬移！
         Assert.True(table.Contents.Get("stew") > 0);
-        Assert.True(shelf.Contents.Get("小麦") < 2);
+        Assert.True(shelf.Contents.Get("肉") < 2);
 
         // 2. 推进到午餐时间（12:00 = 720 分钟），食客坐在餐桌旁优雅享用炖菜
         state.Clock.Advance(12 * 60 - state.Clock.Minutes);

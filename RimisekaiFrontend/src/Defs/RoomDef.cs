@@ -43,6 +43,12 @@ public sealed class RoomDef : Def, IIdentifiedDef
     /// <summary>房间细分标签（至少 1 个，无上限，如室内/室外/工作间/娱乐室/卧室）。</summary>
     public List<string> Tags { get; init; } = new();
 
+    /// <summary>建成时白送的一件设施（FacilityDef 的 DefName）。占房里的设施位，与自己建的一样算数。</summary>
+    public string BundledFacility { get; init; } = "";
+
+    /// <summary>对口的工作：在这间房里干这些活，进度快 <see cref="Territory.RoomBonusPercent"/>%。</summary>
+    public List<ActionKind> BonusActions { get; init; } = new();
+
     public Room ToRuntime()
     {
         var room = new Room
@@ -59,6 +65,8 @@ public sealed class RoomDef : Def, IIdentifiedDef
             Illustration = Illustration,
         };
         room.MaterialCost.AddRange(MaterialCost);
+        foreach (var action in BonusActions)
+            room.BonusActions.Add(action);
         foreach (var tag in Tags)
             room.AddTag(tag);
         room.EnsureDefaultTag();

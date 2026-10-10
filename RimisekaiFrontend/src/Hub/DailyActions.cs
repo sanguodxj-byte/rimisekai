@@ -97,7 +97,9 @@ public sealed partial class HubSession
                     }
                 }
             }
-            minutes = ActionKindMap.Ticks(action) * TerritoryClock.StepMinutes;
+            // 对口的房间里干得快：耗时按进度倍率折短，取整到一格时间。
+            var ticks = ActionKindMap.Ticks(action) * 100 / State.Territory.RoomWorkPercent(fixture.RoomId, action);
+            minutes = System.Math.Max(1, ticks) * TerritoryClock.StepMinutes;
             // 恶劣天气露天作业：同样的活耗时加倍。
             if (WorldEffects.IsSevere(State.Weather)
                 && WorldEffects.OutdoorRoom(State.Territory, fixture.RoomId))
@@ -151,12 +153,16 @@ public sealed partial class HubSession
         }
 
         var master = State.Roster.Master;
-        // 睡下的主人把门带上；一醒过来做别的事，门就还回去（下一次行动不再是睡）。
+        // 睡下的主人把门带上（自己的房间自动锁上）；醒来即还回去。
         State.Territory.MasterAsleep = action == ActionKind.Sleep;
         if (action == ActionKind.Sleep)
+        {
+            State.Territory.MasterBedId = fixture.Id; // 主人睡在哪张，哪张就是主人的床
             CoSleep(fixture); // 先安排同床/守候，再让一夜过去
+        }
         PassTime(sleepMinutes > 0 ? sleepMinutes
             : minutes > 0 ? minutes : FacilityActionTicks * TerritoryClock.StepMinutes);
+        State.Territory.MasterAsleep = false; // 一觉醒来门就还回去
         switch (action)
         {
             case ActionKind.Sleep:

@@ -273,11 +273,19 @@ public sealed class TerritoryClock
                     continue;
                 }
                 if (worker.Task != task || worker.FacilityId != assignment.FacilityId)
-                    Retarget(territory, worker, task, assignment.FacilityId, used);
+                    Retarget(territory, worker, character, task, assignment.FacilityId, used);
             }
             // 干活时 Goal 就是那件具体的活（原 Assigned 语义）。
             worker.Goal = worker.Task;
-            if (worker.Phase == WorkPhase.Moving && worker.Path.Count > 0)
+            if (worker.Phase == WorkPhase.Moving && worker.Path.Count > 0
+                && territory.Rooms.Find(r => r.Id == worker.Path.Peek()) is { } door && territory.BarsEntry(door, character))
+            {
+                // 路上那间房锁上了：走不过去，就地停下。
+                worker.Path.Clear();
+                worker.Phase = WorkPhase.Idle;
+                ctx?.Narrate(character, $"{character.Name}被关在{door.Name}门外。");
+            }
+            else if (worker.Phase == WorkPhase.Moving && worker.Path.Count > 0)
             {
                 worker.RoomId = worker.Path.Dequeue();
                 if (ctx != null)
@@ -301,6 +309,8 @@ public sealed class TerritoryClock
                 tick = System.Math.Max(1, tick * Traits.WorkProgressPercent(character, worker.Task, ctx == null ? 12 : ctx.NowTotal / 60 % 24) / 100);
                 // 技能决定手快慢：同一个人干对口的活更快，干不对口的更慢。
                 tick = System.Math.Max(1, tick * ActionKindMap.SpeedPercent(character, worker.Task) / 100);
+                // 对口的房间（铁匠铺里锻造、木工房里木作……）手更快。
+                tick = tick * territory.RoomWorkPercent(facility.RoomId, worker.Task) / 100;
                 // 恶劣天气露天作业：耗时加倍，效率减半（产量不变）。
                 if (ctx != null && WorldEffects.IsSevere(ctx.Weather)
                     && WorldEffects.OutdoorRoom(territory, facility.RoomId))
@@ -323,7 +333,48 @@ public sealed class TerritoryClock
             if (ctx != null)
                 ctx.Narrate(character, Describe(character, worker, territory, ctx));
         }
+        if (ctx != null)
+            LockSleepersRooms(territory, roster, ctx);
         return logs;
+    }
+
+    /// <summary>
+    /// 睡下锁门：除女仆外，人在床上睡着了就反锁所在的房间——醒着的旁人请出门外（挪到隔壁进得去的房间，
+    /// 没有就留在原地），锁着的门别人进不来（见 <see cref="Territory.BarsEntry"/>），睡醒起床门就开。
+    /// 同屋已经睡着的人不叫醒、不赶。主人一样被请出、一样进不来（主人那一份由会话在推进时间后结算），
+    /// 只有肯与主人同床的人锁门不拦主人。
+    /// </summary>
+    private void LockSleepersRooms(Territory territory, Roster roster, StepContext ctx)
+    {
+        territory.SleeperLocks.Clear();
+        foreach (var sleeper in _workers)
+        {
+            if (sleeper.Goal != ActionKind.Sleep || sleeper.Path.Count > 0 || sleeper.CharacterId == ctx.MasterId)
+                continue;
+            var who = roster.Find(sleeper.CharacterId);
+            var bed = territory.Facilities.Find(f => f.Id == sleeper.FacilityId);
+            if (who == null || !who.LocksDoorAsleep() || bed == null || bed.RoomId != sleeper.RoomId)
+                continue;
+            territory.SleeperLocks.TryAdd(bed.RoomId, new Territory.SleeperLock(who.Id, Intimacy.SharesBed(who)));
+        }
+        foreach (var (roomId, sleeperLock) in territory.SleeperLocks)
+        {
+            var room = territory.Rooms.Find(r => r.Id == roomId)!;
+            foreach (var other in _workers)
+            {
+                if (other.RoomId != roomId || other.CharacterId == ctx.MasterId || other.Goal == ActionKind.Sleep)
+                    continue;
+                var evicted = roster.Find(other.CharacterId);
+                if (evicted == null)
+                    continue;
+                var outside = territory.DoorOut(room, evicted);
+                if (outside == null)
+                    continue;
+                EndRoutine(other);
+                other.RoomId = outside.Id;
+                ctx.Narrate(evicted, $"{roster.Find(sleeperLock.SleeperId)!.Name}锁门睡下，{evicted.Name}被请出了{room.Name}。");
+            }
+        }
     }
 
     /// <summary>
@@ -416,8 +467,7 @@ public sealed class TerritoryClock
             {
                 if (!facility.Supports(task))
                     continue;
-                if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(task)!.Value))
-                    || !character.Affect.AcceptsWork())
+                if (!character.Affect.AcceptsWork())
                     return ActionKind.None;
                 if (task == ActionKind.Till
                     && territory.PlotState(facility, season, character)
@@ -455,7 +505,7 @@ public sealed class TerritoryClock
     /// 换活：到排班点名的那件设施去（排班是「某时段到某件设施去」，不是「找任意一件同类设施」）。
     /// 那件设施坐满了就原地待命，下一格再试。
     /// </summary>
-    private void Retarget(Territory territory, Worker worker, ActionKind task, int facilityId, Dictionary<int, int> used)
+    private void Retarget(Territory territory, Worker worker, CharacterState character, ActionKind task, int facilityId, Dictionary<int, int> used)
     {
         Release(worker, used);
         worker.Task = task;
@@ -473,7 +523,7 @@ public sealed class TerritoryClock
             Sit(territory, worker, used);
         else
         {
-            foreach (var step in Route(territory, worker.RoomId, facility.RoomId))
+            foreach (var step in territory.Route(worker.RoomId, facility.RoomId, barred: r => territory.BarsEntry(r, character)))
                 worker.Path.Enqueue(step);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         }
@@ -581,15 +631,13 @@ public sealed class TerritoryClock
         worker.Phase = WorkPhase.Idle;
     }
 
-    private static List<int> Route(Territory territory, int fromRoom, int toRoom, Func<Room, bool>? passable = null) =>
-        territory.Route(fromRoom, toRoom, passable);
-
     private void UpdateRoutine(CharacterState character, Worker worker, Territory territory, Roster roster, SlotAssignment assignment, StepContext ctx, Dictionary<int, int> used)
     {
         DriftMood(character, worker, ctx);
         GrowDesire(character, ctx);
         TrackTogether(character, worker, roster, ctx);
-        if (ctx.Day != character.Affect.LastBoredDay && ctx.Day - character.Affect.LastPlayDay > 2)
+        // 无聊只记 NPC：主人的消遣由玩家亲手安排，自动节律里没有主人去消遣的分支，记了只会越扣越低。
+        if (!character.IsMaster && ctx.Day != character.Affect.LastBoredDay && ctx.Day - character.Affect.LastPlayDay > 2)
         {
             character.Affect.LastBoredDay = ctx.Day;
             character.Affect.AddMood(-5);
@@ -675,7 +723,7 @@ public sealed class TerritoryClock
                 if (StartFetchForBench(character, worker, territory, ctx, ActionKind.Cook, stove))
                     return;
                 if (worker.Task != ActionKind.Cook || worker.FacilityId != stove.Id)
-                    Retarget(territory, worker, ActionKind.Cook, stove.Id, used);
+                    Retarget(territory, worker, character, ActionKind.Cook, stove.Id, used);
                 worker.Goal = ActionKind.Cook;
                 return;
             }
@@ -690,7 +738,7 @@ public sealed class TerritoryClock
             if (StartFetchForBench(character, worker, territory, ctx, work, bench))
                 return;
             if (worker.Task != work || worker.FacilityId != bench.Id)
-                Retarget(territory, worker, work, bench.Id, used);
+                Retarget(territory, worker, character, work, bench.Id, used);
             // 认定委派：Goal 就是那件活（原 Assigned 语义），主循环据此结算进度。
             worker.Goal = work;
             return;
@@ -774,13 +822,13 @@ public sealed class TerritoryClock
                     continue;
                 worker.HaulCount = moved;
                 worker.HaulPhase = HaulPhase.Delivering;
-                GotoRoom(worker, territory, bench.RoomId, r => Enterable(r, character, ctx));
+                GotoRoom(worker, territory, bench.RoomId, character, ctx);
             }
             else
             {
                 // 物理走去源设施所在房间取料，全局禁止隔空取物
                 worker.HaulPhase = HaulPhase.Fetching;
-                GotoRoom(worker, territory, source.RoomId, r => Enterable(r, character, ctx));
+                GotoRoom(worker, territory, source.RoomId, character, ctx);
             }
 
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
@@ -796,11 +844,17 @@ public sealed class TerritoryClock
         return false;
     }
 
+    /// <summary>
+    /// 包里有没有刚做好、该送上餐桌的饭菜：只认灶上做出来的（烹饪配方的产物）。
+    /// 生肉、卷心菜这类能直接啃的食材也算食物，但它们是正往灶台搬的料——
+    /// 当成「热饭」送回仓储，备料就会在库房与灶台之间来回搬个没完。
+    /// </summary>
     private static bool HasDeliverableMeal(CharacterState character, Territory territory)
     {
         foreach (var pair in character.Bag.Items)
         {
-            if (pair.Value > 0 && territory.IsFood(pair.Key))
+            if (pair.Value > 0 && territory.IsFood(pair.Key)
+                && territory.Recipes.Exists(r => r.Station == ActionKind.Cook && r.ItemId == pair.Key))
             {
                 var storage = territory.FindStorageFor(pair.Key);
                 if (storage != null)
@@ -834,7 +888,7 @@ public sealed class TerritoryClock
             worker.HaulPhase = HaulPhase.Delivering;
             worker.HaulTargetId = storage.Id;
             worker.FacilityId = -1;
-            GotoRoom(worker, territory, storage.RoomId, r => Enterable(r, character, ctx));
+            GotoRoom(worker, territory, storage.RoomId, character, ctx);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
             {
@@ -846,20 +900,6 @@ public sealed class TerritoryClock
             return true;
         }
         return false;
-    }
-
-    /// <summary>
-    /// <summary>把背包里的东西直接卸到设施台面（工作台备料用，不受仓储容量限制）。</summary>
-    private static int Deposit(CharacterState who, Facility target, string itemId, int count)
-    {
-        if (count <= 0 || itemId.Length == 0)
-            return 0;
-        var moved = System.Math.Min(count, who.Bag.Get(itemId));
-        if (moved <= 0)
-            return 0;
-        who.Bag.Add(itemId, -moved);
-        target.Contents.Add(itemId, moved);
-        return moved;
     }
 
     /// <summary>收尾搬运状态，回决策。</summary>
@@ -917,7 +957,7 @@ public sealed class TerritoryClock
             var seat = here >= 0 ? seats[here] : seats[Rng.Next(seats.Count)];
             worker.Loiter = LoiterKind.Sitting;
             worker.FacilityId = seat.Id;
-            GotoRoom(worker, territory, seat.RoomId, r => Enterable(r, character, ctx));
+            GotoRoom(worker, territory, seat.RoomId, character, ctx);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             if (worker.Path.Count == 0)
                 Sit(territory, worker, used);
@@ -936,7 +976,7 @@ public sealed class TerritoryClock
         {
             worker.Loiter = LoiterKind.Wandering;
             var target = rooms[Rng.Next(rooms.Count)];
-            GotoRoom(worker, territory, target, r => Enterable(r, character, ctx));
+            GotoRoom(worker, territory, target, character, ctx);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             worker.StateMachine.TransitionTo(new StateMachine.States.LoiteringState(), new StateMachine.WorkerContext
             {
@@ -1088,7 +1128,10 @@ public sealed class TerritoryClock
         }
     }
 
-    /// <summary>起床结算：与心仪同伴同室同寝醒来温馨安宁（加心情）；与外人挤房扣心情；没床再扣。起床即换了干衣服。</summary>
+    /// <summary>
+    /// 起床结算：与心仪同伴同室同寝醒来温馨安宁（加心情）；与外人挤房扣心情（女仆与主人同屋除外）；没床再扣。
+    /// 起床即换了干衣服。
+    /// </summary>
     private void WakeUp(CharacterState character, Worker worker, Roster roster, StepContext ctx)
     {
         character.Condition.ChangeIntoDryClothes();
@@ -1096,7 +1139,7 @@ public sealed class TerritoryClock
         var loverWithMe = false;
         foreach (var other in _workers)
         {
-            if (other.CharacterId != worker.CharacterId && other.RoomId == worker.RoomId)
+            if (other.CharacterId != worker.CharacterId && other.CharacterId != ctx.MasterId && other.RoomId == worker.RoomId)
             {
                 roommates++;
                 var otherChar = roster.Find(other.CharacterId);
@@ -1104,18 +1147,19 @@ public sealed class TerritoryClock
                     loverWithMe = true;
             }
         }
-        if (ctx.PlayerRoomId == worker.RoomId && (character.Relations.Has(ctx.MasterId, RelationFlag.Sworn) || character.Condition.Bond == Bond.Lover))
-        {
+        // 主人也是同屋的人。女仆与主人同屋不算挤（女仆特质）；够亲近到能同床的，同屋自然也不介意。
+        var masterHere = ctx.PlayerRoomId == worker.RoomId;
+        if (masterHere && (character.Relations.Has(ctx.MasterId, RelationFlag.Sworn) || character.Condition.Bond == Bond.Lover))
             loverWithMe = true;
-        }
+        var masterCrowds = masterHere && !character.SharesRoomWithMaster() && !Intimacy.SharesBed(character);
 
-        if (loverWithMe && roommates <= 1)
+        if (loverWithMe && roommates + (masterHere ? 1 : 0) <= 1)
             character.Affect.AddMood(8);
-        else if (roommates > 0)
+        else if (roommates > 0 || masterCrowds)
             character.Affect.AddMood(-15);
 
         if (worker.FacilityId < 0)
-            character.Affect.AddMood(-5);
+            character.Affect.SleptOnFloor(ctx.Day);
     }
 
     private static int SeekThreshold(CharacterState character) =>
@@ -1180,7 +1224,7 @@ public sealed class TerritoryClock
         worker.Progress = 0;
         worker.Path.Clear();
         worker.FacilityId = seat.Id;
-        GotoRoom(worker, territory, room, r => Enterable(r, character, ctx));
+        GotoRoom(worker, territory, room, character, ctx);
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
             Sit(territory, worker, used);
@@ -1195,25 +1239,43 @@ public sealed class TerritoryClock
         return true;
     }
 
-    private static bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
+    /// <summary>
+    /// 找床睡：先找最近的、还没有外人睡着的卧处（与外人挤房醒来要扣心情，见 <see cref="WakeUp"/>）；
+    /// 处处都有人了再退回最近的有空床的房间。有人锁门睡下的房间进不去，主人的床好感不够上不去
+    /// （见 <see cref="FreeBed"/>）。一张床都找不到就在最近的进得去的室内打地铺（女仆先挑主人的房间），
+    /// 醒来心情受地铺之苦（见 <see cref="Affect.SleptOnFloor"/>）；连室内都进不去才不睡，退回日常决策。
+    /// </summary>
+    private bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
     {
-        var bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
-            r => HasAction(territory, r.Id, ActionKind.Sleep));
+        // 女仆与主人同屋：主人的房间里有空床就先回那里睡。
+        var bed = character.SharesRoomWithMaster()
+            ? NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => r.Id == territory.MasterBedroomId && MaySleepIn(territory, r, character)
+                    && FreeBed(territory, r.Id, character, ctx, used) != null)
+            : -1;
+        if (bed < 0)
+            bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => MaySleepIn(territory, r, character)
+                    && FreeBed(territory, r.Id, character, ctx, used) != null
+                    && !SleepsWithStranger(character, worker, territory, roster, r.Id));
+        if (bed < 0)
+            bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => MaySleepIn(territory, r, character)
+                    && FreeBed(territory, r.Id, character, ctx, used) != null);
+        var mattress = bed >= 0 ? FreeBed(territory, bed, character, ctx, used) : null;
+        if (bed < 0)
+            bed = FloorFor(character, worker, territory, roster, ctx);
         if (bed < 0)
             return false;
 
-        var mattress = FindFree(territory, bed, ActionKind.Sleep, used);
-        if (mattress == null)
-            return false;
-
         Release(worker, used);
-        character.Affect.AddMood((Affect.Neutral - character.Affect.Mood) * 20 / 100);
+        character.Affect.AddMood((character.Affect.Baseline(ctx.Day) - character.Affect.Mood) * 20 / 100);
         worker.Goal = ActionKind.Sleep;
         worker.Task = ActionKind.None;
         worker.Progress = 0;
         worker.Path.Clear();
-        worker.FacilityId = mattress.Id;
-        GotoRoom(worker, territory, bed, r => Enterable(r, character, ctx));
+        worker.FacilityId = mattress?.Id ?? -1;
+        GotoRoom(worker, territory, bed, character, ctx);
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
             Sit(territory, worker, used);
@@ -1226,6 +1288,48 @@ public sealed class TerritoryClock
             UsedFacilities = new HashSet<int>(used.Keys),
         });
         return true;
+    }
+
+    /// <summary>
+    /// 打地铺的地方：最近的、进得去的室内房间。女仆先挑主人的房间（与主人同屋不介意），
+    /// 其余人先挑没外人睡着的，都有人了再随便哪间。没有就返回 -1。
+    /// </summary>
+    private int FloorFor(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx)
+    {
+        bool Indoor(Room r) => r.HasTag(Territory.IndoorTag) && MaySleepIn(territory, r, character);
+        var room = character.SharesRoomWithMaster()
+            ? NearestRoomWith(territory, worker.RoomId, character, ctx, r => r.Id == territory.MasterBedroomId && Indoor(r))
+            : -1;
+        if (room < 0)
+            room = NearestRoomWith(territory, worker.RoomId, character, ctx,
+                r => Indoor(r) && !SleepsWithStranger(character, worker, territory, roster, r.Id));
+        if (room < 0)
+            room = NearestRoomWith(territory, worker.RoomId, character, ctx, Indoor);
+        return room;
+    }
+
+    /// <summary>
+    /// 能不能去这间房睡：进得去（门锁 <see cref="Territory.BarsEntry"/>）；会锁门的人（除女仆外）
+    /// 不睡在主人的房间里——除非肯与主人同床——免得一锁门把主人关在自己卧室外头。
+    /// </summary>
+    private static bool MaySleepIn(Territory territory, Room room, CharacterState character) =>
+        !territory.BarsEntry(room, character)
+        && (room.Id != territory.MasterBedroomId || !character.LocksDoorAsleep() || Intimacy.SharesBed(character));
+
+    /// <summary>这间房里已经有不是心仪同伴的人睡下了。</summary>
+    private bool SleepsWithStranger(CharacterState character, Worker worker, Territory territory, Roster roster, int roomId)
+    {
+        foreach (var other in _workers)
+        {
+            if (other.CharacterId == worker.CharacterId || other.Goal != ActionKind.Sleep)
+                continue;
+            if (territory.Facilities.Find(f => f.Id == other.FacilityId)?.RoomId != roomId)
+                continue;
+            var otherChar = roster.Find(other.CharacterId);
+            if (otherChar == null || !(character.Relations.Has(other.CharacterId, RelationFlag.Sworn) || otherChar.Condition.Bond == Bond.Lover))
+                return true;
+        }
+        return false;
     }
 
     private static bool StartMeal(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, int window, Dictionary<int, int> used)
@@ -1242,7 +1346,7 @@ public sealed class TerritoryClock
         worker.Task = ActionKind.None;
         worker.Progress = 0;
         worker.FacilityId = seat.Id;
-        if (!GotoRoom(worker, territory, seat.RoomId, r => Enterable(r, character, ctx)))
+        if (!GotoRoom(worker, territory, seat.RoomId, character, ctx))
         {
             character.Affect.AddMood(-8);
             worker.Goal = ActionKind.None;
@@ -1304,6 +1408,16 @@ public sealed class TerritoryClock
             && f.Supports(action)
             && used.GetValueOrDefault(f.Id) < f.Capacity);
 
+    /// <summary>
+    /// 某房间里一张能睡的空床。主人的床（<see cref="Territory.MasterBedId"/>）和主人此刻躺着（坐着）的那张，
+    /// 好感不够同床（<see cref="Intimacy.SharesBed"/>）就不上——女仆也一样：同屋不介意，同床得够亲近。
+    /// </summary>
+    private static Facility? FreeBed(Territory territory, int roomId, CharacterState character, StepContext ctx, Dictionary<int, int> used) =>
+        territory.Facilities.Find(f => f.Built && f.RoomId == roomId
+            && f.Supports(ActionKind.Sleep)
+            && used.GetValueOrDefault(f.Id) + (f.Id == ctx.PlayerFixtureId ? 1 : 0) < f.Capacity
+            && ((f.Id != ctx.PlayerFixtureId && f.Id != territory.MasterBedId) || Intimacy.SharesBed(character)));
+
     /// <summary>按设施用途找一处空位。用于消遣这类"看设施标签"的去处选择。</summary>
     private static Facility? FindFreeByUsage(Territory territory, int roomId, FacilityUsage usage, Dictionary<int, int> used) =>
         territory.Facilities.Find(f => f.Built && f.RoomId == roomId && f.Usage == usage
@@ -1345,7 +1459,7 @@ public sealed class TerritoryClock
         worker.Progress = 0;
         worker.FacilityId = playFacility.Id;
         worker.PlayTicks = Traits.LoiterTicksFor(character);
-        GotoRoom(worker, territory, playFacility.RoomId, r => Enterable(r, character, ctx));
+        GotoRoom(worker, territory, playFacility.RoomId, character, ctx);
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
             Sit(territory, worker, used);
@@ -1379,7 +1493,7 @@ public sealed class TerritoryClock
         worker.Progress = 0;
         worker.FacilityId = playFacility.Id;
         worker.PlayTicks = Traits.LoiterTicksFor(character);
-        GotoRoom(worker, territory, playFacility.RoomId, r => Enterable(r, character, ctx));
+        GotoRoom(worker, territory, playFacility.RoomId, character, ctx);
         worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
         if (worker.Path.Count == 0)
             Sit(territory, worker, used);
@@ -1416,12 +1530,13 @@ public sealed class TerritoryClock
         });
     }
 
-    private static bool GotoRoom(Worker worker, Territory territory, int roomId, Func<Room, bool>? passable = null)
+    /// <summary>规划去某房间的路：只走这人进得去的房（权限 <see cref="Enterable"/>、门锁 <see cref="Territory.BarsEntry"/>）。</summary>
+    private static bool GotoRoom(Worker worker, Territory territory, int roomId, CharacterState character, StepContext ctx)
     {
         worker.Path.Clear();
         if (worker.RoomId == roomId)
             return true;
-        foreach (var step in Route(territory, worker.RoomId, roomId, passable))
+        foreach (var step in territory.Route(worker.RoomId, roomId, r => Enterable(r, character, ctx), r => territory.BarsEntry(r, character)))
             worker.Path.Enqueue(step);
         if (worker.Path.Count == 0)
             return false;
@@ -1434,12 +1549,15 @@ public sealed class TerritoryClock
         if (ctx.NowTotal % Affect.DriftPeriodMinutes != 0)
             return;
         var mood = character.Affect.Mood;
-        if (mood > Affect.Neutral)
+        var baseline = character.Affect.Baseline(ctx.Day);
+        if (mood > baseline)
             character.Affect.AddMood(-1);
-        else if (mood < Affect.Neutral)
+        else if (mood < baseline)
             character.Affect.AddMood(1);
         if (character.Condition.Stamina * 10 < character.Condition.MaxStamina * 3)
             character.Affect.AddMood(-1);
+        if (worker.Phase == WorkPhase.Working)
+            character.Affect.AddMood(-character.HardLaborMoodPenalty(worker.Task));
     }
 
     private static void GrowDesire(CharacterState character, StepContext ctx)

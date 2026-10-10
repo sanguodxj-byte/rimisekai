@@ -1593,7 +1593,7 @@ public sealed class InkHubModel
 
         // 房间级行动：第 1 项固定为观察四周，第 2 项固定为前往世界（若在世界层显示返回领地）
         var placeMinutes = vm.Hub.ActionMinutes(Hub.SocialAction.Observe);
-        var hasLock = vm.Hub.CurrentRoomIsPrivate();
+        var hasLock = vm.Hub.CurrentRoomLockable();
         var target = vm.Hub.CrossTargetRegion(vm.Hub.PlayerRoomId);
         var totalCount = 2 + (hasLock ? 1 : 0) + (target >= 0 ? 1 : 0);
 
@@ -1636,7 +1636,7 @@ public sealed class InkHubModel
         var target = vm.Hub.CrossTargetRegion(vm.Hub.PlayerRoomId);
         if (target < 0)
             return;
-        var slot = count + (vm.Hub.CurrentRoomIsPrivate() ? 1 : 0);
+        var slot = count + (vm.Hub.CurrentRoomLockable() ? 1 : 0);
         widgets.Add(new InkWidget(
             InkLayout.PlaceButton(slot, slot + 1), InkAction.CrossRegion,
             target, true, $"去往{Territory.RegionName(target)}"));
@@ -1647,7 +1647,7 @@ public sealed class InkHubModel
     /// </summary>
     private static void AddRoomLockButton(List<InkWidget> widgets, InkViewModel vm, int count)
     {
-        if (!vm.Hub.CurrentRoomIsPrivate())
+        if (!vm.Hub.CurrentRoomLockable())
             return;
         widgets.Add(new InkWidget(
             InkLayout.PlaceButton(count, count + 1), InkAction.RoomLock,

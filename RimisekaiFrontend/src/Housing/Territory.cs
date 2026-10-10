@@ -14,10 +14,6 @@ public enum RoomPermission
     Faction = 2,
 }
 
-/// <summary>
-/// 房门的锁。只有「私人空间」房间（卧室类）用得上：
-/// 自动 = 主人不在屋内或正在睡时锁；另两档是玩家手动拧的，压过自动规则。
-/// </summary>
 /// <summary>房间朝向（网格上 北＝y-1、东＝x+1、南＝y+1、西＝x-1）。</summary>
 public enum RoomDir
 {
@@ -27,6 +23,11 @@ public enum RoomDir
     West,
 }
 
+/// <summary>
+/// 房门的锁。只有主人的房间（摆着主人的床那间，<see cref="Territory.MasterBedroomId"/>）用得上：
+/// 自动 = 主人不在屋内或正在睡时锁（女仆照进）；手动锁 = 主人在屋里时把门锁死，谁都进不来（主人一出门就回到自动）；
+/// 手动敞开 = 谁都进得来。
+/// </summary>
 public enum RoomLock
 {
     Auto = 0,
@@ -51,11 +52,7 @@ public sealed class Room
     public int OpenCost { get; init; }
     public RoomPermission Permission { get; set; } = RoomPermission.Public;
 
-    /// <summary>
-    /// 门锁。只有打了「私人空间」标签的房间（卧室类）这个字段才有意义。
-    /// 自动 = 主人不在屋内或正在睡时锁上；手动锁/手动解锁压过自动规则。
-    /// 锁只挡别人——主人是这间房的主人，随时进得去。
-    /// </summary>
+    /// <summary>门锁。只有主人的房间这个字段才有意义，见 <see cref="RoomLock"/>。</summary>
     public RoomLock Lock { get; set; } = RoomLock.Auto;
 
     public List<int> Links { get; } = new();
@@ -70,6 +67,9 @@ public sealed class Room
     /// 已建好的房间（菜园、林场……）只能安装进空房；装进去时空房本体被顶替掉。
     /// </summary>
     public bool Vacant { get; set; }
+
+    /// <summary>对口的工作（来自房间表）：在这间房里干这些活进度快 <see cref="Territory.RoomBonusPercent"/>%。</summary>
+    public HashSet<ActionKind> BonusActions { get; } = new();
 
     /// <summary>
     /// 房间细分标签（如“室内”、“室外”、“工作间”、“娱乐室”、“卧室”等）。
@@ -697,7 +697,8 @@ public sealed class Territory
     }
 
     /// <summary>
-    /// 找一处能收下该物品的仓储设施：熟食料理优先送往餐桌，其余物品优先本房，其次据点内任意。
+    /// 找一处能收下该物品的仓储设施：吃食优先送往餐桌，餐桌放不下就送进有餐桌的那间房（餐厅）的仓储
+    /// ——人只在自己所在的房里找吃的，吃食放进别处的柜子就没人吃得着；其余物品优先本房，其次据点内任意。
     /// 找不到返回 null（没地方放）。
     /// </summary>
     public Facility? FindStorageFor(string itemId, int preferRoomId = -1)
@@ -707,6 +708,10 @@ public sealed class Territory
             var table = Facilities.Find(f => f.Built && f.IsTable && f.CanStore && f.Accepts(itemId, Weapons));
             if (table != null)
                 return table;
+            var pantry = Facilities.Find(f => f.Built && f.Accepts(itemId, Weapons)
+                && Facilities.Exists(t => t.Built && t.IsTable && t.RoomId == f.RoomId));
+            if (pantry != null)
+                return pantry;
         }
 
         if (preferRoomId >= 0)
@@ -740,6 +745,9 @@ public sealed class Territory
     public int Haul(CharacterState who, Facility storage, string itemId, int count) =>
         StoreFrom(who, storage, itemId, count);
 
+    /// <summary>井的产出、也是井里唯一能存的东西。</summary>
+    public const string WellItemId = "水";
+
     /// <summary>每口井存水的上限。</summary>
     public const int WellWaterCap = 20;
 
@@ -752,19 +760,19 @@ public sealed class Territory
     {
         foreach (var facility in Facilities)
         {
-            if (!facility.Built || facility.YieldItemId != "水")
+            if (!facility.Built || facility.YieldItemId != WellItemId)
                 continue;
-            var shortOf = WellWaterCap - facility.Contents.Get("水");
+            var shortOf = WellWaterCap - facility.Contents.Get(WellItemId);
             if (shortOf > 0)
-                facility.Contents.Add("水", shortOf);
+                facility.Contents.Add(WellItemId, shortOf);
         }
     }
 
     /// <summary>新落的井自带一井水（之后每日回满，见 <see cref="TopUpWells"/>）。</summary>
     private static void SeedWellWater(Facility facility)
     {
-        if (facility.YieldItemId == "水" && facility.Contents.Get("水") <= 0)
-            facility.Contents.Add("水", WellWaterCap);
+        if (facility.YieldItemId == WellItemId && facility.Contents.Get(WellItemId) <= 0)
+            facility.Contents.Add(WellItemId, WellWaterCap);
     }
 
     public bool UnlockRegion()
@@ -1082,36 +1090,81 @@ public sealed class Territory
     /// </summary>
     public Room? RoomAt(int x, int y) => Rooms.Find(r => r.X == x && r.Y == y);
 
-    /// <summary>私人空间的标签名。卧室类房间带这个标签，锁才对它有意义。</summary>
-    public const string PrivateTag = "私人空间";
-
     /// <summary>主人此刻在哪间房（-1 = 不在领地里）。自动上锁按它判。</summary>
     public int MasterRoomId { get; set; } = -1;
 
-    /// <summary>主人是不是正在睡。睡着的私室别人进不来。</summary>
+    /// <summary>
+    /// 主人的床：开局卧室那张（内容表 masterBed），之后是主人最近一次睡下的那张。
+    /// 别人好感不够同床（<see cref="Character.Intimacy.SharesBed"/>）就不睡它——女仆也一样，她得有自己的床。
+    /// </summary>
+    public int MasterBedId { get; set; } = -1;
+
+    /// <summary>主人的房间：主人的床摆在哪间。门锁（<see cref="Room.Lock"/>）只对这一间有意义；没有主人的床就是 -1。</summary>
+    public int MasterBedroomId => Facilities.Find(f => f.Id == MasterBedId)?.RoomId ?? -1;
+
+    /// <summary>主人是不是正在睡。睡着时主人的房间自动锁上。</summary>
     public bool MasterAsleep { get; set; }
 
-    /// <summary>这间房此刻锁不锁。手动锁/手动解锁压过自动规则；没打标签的房间永不锁。</summary>
+    /// <summary>
+    /// 有人睡着、把门反锁了的房间 → 那人是谁、放不放主人进来（肯与主人同床的人不拦主人）。
+    /// 除了女仆，人一睡下就锁门，醒了才开（由领地时钟每格按「谁在哪张床上睡着」重算，不进存档）。
+    /// </summary>
+    public Dictionary<int, SleeperLock> SleeperLocks { get; } = new();
+
+    public readonly record struct SleeperLock(int SleeperId, bool AdmitsMaster);
+
+    /// <summary>
+    /// 这间房的门此刻关没关上（对一个寻常外人而言）：有人睡着反锁了，或者是主人的房间且按门锁该锁。
+    /// 具体某人进不进得去看 <see cref="BarsEntry"/>。
+    /// </summary>
     public bool IsLocked(Room room)
     {
-        if (room == null || !room.HasTag(PrivateTag))
+        if (room == null)
             return false;
-        return room.Lock switch
+        if (SleeperLocks.ContainsKey(room.Id))
+            return true;
+        return room.Id == MasterBedroomId && room.Lock switch
         {
             RoomLock.Locked => true,
             RoomLock.Unlocked => false,
-            // 自动：主人不在屋内，或者主人在睡。
             _ => MasterRoomId != room.Id || MasterAsleep,
         };
     }
 
     /// <summary>
+    /// 这个人此刻进不进得了这间房。门锁一视同仁，主人也不例外：
+    /// - 有人锁门睡下：除了睡着的那人自己，谁都进不去（肯与主人同床的人不拦主人）。
+    /// - 主人的房间：主人自己随时进得去。手动锁上＝别人一律进不去，女仆也不例外；手动敞开＝谁都进得去；
+    ///   自动＝主人不在屋里或在睡时锁上，只放女仆（她与主人同屋）。
+    /// </summary>
+    public bool BarsEntry(Room room, CharacterState who)
+    {
+        if (SleeperLocks.TryGetValue(room.Id, out var sleeper))
+            return sleeper.SleeperId != who.Id && !(who.IsMaster && sleeper.AdmitsMaster);
+        if (room.Id != MasterBedroomId || who.IsMaster)
+            return false;
+        return room.Lock switch
+        {
+            RoomLock.Locked => true,
+            RoomLock.Unlocked => false,
+            _ => (MasterRoomId != room.Id || MasterAsleep) && !who.SharesRoomWithMaster(),
+        };
+    }
+
+    /// <summary>被请出门时去哪：隔壁第一间开着、这人进得去的房；没有就是 null（留在原地，不把人关死）。</summary>
+    public Room? DoorOut(Room room, CharacterState who) =>
+        room.Links.Select(id => Rooms.Find(r => r.Id == id))
+            .FirstOrDefault(r => r != null && r.Open && !BarsEntry(r, who));
+
+    /// <summary>
     /// 房间间的最短通路（BFS）。找不到返回空表。
     /// passable 用于"这个角色能不能进这间房"的额外判定；目标房间本身不查。
-    /// 锁着的私人空间走不通：角色不会规划一条穿门上锁的私室的路。
+    /// barred 是门锁：进不去的房间（含目标）走不通；不给就按寻常外人算（<see cref="IsLocked"/>），
+    /// 知道是谁走就传 <c>r => BarsEntry(r, who)</c>。
     /// </summary>
-    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null, bool ignoreLocks = false)
+    public List<int> Route(int fromRoom, int toRoom, Func<Room, bool>? passable = null, Func<Room, bool>? barred = null)
     {
+        barred ??= IsLocked;
         var queue = new Queue<int>();
         var prev = new Dictionary<int, int> { [fromRoom] = -1 };
         queue.Enqueue(fromRoom);
@@ -1128,7 +1181,7 @@ public sealed class Territory
                 if (prev.ContainsKey(next))
                     continue;
                 var node = Rooms.Find(r => r.Id == next);
-                if (node == null || !node.Open || (!ignoreLocks && IsLocked(node)))
+                if (node == null || !node.Open || barred(node))
                     continue;
                 if (next != toRoom && passable != null && !passable(node))
                     continue;
@@ -1296,6 +1349,30 @@ public sealed class Territory
     /// <summary>这间房还摆不摆得下一件设施（上限见 <see cref="Room.MaxFacilities"/>）。</summary>
     public bool HasFacilitySlot(int roomId) => FacilityCount(roomId) < Housing.Room.MaxFacilities;
 
+    /// <summary>室内房间的标签：家具只能摆这种房，打地铺也只在这种房里打。</summary>
+    public const string IndoorTag = "室内";
+
+    /// <summary>室外房间的标签：田地、圈舍、资源点、井与营火只能建在这种房里。</summary>
+    public const string OutdoorTag = "室外";
+
+    /// <summary>房间对口工作的进度加成（百分比）。</summary>
+    public const int RoomBonusPercent = 20;
+
+    /// <summary>在这间房里干这项活的进度倍率（百分比）：对口 100+<see cref="RoomBonusPercent"/>，否则 100。</summary>
+    public int RoomWorkPercent(int roomId, ActionKind task) =>
+        Room(roomId)?.BonusActions.Contains(task) == true ? 100 + RoomBonusPercent : 100;
+
+    /// <summary>设施的房间标签要求这间房满足不满足（家具要室内、田地圈舍要室外）。</summary>
+    public static bool Fits(Room room, string roomTag) => roomTag.Length == 0 || room.HasTag(roomTag);
+
+    /// <summary>摆不进去的缘由，界面上灰掉的那一行写它。</summary>
+    public static string FitReason(string roomTag) => roomTag switch
+    {
+        IndoorTag => "只能摆在室内",
+        OutdoorTag => "只能建在室外",
+        _ => $"要{roomTag}的房间",
+    };
+
     public bool AddFacility(Facility facility)
     {
         if (Rooms.Find(r => r.Id == facility.RoomId) == null)
@@ -1365,7 +1442,8 @@ public sealed class Territory
     public bool PlaceFacility(int roomId, Facility facility)
     {
         var room = Rooms.Find(r => r.Id == roomId);
-        if (room == null || !room.Open || facility.RoomId >= 0 || !HasFacilitySlot(roomId))
+        if (room == null || !room.Open || facility.RoomId >= 0 || !HasFacilitySlot(roomId)
+            || !Fits(room, facility.RoomTag))
             return false;
         facility.RoomId = roomId;
         RegisterEffect(facility, +1);
@@ -1488,8 +1566,7 @@ public sealed class Territory
             var facility = Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
             if (facility == null || used.GetValueOrDefault(facility.Id) >= facility.Capacity)
                 continue;
-            if (!character.WillWork(WorkTypeMap.IsHard(ActionKindMap.TypeOf(TaskOf(facility))!.Value))
-                || !character.Affect.AcceptsWork())
+            if (!character.Affect.AcceptsWork())
                 continue;
             used[facility.Id] = used.GetValueOrDefault(facility.Id) + 1;
             var task = TaskOf(facility);

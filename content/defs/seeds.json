@@ -4,7 +4,7 @@
     {
       "defName": "Standard",
       "label": "标准开局",
-      "money": 10000,
+      "money": 1500,
       "startRoomId": 1,
       "startCharacterName": "璐米埃尔",
       "voicePath": "res://content/voice.json",
@@ -38,7 +38,7 @@
     {
       "defName": "Hard",
       "label": "困难开局",
-      "money": 10000,
+      "money": 1000,
       "startRoomId": 1,
       "startCharacterName": "",
       "voicePath": "res://content/voice.json",

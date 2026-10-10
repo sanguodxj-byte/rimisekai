@@ -36,8 +36,8 @@ public static class Traits
     public static int TalkDifficulty(this CharacterState character) =>
         PersonalityTraits.TalkDifficultyTotal(character);
 
-    public static bool WillWork(this CharacterState character, bool hardLabor) =>
-        PersonalityTraits.WillWork(character, hardLabor);
+    public static int HardLaborMoodPenalty(this CharacterState character, ActionKind action) =>
+        PersonalityTraits.HardLaborMoodPenalty(character, action);
 
     public static bool RequiresWage(this CharacterState character) =>
         PersonalityTraits.RequiresWage(character);
@@ -50,6 +50,12 @@ public static class Traits
 
     public static bool IsMaid(this CharacterState character) =>
         character.Has(Trait.Maid);
+
+    public static bool SharesRoomWithMaster(this CharacterState character) =>
+        PersonalityTraits.SharesRoomWithMaster(character);
+
+    public static bool LocksDoorAsleep(this CharacterState character) =>
+        PersonalityTraits.LocksDoorAsleep(character);
 
     public static bool IsMage(this CharacterState character) =>
         character.Has(Trait.Mage);

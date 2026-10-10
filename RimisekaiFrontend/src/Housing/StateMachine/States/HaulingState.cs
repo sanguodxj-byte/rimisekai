@@ -50,7 +50,7 @@ public sealed class HaulingState : BaseWorkerState
             var target = ctx.Territory.Facilities.Find(f => f.Id == worker.HaulTargetId && f.Built);
             if (target != null && target.RoomId != worker.RoomId)
             {
-                GotoRoom(worker, ctx.Territory, target.RoomId);
+                GotoRoom(worker, ctx.Territory, target.RoomId, ctx.Character);
                 worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
                 return false;
             }
@@ -80,15 +80,6 @@ public sealed class HaulingState : BaseWorkerState
 
         EndHaul(worker);
         return true;
-    }
-
-    private static void GotoRoom(Worker worker, Territory territory, int toRoomId)
-    {
-        worker.Path.Clear();
-        if (worker.RoomId == toRoomId)
-            return;
-        foreach (var step in territory.Route(worker.RoomId, toRoomId))
-            worker.Path.Enqueue(step);
     }
 
     private static int Deposit(Character.CharacterState who, Facility target, string itemId, int count)

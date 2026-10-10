@@ -567,13 +567,28 @@ public sealed partial class HubSession
             Illustration = def.Illustration,
         };
         added.MaterialCost.AddRange(def.MaterialCost);
+        foreach (var action in def.BonusActions)
+            added.BonusActions.Add(action);
         foreach (var tag in def.Tags)
             added.AddTag(tag);
         added.EnsureDefaultTag();
         if (!State.Territory.AddRoom(added))
             return false;
-        Write($"新建了{added.Name}。");
+        // 房间建成白送一件对口的设施，占它的一个设施位。
+        var bundled = DefDatabase<FacilityDef>.GetNamed(def.BundledFacility).ToRuntime();
+        bundled.Id = NextFacilityId();
+        bundled.RoomId = added.Id;
+        State.Territory.AddFacility(bundled);
+        Write($"新建了{added.Name}，里头带着一件{bundled.Name}。");
         return true;
+    }
+
+    private int NextFacilityId()
+    {
+        var id = 0;
+        foreach (var facility in State.Territory.Facilities)
+            id = System.Math.Max(id, facility.Id);
+        return id + 1;
     }
 
     /// <summary>开发：按建筑表建新设施。花材料，建成后先进入未放置列表。</summary>
@@ -586,20 +601,10 @@ public sealed partial class HubSession
         PassTime(CostDevelop * TerritoryClock.StepMinutes);
         if (!State.Territory.PayWith(State.Roster.Master, def.MaterialCost))
             return false;
-        var id = 0;
-        foreach (var facility in State.Territory.Facilities)
-            id = System.Math.Max(id, facility.Id);
-        var added = new Facility
-        {
-            Id = id + 1, Name = def.Name, RoomId = -1, Usage = def.Usage,
-            Capacity = def.Capacity, YieldItemId = def.YieldItemId,
-            Built = true, EffectId = def.EffectId, Buildable = def.Buildable,
-            IsTable = def.IsTable,
-            CanStore = def.Storage,
-        };
-        added.MaterialCost.AddRange(def.MaterialCost);
-        foreach (var action in def.Actions)
-            added.Actions.Add(action);
+        var added = def.ToRuntime();
+        added.Id = NextFacilityId();
+        added.RoomId = -1;
+        added.Built = true;
         if (!State.Territory.AddUnplacedFacility(added))
             return false;
         Write($"建造了{added.Name}（未放置）。");
@@ -627,6 +632,8 @@ public sealed partial class HubSession
         // 先验房里有没有空位，满了就不扣料——否则建出来放不进去，只能堆在未放置里。
         var room = Room(roomId);
         if (room == null || !room.Open || !State.Territory.HasFacilitySlot(roomId))
+            return false;
+        if (DefDatabase<FacilityDef>.GetById(defId) is not FacilityDef def || !Territory.Fits(room, def.RoomTag))
             return false;
         if (!BuildFacilityDef(defId))
             return false;

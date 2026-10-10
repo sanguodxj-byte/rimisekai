@@ -4,7 +4,7 @@ namespace Rimisekai.Housing.StateMachine.States;
 
 /// <summary>
 /// 主动搭话状态：好感与搭话欲望蓄满后，角色主动寻路前往玩家所在房间找玩家搭话。
-/// 若房门被阻挡则在门外等候，超时放弃并扣减少量心情。
+/// 若房门被阻挡则在门外等候，超时放弃并扣减少量心情（每次 -2，每日累计至多 -6，见 <see cref="Character.Affect.TakeIgnoredChat"/>）。
 /// </summary>
 public sealed class SeekingChatState : BaseWorkerState
 {
@@ -32,7 +32,7 @@ public sealed class SeekingChatState : BaseWorkerState
 
         if (worker.WaitTicks <= 0)
         {
-            character.Affect.AddMood(-5);
+            character.Affect.TakeIgnoredChat(stepCtx.Day);
             character.Affect.ChatDesire = 50;
             return true; // 超时放弃
         }
@@ -63,7 +63,7 @@ public sealed class SeekingChatState : BaseWorkerState
 
         if (worker.RoomId != target.Id && worker.Path.Count == 0)
         {
-            GotoRoom(worker, territory, target.Id, r => Enterable(r, character, stepCtx));
+            GotoRoom(worker, territory, target.Id, character, r => Enterable(r, character, stepCtx));
             if (worker.Path.Count == 0)
             {
                 worker.SeekWaiting = true;

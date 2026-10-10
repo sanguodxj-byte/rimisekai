@@ -36,6 +36,12 @@ public sealed class FacilityDef : Def, IIdentifiedDef
     public bool Buildable { get; init; }
 
     /// <summary>
+    /// 只能摆进带这个标签的房间：家具一律「室内」，田地、圈舍、资源点、井与营火一律「室外」。
+    /// 空串 = 哪儿都能摆（工作台、炉灶这类）。
+    /// </summary>
+    public string RoomTag { get; init; } = "";
+
+    /// <summary>
     /// 售价基准。设施只卖不买，这个价是卖给店时的依据。
     /// 0 表示按取得成本推算——设施自己带的料钱，没有料钱就按它产出的东西计价。
     /// 设施与房间是两张独立的表：一件设施可以摆进任何开着的房，定价不查房间。
@@ -107,6 +113,7 @@ public sealed class FacilityDef : Def, IIdentifiedDef
             IsTable = IsTable,
             CanStore = Storage,
             StorageCapacity = StorageCapacity,
+            RoomTag = RoomTag,
         };
         facility.MaterialCost.AddRange(MaterialCost);
         foreach (var filter in StorageFilter)
