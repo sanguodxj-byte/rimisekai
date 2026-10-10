@@ -125,7 +125,7 @@ public sealed class Room
 
         if (Name.Contains("院") || Name.Contains("林") || Name.Contains("山") || Name.Contains("田") || Name.Contains("井") || Name.Contains("园") || Name.Contains("池"))
             Tags.Add("室外");
-        else if (Name.Contains("卧") || Name.Contains("寝") || Name.Contains("兵营"))
+        else if (Name.Contains("卧") || Name.Contains("寝"))
             Tags.Add("卧室");
         else if (Name.Contains("客") || Name.Contains("堂") || Name.Contains("厅") || Name.Contains("馆") || Name.Contains("剧"))
             Tags.Add("娱乐室");

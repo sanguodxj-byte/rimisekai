@@ -863,34 +863,6 @@
     },
     {
       "defType": "FacilityDef",
-      "defName": "Facility_1057",
-      "label": "蜂箱",
-      "id": 1057,
-      "usage": "Plain",
-      "capacity": 2,
-      "buildCost": 1100,
-      "startBuilt": true,
-      "effectId": "",
-      "yieldItemId": "蜂蜜",
-      "buildable": true,
-      "isTable": false,
-      "storage": false,
-      "actions": [
-        "Tend"
-      ],
-      "roomTag": "室外",
-      "craft": "",
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 14
-        }
-      ],
-      "marketValue": 0,
-      "buildCategory": "Build_Farm"
-    },
-    {
-      "defType": "FacilityDef",
       "defName": "Facility_1058",
       "label": "鱼塘",
       "id": 1058,
@@ -1346,39 +1318,6 @@
     },
     {
       "defType": "RoomDef",
-      "defName": "Room_124",
-      "label": "兵营",
-      "description": "结实的双层木床排列整齐，兵器架上立着练习用的钝剑与圆盾，皮甲养护油的气息淡淡弥散。",
-      "id": 124,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室内",
-        "卧室"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 20
-        },
-        {
-          "itemId": "石材",
-          "count": 15
-        }
-      ],
-      "illustration": "res://assets/settlement_town.png",
-      "bundledFacility": "床",
-      "bonusActions": [],
-      "buildCategory": "BuildRoom_Living"
-    },
-    {
-      "defType": "RoomDef",
       "defName": "Room_125",
       "label": "图书馆",
       "description": "高耸的书架沿着石墙一路排开，羊皮卷轴与厚重的大部头错落陈列，长桌上备有墨水与羽毛笔。",
@@ -1657,37 +1596,6 @@
       ],
       "illustration": "res://assets/settlement_village.png",
       "bundledFacility": "Facility_1052",
-      "bonusActions": [
-        "Tend"
-      ],
-      "buildCategory": "BuildRoom_Farm"
-    },
-    {
-      "defType": "RoomDef",
-      "defName": "Room_141",
-      "label": "养蜂场",
-      "description": "几只精致的木箱蜂巢错落安置在向阳的花丛旁，蜜蜂在温暖的阳光下嗡嗡穿梭。",
-      "id": 141,
-      "minTerritoryLevel": 1,
-      "regionId": 0,
-      "x": 0,
-      "y": 0,
-      "openCost": 0,
-      "permission": "Public",
-      "startOpen": false,
-      "buildable": true,
-      "tags": [
-        "室外",
-        "工作间"
-      ],
-      "materialCost": [
-        {
-          "itemId": "木材",
-          "count": 5
-        }
-      ],
-      "illustration": "res://assets/room_courtyard.png",
-      "bundledFacility": "Facility_1057",
       "bonusActions": [
         "Tend"
       ],

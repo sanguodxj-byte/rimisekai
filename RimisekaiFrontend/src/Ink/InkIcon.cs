@@ -25,14 +25,14 @@ public static class InkIcon
     }
 
     /// <summary>
-    /// 标准图标库的 61 个规范名，按类别固定顺序。
+    /// 标准图标库的 60 个规范名，按类别固定顺序。
     /// 顺序稳定，供盲审导出等诊断用途按下标编号（改名即改序，导出脚本依赖它）。
     /// </summary>
     public static readonly IReadOnlyList<string> StandardNames = new[]
     {
         "书本", "以太", "剑", "匕首", "布", "帽", "弓", "弩", "手", "斧",
         "木材", "果实", "水", "法杖", "炖菜", "珊瑚", "甲", "皮", "石材", "种子",
-        "秘银", "精金", "纤维", "羊毛", "肉", "腿", "药草", "蜂蜜", "钢", "铁",
+        "秘银", "精金", "纤维", "羊毛", "肉", "腿", "药草", "钢", "铁",
         "铁矿", "长枪", "陶罐", "青铜", "面包", "靴", "鱼", "鸡蛋",
         "中毒", "灼烧", "流血", "铁壁", "冻伤", "破甲", "迅捷", "狂暴", "虚弱", "治愈",
         "单手", "双手", "双持", "远程", "法术", "持盾", "格斗",
@@ -139,7 +139,6 @@ public static class InkIcon
         if (clean.Contains("面包")) return "面包";
         if (clean.Contains("鱼")) return "鱼";
         if (clean.Contains("炖菜") || clean.Contains("浓汤")) return "炖菜";
-        if (clean.Contains("蜂")) return "蜂蜜";
         if (clean.Contains("陶罐") || clean.Contains("陶器")) return "陶罐";
         if (clean.Contains("布")) return "布";
         if (clean.Contains("铁")) return "铁";

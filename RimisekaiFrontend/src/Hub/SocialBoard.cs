@@ -832,7 +832,7 @@ public sealed partial class HubSession
         if (giftItemId.Length == 0)
             return 20;
 
-        // 女仆（璐米埃尔）：喜欢花饰、香草茶、蜂蜜点心与针线布匹
+        // 女仆（璐米埃尔）：喜欢花饰、香草茶、点心与针线布匹
         if (who.Name == "璐米埃尔" || who.IsMaid())
         {
             if (giftItemId.Contains("花") || giftItemId.Contains("草") || giftItemId.Contains("茶")

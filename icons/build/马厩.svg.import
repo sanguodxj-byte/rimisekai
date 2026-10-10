@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3gr6m5ynw5ns"
-path="res://.godot/imported/蜂蜜.svg-312f5f3ae6dbd4790d489a482e5cced7.ctex"
+uid="uid://dwysvpxu5tjdi"
+path="res://.godot/imported/马厩.svg-63e001f1a3c8433caf4995a539be20ba.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://icons/蜂蜜.svg"
-dest_files=["res://.godot/imported/蜂蜜.svg-312f5f3ae6dbd4790d489a482e5cced7.ctex"]
+source_file="res://icons/build/马厩.svg"
+dest_files=["res://.godot/imported/马厩.svg-63e001f1a3c8433caf4995a539be20ba.ctex"]
 
 [params]
 

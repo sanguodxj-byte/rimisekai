@@ -62,18 +62,6 @@
       "moodBonus": 0
     },
     {
-      "defName": "蜂蜜",
-      "label": "蜂蜜",
-      "description": "蜂箱中摇出的稠厚纯净野蜜，色泽金黄澄澈，带有草木幽香。",
-      "category": "RawFood",
-      "stackLimit": 999,
-      "marketValue": 6,
-      "isFood": true,
-      "foodTier": "Plain",
-      "nutrition": 15,
-      "moodBonus": 0
-    },
-    {
       "defName": "鱼",
       "label": "鱼",
       "description": "清溪活水中钓获的鲜嫩白鱼，银鳞闪亮，肉质清甜无腥。",
