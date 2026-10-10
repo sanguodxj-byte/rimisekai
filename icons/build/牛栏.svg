@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 栅栏 -->
+    <rect x="-240" y="110" width="480" height="24" fill="#E9EFEA"/>
+    <rect x="-240" y="165" width="480" height="24" fill="#E9EFEA"/>
+    <rect x="-220" y="80" width="30" height="130" fill="#E9EFEA"/>
+    <rect x="190" y="80" width="30" height="130" fill="#E9EFEA"/>
+
+    <!-- 牛：弯角宽脸 -->
+    <g transform="translate(0,-55) scale(0.9)">
+      <path fill="#E9EFEA" d="M -70,-90 C -140,-100 -165,-130 -170,-175 C -140,-145 -110,-130 -60,-125 Z"/>
+      <path fill="#E9EFEA" d="M 70,-90 C 140,-100 165,-130 170,-175 C 140,-145 110,-130 60,-125 Z"/>
+      <ellipse cx="-115" cy="-60" rx="50" ry="22" transform="rotate(15 -115 -60)" fill="#E9EFEA"/>
+      <ellipse cx="115" cy="-60" rx="50" ry="22" transform="rotate(-15 115 -60)" fill="#E9EFEA"/>
+      <path fill="#E9EFEA" d="M -80,-120 C -40,-140 40,-140 80,-120 L 70,40 C 70,80 -70,80 -70,40 Z"/>
+      <ellipse cx="0" cy="70" rx="85" ry="60" fill="#E9EFEA"/>
+      <circle cx="-35" cy="-50" r="12" fill="#000000"/><circle cx="35" cy="-50" r="12" fill="#000000"/>
+      <ellipse cx="-32" cy="75" rx="14" ry="18" fill="#000000"/><ellipse cx="32" cy="75" rx="14" ry="18" fill="#000000"/>
+    </g>
+  </g>
+</svg>

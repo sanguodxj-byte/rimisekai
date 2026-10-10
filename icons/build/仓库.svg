@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <path fill="#E9EFEA" d="M -230,-20 L -170,-160 L 0,-225 L 170,-160 L 230,-20 L 230,205 L -230,205 Z"/>
+    <rect x="-140" y="-40" width="280" height="230" fill="#000000"/>
+    <g transform="translate(0,75) scale(0.5) translate(0,0)">
+    <!-- 拱盖 -->
+    <path fill="#E9EFEA" d="M -210,-40 L -210,-80 C -210,-160 -130,-190 0,-190 C 130,-190 210,-160 210,-80 L 210,-40 Z"/>
+    <!-- 箱身 -->
+    <rect x="-210" y="-25" width="420" height="215" rx="8" fill="#E9EFEA"/>
+    <!-- 铁箍（负形） -->
+    <rect x="-150" y="-190" width="16" height="380" fill="#000000"/>
+    <rect x="134" y="-190" width="16" height="380" fill="#000000"/>
+    <!-- 锁扣 -->
+    <rect x="-40" y="-55" width="80" height="100" rx="10" fill="#000000"/>
+    <rect x="-26" y="-41" width="52" height="72" rx="6" fill="#E9EFEA"/>
+    <rect x="-7" y="-15" width="14" height="30" fill="#000000"/>
+</g>
+  </g>
+</svg>

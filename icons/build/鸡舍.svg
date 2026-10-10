@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 小屋顶 -->
+    <path fill="#E9EFEA" d="M -200,-60 L 0,-200 L 200,-60 L 170,-40 L 0,-160 L -170,-40 Z"/>
+    <!-- 舍身（高脚） -->
+    <path fill="#E9EFEA" d="M -150,-50 L 0,-150 L 150,-50 L 150,80 L -150,80 Z"/>
+    <!-- 圆形窝门（负形）与门里一枚蛋 -->
+    <circle cx="0" cy="-10" r="60" fill="#000000"/>
+    <ellipse cx="0" cy="10" rx="28" ry="36" fill="#E9EFEA"/>
+    <!-- 脚柱与斜梯 -->
+    <rect x="-140" y="80" width="28" height="120" fill="#E9EFEA"/>
+    <rect x="112" y="80" width="28" height="120" fill="#E9EFEA"/>
+    <path fill="#E9EFEA" d="M 140,70 L 165,80 L 240,200 L 210,205 Z"/>
+  </g>
+</svg>

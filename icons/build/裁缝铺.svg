@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    
+    <path fill="#E9EFEA" d="M -245,-60 L 0,-225 L 245,-60 L 215,-40 L 0,-185 L -215,-40 Z"/>
+    <path fill="#E9EFEA" d="M -190,-45 L 0,-170 L 190,-45 L 190,205 L -190,205 Z"/>
+    <rect x="-150" y="-50" width="300" height="230" rx="14" fill="#000000"/>
+    <g transform="translate(0,65) scale(0.52) translate(-256,-256)">
+  <g transform="translate(246, 236) rotate(-20)">
+    <!-- 上方横卧的布匹卷筒（Cloth Roll） -->
+    <path fill="#E9EFEA" d="M -150,-140 L 110,-140 L 110,-40 L -150,-40 Z"/>
+    <ellipse cx="-150" cy="-90" rx="30" ry="50" fill="#E9EFEA"/>
+    <ellipse cx="-150" cy="-90" rx="15" ry="25" fill="#000000"/>
+    <ellipse cx="110" cy="-90" rx="30" ry="50" fill="#E9EFEA"/>
+
+    <!-- 向下垂落展开的宽大波浪形布匹幔幔（Draped Silk） -->
+    <path fill="#E9EFEA" d="
+      M -150,-40
+      C -150,40 -120,120 -90,190
+      L 170,190
+      C 140,120 110,40 110,-40
+      Z
+    "/>
+    <!-- 布料边缘下摆折痕（负形弧线，表现布料柔软垂坠感） -->
+    <path fill="#000000" d="M -90,150 C -20,170 80,170 170,150 L 165,165 C 80,185 -20,185 -85,165 Z"/>
+  </g>
+
+</g>
+  </g>
+</svg>

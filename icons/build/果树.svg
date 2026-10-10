@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <!-- 树冠：三团圆叶 -->
+    <circle cx="0" cy="-110" r="110" fill="#E9EFEA"/>
+    <circle cx="-110" cy="-40" r="90" fill="#E9EFEA"/>
+    <circle cx="110" cy="-40" r="90" fill="#E9EFEA"/>
+    <!-- 果子（负形圈中实心） -->
+    <g>
+      <circle cx="-40" cy="-130" r="26" fill="#000000"/><circle cx="-40" cy="-130" r="17" fill="#E9EFEA"/>
+      <circle cx="60" cy="-90" r="26" fill="#000000"/><circle cx="60" cy="-90" r="17" fill="#E9EFEA"/>
+      <circle cx="-120" cy="-20" r="26" fill="#000000"/><circle cx="-120" cy="-20" r="17" fill="#E9EFEA"/>
+      <circle cx="130" cy="-20" r="26" fill="#000000"/><circle cx="130" cy="-20" r="17" fill="#E9EFEA"/>
+    </g>
+    <!-- 树干与根 -->
+    <path fill="#E9EFEA" d="M -30,30 L 30,30 L 35,170 L 80,205 L -80,205 L -35,170 Z"/>
+  </g>
+</svg>

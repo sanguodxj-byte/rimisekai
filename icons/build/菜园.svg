@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#000000"/>
+  <g transform="translate(256, 256)">
+    <path fill="#E9EFEA" d="M -250,-120 L -170,-190 L -110,-140 L -20,-230 L 80,-150 L 150,-200 L 250,-120 L 250,-105 L -250,-105 Z"/>
+    <rect x="-250" y="195" width="500" height="20" fill="#E9EFEA"/>
+    <g transform="translate(0,10) scale(0.8) translate(0,0)">
+    <!-- 田垄 -->
+    <path fill="#E9EFEA" d="M -240,120 L 240,120 L 220,205 L -220,205 Z"/>
+    <rect x="-240" y="150" width="480" height="10" fill="#000000"/>
+
+    <circle cx="-178.75" cy="69.75" r="42.5" fill="#E9EFEA"/>
+    <circle cx="-51.25" cy="69.75" r="42.5" fill="#E9EFEA"/>
+    <circle cx="-115" cy="40" r="85" fill="#E9EFEA"/>
+    <path fill="#000000" d="M -178.75,57.0 C -178.75,-11.0 -106.5,-32.25 -68.25,1.75 L -76.75,10.250000000000004 C -110.75,-15.25 -166.0,1.75 -166.0,57.0 Z"/>
+    <path fill="#000000" d="M -55.50000000000001,48.5 C -64.0,91.0 -115,103.75 -144.75,86.75 L -138.8,76.55 C -110.75,91.0 -72.5,78.25 -66.55000000000001,48.5 Z"/>
+    <rect x="-120" y="18.75" width="10" height="51.0" fill="#000000"/>
+    <circle cx="51.25" cy="69.75" r="42.5" fill="#E9EFEA"/>
+    <circle cx="178.75" cy="69.75" r="42.5" fill="#E9EFEA"/>
+    <circle cx="115" cy="40" r="85" fill="#E9EFEA"/>
+    <path fill="#000000" d="M 51.25,57.0 C 51.25,-11.0 123.5,-32.25 161.75,1.75 L 153.25,10.250000000000004 C 119.25,-15.25 64.0,1.75 64.0,57.0 Z"/>
+    <path fill="#000000" d="M 174.5,48.5 C 166.0,91.0 115,103.75 85.25,86.75 L 91.2,76.55 C 119.25,91.0 157.5,78.25 163.45,48.5 Z"/>
+    <rect x="110" y="18.75" width="10" height="51.0" fill="#000000"/></g><rect x="-250" y="150" width="500" height="18" fill="#E9EFEA"/><rect x="-240" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M -240,120 L -229,100 L -218,120 Z"/><rect x="-180" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M -180,120 L -169,100 L -158,120 Z"/><rect x="-120" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M -120,120 L -109,100 L -98,120 Z"/><rect x="-60" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M -60,120 L -49,100 L -38,120 Z"/><rect x="0" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M 0,120 L 11,100 L 22,120 Z"/><rect x="60" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M 60,120 L 71,100 L 82,120 Z"/><rect x="120" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M 120,120 L 131,100 L 142,120 Z"/><rect x="180" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M 180,120 L 191,100 L 202,120 Z"/><rect x="240" y="120" width="22" height="80" fill="#E9EFEA"/><path fill="#E9EFEA" d="M 240,120 L 251,100 L 262,120 Z"/>
+  </g>
+</svg>
