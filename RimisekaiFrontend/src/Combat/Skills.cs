@@ -143,6 +143,16 @@ public sealed class LootResult
 {
     public long Money { get; set; }
     public List<(string ItemId, int Count)> Items { get; } = new();
+
+    /// <summary>记一笔掉落：同种物品并成一行（结算单上不重复列「兽皮 ×1」十几行）。</summary>
+    public void Add(string itemId, int count)
+    {
+        var i = Items.FindIndex(x => x.ItemId == itemId);
+        if (i < 0)
+            Items.Add((itemId, count));
+        else
+            Items[i] = (itemId, Items[i].Count + count);
+    }
 }
 
 public static class BattleLoot
@@ -167,7 +177,7 @@ public static class BattleLoot
                 var span = row.Max - row.Min + 1;
                 var count = row.Min + (span > 1 ? roll() % span : 0);
                 if (count > 0)
-                    result.Items.Add((row.ItemId, count));
+                    result.Add(row.ItemId, count);
             }
         }
         return result;

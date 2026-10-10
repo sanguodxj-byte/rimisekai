@@ -422,6 +422,18 @@ public sealed class CombatTests
     }
 
     [Fact]
+    public void Loot_of_the_same_item_merges_into_one_row()
+    {
+        // 十几只狼各掉一张兽皮：结算单上一行「兽皮 ×N」，不是 N 行「兽皮 ×1」。
+        var loot = new LootResult();
+        for (var i = 0; i < 12; i++)
+            loot.Add("兽皮", 1);
+        loot.Add("骨头", 2);
+        loot.Add("兽皮", 3);
+        Assert.Equal(new[] { ("兽皮", 15), ("骨头", 2) }, loot.Items);
+    }
+
+    [Fact]
     public void Ally_and_enemy_get_independent_turns_on_timeline()
     {
         var battle = new Battle(d100: () => 0);
