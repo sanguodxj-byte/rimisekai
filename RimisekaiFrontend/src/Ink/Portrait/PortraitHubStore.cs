@@ -11,7 +11,8 @@ namespace Rimisekai.Portrait;
 /// <summary>
 /// 仓储页签：分段 库存 / 交易 / 制作。
 /// 库存＝搜索条（原生输入框）＋品类签＋三列物品卡（点卡看详情抽屉）；
-/// 交易＝买入/卖出段＋带步进的行＋底部结算条（一次成交整单，与 Core 的「每日一趟」闸门一致）；
+/// 交易＝买入/卖出段＋带步进的行＋底部结算条（一次成交整单）；只有人站在城镇商店里才能成交（Core 的 AtCityShop），
+/// 别处照样看行情，步进与成交钮压暗，结算条写明去哪买卖；
 /// 制作＝工种签＋配方行＋详情框（材料与持有、设为/取消该工种的生产目标）。
 /// </summary>
 public partial class PortraitHubScreen
@@ -58,8 +59,6 @@ public partial class PortraitHubScreen
 
     private void LeaveTradeIfOpen()
     {
-        if (_tab == 3 && _storeMode == 1 && _push == PushPage.None)
-            _vm.Hub.LeaveMarket();
         _tradeQty.Clear();
         if (_searchEdit is { Visible: true })
             EndSearch();
@@ -271,6 +270,8 @@ public partial class PortraitHubScreen
     private void DrawTrade()
     {
         var lines = TradeLines();
+        // 只有站在城镇商店里能成交；别处只看行情，步进压暗。
+        var open = _vm.Hub.AtCityShop;
         var view = PortraitLayout.TradeView;
         var step = PortraitLayout.TradeRowHeight;
         var total = (int)(lines.Count * step);
@@ -298,11 +299,11 @@ public partial class PortraitHubScreen
                 PortraitFrame.PressMark(this, minus.Grow(-8f));
             if (PortraitFrame.IsPressed(plus))
                 PortraitFrame.PressMark(this, plus.Grow(-8f));
-            PortraitGlyph.Minus(this, minus.GetCenter().X, minus.GetCenter().Y, 22f, q > 0 ? InkStyle.Line : InkStyle.WoodDark);
-            PortraitGlyph.Plus(this, plus.GetCenter().X, plus.GetCenter().Y, 22f, q < line.Max ? InkStyle.Line : InkStyle.WoodDark);
+            PortraitGlyph.Minus(this, minus.GetCenter().X, minus.GetCenter().Y, 22f, open && q > 0 ? InkStyle.Line : InkStyle.WoodDark);
+            PortraitGlyph.Plus(this, plus.GetCenter().X, plus.GetCenter().Y, 22f, open && q < line.Max ? InkStyle.Line : InkStyle.WoodDark);
             InkDraw.Text(this, stepper.GetCenter(), $"{q}", PortraitLayout.FontBody, InkStyle.Line, "cm");
-            AddClipped(minus, view, PortraitAction.TradeMinus, i, q > 0, line.Id);
-            AddClipped(plus, view, PortraitAction.TradePlus, i, q < line.Max, line.Id);
+            AddClipped(minus, view, PortraitAction.TradeMinus, i, open && q > 0, line.Id);
+            AddClipped(plus, view, PortraitAction.TradePlus, i, open && q < line.Max, line.Id);
         }
         RegisterScroll("trade", view, total, (int)view.Size.Y, offset, v => _pan["trade"] = v, 1f);
         MaskAbove(view);
@@ -318,12 +319,13 @@ public partial class PortraitHubScreen
         var (count, delta) = TradeTotals();
         var money = _vm.Hub.State.Money;
         PortraitFrame.Bevel(this, bar, 40f, InkStyle.Line);
-        InkDraw.Text(this, new Vector2(bar.Position.X + 50f, bar.Position.Y + 56f), $"共 {count} 件", PortraitLayout.FontMeta, InkStyle.WoodDark, "lm");
+        InkDraw.Text(this, new Vector2(bar.Position.X + 50f, bar.Position.Y + 56f), open ? $"共 {count} 件" : "只看行情",
+            PortraitLayout.FontMeta, InkStyle.WoodDark, "lm");
         InkDraw.TextBounded(this, new Rect2(bar.Position.X + 50f, bar.Position.Y + 84f, bar.Size.X - 420f, 66f),
-            $"{(delta >= 0 ? "+" : "−")} {Math.Abs(delta)}  →  余 {InkText.Money(money + delta)}",
+            open ? $"{(delta >= 0 ? "+" : "−")} {Math.Abs(delta)}  →  余 {InkText.Money(money + delta)}" : "去城镇的商店里买卖",
             PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Bg, "lm");
         var commit = new Rect2(bar.End.X - 30f - 290f, bar.Position.Y + 26f, 290f, PortraitLayout.TouchMin);
-        var canCommit = count > 0 && money + delta >= 0 && _vm.Hub.TradeAvailable;
+        var canCommit = open && count > 0 && money + delta >= 0;
         PortraitFrame.Bevel(this, commit, 59f, PortraitFrame.IsPressed(commit) ? InkStyle.Hover : InkStyle.Bg);
         InkDraw.Text(this, commit.GetCenter(), "成交", PortraitLayout.FontBody, canCommit ? InkStyle.Line : InkStyle.Dim, "cm");
         _widgets.Add(new PortraitWidget(commit, PortraitAction.TradeRun, 0, canCommit, "成交"));
@@ -424,10 +426,6 @@ public partial class PortraitHubScreen
         switch (w.Action)
         {
             case PortraitAction.StoreSegment:
-                if (_storeMode == 1 && w.Index != 1)
-                    _vm.Hub.LeaveMarket();
-                if (w.Index == 1 && _storeMode != 1)
-                    _vm.Hub.OpenTrade();
                 _storeMode = w.Index;
                 _tradeQty.Clear();
                 return true;

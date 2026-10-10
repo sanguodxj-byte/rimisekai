@@ -9,27 +9,19 @@ namespace Rimisekai.Combat;
 public static class Deploy
 {
     /// <summary>
-    /// 从角色快照参战者。武器面板按武器种类查目录（查不到按空手面板 0），
+    /// 从角色快照参战者。武器面板取主手里那件实例（材料×品质×强化，见 <see cref="Defs.WeaponInstance.Panel"/>），
+    /// 没有实例的原配武器按面板 0；防具五件的防御合计按 <see cref="BattleRules.GearArmourPercent"/>% 折成护甲（每下伤害平减）。
     /// 出手总量与基础命中走角色既有的 ResolveStrike/EquippedHit，蓝量取当前值。
-    /// 血量按满值进战斗：战斗血与体力气力是两套账。
     /// 出手总量与法力按 <see cref="BattleRules.PowerPercent"/> 折算进战斗。
+    /// 敌人没有装备，两张登记表都不传。
     /// </summary>
-    public static Combatant FromCharacter(CharacterState c, CombatSide side, GameCatalog? catalog = null)
+    public static Combatant FromCharacter(CharacterState c, CombatSide side,
+        Defs.WeaponRegistry? weapons = null, Defs.EquipRegistry? equips = null)
     {
         var sheet = c.Combat;
-        WeaponDef? weapon = null;
-        if (catalog != null && c.MainWeapon != null)
-        {
-            foreach (var w in catalog.Weapons.Values)
-            {
-                if (w.Type == c.MainWeapon)
-                {
-                    weapon = w;
-                    break;
-                }
-            }
-        }
-        var strike = weapon != null ? c.ResolveStrike(weapon) : c.ResolveStrike(0);
+        var panel = weapons?.Get(c.EquippedId(Defs.EquipSlot.MainHand))?.Panel ?? 0;
+        var strike = c.ResolveStrike(panel);
+        var armour = equips == null ? 0 : c.TotalDefence(equips) * BattleRules.GearArmourPercent / 100;
 
         // 能力表：普通攻击与防御架势玩家侧角色自带（敌人没有防御动作）；
         // 流派能力按门槛解锁（流派＋熟练，必要时还有属性／生活技能／素质／前置）——
@@ -70,6 +62,7 @@ public static class Deploy
             StyleLevel = Math.Max(1, c.Styles[(int)strike.Style].Level),
             StrikePower = Math.Max(1, (int)Math.Round(strike.Rounded * tiredMult * BattleRules.PowerPercent / 100.0)),
             BaseHit = c.EquippedHit(BattleRules.BaseHit),
+            Armour = armour,
         };
         foreach (var id in skills)
             if (!c2.Skills.Contains(id))
@@ -120,8 +113,9 @@ public static class Deploy
             Portrait = def.Portrait,
             MoneyReward = def.Money,
         };
+        // 敌人不架防御、不喝药。
         foreach (var skill in sheet.Skills)
-            if (skill != BattleSkills.GuardId && !c.Skills.Contains(skill))
+            if (skill != BattleSkills.GuardId && SkillTable.Get(skill) is not { Item.Length: > 0 } && !c.Skills.Contains(skill))
                 c.Skills.Add(skill);
         foreach (var skill in def.Skills)
             if (!c.Skills.Contains(skill))

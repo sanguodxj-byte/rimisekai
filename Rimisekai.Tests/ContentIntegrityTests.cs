@@ -30,7 +30,16 @@ public class ContentIntegrityTests
 
         foreach (var recipe in DefDatabase<RecipeDef>.All)
         {
-            Check($"配方 {recipe.DefName} 的产出", recipe.ItemId);
+            // 装备配方产出的是现锻的实例，查的是材料能不能打这一类。
+            if (recipe.Gear is { } gear)
+            {
+                var material = DefDatabase<MaterialDef>.Get(gear.Material);
+                if (material == null || (gear.Weapon != null ? !material.WeaponUsable : !material.ArmorUsable)
+                    || (gear.Weapon == null) == (gear.Slot == null))
+                    missing.Add($"配方 {recipe.DefName} 的装备规格 → {gear.Material}");
+            }
+            else
+                Check($"配方 {recipe.DefName} 的产出", recipe.ItemId);
             foreach (var cost in recipe.Costs)
                 Check($"配方 {recipe.DefName} 的料", cost.ItemId);
         }

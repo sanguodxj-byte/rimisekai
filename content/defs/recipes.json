@@ -52,7 +52,8 @@
           "itemId": "铁矿",
           "count": 2
         }
-      ]
+      ],
+      "craft": "锻"
     },
     {
       "defName": "Recipe_Tan",
@@ -97,7 +98,8 @@
           "itemId": "石材",
           "count": 3
         }
-      ]
+      ],
+      "craft": "窑"
     },
     {
       "defName": "Recipe_Book",
@@ -203,7 +205,8 @@
           "itemId": "herb",
           "count": 2
         }
-      ]
+      ],
+      "craft": "窑"
     },
     {
       "defName": "Recipe_WoodBowl",
@@ -318,6 +321,591 @@
           "count": 1
         }
       ]
+    },
+    {
+      "defName": "Recipe_Steel",
+      "label": "炼钢",
+      "description": "铁锭回炉，掺木炭反复锻打，炼出一块钢。",
+      "itemId": "钢",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 2
+        },
+        {
+          "itemId": "木材",
+          "count": 2
+        }
+      ],
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_WoodBow",
+      "label": "木弓",
+      "description": "整段韧木削成弓身，绞上弦。猎户的家什。",
+      "itemId": "木弓",
+      "station": "Woodwork",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "木材",
+          "count": 8
+        }
+      ],
+      "gear": {
+        "material": "木材",
+        "weapon": "Bow"
+      }
+    },
+    {
+      "defName": "Recipe_WoodStaff",
+      "label": "木杖",
+      "description": "硬木削成的长杖，施法者的入门之物。",
+      "itemId": "木杖",
+      "station": "Woodwork",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "木材",
+          "count": 6
+        }
+      ],
+      "gear": {
+        "material": "木材",
+        "weapon": "Staff"
+      }
+    },
+    {
+      "defName": "Recipe_WoodSpear",
+      "label": "木矛",
+      "description": "木杆削尖烤硬，乡勇守夜用的长矛。",
+      "itemId": "木矛",
+      "station": "Woodwork",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "木材",
+          "count": 8
+        }
+      ],
+      "gear": {
+        "material": "木材",
+        "weapon": "Spear"
+      }
+    },
+    {
+      "defName": "Recipe_IronSword",
+      "label": "铁剑",
+      "description": "铁锭锻成剑身，配一截木柄。",
+      "itemId": "铁剑",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 4
+        },
+        {
+          "itemId": "木材",
+          "count": 1
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "weapon": "Sword"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronAxe",
+      "label": "铁斧",
+      "description": "厚背铁斧，劈柴劈人都趁手。",
+      "itemId": "铁斧",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 4
+        },
+        {
+          "itemId": "木材",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "weapon": "Axe"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronSpear",
+      "label": "铁矛",
+      "description": "铁矛头套上长木杆。",
+      "itemId": "铁矛",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 3
+        },
+        {
+          "itemId": "木材",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "weapon": "Spear"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronDagger",
+      "label": "铁匕首",
+      "description": "一指宽的短刃，贴身藏着。",
+      "itemId": "铁匕首",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "weapon": "Dagger"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronCrossbow",
+      "label": "铁弩",
+      "description": "铁弩臂、木弩身，上弦费劲，打得也狠。",
+      "itemId": "铁弩",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 3
+        },
+        {
+          "itemId": "木材",
+          "count": 4
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "weapon": "Crossbow"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelSword",
+      "label": "钢剑",
+      "description": "好钢千锤，剑脊笔直，刃口泛青。",
+      "itemId": "钢剑",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 4
+        },
+        {
+          "itemId": "木材",
+          "count": 1
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "weapon": "Sword"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelAxe",
+      "label": "钢斧",
+      "description": "钢刃斧，砍进骨头也不卷口。",
+      "itemId": "钢斧",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 4
+        },
+        {
+          "itemId": "木材",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "weapon": "Axe"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelSpear",
+      "label": "钢矛",
+      "description": "钢矛头，破甲用。",
+      "itemId": "钢矛",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 3
+        },
+        {
+          "itemId": "木材",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "weapon": "Spear"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronHelm",
+      "label": "铁盔",
+      "description": "一顶铆钉铁盔。",
+      "itemId": "铁盔",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "slot": "Head"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronCuirass",
+      "label": "铁胸甲",
+      "description": "铁片缀在皮衬上的胸甲。",
+      "itemId": "铁胸甲",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 6
+        },
+        {
+          "itemId": "皮",
+          "count": 1
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "slot": "Torso"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronGreaves",
+      "label": "铁护腿",
+      "description": "护住小腿与膝盖的铁片。",
+      "itemId": "铁护腿",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 4
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "slot": "Legs"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronGauntlets",
+      "label": "铁护手",
+      "description": "铁指节的护手。",
+      "itemId": "铁护手",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "slot": "Hands"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_IronBoots",
+      "label": "铁靴",
+      "description": "包铁的硬靴。",
+      "itemId": "铁靴",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "铁",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "铁",
+        "slot": "Feet"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelHelm",
+      "label": "钢盔",
+      "description": "钢打的护面盔。",
+      "itemId": "钢盔",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "slot": "Head"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelCuirass",
+      "label": "钢胸甲",
+      "description": "整片钢板捶成的胸甲。",
+      "itemId": "钢胸甲",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 6
+        },
+        {
+          "itemId": "皮",
+          "count": 1
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "slot": "Torso"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_SteelGreaves",
+      "label": "钢护腿",
+      "description": "钢片护腿。",
+      "itemId": "钢护腿",
+      "station": "Forge",
+      "outputCount": 1,
+      "skill": "Smithing",
+      "costs": [
+        {
+          "itemId": "钢",
+          "count": 4
+        }
+      ],
+      "gear": {
+        "material": "钢",
+        "slot": "Legs"
+      },
+      "craft": "锻"
+    },
+    {
+      "defName": "Recipe_ClothCap",
+      "label": "布帽",
+      "description": "厚布缝的软帽。",
+      "itemId": "布帽",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "布",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "布",
+        "slot": "Head"
+      }
+    },
+    {
+      "defName": "Recipe_Gambeson",
+      "label": "布衣",
+      "description": "多层布絮缝成的棉甲。",
+      "itemId": "布衣",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "布",
+          "count": 4
+        }
+      ],
+      "gear": {
+        "material": "布",
+        "slot": "Torso"
+      }
+    },
+    {
+      "defName": "Recipe_ClothTrousers",
+      "label": "布裤",
+      "description": "衬了絮的布裤。",
+      "itemId": "布裤",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "布",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "布",
+        "slot": "Legs"
+      }
+    },
+    {
+      "defName": "Recipe_LeatherCap",
+      "label": "皮帽",
+      "description": "硬皮帽。",
+      "itemId": "皮帽",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "皮",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "皮",
+        "slot": "Head"
+      }
+    },
+    {
+      "defName": "Recipe_LeatherArmor",
+      "label": "皮甲",
+      "description": "鞣过的厚皮缝成的护身甲。",
+      "itemId": "皮甲",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "皮",
+          "count": 4
+        }
+      ],
+      "gear": {
+        "material": "皮",
+        "slot": "Torso"
+      }
+    },
+    {
+      "defName": "Recipe_LeatherTrousers",
+      "label": "皮裤",
+      "description": "皮护腿。",
+      "itemId": "皮裤",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "皮",
+          "count": 3
+        }
+      ],
+      "gear": {
+        "material": "皮",
+        "slot": "Legs"
+      }
+    },
+    {
+      "defName": "Recipe_LeatherGloves",
+      "label": "皮手套",
+      "description": "鹿皮手套。",
+      "itemId": "皮手套",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "皮",
+          "count": 1
+        }
+      ],
+      "gear": {
+        "material": "皮",
+        "slot": "Hands"
+      }
+    },
+    {
+      "defName": "Recipe_LeatherBoots",
+      "label": "皮靴",
+      "description": "厚底皮靴。",
+      "itemId": "皮靴",
+      "station": "Sew",
+      "outputCount": 1,
+      "skill": "Craft",
+      "costs": [
+        {
+          "itemId": "皮",
+          "count": 2
+        }
+      ],
+      "gear": {
+        "material": "皮",
+        "slot": "Feet"
+      }
     }
   ]
 }

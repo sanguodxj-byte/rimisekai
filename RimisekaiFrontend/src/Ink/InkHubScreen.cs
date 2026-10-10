@@ -117,15 +117,6 @@ public partial class InkHubScreen : Control
         _ui.SkillDiscZoom = 1.0f;
         _ui.SkillDiscPivot = InkLayout.SkillDiscCenter;
         _ui.SkillDiscRotation = 0.0f;
-        // 交易页进出即开集/散集：页内才能买卖（Core 的 AtMarket 闸门）。
-        // 从页签切到交易页也要开集，否则成交全被 Core 拒掉。
-        if (_vm != null)
-        {
-            if (page == InkPage.Trade)
-                _vm.Hub.OpenTrade();
-            else
-                _vm.Hub.LeaveMarket();
-        }
         ResetPageQuery();
         _ui.Notice = "";
     }
@@ -1249,14 +1240,9 @@ public partial class InkHubScreen : Control
                 }
                 else
                 {
-                    // 点交易即进入交易：开页免费，行程在首笔成交时结算（Core）。
-                    // 今天成交过则按钮是暗的，点了也不开页。
-                    if (entries[widget.Index] == InkPage.Trade)
-                    {
-                        if (!vm.Hub.TradeAvailable)
-                            break;
-                        vm.Hub.OpenTrade();
-                    }
+                    // 交易只在城镇商店里做：不在商店时按钮是暗的，点了也不开页。
+                    if (entries[widget.Index] == InkPage.Trade && !vm.Hub.AtCityShop)
+                        break;
                     OpenPage(entries[widget.Index]);
                 }
                 _ui.Notice = "";
@@ -1705,9 +1691,6 @@ public partial class InkHubScreen : Control
                 break;
 
             case InkAction.PageClose:
-                // 关交易页即结束本次交易（不耗时）。
-                if (_ui.OpenPage == InkPage.Trade)
-                    vm.Hub.LeaveMarket();
                 _ui.OpenPage = InkPage.None;
                 _ui.DevMode = false;
                 break;
@@ -2462,7 +2445,7 @@ public partial class InkHubScreen : Control
             var enabled = model.InCombat
                 || entries[i] != InkPage.Trade
                 || _vm == null
-                || _vm.Hub.TradeAvailable;
+                || _vm.Hub.AtCityShop;
 
             // 战斗形态「自动」钮：开启后显示选中态（浅填）。
             var selected = model.InCombat && i == 0 && model.AutoBattle;

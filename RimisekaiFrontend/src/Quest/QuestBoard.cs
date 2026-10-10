@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Defs;
 using Rimisekai.Save;
 using Rimisekai.WorldMap;
@@ -69,8 +70,8 @@ public static class QuestBoard
             Difficulty = stars,
             MaxPartySize = board.PartyBase + tier,
             RewardMoney = money,
-            Rewards = new List<string> { string.Format(board.RewardText, money) },
-            Foes = boss.Foes,
+            Foes = boss.Foes.Select(f => f.Stronger(
+                (int)Math.Round(board.CorePerStar * stars), (int)Math.Round(board.ExpPerStar * stars))).ToList(),
         };
         Cache[key] = def;
         return def;

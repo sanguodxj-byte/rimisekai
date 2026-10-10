@@ -77,14 +77,28 @@ public sealed class QuestDef : Def, IIdentifiedDef
     /// <summary>难度，按星计，半星用 0.5 表达。</summary>
     public double Difficulty { get; init; }
 
-    /// <summary>了结时实发的金币（奖励清单里的「金币 ×N」照此写）；物品奖励暂只作展示。</summary>
+    /// <summary>了结时实发的金币。</summary>
     public int RewardMoney { get; init; }
+
+    /// <summary>了结时实发的物品（DefName × 件数），交进主人背包。</summary>
+    public List<Housing.RecipeCost> RewardItems { get; init; } = new();
 
     /// <summary>委托板现生成的委托：一次性，了结即撕下，不起冷却。</summary>
     public bool Generated { get; init; }
 
-    /// <summary>奖励清单，一行一条。</summary>
-    public List<string> Rewards { get; init; } = new();
+    /// <summary>奖励清单，一行一条：先金币，再逐样物品。由实发的金币与物品拼出，不另写一份。</summary>
+    public List<string> Rewards
+    {
+        get
+        {
+            var list = new List<string>();
+            if (RewardMoney > 0)
+                list.Add($"金币 ×{RewardMoney}");
+            foreach (var item in RewardItems)
+                list.Add($"{Items.Get(item.ItemId)?.Label ?? item.ItemId} ×{item.Count}");
+            return list;
+        }
+    }
 
     /// <summary>最多参与人数，含玩家本人。</summary>
     public int MaxPartySize { get; init; }

@@ -22,6 +22,9 @@ public sealed class FacilityTemplateDef
     public string Terrain { get; set; } = "Plains";
     public bool DefaultPool { get; set; } = true;
     public List<int> RoomIds { get; set; } = new();
+
+    /// <summary>城镇商店：进了这一间才能买卖（见 <see cref="Hub.HubSession.AtCityShop"/>）。</summary>
+    public bool Shop { get; set; }
 }
 
 public sealed class TerrainDefEntry
@@ -143,8 +146,10 @@ public sealed class QuestBoardDef
     public int MoneyBase { get; set; }
     public int MoneyPerStar { get; set; }
 
-    /// <summary>奖励行，{0} 为金币数。</summary>
-    public string RewardText { get; set; } = "";
+    /// <summary>正主按星数加码：每颗星多给的属性池与经验池（星数一样的正主一样强）。</summary>
+    public int CorePerStar { get; set; }
+    public int ExpPerStar { get; set; }
+
 
     /// <summary>人数上限＝此数＋危险等级。</summary>
     public int PartyBase { get; set; }
@@ -172,6 +177,9 @@ public sealed class PoiDistrictDef
     public string Id { get; set; } = "";
     public List<int> RoomIds { get; set; } = new();
     public List<int> FacilityIds { get; set; } = new();
+
+    /// <summary>这一区必有的商店设施（facility_defs.json 里 shop 为真的那一项）；0 = 这一区没有商店。</summary>
+    public int ShopFacilityId { get; set; }
 }
 
 public sealed class SettlementGrammarDef
@@ -292,6 +300,12 @@ public sealed class MapCatalog
     }
 
     public FacilityTemplateDef GetFacilityById(int id) => _facilitiesById[id];
+
+    /// <summary>这一区必有的商店设施；没有返回 null。</summary>
+    public FacilityTemplateDef? ShopOf(string districtId) =>
+        _districts.TryGetValue(districtId, out var district) && district.ShopFacilityId > 0
+            ? _facilitiesById[district.ShopFacilityId]
+            : null;
 
     public FacilityTemplateDef? GetDistrictFacilityTemplate(string districtId, int roomTemplateId, int index)
     {
@@ -546,6 +560,9 @@ public sealed class MapCatalog
                 if (!district.RoomIds.Exists(facility.RoomIds.Contains))
                     throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 的设施 {facilityId} 未绑定到分区内任何房间");
             }
+            if (district.ShopFacilityId > 0
+                && (!catalog._facilitiesById.TryGetValue(district.ShopFacilityId, out var shop) || !shop.Shop))
+                throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 的商店 {district.ShopFacilityId} 不是 facility_defs.json 里的商店");
         }
 
         return catalog;

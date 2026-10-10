@@ -7,6 +7,19 @@
 
     等级由劣到优：布、皮、木材、珊瑚、青铜、铁、钢、秘银、精金、以太。
     （黑曜石已移除；石制武器没有。）
+    这张表就是装备的「材料等级表」：tier 定档次，damageBonus 加到兵器基座面板上、armorBonus 加到每件甲的槽位底防上，
+    两者都再乘品质。兵器只认 damageBonus，甲只认 armorBonus（能缝甲的材料才填）。
+      档 材料  兵器加成 甲加成
+      0  布     -       0
+      1  皮     -       2
+      2  木材   0       -
+      3  珊瑚   2       -
+      4  青铜   4       -
+      5  铁     7       4
+      6  钢     12      7
+      7  秘银   18      11
+      8  精金   25      15
+      9  以太   33      20
     weaponUsable / armorUsable 决定它能打兵器还是能缝甲——
     布和皮做不了兵器；铁以下的装备只做布甲皮甲，木材/珊瑚/青铜也缝不了甲。
   -->
@@ -21,6 +34,7 @@
     <weaponUsable>false</weaponUsable>
     <armorUsable>true</armorUsable>
     <damageBonus>0</damageBonus>
+    <armorBonus>0</armorBonus>
     <valueFactor>80</valueFactor>
   </MaterialDef>
 
@@ -34,7 +48,8 @@
     <tier>1</tier>
     <weaponUsable>false</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>2</damageBonus>
+    <damageBonus>0</damageBonus>
+    <armorBonus>2</armorBonus>
     <valueFactor>130</valueFactor>
   </MaterialDef>
 
@@ -48,7 +63,8 @@
     <tier>2</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
-    <damageBonus>1</damageBonus>
+    <damageBonus>0</damageBonus>
+    <armorBonus>0</armorBonus>
     <valueFactor>160</valueFactor>
   </MaterialDef>
 
@@ -63,6 +79,7 @@
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
     <damageBonus>2</damageBonus>
+    <armorBonus>0</armorBonus>
     <valueFactor>175</valueFactor>
   </MaterialDef>
 
@@ -76,7 +93,8 @@
     <tier>4</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>false</armorUsable>
-    <damageBonus>3</damageBonus>
+    <damageBonus>4</damageBonus>
+    <armorBonus>0</armorBonus>
     <valueFactor>200</valueFactor>
   </MaterialDef>
 
@@ -90,7 +108,8 @@
     <tier>5</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>4</damageBonus>
+    <damageBonus>7</damageBonus>
+    <armorBonus>4</armorBonus>
     <valueFactor>220</valueFactor>
   </MaterialDef>
 
@@ -104,7 +123,8 @@
     <tier>6</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>9</damageBonus>
+    <damageBonus>12</damageBonus>
+    <armorBonus>7</armorBonus>
     <valueFactor>420</valueFactor>
   </MaterialDef>
 
@@ -118,7 +138,8 @@
     <tier>7</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>15</damageBonus>
+    <damageBonus>18</damageBonus>
+    <armorBonus>11</armorBonus>
     <valueFactor>750</valueFactor>
   </MaterialDef>
 
@@ -132,7 +153,8 @@
     <tier>8</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>19</damageBonus>
+    <damageBonus>25</damageBonus>
+    <armorBonus>15</armorBonus>
     <valueFactor>1000</valueFactor>
   </MaterialDef>
 
@@ -146,7 +168,8 @@
     <tier>9</tier>
     <weaponUsable>true</weaponUsable>
     <armorUsable>true</armorUsable>
-    <damageBonus>24</damageBonus>
+    <damageBonus>33</damageBonus>
+    <armorBonus>20</armorBonus>
     <valueFactor>1400</valueFactor>
   </MaterialDef>
 </Defs>

@@ -7,7 +7,7 @@ namespace Rimisekai.Ink;
 /// <summary>
 /// 游戏纯实心图标服务。
 /// 按元素名称解析并加载 res://icons/{name}.svg，内部缓存 ImageTexture。
-/// 支持前缀/别名模糊匹配（如“小麦种子”->“种子”，“铁矿石”->“铁矿”）。
+/// 支持前缀/别名模糊匹配（如“小麦种子”->“种子”）。
 /// </summary>
 public static class InkIcon
 {

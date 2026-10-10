@@ -27,18 +27,23 @@ public sealed class CombatTests
     [Fact]
     public void Deploy_snapshots_character_strike_and_hit()
     {
-        var catalog = new GameCatalog();
-        catalog.Weapons["sword"] = new WeaponDef { Id = "sword", Name = "剑", Type = WeaponType.Sword, Panel = 20 };
+        var weapons = new Rimisekai.Defs.WeaponRegistry();
+        var sword = Rimisekai.Defs.WeaponForge.Forge("铁", WeaponType.Sword, Rimisekai.Defs.Quality.Common, "", false, 0);
+        weapons.Add(sword);
         var c = SwordUser();
+        c.SetEquippedId(Rimisekai.Defs.EquipSlot.MainHand, sword.Id);
 
-        var unit = Deploy.FromCharacter(c, CombatSide.Attacker, catalog);
+        var unit = Deploy.FromCharacter(c, CombatSide.Attacker, weapons);
 
         Assert.Equal(7, unit.Id);
         Assert.Equal(c.Combat.MaxHp, unit.MaxHp);
         Assert.Equal(c.Combat.MaxHp, unit.Hp);
-        // 武器经验顺带升了 3 级，六项各 +3：面板 20 + 5×熟练1 + 2×灵巧11 + 力量15 = 62，
-        // 乘数 1 + 0.55 + 0.2 + 1 = 2.75 → 170；进战斗按参战折算四成 → 68
-        Assert.Equal(170 * BattleRules.PowerPercent / 100, unit.StrikePower);
+        // 主手那件铁剑：面板（剑 18 + 铁 7）× 普通 100% = 25。
+        // 武器经验顺带升了 3 级，六项各 +3：面板 25 + 5×熟练1 + 2×灵巧11 + 力量15 = 67，
+        // 乘数 1 + 0.55 + 0.2 + 1 = 2.75 → 184；进战斗按参战折算
+        Assert.Equal(25, sword.Panel);
+        Assert.Equal((int)System.Math.Round(c.ResolveStrike(25).Rounded * BattleRules.PowerPercent / 100.0), unit.StrikePower);
+        Assert.True(unit.StrikePower > Deploy.FromCharacter(c, CombatSide.Attacker).StrikePower);
         Assert.Equal(WeaponType.Sword, unit.Weapon);
         Assert.Equal(StyleType.OneHand, unit.Style);
         Assert.Equal(c.EquippedHit(BattleRules.BaseHit), unit.BaseHit);

@@ -346,6 +346,18 @@ public sealed class Territory
     public string GetTargetCraftItem(ActionKind station) =>
         TargetCraftItems.TryGetValue(station, out var item) ? item : "";
 
+    /// <summary>
+    /// 这门手艺此刻做不做这份配方：指定了目标就只做目标；没指定就做普通配方，
+    /// 装备配方（兵器、甲）不会自己开炉——得有人下单，免得把铁锭全打成剑。
+    /// </summary>
+    public bool Makes(Recipe recipe, ActionKind task, Facility bench)
+    {
+        if (recipe.Station != task || recipe.Craft != bench.Craft)
+            return false;
+        var target = GetTargetCraftItem(task);
+        return target.Length > 0 ? recipe.ItemId == target : recipe.Gear == null;
+    }
+
     public void SetTargetCraftItem(ActionKind station, string itemId)
     {
         if (string.IsNullOrEmpty(itemId))
@@ -532,6 +544,78 @@ public sealed class Territory
         if (count > 0 && itemId.Length > 0)
             who.Bag.Add(itemId, count);
     }
+
+    /// <summary>
+    /// 一份配方做完：普通配方出成品，装备配方锻一件实例（一件一单，做完撤掉指定目标）。都进做的人背包（之后照常搬进仓储）。
+    /// 返回落进背包的 Id（装备是实例 Id）。
+    /// </summary>
+    public string Finish(CharacterState crafter, Recipe recipe)
+    {
+        if (recipe.Gear == null)
+        {
+            Produce(crafter, recipe.ItemId, recipe.OutputCount);
+            return recipe.ItemId;
+        }
+        // 装备是一件一单：做完这件，这门手艺的指定目标就撤了。
+        if (GetTargetCraftItem(recipe.Station) == recipe.ItemId)
+            SetTargetCraftItem(recipe.Station, "");
+        return ForgeGear(crafter, recipe.Gear, CraftQuality(crafter.Life(recipe.Skill)));
+    }
+
+    /// <summary>
+    /// 照规格锻一件兵器或甲：材料 × 种类/槽位定基座，品质由手艺给定，不附魔、不祝福、不强化。
+    /// 登记进武器/防具表，放进做的人背包，返回实例 Id。
+    /// </summary>
+    public string ForgeGear(CharacterState crafter, RecipeGear gear, Quality quality)
+    {
+        string id;
+        if (gear.Weapon is { } type)
+        {
+            var weapon = WeaponForge.Forge(gear.Material, type, quality, "", false, 0);
+            Weapons.Add(weapon);
+            id = weapon.Id;
+        }
+        else
+        {
+            var armor = EquipForge.ForgeArmor(gear.Slot!.Value, gear.Material, quality, "", false, 0);
+            Equips.Add(armor);
+            id = armor.Id;
+        }
+        crafter.Bag.Add(id, 1);
+        return id;
+    }
+
+    /// <summary>操练一回：手上那门兵器的熟练经验（进熟练前按角色既有分成翻倍）。</summary>
+    public const int TrainWeaponExp = 10;
+
+    /// <summary>操练一回：流派经验。</summary>
+    public const int TrainStyleExp = 5;
+
+    /// <summary>操练只练到这一级熟练；再往上得靠实战。</summary>
+    public const int TrainLevelCap = 10;
+
+    /// <summary>
+    /// 在箭靶、操练场上练一回：涨手上兵器（空手按格斗）的熟练与流派经验。
+    /// 熟练已到 <see cref="TrainLevelCap"/> 级就练不出东西了，返回 false。
+    /// </summary>
+    public static bool Drill(CharacterState c)
+    {
+        var weapon = c.MainWeapon ?? WeaponType.Unarmed;
+        if (c.Weapons[(int)weapon].Level >= TrainLevelCap)
+            return false;
+        c.GainWeaponExp(weapon, TrainWeaponExp);
+        c.GainStyleExp(c.EquippedStyle ?? StyleType.Unarmed, TrainStyleExp);
+        return true;
+    }
+
+    /// <summary>手艺定品质：生活技能不到 8 粗糙，不到 25 普通，不到 50 精良，再往上史诗（开局的人手艺在 10 上下，出普通货）。</summary>
+    public static Quality CraftQuality(int skill) => skill switch
+    {
+        < 8 => Quality.Crude,
+        < 25 => Quality.Common,
+        < 50 => Quality.Fine,
+        _ => Quality.Epic,
+    };
 
     // ---------- 耕地 ----------
 
@@ -995,6 +1079,12 @@ public sealed class Territory
             return new MarketListing(weapon.Id, weapon.Name, -1, 0, sellOnly);
         }
 
+        // 甲与饰品实例：市场不卖成品甲，玩家做出来的只收不卖（同自己的武器）。
+        var equip = Equips.Get(itemId);
+        if (equip != null)
+            return new MarketListing(equip.Id, equip.Name, -1, 0,
+                Math.Max(1, ScaleBy(equip.Value, SellRatioPercent, WeaponPricePercent)));
+
         var facility = Defs.DefDatabase<Defs.FacilityDef>.All
             .FirstOrDefault(f => f.DefName.Equals(itemId, StringComparison.OrdinalIgnoreCase));
         if (facility == null)
@@ -1352,6 +1442,9 @@ public sealed class Territory
     /// <summary>室内房间的标签：家具只能摆这种房，打地铺也只在这种房里打。</summary>
     public const string IndoorTag = "室内";
 
+    /// <summary>城镇里的商店（聚落场景的房间标签）：人进了这一间才能买卖。</summary>
+    public const string CityShopTag = "商店";
+
     /// <summary>室外房间的标签：田地、圈舍、资源点、井与营火只能建在这种房里。</summary>
     public const string OutdoorTag = "室外";
 
@@ -1629,11 +1722,10 @@ public sealed class Territory
     private WorkLog? Craft(
         int slot, CharacterState character, Facility facility, ActionKind task)
     {
-        var recipe = Recipes.Find(r => r.Station == task && CanPayWith(character, r.Costs));
+        var recipe = Recipes.Find(r => Makes(r, task, facility) && CanPayWith(character, r.Costs));
         if (recipe == null || !PayWith(character, recipe.Costs))
             return null;
-        // 成品优先进同房仓储，没有仓储就进制作者背包。
-        Produce(character, recipe.ItemId, recipe.OutputCount);
+        Finish(character, recipe);
         character.GainLifeExp(recipe.Skill, CraftExp);
         return new WorkLog
         {

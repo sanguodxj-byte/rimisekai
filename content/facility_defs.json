@@ -181,6 +181,16 @@
       ]
     },
     {
+      "id": 24,
+      "name": "商店",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1029
+      ],
+      "shop": true
+    },
+    {
       "id": 1023,
       "name": "水车",
       "terrain": "River",

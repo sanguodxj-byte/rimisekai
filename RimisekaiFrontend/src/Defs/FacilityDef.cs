@@ -42,6 +42,12 @@ public sealed class FacilityDef : Def, IIdentifiedDef
     public string RoomTag { get; init; } = "";
 
     /// <summary>
+    /// 手艺门类：同一门手艺（同为 Forge）分台子做——铁砧、熔炉是「锻」（冶铁、炼钢、打兵器与铁甲），
+    /// 陶器坊是「窑」（拉坯、煅炼金尘）。配方的 <see cref="RecipeDef.Craft"/> 与之相同才在这座台子上做；都空串＝不分。
+    /// </summary>
+    public string Craft { get; init; } = "";
+
+    /// <summary>
     /// 售价基准。设施只卖不买，这个价是卖给店时的依据。
     /// 0 表示按取得成本推算——设施自己带的料钱，没有料钱就按它产出的东西计价。
     /// 设施与房间是两张独立的表：一件设施可以摆进任何开着的房，定价不查房间。
@@ -114,6 +120,7 @@ public sealed class FacilityDef : Def, IIdentifiedDef
             CanStore = Storage,
             StorageCapacity = StorageCapacity,
             RoomTag = RoomTag,
+            Craft = Craft,
         };
         facility.MaterialCost.AddRange(MaterialCost);
         foreach (var filter in StorageFilter)

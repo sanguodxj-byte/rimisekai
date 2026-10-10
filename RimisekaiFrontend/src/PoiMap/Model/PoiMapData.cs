@@ -77,6 +77,11 @@ public sealed class PoiMapData
                 OpenCost = r.OpenCost,
             };
             room.Links.AddRange(r.Links);
+            if (r.Shop)
+            {
+                room.AddTag(Territory.CityShopTag);
+                room.AddTag(Territory.IndoorTag);
+            }
             result.Add(room);
         }
         return result;

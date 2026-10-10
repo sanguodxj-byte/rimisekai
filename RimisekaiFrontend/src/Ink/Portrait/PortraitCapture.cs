@@ -129,7 +129,14 @@ public partial class PortraitCapture : Node
         // 仓储三段
         _steps.Enqueue(() => _root.HubScreen.ShowTab(3));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
-        _steps.Enqueue(() => Shoot("store_trade", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            // 领地里没有远程交易：行情照看，步进与成交都压暗（进城镇商店才能买卖，后面大地图那段核对）。
+            var widgets = _root.HubScreen.DebugWidgets;
+            Require(!widgets.Any(w => w.Action is PortraitAction.TradePlus or PortraitAction.TradeMinus && w.Enabled)
+                && widgets.Any(w => w.Action == PortraitAction.TradeRun && !w.Enabled), "trade steppers are dead at home");
+            Shoot("store_trade", _root.HubScreen);
+        });
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 2));
         _steps.Enqueue(() => Shoot("store_craft", _root.HubScreen));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 0));
@@ -356,7 +363,9 @@ public partial class PortraitCapture : Node
         {
             _root.HubScreen.DebugPress(PortraitAction.WorldHome, 0);
             var world = _root.HubScreen.DebugHub.State.World;
-            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            // 最近一座开店的聚落（村、镇、王都）：进去还要走进商店拍交易页。
+            var poi = world.Pois.Where(p => p.Type is Rimisekai.WorldMap.WorldPoiType.Village or Rimisekai.WorldMap.WorldPoiType.Town or Rimisekai.WorldMap.WorldPoiType.Capital)
+                .OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
             _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
         });
         // 点格逻辑已移除（2026-10-10）：轻点兴趣点格不弹抽屉。
@@ -446,7 +455,9 @@ public partial class PortraitCapture : Node
             var world = hub.State.World;
             Require(hub.Layer == Rimisekai.Hub.MapLayer.World && hub.WorldPartyPosition == (world.HomeX, world.HomeY) && hub.PlayerRoomId == -1,
                 "travel puts the party on the home tile, out of every territory room");
-            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
+            // 最近一座开店的聚落（村、镇、王都）：进去还要走进商店拍交易页。
+            var poi = world.Pois.Where(p => p.Type is Rimisekai.WorldMap.WorldPoiType.Village or Rimisekai.WorldMap.WorldPoiType.Town or Rimisekai.WorldMap.WorldPoiType.Capital)
+                .OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
             // 走到兴趣点旁边一格（逐格耗时），再用方向键踩上去——踩上即自动弹出「进入」。
             var near = new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }
                 .Select(d => (X: poi.X - d.Item1, Y: poi.Y - d.Item2, Dir: System.Array.IndexOf(new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }, d)))
@@ -477,8 +488,31 @@ public partial class PortraitCapture : Node
         {
             Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.WorldPoi, "inside the settlement");
             Shoot("world_poi_inside", _root.HubScreen);
-            _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
+            // 走进城里的商店：买卖只在这里做。
+            var hub = _root.HubScreen.DebugHub;
+            var shop = hub.State.Territory.Rooms.First(r => r.RegionId >= Rimisekai.Housing.Territory.MaxTerritoryRegions
+                && r.HasTag(Rimisekai.Housing.Territory.CityShopTag));
+            Require((hub.PlayerRoomId == shop.Id || hub.Arrive(shop.Id)) && hub.AtCityShop, "walk into the town shop");
+            _root.HubScreen.ShowTab(3);
         });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.StoreSegment, 1));
+        _steps.Enqueue(() =>
+        {
+            var widgets = _root.HubScreen.DebugWidgets;
+            Require(widgets.Any(w => w.Action == PortraitAction.TradePlus && w.Enabled), "in the town shop the trade steppers are live");
+            Shoot("store_trade_city_shop", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.TradePlus, widgets.First(w => w.Action == PortraitAction.TradePlus && w.Enabled).Index);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.TradeRun && w.Enabled), "a stepped line can be dealt in the shop");
+            Shoot("store_trade_city_shop_picked", _root.HubScreen);
+            var bought = _root.HubScreen.DebugHub.State.Money;
+            _root.HubScreen.DebugPress(PortraitAction.TradeRun, 0);
+            Require(_root.HubScreen.DebugHub.State.Money < bought, "dealing in the shop pays for the goods");
+            _root.HubScreen.ShowTab(0);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0));
         _steps.Enqueue(() =>
         {
             Require(_root.HubScreen.DebugHub.Layer == Rimisekai.Hub.MapLayer.World, "leaving the settlement stands on its tile");
@@ -1167,10 +1201,14 @@ public partial class PortraitCapture : Node
             .ToList();
         Require(labels.SequenceEqual(new[] { "攻击", "技能", "道具", "逃跑" }),
             "action panel lists attack skill item flee");
+        // 背包里带两瓶药剂进场：道具页多一枚「饮药剂」，技能页不重复列。
+        _root.HubScreen.DebugHub.State.Roster.Master!.Bag.Add("药剂", 2);
+        _battleProbe.Battle.Supplies["药剂"] = 2;
         _root.CombatView.DebugPress(PortraitAction.CombatMenu, 2);
         Require(_root.ModalLayer.Current?.Title == "道具"
-            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回"),
-            "item button opens the item popup");
+            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
+            && _root.ModalLayer.Current.Choices.Any(c => c.Id == "potion" && c.Label == "饮药剂 ×2"),
+            "item button opens the item popup with the potion to drink");
     }
 
     /// <summary>道具页返回后点「技能」：技能页含防御架势与返回、不含普攻。</summary>
@@ -1181,8 +1219,9 @@ public partial class PortraitCapture : Node
         Require(_root.ModalLayer.IsActive, "skill button opens the skill popup");
         Require(!_root.ModalLayer.Current!.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.AttackId)
             && _root.ModalLayer.Current.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.GuardId)
-            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回"),
-            "skill popup lists guard and back but not the basic attack");
+            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
+            && !_root.ModalLayer.Current.Choices.Any(c => c.Id == "potion"),
+            "skill popup lists guard and back but neither the basic attack nor the potion");
     }
 
     /// <summary>技能页返回后点「攻击」，点选敌卡派发战斗动作。</summary>

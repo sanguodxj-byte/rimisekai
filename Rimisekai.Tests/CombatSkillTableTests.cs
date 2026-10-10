@@ -24,8 +24,8 @@ public sealed class CombatSkillTableTests
     [Fact]
     public void Skill_table_has_three_tiers_per_style_plus_universal()
     {
-        // 通用两式 + 七流派技能（持盾系只定了铁壁一项）逐条都有名字与流派归属。
-        Assert.Equal(23, SkillTable.All.Count);
+        // 通用三式（攻击、防御、饮药剂）+ 七流派技能（持盾系只定了铁壁一项）逐条都有名字与流派归属。
+        Assert.Equal(24, SkillTable.All.Count);
         foreach (var skill in SkillTable.All)
             Assert.False(string.IsNullOrWhiteSpace(skill.Name));
         // 通用能力（attack/guard）无流派门槛，其余全部归属一个流派。

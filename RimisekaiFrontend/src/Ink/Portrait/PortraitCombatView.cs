@@ -94,8 +94,9 @@ public partial class PortraitCombatView : Control
                 // 普通攻击走攻击钮，不在技能菜单里重复列出。
                 if (id == BattleSkills.AttackId)
                     continue;
+                // 喝药这类耗道具的招式走道具钮，不进技能菜单。
                 var skill = B!.Lookup(id);
-                if (skill != null)
+                if (skill != null && skill.Item.Length == 0)
                     _menu.Add(skill);
             }
     }
@@ -608,13 +609,15 @@ public partial class PortraitCombatView : Control
 
     /// <summary>
     /// 道具弹窗：参战我方背包汇总（名 ×数），一行一件，整列可拖动滚动（弹窗正文的滚动），不翻页。
-    /// Core 尚无战斗道具结算，条目只列不可选，底下一枚「返回」。
+    /// 战斗里用得上的道具（药剂）各有一枚选项：写「饮药剂 ×剩余瓶数」，点＝装上那一式，再点选我方目标；底下一枚「返回」。
     /// </summary>
     private void ShowItemPopup()
     {
         var bag = new Dictionary<string, int>();
         var battle = B;
+        var choices = new List<InkModalChoice>();
         if (battle != null)
+        {
             foreach (var m in battle.Members.Where(m => m.Side == battle.ControlledSide))
             {
                 var member = _vm.Hub.State.Roster.Find(m.Name);
@@ -623,12 +626,21 @@ public partial class PortraitCombatView : Control
                 foreach (var pair in member.Bag.Items)
                     bag[pair.Key] = bag.GetValueOrDefault(pair.Key) + pair.Value;
             }
+            foreach (var skill in battle.Menu().Where(s => s.Item.Length > 0))
+                choices.Add(new InkModalChoice
+                {
+                    Id = skill.Id,
+                    Label = $"{skill.Name} ×{battle.Supplies[skill.Item]}",
+                    OnSelected = () => ArmAndClose(skill.Id),
+                });
+        }
+        choices.Add(new InkModalChoice { Id = "back", Label = "返回", OnSelected = () => { } });
         var lines = bag.Select(p => $"{ItemLabel(p.Key)} ×{p.Value}").OrderBy(l => l, StringComparer.Ordinal);
         _modal.Show(new InkModalPage
         {
             Title = "道具",
             Body = string.Join("\n", lines),
-            Choices = { new InkModalChoice { Id = "back", Label = "返回", OnSelected = () => { } } },
+            Choices = choices,
         });
     }
 

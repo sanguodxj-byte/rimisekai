@@ -145,9 +145,8 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - `StoreOrGive(who, roomId, itemId, count)`：NPC 采集/制作的产出优先进同房仓储，没有仓储则进产出者背包
 - `FindFoodIn(who, roomId) / ConsumeFood(who, roomId)`：吃东西必须取到实物，背包优先、其次该房间设施存货
 - `Stock() -> IReadOnlyDictionary<string, int>`：**玩家背包**快照（买卖、送礼都走背包）
-- `Trade(itemId, count, unitPrice, selling)`：通用买卖（自定价，调试/事件用）
-- **交易结算制**：`OpenTrade()` 打开交易页（浏览行情**不耗时**）；`AtMarket` 为真才能 `MarketTrade`；`LeaveMarket()` 关页结束（不耗时）。**首笔成交即结算行程**：当天第一笔买/卖成交时固定扣 6 小时（`MarketSettledDay` 记当天，0 点刷新），之后的成交免费；校验失败的买卖不耗时也不结算。`TradeAvailable` = 今天还没成交过，供交易入口按钮置灰
-- `MarketTrade(itemId, count, selling) -> bool`：按当日行情买卖；报价 `MarketOffer(ItemId, BuyPrice, SellPrice, SellOnly, Stock)`。**行情每日 0 点重掷**（`Territory.RollMarketDay`）：每种 ThingDef 物品有存货（按价值分档，0=今日无货买不了但仍可卖）与价格系数（70-130）。**库存即价格**：买入压库存、卖出抬库存——买入价 = 基准 × 系数% × (100−库存×4，下限 60)%；卖出价 = 基准 × 60% × 系数% × (100−库存×5，下限 70)%（集市存货越多，玩家卖价越低）。武器为**运行时独特实例**：集市每日随机锻 3-6 件（材料/品质只取前三种，附魔低概率，不强化不祝福），在售武器买走即下架；玩家卖武器 = 价值 × 60% × 当日武器系数（`WeaponPricePercent`，70-130），卖掉即上架可被买回。设施无库存概念，直报价。显式报价表（`Territory.Market`）优先级最高
+- **买卖只在城镇商店里做（2026-10-10 主人定）**：没有坐在领地里点一下就让货物凭空进出的远程交易。人得走大地图进一座村、镇或王都，再走进聚落里带 `Territory.CityShopTag`（「商店」）标签的那一间——`AtCityShop` 为真才能 `MarketTrade` / `MarketTradeCombined`；货从玩家背包出、落进玩家背包，路程按大地图逐格耗时，成交本身不耗时。行情页在领地里照看（步进与成交压暗）。设施、房间不在城里卖。商店由 `poi_defs.json` 里聚落分区的 `shopFacilityId`（`facility_defs.json` 中 `shop: true` 的「商店」）放在一格临街的格子上，每座村/镇/王都恰有一间
+- `MarketTrade(itemId, count, selling) -> bool`：在城镇商店里按当日行情买卖；报价 `MarketOffer(ItemId, BuyPrice, SellPrice, SellOnly, Stock)`。**行情每日 0 点重掷**（`Territory.RollMarketDay`）：每种 ThingDef 物品有存货（按价值分档，0=今日无货买不了但仍可卖）与价格系数（70-130）。**库存即价格**：买入压库存、卖出抬库存——买入价 = 基准 × 系数% × (100−库存×4，下限 60)%；卖出价 = 基准 × 60% × 系数% × (100−库存×5，下限 70)%（集市存货越多，玩家卖价越低）。武器为**运行时独特实例**：集市每日随机锻 3-6 件（材料/品质只取前三种，附魔低概率，不强化不祝福），在售武器买走即下架；玩家卖武器 = 价值 × 60% × 当日武器系数（`WeaponPricePercent`，70-130），卖掉即上架可被买回。设施无库存概念，直报价。显式报价表（`Territory.Market`）优先级最高
 - `Craft(itemId) -> bool`：材料从背包+设施存货扣，成品进背包；主角涨对应生活经验
 - 配方 `Recipe`：`ItemId, Station(工作台种类，对应 WorkTask), OutputCount, Skill, Costs[]`
 

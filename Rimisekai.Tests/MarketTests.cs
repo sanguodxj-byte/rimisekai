@@ -11,104 +11,96 @@ using Xunit;
 namespace Rimisekai.Tests;
 
 /// <summary>
-/// 交易系统：点交易免费开页浏览；**首笔成交结算行程**（固定 6 小时，当天只此一次，
-/// 0 点刷新；之后的成交免费，失败的买卖不耗时）；随机行情（每日重掷、供需推价、
-/// 60% 收购基准）；集市武器（每日随机锻、卖掉上架买走下架）；行情与结算进存档。
+/// 交易系统：买卖只在城镇商店里做（人走到聚落、进商店那一间），领地里点不了远程交易；
+/// 成交本身不耗时（路是走来的）；随机行情（每日重掷、供需推价、60% 收购基准）；
+/// 集市武器（每日随机锻、卖掉上架买走下架）；行情进存档。
 /// </summary>
 public sealed class MarketTests
 {
-    // ---------- 赶集结算 ----------
+    // ---------- 城镇商店 ----------
 
     [Fact]
-    public void OpenTrade_IsFree_ButTradesOnlyWorkInside()
+    public void Trading_only_works_inside_a_city_shop()
     {
-        var (state, hub) = NewHub();
-
-        hub.OpenTrade();
-        Assert.True(hub.AtMarket);
-        Assert.Equal(0, state.Clock.Minutes);
-        Assert.True(hub.TradeAvailable);
-
-        hub.LeaveMarket();
+        var hub = TerritoryLoopTests.NewGame(out var state, 1);
+        var master = state.Roster.Master!;
+        // 在领地里：既买不了也卖不了，不耗时
+        var minutes = state.Clock.Minutes;
+        var rations = master.Bag.Get("干粮");
+        var wood = master.Bag.Get("木材");
+        master.Bag.Add("木材", 2);
+        Assert.False(hub.AtCityShop);
         Assert.False(hub.MarketTrade("干粮", 1, selling: false));
-        Assert.Equal(0, state.Clock.Minutes);
-    }
+        Assert.False(hub.MarketTrade("木材", 1, selling: true));
+        Assert.Equal(minutes, state.Clock.Minutes);
 
-    [Fact]
-    public void FirstSettlement_CostsSixHours_AndMarksTheDay()
-    {
-        var (state, hub) = NewHub();
-        state.Roster.Master!.Bag.Add("干粮", 1);
-        hub.OpenTrade();
-        var before = state.Clock.Minutes;
+        // 走进城镇：大门口还不是商店
+        Assert.True(hub.TravelToPoiDirect(CityTrip.NearestTown(hub).Id));
+        Assert.False(hub.AtCityShop);
+        Assert.False(hub.MarketTrade("干粮", 1, selling: false));
 
-        Assert.True(hub.MarketTrade("干粮", 1, selling: false));
-        Assert.Equal(6 * 60, state.Clock.Minutes - before);
-        Assert.Equal(state.Clock.Day, hub.MarketSettledDay);
-        Assert.False(hub.TradeAvailable);
-    }
-
-    [Fact]
-    public void Settlement_HappensOnce_PerDay_LaterTradesAreFree()
-    {
-        var (state, hub) = NewHub();
-        state.Roster.Master!.Bag.Add("干粮", 5);
-        hub.OpenTrade();
-
-        Assert.True(hub.MarketTrade("干粮", 1, selling: false));
-        var afterFirst = state.Clock.Minutes;
-        Assert.Equal(6 * 60, afterFirst);
-
+        // 进了商店：买卖都做得成，成交本身不耗时
+        var shop = hub.State.Territory.Rooms.Single(r => r.RegionId >= Territory.MaxTerritoryRegions && r.HasTag(Territory.CityShopTag));
+        Assert.True(hub.Arrive(shop.Id));
+        Assert.True(hub.AtCityShop);
+        minutes = state.Clock.Minutes;
         var money = state.Money;
-        var price = hub.TradePrices(state.Territory.Listing("干粮")!.Value, selling: false);
-        Assert.True(hub.MarketTrade("干粮", 1, selling: false));
-        Assert.Equal(afterFirst, state.Clock.Minutes);
-        Assert.Equal(money - price, state.Money);
-    }
+        Assert.True(hub.MarketTrade("干粮", 2, selling: false), "城里买得到口粮");
+        Assert.True(state.Money < money);
+        money = state.Money;
+        Assert.True(hub.MarketTrade("木材", 2, selling: true));
+        Assert.True(state.Money > money);
+        Assert.Equal(minutes, state.Clock.Minutes);
+        Assert.Equal(rations + 2, master.Bag.Get("干粮"));
+        Assert.Equal(wood, master.Bag.Get("木材"));
 
-    [Fact]
-    public void FailedTrades_DoNotSettleOrCostTime()
-    {
-        var (state, hub) = NewHub();
-        hub.OpenTrade();
-
-        // 没有可卖的货：成交失败，不耗时也不结算行程。
-        Assert.False(hub.MarketTrade("干粮", 1, selling: true));
-        Assert.Equal(0, state.Clock.Minutes);
-        Assert.True(hub.TradeAvailable);
-    }
-
-    [Fact]
-    public void SettlementRefreshesAtMidnight()
-    {
-        var (state, hub) = NewHub();
-        state.Roster.Master!.Bag.Add("干粮", 9);
-        state.Money = 100000;
-        hub.OpenTrade();
-
-        Assert.True(hub.MarketTrade("干粮", 1, selling: false));
-        Assert.False(hub.TradeAvailable);
-
-        // 0 点刷新：次日首笔成交再结算一次 6 小时。
-        state.Clock.SetTime(2, 8 * 60);
-        Assert.True(hub.TradeAvailable);
-        var before = state.Clock.Minutes;
-        Assert.True(hub.MarketTrade("干粮", 1, selling: false));
-        Assert.Equal(6 * 60, state.Clock.Minutes - before);
-    }
-
-    [Fact]
-    public void LeaveMarket_IsFree_AndClosesTrading()
-    {
-        var (state, hub) = NewHub();
-        hub.OpenTrade();
-        hub.LeaveMarket();
-
-        Assert.False(hub.AtMarket);
-        Assert.Equal(0, state.Clock.Minutes);
+        // 出了商店又不行；回到领地也不行
+        var gate = hub.Map().First(r => r.Id != shop.Id && hub.CanReach(r.Id));
+        Assert.True(hub.Arrive(gate.Id));
         Assert.False(hub.MarketTrade("干粮", 1, selling: false));
-        // 纯浏览没成交，交易按钮仍亮着。
-        Assert.True(hub.TradeAvailable);
+        CityTrip.Home(hub);
+        Assert.False(hub.MarketTrade("干粮", 1, selling: false));
+        // 买来的口粮人背在身上带回了家
+        Assert.Equal(rations + 2, master.Bag.Get("干粮"));
+    }
+
+    [Fact]
+    public void Every_village_town_and_capital_has_one_reachable_shop()
+    {
+        var state = new GameState();
+        foreach (var poi in state.World.Pois.Where(p => CityTrip.ShopTowns.Contains(p.Type)))
+        {
+            var scene = state.EnterPoi(poi.Id);
+            var rooms = scene.ExportToHousingRooms();
+            var shops = rooms.Where(r => r.HasTag(Territory.CityShopTag)).ToList();
+            Assert.True(shops.Count >= 1, $"{poi.NameZh}（{poi.Type}）没有商店");
+            var start = scene.Blocks[0].StartRoom!.Id;
+            var territory = new Territory();
+            // 同进场一样，场景房借领地之后的区号（不占领地的房间名额）
+            territory.SetUnlockedRegions(Territory.MaxTerritoryRegions + scene.Blocks.Count);
+            foreach (var r in rooms)
+            {
+                r.RegionId += Territory.MaxTerritoryRegions;
+                Assert.True(territory.AddRoom(r));
+            }
+            Assert.True(territory.Route(start, shops[0].Id).Count > 0, $"{poi.NameZh} 的商店从大门走不到");
+        }
+        // 城堡、要塞、修道院、遗迹不开店
+        foreach (var poi in state.World.Pois.Where(p => !CityTrip.ShopTowns.Contains(p.Type)).Take(6))
+            Assert.DoesNotContain(state.EnterPoi(poi.Id).ExportToHousingRooms(), r => r.HasTag(Territory.CityShopTag));
+    }
+
+    [Fact]
+    public void Failed_trades_change_nothing()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 1);
+        CityTrip.ToShop(hub);
+        var money = state.Money;
+        var minutes = state.Clock.Minutes;
+        // 没有可卖的货：成交失败，什么都不变。
+        Assert.False(hub.MarketTrade("雨伞", 1, selling: true));
+        Assert.Equal(money, state.Money);
+        Assert.Equal(minutes, state.Clock.Minutes);
     }
 
     // ---------- 行情：报价、供需、60% 基准 ----------
@@ -169,7 +161,7 @@ public sealed class MarketTests
         state.Roster.Add("你", master: true);
         state.Roster.Master!.Bag.Add("雨伞", 1);
         var hub = new HubSession(state);
-        hub.OpenTrade();
+        CityTrip.ToShop(hub);
         state.Territory.MarketDay["雨伞"] = new Territory.MarketEntry(0, 100);
 
         Assert.False(hub.MarketTrade("雨伞", 1, selling: false));
@@ -279,7 +271,7 @@ public sealed class MarketTests
         state.Territory.Weapons.Add(weapon);
         state.Territory.MarketWeapons.Add(new Territory.MarketWeaponListing(weapon.Id, 100));
         var hub = new HubSession(state);
-        hub.OpenTrade();
+        CityTrip.ToShop(hub);
 
         var row = state.Territory.Listing(weapon.Id)!.Value;
         Assert.Equal(1, row.Stock);
@@ -300,7 +292,7 @@ public sealed class MarketTests
             quality: Defs.Quality.Common, enchant: "", blessed: false, enhance: 0);
         state.Territory.Weapons.Add(weapon);
         state.Roster.Master!.Bag.Add(weapon.Id, 1);
-        hub.OpenTrade();
+        CityTrip.ToShop(hub);
 
         // 未上架的武器只收不卖，价 = 价值 × 60% × 当日武器系数。
         var row = state.Territory.Listing(weapon.Id)!.Value;
@@ -320,18 +312,16 @@ public sealed class MarketTests
     // ---------- 存档 ----------
 
     [Fact]
-    public void SaveRoundtrip_KeepsMarketAndSettlement()
+    public void SaveRoundtrip_KeepsMarket()
     {
         var state = new GameState();
         state.Roster.Add("你", master: true);
-        state.Territory.MarketDay["雨伞"] = new Territory.MarketEntry(0, 88);
         var hub = new HubSession(state);
-        hub.OpenTrade();
-        state.Clock.SetTime(1, 9 * 60);
-        // 成交一笔：结算行程（+6 小时，记当天），卖出抬库存 0→1。
+        CityTrip.ToShop(hub);
+        state.Territory.MarketDay["雨伞"] = new Territory.MarketEntry(0, 88);
+        // 在商店里卖一把：卖出抬库存 0→1。存档时人记回领地（读档即人在据点）。
         state.Roster.Master!.Bag.Add("雨伞", 1);
         Assert.True(hub.MarketTrade("雨伞", 1, selling: true));
-        hub.LeaveMarket();
 
         var json = SaveSystem.Save(state, hub);
         var loaded = SaveSystem.Load(json);
@@ -343,10 +333,7 @@ public sealed class MarketTests
         var snapshot = System.Text.Json.JsonSerializer.Deserialize<SaveData>(json);
         Assert.NotNull(snapshot?.Hub);
         restored.Restore(snapshot.Hub);
-        Assert.False(restored.AtMarket);
-        Assert.Equal(1, restored.MarketSettledDay);
-        // 结算后当天按钮是暗的。
-        Assert.False(restored.TradeAvailable);
+        Assert.False(restored.AtCityShop);
     }
 
     [Fact]
@@ -354,10 +341,10 @@ public sealed class MarketTests
     {
         var (state, hub) = NewHub();
         state.Money = 10; // 现金不足以单独买入高价物品
+        CityTrip.ToShop(hub);
         state.Territory.MarketDay["木材"] = new Territory.MarketEntry(10, 100);
         state.Territory.MarketDay["雨伞"] = new Territory.MarketEntry(5, 100);
 
-        hub.OpenTrade();
         var master = state.Roster.Master!;
         master.Bag.Add("雨伞", 1);
 
@@ -381,10 +368,10 @@ public sealed class MarketTests
     {
         var (state, hub) = NewHub();
         state.Money = 0; // 零现金
+        CityTrip.ToShop(hub);
         state.Territory.MarketDay["木材"] = new Territory.MarketEntry(10, 100);
         state.Territory.MarketDay["雨伞"] = new Territory.MarketEntry(5, 100);
 
-        hub.OpenTrade();
         var master = state.Roster.Master!;
         master.Bag.Add("木材", 1); // 木材价值很低，远不足以抵扣高价值雨伞
 

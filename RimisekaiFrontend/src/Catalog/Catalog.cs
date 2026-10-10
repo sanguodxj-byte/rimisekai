@@ -141,6 +141,12 @@ public sealed class SkillDef : Defs.Def
     /// <summary>状态持续回合。</summary>
     public int StatusRounds { get; init; }
 
+    /// <summary>
+    /// 每用一次耗掉的物品（DefName，如「药剂」）。空串 = 不耗东西。
+    /// 耗物品的治疗按目标最大生命的 <see cref="Power"/>% 回，不看法强；只有控制方带着存货时可用。
+    /// </summary>
+    public string Item { get; init; } = "";
+
 }
 
 public sealed class ItemDef
@@ -216,6 +222,15 @@ public sealed class EnemyDef
 
     /// <summary>掉落表，击坠后逐行掷骰。</summary>
     public List<EnemyLoot> Loot { get; init; } = new();
+
+    /// <summary>同一只怪的加强版：属性池与经验池各多给一些（委托板按星数给正主加码用），其余照抄。</summary>
+    public EnemyDef Stronger(int corePool, int expPool) => new()
+    {
+        Id = Id, Name = Name, Weapon = Weapon, Primary = Primary, Secondary = Secondary,
+        CorePool = CorePool + corePool, ExpPool = ExpPool + expPool,
+        ThreatTier = ThreatTier, Column = Column, Size = Size, ActionPoints = ActionPoints,
+        Portrait = Portrait, Armour = Armour, Money = Money, Skills = Skills, Loot = Loot,
+    };
 }
 
 /// <summary>

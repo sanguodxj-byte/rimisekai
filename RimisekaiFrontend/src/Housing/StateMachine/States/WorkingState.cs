@@ -112,11 +112,11 @@ public sealed class WorkingState : BaseWorkerState
             };
         }
 
-        var recipe = territory.Recipes.Find(r => r.Station == worker.Task && territory.CanPayAt(facility, character, r.Costs));
+        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task, facility) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
 
-        territory.Produce(character, recipe.ItemId, recipe.OutputCount);
+        territory.Finish(character, recipe);
         character.GainLifeExp(recipe.Skill, Territory.CraftExp);
         return new WorkLog
         {

@@ -15,9 +15,6 @@ public sealed class HubSnapshot
     /// <summary>近期日志（两段式，最旧在前）。</summary>
     public List<LogEntryData> Log { get; set; } = new();
 
-    /// <summary>最近一次出发去集市的日期（按出发日计，0 点刷新次数）。-1 = 还没去过。</summary>
-    public int MarketSettledDay { get; set; } = -1;
-
     /// <summary>
     /// 定时事件的暂存演员：已掷好但还没登场，因此不在名册里，
     /// 只能随会话快照单独存一份（名册那份存不到他们）。
@@ -61,7 +58,6 @@ public sealed partial class HubSession
         Selected = SelectedCharacterId,
         Presence = presence,
         Log = History.Select(l => new LogEntryData { Kind = l.Kind, Fact = l.Fact, Feel = l.Feel, Day = l.Day, Minutes = l.Minutes, Who = l.Who }).ToList(),
-        MarketSettledDay = MarketSettledDay,
         StagedActors = CaptureStagedActors(),
     };
 
@@ -81,8 +77,6 @@ public sealed partial class HubSession
             Select(snapshot.Selected);
         _book.Restore(snapshot.Log.Select(l => new LogEntry(l.Kind, l.Fact, l.Feel, l.Day, l.Minutes, l.Who)));
         // 读档即人在据点：在集市状态是行程中的临时态，不进存档。
-        AtMarket = false;
-        MarketSettledDay = snapshot.MarketSettledDay;
         RestoreStagedActors(snapshot.StagedActors);
         // 读档后补排班：暂存演员已在，这里只把还没生成的行重新排进后台队列。
         InitializeScheduledEvents();

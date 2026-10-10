@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Rimisekai.Combat;
 using Rimisekai.Defs;
@@ -340,8 +341,14 @@ public sealed class WorldEncounterTests
             Assert.InRange(q.Difficulty, board.StarsMin, board.StarsEarly);
             Assert.Contains(board.Sites, s => s.Name == q.Name);
             Assert.DoesNotContain("{", q.Description);
-            Assert.Contains(MapCatalog.Default.Dungeon.Bosses, b => b.Foes == q.Foes && b.MinTier <= QuestBoard.TierOf(q.Difficulty));
-            Assert.Equal(string.Format(board.RewardText, q.RewardMoney), q.Rewards.Single());
+            // 守关的是某个够格的首领，按星数加厚：每星 CorePerStar 点核心、ExpPerStar 点经验。
+            var core = (int)Math.Round(board.CorePerStar * q.Difficulty);
+            var exp = (int)Math.Round(board.ExpPerStar * q.Difficulty);
+            Assert.Contains(MapCatalog.Default.Dungeon.Bosses, b => b.MinTier <= QuestBoard.TierOf(q.Difficulty)
+                && b.Foes.Count == q.Foes.Count
+                && b.Foes.Zip(q.Foes).All(p => p.First.Name == p.Second.Name
+                    && p.Second.CorePool == p.First.CorePool + core && p.Second.ExpPool == p.First.ExpPool + exp));
+            Assert.Equal($"金币 ×{q.RewardMoney}", q.Rewards.Single());
             Assert.True(q.RewardMoney > 0);
         }
         Assert.Equal(posted.Count, posted.Select(q => q.Name).Distinct().Count());

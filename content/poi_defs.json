@@ -76,7 +76,8 @@
         1023,
         9,
         13
-      ]
+      ],
+      "shopFacilityId": 24
     },
     {
       "id": "TownGateDistrict",
@@ -101,7 +102,8 @@
         8,
         9,
         12
-      ]
+      ],
+      "shopFacilityId": 24
     },
     {
       "id": "CastleGateDistrict",
@@ -171,7 +173,8 @@
         1031,
         1032,
         11
-      ]
+      ],
+      "shopFacilityId": 24
     },
     {
       "id": "CapitalCraftDistrict",

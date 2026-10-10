@@ -153,7 +153,7 @@ public sealed class RoomBuildRulesTests
         ContentDefs.EnsureInitialized();
         TerritoryLoopTests.NewGame(out _, 1);
         var anvil = DefDatabase<FacilityDef>.GetById(AnvilDef)!;
-        Assert.Equal(new[] { ("石材", 30), ("铁矿", 20) }, anvil.MaterialCost.Select(c => (c.ItemId, c.Count)));
+        Assert.Equal(new[] { ("石材", 30), ("铁矿", 15) }, anvil.MaterialCost.Select(c => (c.ItemId, c.Count)));
         var sewing = DefDatabase<FacilityDef>.GetById(SewingDef)!;
         Assert.Equal(new[] { ("木材", 30) }, sewing.MaterialCost.Select(c => (c.ItemId, c.Count)));
     }

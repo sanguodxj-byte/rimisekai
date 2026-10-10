@@ -203,6 +203,9 @@ public sealed class TerritoryClock
 
     /// <summary>推进一个时间步。换委派槽时重新找设施；座位满则改走后备。
     /// 传 ctx 才跑自主节律（睡眠/三餐/找人/娱乐/休息），不传保持旧行为。</summary>
+    /// <summary>出门办委托、此刻不在领地里的人（角色 Id）：不干活、不起居，回来由会话清掉。</summary>
+    public HashSet<int> Away { get; } = new();
+
     public List<WorkLog> Step(Territory territory, Roster roster, int slot, Func<ActionKind, int>? yieldFor = null, StepContext? ctx = null)
     {
         var logs = new List<WorkLog>();
@@ -210,19 +213,19 @@ public sealed class TerritoryClock
         foreach (var character in roster.Members)
         {
             var assignment = territory.ScheduleOf(character.Id).Slots[slot];
+            // 出门办委托的人、出了领地的主人（人在大地图上）：领地里没有他的身子，不跑任何自动行为。
+            if (Away.Contains(character.Id) || (character.IsMaster && ctx != null && ctx.PlayerRoomId < 0))
+            {
+                var awayWorker = _workers.Find(w => w.CharacterId == character.Id);
+                if (awayWorker != null && awayWorker.Goal != ActionKind.None)
+                {
+                    EndRoutine(awayWorker);
+                    Release(awayWorker, used);
+                }
+                continue;
+            }
             if (character.IsMaster)
             {
-                // 主人出了领地（人在大地图上）：领地里没有他的身子，不跑任何自动行为。
-                if (ctx != null && ctx.PlayerRoomId < 0)
-                {
-                    var awayWorker = _workers.Find(w => w.CharacterId == character.Id);
-                    if (awayWorker != null && awayWorker.Goal != ActionKind.None)
-                    {
-                        EndRoutine(awayWorker);
-                        Release(awayWorker, used);
-                    }
-                    continue;
-                }
                 // 玩家在非工作时段（空闲或娱乐）不走自动工作，保持手动自由控制
                 if (assignment.Mode != SlotMode.Work)
                 {
@@ -412,10 +415,7 @@ public sealed class TerritoryClock
     /// </summary>
     public static Recipe? FindAvailableRecipe(Territory territory, Facility bench, CharacterState character, ActionKind task)
     {
-        var candidates = territory.Recipes.Where(r => r.Station == task);
-        var target = territory.GetTargetCraftItem(task);
-        if (!string.IsNullOrEmpty(target))
-            candidates = candidates.Where(r => r.ItemId == target);
+        var candidates = territory.Recipes.Where(r => territory.Makes(r, task, bench));
 
         Recipe? fetchable = null;
         foreach (var r in candidates)
@@ -575,13 +575,10 @@ public sealed class TerritoryClock
         }
         // 工作台只用“这个人背包 + 这台子自己的存货”付料：
         // 材料得有人搬过来，不能隔空从别的货架取。
-        var targetCraft = territory.GetTargetCraftItem(worker.Task);
-        var recipe = (!string.IsNullOrEmpty(targetCraft))
-            ? territory.Recipes.Find(r => r.Station == worker.Task && r.ItemId == targetCraft && territory.CanPayAt(facility, character, r.Costs))
-            : territory.Recipes.Find(r => r.Station == worker.Task && territory.CanPayAt(facility, character, r.Costs));
+        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task, facility) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
-        territory.Produce(character, recipe.ItemId, recipe.OutputCount);
+        territory.Finish(character, recipe);
         character.GainLifeExp(recipe.Skill, Territory.CraftExp);
         character.Condition.Spend(0, GetSpiritCost(worker.Task));
         worker.Phase = WorkPhase.Idle;
@@ -704,6 +701,9 @@ public sealed class TerritoryClock
             StartSeek(character, worker, used);
             return;
         }
+        // 搬运只让三餐与找人打断：半路改去干活，下一格又因包里有货重新起一趟搬运，人就在门口来回打转。
+        if (worker.Goal == ActionKind.Haul)
+            return;
 
         // 刚做好的热饭热菜优先送到餐桌储存，供全领地享用
         if (HasDeliverableMeal(character, territory))
@@ -805,33 +805,15 @@ public sealed class TerritoryClock
                 continue;
 
             var need = cost.Count - onBench;
-            worker.Goal = ActionKind.Haul;
-            worker.Task = ActionKind.None;
-            worker.Progress = 0;
-            worker.HaulItemId = cost.ItemId;
-            worker.HaulCount = need;
-            worker.HaulSourceId = source.Id;
-            worker.HaulTargetId = bench.Id;
-            worker.FacilityId = -1;
-
+            // 人已经在源设施所在的房间：当面取货，直接进入送往工作台阶段
+            var moved = 0;
             if (source.RoomId == worker.RoomId)
             {
-                // 人已经在源设施所在的房间：当面取货，进入送往工作台阶段
-                var moved = territory.TakeFrom(character, source, cost.ItemId, need);
+                moved = territory.TakeFrom(character, source, cost.ItemId, need);
                 if (moved <= 0)
                     continue;
-                worker.HaulCount = moved;
-                worker.HaulPhase = HaulPhase.Delivering;
-                GotoRoom(worker, territory, bench.RoomId, character, ctx);
             }
-            else
-            {
-                // 物理走去源设施所在房间取料，全局禁止隔空取物
-                worker.HaulPhase = HaulPhase.Fetching;
-                GotoRoom(worker, territory, source.RoomId, character, ctx);
-            }
-
-            worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+            // 先换状态再填搬运单：换出去的若是上一趟搬运，它的 Exit 会清空搬运字段。
             worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
             {
                 Territory = territory,
@@ -839,6 +821,28 @@ public sealed class TerritoryClock
                 Worker = worker,
                 StepContext = ctx,
             });
+            worker.Goal = ActionKind.Haul;
+            worker.Task = ActionKind.None;
+            worker.Progress = 0;
+            worker.HaulItemId = cost.ItemId;
+            worker.HaulSourceId = source.Id;
+            worker.HaulTargetId = bench.Id;
+            worker.FacilityId = -1;
+            if (moved > 0)
+            {
+                worker.HaulCount = moved;
+                worker.HaulPhase = HaulPhase.Delivering;
+                GotoRoom(worker, territory, bench.RoomId, character, ctx);
+            }
+            else
+            {
+                // 物理走去源设施所在房间取料，全局禁止隔空取物
+                worker.HaulCount = need;
+                worker.HaulPhase = HaulPhase.Fetching;
+                GotoRoom(worker, territory, source.RoomId, character, ctx);
+            }
+
+            worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
             return true;
         }
         return false;
@@ -879,6 +883,14 @@ public sealed class TerritoryClock
             if (storage == null)
                 continue;
 
+            // 先换状态再填搬运单：换出去的若是上一趟搬运，它的 Exit 会清空搬运字段。
+            worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
+            {
+                Territory = territory,
+                Character = character,
+                Worker = worker,
+                StepContext = ctx,
+            });
             worker.Goal = ActionKind.Haul;
             worker.Task = ActionKind.None;
             worker.Progress = 0;
@@ -890,13 +902,6 @@ public sealed class TerritoryClock
             worker.FacilityId = -1;
             GotoRoom(worker, territory, storage.RoomId, character, ctx);
             worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
-            worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
-            {
-                Territory = territory,
-                Character = character,
-                Worker = worker,
-                StepContext = ctx,
-            });
             return true;
         }
         return false;

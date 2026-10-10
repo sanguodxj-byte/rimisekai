@@ -224,7 +224,7 @@ public static class InkPageBuilder
                     System.Math.Max(0, held.Count - InkLayout.TradeVisibleRows(InkLayout.TradePlayerPanel))),
                 MarketFirst = System.Math.Clamp(q.MarketFirst, 0,
                     System.Math.Max(0, market.Count - InkLayout.TradeVisibleRows(InkLayout.TradeMarketPanel))),
-                TradeAvailable = hub.TradeAvailable,
+                TradeAvailable = hub.AtCityShop,
                 SellName = sellName,
                 SellPrice = sellPrice,
                 BuyName = buyName,

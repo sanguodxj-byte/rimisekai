@@ -8,22 +8,12 @@ namespace Rimisekai.Hub;
 
 public sealed partial class HubSession
 {
-    public const int CostTrade = 72;
-
-    /// <summary>此刻是否在交易页里（点交易进入，关页离开）。在页内才能买卖。</summary>
-    public bool AtMarket { get; private set; }
-
-    /// <summary>最近一次交易成交的日期（首笔成交即结算行程，0 点刷新）。</summary>
-    public int MarketSettledDay { get; private set; } = -1;
-
-    /// <summary>今天还没成交过：交易按钮亮着；成交过即暗，0 点重新点亮。</summary>
-    public bool TradeAvailable => MarketSettledDay != State.Clock.Day;
-
-    /// <summary>打开交易页：浏览行情不耗时。</summary>
-    public void OpenTrade() => AtMarket = true;
-
-    /// <summary>关闭交易页：不耗时。</summary>
-    public void LeaveMarket() => AtMarket = false;
+    /// <summary>
+    /// 此刻是否站在城镇的商店里：买卖只在这里做——货得人亲手背进城、背回家，
+    /// 不再有坐在领地里点一下就成交的远程交易。商店是聚落场景里带 <see cref="Territory.CityShopTag"/> 的那一间。
+    /// </summary>
+    public bool AtCityShop =>
+        Layer == MapLayer.WorldPoi && Room(PlayerRoomId)?.HasTag(Territory.CityShopTag) == true;
 
     /// <summary>玩家背包里的物品。买卖、送礼都看这里。</summary>
     public IReadOnlyDictionary<string, int> Stock() =>
@@ -31,49 +21,14 @@ public sealed partial class HubSession
 
     private static readonly Dictionary<string, int> EmptyItems = new();
 
-    /// <summary>
-    /// 交易。物品买进/卖出都过背包；**设施只能卖**——卖掉就把据点里那座设施移除，
-    /// 想再有一座只能去建。房间不是货，不在市场清单里，<see cref="CanTrade"/> 拒掉。
-    /// </summary>
-    public bool Trade(string itemId, int count, int price, bool selling)
-    {
-        if (!CanTrade(itemId, count, price, selling))
-            return false;
-        PassTime(CostTrade * TerritoryClock.StepMinutes);
-        return TradeCore(itemId, count, price, selling);
-    }
-
-    /// <summary>按 Id 取设施定义；不是设施返回 null。</summary>
-    private static Defs.FacilityDef? FacilityOf(string itemId) =>
-        Defs.DefDatabase<Defs.FacilityDef>.All.FirstOrDefault(f =>
-            f.DefName.Equals(itemId, StringComparison.OrdinalIgnoreCase));
-
-    /// <summary>据点里同名设施有多少座（含已摆放与未放置）。</summary>
-    private int FacilityCount(Defs.FacilityDef def)
-    {
-        var n = 0;
-        foreach (var facility in State.Territory.Facilities)
-        {
-            if (facility.Name == def.Name)
-                n++;
-        }
-        return n;
-    }
-
+    /// <summary>买卖都过玩家背包：卖的得在包里，买的落进包里。设施、房间不是随身货，不在城里卖。</summary>
     private bool CanTrade(string itemId, int count, int price, bool selling)
     {
         if (count <= 0 || price < 0)
             return false;
-        var cost = (long)count * price;
-        if (selling)
-        {
-            // 设施按座数计（拆一座卖一份），其余看背包。
-            var def = FacilityOf(itemId);
-            return def != null
-                ? FacilityCount(def) >= count
-                : (State.Roster.Master?.Bag.Get(itemId) ?? 0) >= count;
-        }
-        return State.Money >= cost;
+        return selling
+            ? (State.Roster.Master?.Bag.Get(itemId) ?? 0) >= count
+            : State.Money >= (long)count * price;
     }
 
     private bool TradeCore(string itemId, int count, int price, bool selling)
@@ -84,23 +39,7 @@ public sealed partial class HubSession
             return false;
         if (selling)
         {
-            var def = FacilityOf(itemId);
-            if (def != null)
-            {
-                // 卖设施：把据点里这座设施拆掉换钱。先拆未放置的，再拆已摆放的。
-                for (var i = 0; i < count; i++)
-                {
-                    var facility = State.Territory.Facilities.Find(f => f.RoomId < 0 && f.Name == def.Name)
-                        ?? State.Territory.Facilities.Find(f => f.Name == def.Name);
-                    if (facility == null)
-                        return false;
-                    State.Territory.Facilities.Remove(facility);
-                }
-            }
-            else
-            {
-                bag.Add(itemId, -count);
-            }
+            bag.Add(itemId, -count);
             State.Money += cost;
         }
         else
@@ -112,19 +51,18 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 交易：必须在交易页内（点交易进入，浏览不耗时）。
-    /// **首笔成交即结算行程**：固定 6 小时，当天只此一次；之后的成交免费。
+    /// 在城镇商店里买卖一笔（人得在 <see cref="AtCityShop"/>）。路已经是走来的，成交本身不再耗时。
     /// 成交即推动行情：买入压库存、卖出抬库存——库存即价格。
     /// </summary>
     public bool MarketTrade(string itemId, int count, bool selling)
     {
-        if (!AtMarket)
+        if (!AtCityShop)
             return false;
         var listing = State.Territory.Listing(itemId);
         if (listing == null)
             return false;
         var row = listing.Value;
-        // 今日无货：买不了，卖不受影响。设施与玩家自己的武器市场根本不卖（Stock < 0）。
+        // 今日无货：买不了，卖不受影响。玩家自己的武器与甲根本不卖（Stock < 0）。
         if (!selling && (row.SoldOut || row.Stock < 0))
             return false;
         // 成交价跟随加成后取：买入往下磨，卖出往上抬（与界面显示同一口径）。
@@ -133,13 +71,6 @@ public sealed partial class HubSession
             return false;
         if (!CanTrade(itemId, count, price, selling))
             return false;
-        // 校验全过、这笔必然成交，才结算行程——失败的买卖不耗时。
-        if (MarketSettledDay != State.Clock.Day)
-        {
-            PassTime(CostTrade * TerritoryClock.StepMinutes);
-            MarketSettledDay = State.Clock.Day;
-            Write("你出门交易了一趟。");
-        }
         if (!TradeCore(itemId, count, price, selling))
             return false;
         if (row.Stock >= 0)
@@ -166,7 +97,7 @@ public sealed partial class HubSession
     /// </summary>
     public bool MarketTradeCombined(string? sellItemId, int sellCount, string? buyItemId, int buyCount)
     {
-        if (!AtMarket)
+        if (!AtCityShop)
             return false;
         var hasSell = !string.IsNullOrEmpty(sellItemId) && sellCount > 0;
         var hasBuy = !string.IsNullOrEmpty(buyItemId) && buyCount > 0;
@@ -200,13 +131,6 @@ public sealed partial class HubSession
         var buyExpense = (long)buyCount * buyPrice;
         if (State.Money + sellIncome < buyExpense)
             return false;
-
-        if (MarketSettledDay != State.Clock.Day)
-        {
-            PassTime(CostTrade * TerritoryClock.StepMinutes);
-            MarketSettledDay = State.Clock.Day;
-            Write("你出门交易了一趟。");
-        }
 
         bag.Add(sellItemId!, -sellCount);
         bag.Add(buyItemId!, buyCount);

@@ -52,15 +52,23 @@ public static class CombatSettlement
         state.Money += loot.Money;
         var carrier = state.Roster.Master;
         if (carrier != null)
+        {
             foreach (var (itemId, count) in loot.Items)
                 state.Territory.Produce(carrier, itemId, count);
+            // 战斗里喝掉的药剂从背包里扣。
+            foreach (var (itemId, count) in battle.Consumed)
+                carrier.Bag.Add(itemId, -count);
+        }
 
-        // 3. 任务结算：胜则通关（记通关次数、起冷却、凯旋回心情）并发酬金。
+        // 3. 任务结算：胜则通关（记通关次数、起冷却、凯旋回心情），发酬金与物品奖励。
         var won = battle.Outcome == CombatOutcome.AttackerWin;
         if (won && questRun != null)
         {
             state.Quests.Complete(questRun, state.Roster);
             state.Money += questRun.Def.RewardMoney;
+            if (carrier != null)
+                foreach (var item in questRun.Def.RewardItems)
+                    state.Territory.Produce(carrier, item.ItemId, item.Count);
         }
 
         return new Outcome { Result = result, Loot = loot, Won = won };

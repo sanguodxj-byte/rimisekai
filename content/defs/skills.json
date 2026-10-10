@@ -47,6 +47,29 @@
     },
     {
       "defType": "SkillDef",
+      "defName": "potion",
+      "label": "饮药剂",
+      "kind": "Heal",
+      "target": "Ally",
+      "power": 40,
+      "hitMod": 0,
+      "range": "Ranged",
+      "chantRounds": 0,
+      "control": false,
+      "status": null,
+      "statusStat": "None",
+      "statusPercent": 0,
+      "statusPower": 0,
+      "statusRounds": 0,
+      "item": "药剂",
+      "gate": {
+        "style": null,
+        "styleLevel": 0,
+        "attribute": null
+      }
+    },
+    {
+      "defType": "SkillDef",
       "defName": "slash", "chartRow": 1, "chartColumn": 1, "deriveFrom": ["attack"],
       "label": "疾斩",
       "kind": "Strike",

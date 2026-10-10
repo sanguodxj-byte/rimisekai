@@ -25,6 +25,15 @@ public sealed class RecipeDef : Def
     /// <summary>所需的原材料清单（物品 DefName + 数量）。</summary>
     public List<RecipeCost> Costs { get; init; } = new();
 
+    /// <summary>
+    /// 装备配方：照这份规格锻一件兵器或甲的实例（见 <see cref="Territory.ForgeGear"/>），
+    /// 此时 <see cref="ItemId"/> 只是配方的名字（如「铁剑」），不是物品。null = 普通物品配方。
+    /// </summary>
+    public RecipeGear? Gear { get; init; }
+
+    /// <summary>手艺门类（「锻」「窑」或空串）：只在门类相同的台子上做，见 <see cref="FacilityDef.Craft"/>。</summary>
+    public string Craft { get; init; } = "";
+
     /// <summary>转为运行时配方对象。</summary>
     public Recipe ToRuntime()
     {
@@ -34,8 +43,23 @@ public sealed class RecipeDef : Def
             Station = Station,
             OutputCount = OutputCount,
             Skill = Skill,
+            Gear = Gear,
+            Craft = Craft,
         };
         recipe.Costs.AddRange(Costs);
         return recipe;
     }
+}
+
+/// <summary>装备配方的规格：什么材料，打哪种兵器或缝哪个槽位的甲（二选一）。</summary>
+public sealed class RecipeGear
+{
+    /// <summary>材料 DefName（材料等级表 materials.xml 里的一档）。</summary>
+    public string Material { get; init; } = "";
+
+    /// <summary>兵器种类；做甲时为 null。</summary>
+    public WeaponType? Weapon { get; init; }
+
+    /// <summary>甲的槽位；做兵器时为 null。</summary>
+    public EquipSlot? Slot { get; init; }
 }
