@@ -52,7 +52,8 @@
           "itemId": "铁矿",
           "count": 2
         }
-      ]
+      ],
+      "craft": "锻"
     },
     {
       "defName": "Recipe_Tan",
@@ -97,7 +98,8 @@
           "itemId": "石材",
           "count": 3
         }
-      ]
+      ],
+      "craft": "窑"
     },
     {
       "defName": "Recipe_Book",
@@ -203,7 +205,8 @@
           "itemId": "herb",
           "count": 2
         }
-      ]
+      ],
+      "craft": "窑"
     },
     {
       "defName": "Recipe_WoodBowl",
@@ -336,7 +339,8 @@
           "itemId": "木材",
           "count": 2
         }
-      ]
+      ],
+      "craft": "锻"
     },
     {
       "defName": "Recipe_WoodBow",
@@ -416,7 +420,8 @@
       "gear": {
         "material": "铁",
         "weapon": "Sword"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronAxe",
@@ -439,7 +444,8 @@
       "gear": {
         "material": "铁",
         "weapon": "Axe"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronSpear",
@@ -462,7 +468,8 @@
       "gear": {
         "material": "铁",
         "weapon": "Spear"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronDagger",
@@ -481,7 +488,8 @@
       "gear": {
         "material": "铁",
         "weapon": "Dagger"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronCrossbow",
@@ -504,7 +512,8 @@
       "gear": {
         "material": "铁",
         "weapon": "Crossbow"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelSword",
@@ -527,7 +536,8 @@
       "gear": {
         "material": "钢",
         "weapon": "Sword"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelAxe",
@@ -550,7 +560,8 @@
       "gear": {
         "material": "钢",
         "weapon": "Axe"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelSpear",
@@ -573,7 +584,8 @@
       "gear": {
         "material": "钢",
         "weapon": "Spear"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronHelm",
@@ -592,7 +604,8 @@
       "gear": {
         "material": "铁",
         "slot": "Head"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronCuirass",
@@ -615,7 +628,8 @@
       "gear": {
         "material": "铁",
         "slot": "Torso"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronGreaves",
@@ -634,7 +648,8 @@
       "gear": {
         "material": "铁",
         "slot": "Legs"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronGauntlets",
@@ -653,7 +668,8 @@
       "gear": {
         "material": "铁",
         "slot": "Hands"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_IronBoots",
@@ -672,7 +688,8 @@
       "gear": {
         "material": "铁",
         "slot": "Feet"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelHelm",
@@ -691,7 +708,8 @@
       "gear": {
         "material": "钢",
         "slot": "Head"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelCuirass",
@@ -714,7 +732,8 @@
       "gear": {
         "material": "钢",
         "slot": "Torso"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_SteelGreaves",
@@ -733,7 +752,8 @@
       "gear": {
         "material": "钢",
         "slot": "Legs"
-      }
+      },
+      "craft": "锻"
     },
     {
       "defName": "Recipe_ClothCap",

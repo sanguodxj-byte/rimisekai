@@ -203,6 +203,9 @@ public sealed class TerritoryClock
 
     /// <summary>推进一个时间步。换委派槽时重新找设施；座位满则改走后备。
     /// 传 ctx 才跑自主节律（睡眠/三餐/找人/娱乐/休息），不传保持旧行为。</summary>
+    /// <summary>出门办委托、此刻不在领地里的人（角色 Id）：不干活、不起居，回来由会话清掉。</summary>
+    public HashSet<int> Away { get; } = new();
+
     public List<WorkLog> Step(Territory territory, Roster roster, int slot, Func<ActionKind, int>? yieldFor = null, StepContext? ctx = null)
     {
         var logs = new List<WorkLog>();
@@ -210,19 +213,19 @@ public sealed class TerritoryClock
         foreach (var character in roster.Members)
         {
             var assignment = territory.ScheduleOf(character.Id).Slots[slot];
+            // 出门办委托的人、出了领地的主人（人在大地图上）：领地里没有他的身子，不跑任何自动行为。
+            if (Away.Contains(character.Id) || (character.IsMaster && ctx != null && ctx.PlayerRoomId < 0))
+            {
+                var awayWorker = _workers.Find(w => w.CharacterId == character.Id);
+                if (awayWorker != null && awayWorker.Goal != ActionKind.None)
+                {
+                    EndRoutine(awayWorker);
+                    Release(awayWorker, used);
+                }
+                continue;
+            }
             if (character.IsMaster)
             {
-                // 主人出了领地（人在大地图上）：领地里没有他的身子，不跑任何自动行为。
-                if (ctx != null && ctx.PlayerRoomId < 0)
-                {
-                    var awayWorker = _workers.Find(w => w.CharacterId == character.Id);
-                    if (awayWorker != null && awayWorker.Goal != ActionKind.None)
-                    {
-                        EndRoutine(awayWorker);
-                        Release(awayWorker, used);
-                    }
-                    continue;
-                }
                 // 玩家在非工作时段（空闲或娱乐）不走自动工作，保持手动自由控制
                 if (assignment.Mode != SlotMode.Work)
                 {
@@ -412,7 +415,7 @@ public sealed class TerritoryClock
     /// </summary>
     public static Recipe? FindAvailableRecipe(Territory territory, Facility bench, CharacterState character, ActionKind task)
     {
-        var candidates = territory.Recipes.Where(r => territory.Makes(r, task));
+        var candidates = territory.Recipes.Where(r => territory.Makes(r, task, bench));
 
         Recipe? fetchable = null;
         foreach (var r in candidates)
@@ -572,7 +575,7 @@ public sealed class TerritoryClock
         }
         // 工作台只用“这个人背包 + 这台子自己的存货”付料：
         // 材料得有人搬过来，不能隔空从别的货架取。
-        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task) && territory.CanPayAt(facility, character, r.Costs));
+        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task, facility) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
         territory.Finish(character, recipe);

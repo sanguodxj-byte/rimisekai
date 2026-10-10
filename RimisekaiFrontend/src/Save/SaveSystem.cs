@@ -143,14 +143,9 @@ public sealed class FacilityData
 
     /// <summary>房间标签要求（室内/室外/空串）。</summary>
     public string RoomTag { get; set; } = "";
-}
 
-public sealed class RecipeData
-{
-    public string ItemId { get; set; } = "";
-    public ActionKind Station { get; set; }
-    public int Output { get; set; } = 1;
-    public List<CostData> Costs { get; set; } = new();
+    /// <summary>手艺门类（锻/窑/空串）。</summary>
+    public string Craft { get; set; } = "";
 }
 
 /// <summary>
@@ -190,7 +185,6 @@ public sealed class TerritoryData
 
     public List<RoomData> Rooms { get; set; } = new();
     public List<FacilityData> Facilities { get; set; } = new();
-    public List<RecipeData> Recipes { get; set; } = new();
     public Dictionary<int, List<AssignmentData>> Schedules { get; set; } = new();
 
     public List<GuestData> Guests { get; set; } = new();
@@ -366,17 +360,8 @@ public static class SaveSystem
                 Actions = new List<ActionKind>(f.Actions),
                 IsTable = f.IsTable,
                 RoomTag = f.RoomTag,
+                Craft = f.Craft,
             });
-        }
-        foreach (var r in state.Territory.Recipes)
-        {
-            var recipe = new RecipeData
-            {
-                ItemId = r.ItemId, Station = r.Station, Output = r.OutputCount,
-            };
-            foreach (var cost in r.Costs)
-                recipe.Costs.Add(new CostData { ItemId = cost.ItemId, Count = cost.Count });
-            t.Recipes.Add(recipe);
         }
         foreach (var w in state.Territory.Weapons.All)
         {
@@ -542,6 +527,7 @@ public static class SaveSystem
                 Buildable = f.Buildable, CanStore = f.Storage,
                 IsTable = f.IsTable,
                 RoomTag = f.RoomTag,
+                Craft = f.Craft,
             };
             if (f.Actions != null)
             {
@@ -561,16 +547,6 @@ public static class SaveSystem
                 facility.RoomId = -1;
             if (facility.RoomId < 0)
                 state.Territory.AddUnplacedFacility(facility);
-        }
-        foreach (var r in data.Territory.Recipes)
-        {
-            var recipe = new Recipe
-            {
-                ItemId = r.ItemId, Station = r.Station, OutputCount = r.Output,
-            };
-            foreach (var cost in r.Costs)
-                recipe.Costs.Add(new RecipeCost(cost.ItemId, cost.Count));
-            state.Territory.AddRecipe(recipe);
         }
         foreach (var w in data.Territory.Weapons)
         {

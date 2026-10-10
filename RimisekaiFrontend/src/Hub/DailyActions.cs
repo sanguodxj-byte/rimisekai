@@ -231,7 +231,7 @@ public sealed partial class HubSession
         }
 
         // 制作：这门手艺指定了目标就只做它，否则做第一样料够的普通配方；扣料出成品（装备配方锻一件实例）。
-        var recipe = State.Territory.Recipes.Find(r => State.Territory.Makes(r, act) && State.Territory.CanPayWith(master, r.Costs));
+        var recipe = State.Territory.Recipes.Find(r => State.Territory.Makes(r, act, fixture) && State.Territory.CanPayWith(master, r.Costs));
         if (recipe == null)
         {
             Write($"{fixture.Name}上暂时没有能做的活。");

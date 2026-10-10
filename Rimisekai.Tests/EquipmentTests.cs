@@ -73,11 +73,12 @@ public sealed class EquipmentTests
         var territory = state.Territory;
         var sword = territory.Recipes.Single(r => r.ItemId == "铁剑");
         var ingot = territory.Recipes.Single(r => r.ItemId == "铁");
-        Assert.False(territory.Makes(sword, ActionKind.Forge));
-        Assert.True(territory.Makes(ingot, ActionKind.Forge));
+        var smithy = new Facility { Craft = "锻" };
+        Assert.False(territory.Makes(sword, ActionKind.Forge, smithy));
+        Assert.True(territory.Makes(ingot, ActionKind.Forge, smithy));
         Assert.True(hub.Craft("铁剑"));
-        Assert.True(territory.Makes(sword, ActionKind.Forge));
-        Assert.False(territory.Makes(ingot, ActionKind.Forge));
+        Assert.True(territory.Makes(sword, ActionKind.Forge, smithy));
+        Assert.False(territory.Makes(ingot, ActionKind.Forge, smithy));
 
         // 没下单时站上铁砧的人只冶铁锭，不会把铁锭打成剑
         Assert.True(hub.Craft("铁剑"));

@@ -110,7 +110,7 @@ public sealed class EquipInstance
                 return 1;
             var baseValue = Kind switch
             {
-                EquipKind.Armor => ArmorSlots.BaseDefence(Slot) * 3,
+                EquipKind.Armor => ArmorSlots.BaseValue(Slot),
                 EquipKind.Accessory => AccessoryDef?.BaseBonus * 4 ?? 10,
                 _ => 1,
             };

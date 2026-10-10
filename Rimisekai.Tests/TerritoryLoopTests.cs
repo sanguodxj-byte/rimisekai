@@ -21,8 +21,8 @@ namespace Rimisekai.Tests;
 public sealed class TerritoryLoopTests
 {
     private const int Quarry = 1006;  // 采石点：Mine → 石材
-    private const int Kiln = 1070;    // 陶器坊：Forge（拉坯 3 石材 → 陶罐；冶铁 2 铁矿 → 铁）
-    private const int Anvil = 1013;   // 铁砧：石材 30 + 铁矿 20，Forge（冶铁、打兵器与铁甲）
+    private const int Kiln = 1070;    // 陶器坊：Forge·窑（拉坯 3 石材 → 陶罐；煅炼金尘）
+    private const int Anvil = 1013;   // 铁砧：石材 30 + 铁矿 15，Forge·锻（冶铁、炼钢、打兵器与铁甲）
     private const int ChickenYard = 138; // 养鸡场：建成自带鸡舍（Tend → 鸡蛋）
     private const int CoopCellX = 3, CoopCellY = 1; // 客厅东边、山脚北边的空格
     private const int Chest = 8;      // 箱子
@@ -294,7 +294,8 @@ public sealed class TerritoryLoopTests
     /// 2. 第 3 天旅人留下：开拓一格空地（1000G）建客卧——建成自带一张床，不用另打。旅人上午挖铁矿、下午缺石材采石。
     /// 3. 工坊：石材、铁矿攒够就在庭院起铁砧（石 30 铁矿 20），旅人下午改去铁砧，铁砧指定冶铁锭。
     /// 4. 打装备：铁锭够一件就下一单（先给旅人打他那门兵器，再给玩家、旅人各配一身铁甲），打好的从仓储取出来穿上。
-    /// 5. 委托：从第 4 天起，板上的固定战斗委托（谷仓鼠患、北坡头狼、狼群夜袭）有空就接，三人真打一场（骰子按天定），
+    /// 5. 委托：从第 4 天起每两天接一单板上空着的固定战斗委托（谷仓鼠患、北坡头狼、狼群夜袭），接单直接过 8 小时；
+    ///    玩家带旅人去、女仆留家干活，两人真打一场（骰子按天定），
     ///    赢了照结算入账：酬金、掉落、物品奖励。钱就从这里来——不卖产物。
     /// 6. 钱够了再开拓一格，建养鸡场（自带鸡舍），女仆下午去养鸡，出鸡蛋添口粮。
     /// 两人晚上排娱乐（沙发）；谁来找玩家说话就应一声；每两天去一趟集市，箱里口粮不够就买。跑 30 天，第 16 天存读档一次。
@@ -376,10 +377,10 @@ public sealed class TerritoryLoopTests
             while (state.Clock.Day < target)
             {
                 var hour = state.Clock.Minutes / 60;
-                if (hour >= 9 && !fought && visitorId >= 0 && day >= 4)
+                if (hour >= 9 && !fought && visitorId >= 0 && day >= 4 && day % 2 == 0)
                 {
                     fought = true;
-                    var (won, pay) = TakeCommission(state, day);
+                    var (won, pay) = TakeCommission(hub, state, day);
                     commissionPay += pay;
                     if (won > 0)
                         commissionsWon += won;
@@ -480,7 +481,7 @@ public sealed class TerritoryLoopTests
         Assert.True(maidSleptInHerBed, "女仆睡在第一天给她打的床上");
         // 路线走通：客卧（自带床）→ 铁砧 → 打出装备穿上 → 委托赢钱 → 养鸡场（自带鸡舍）出蛋
         Assert.True(guestBedId >= 0 && anvilId >= 0 && coopId >= 0, $"客卧床 {guestBedId} 铁砧 {anvilId} 鸡舍 {coopId}");
-        Assert.True(investDay["铁砧"] <= 10, $"铁砧第 {investDay["铁砧"]} 天才起");
+        Assert.True(investDay["铁砧"] <= 12, $"铁砧第 {investDay["铁砧"]} 天才起");
         Assert.True(worn.Count >= 6, $"穿上的装备 {worn.Count} 件");
         Assert.True(commissionsWon >= 8, $"委托赢了 {commissionsWon} 场");
         Assert.True(eggs > 0, "鸡舍出了鸡蛋");
@@ -549,14 +550,16 @@ public sealed class TerritoryLoopTests
     /// 接一单板上空着的固定战斗委托（按编号轮着来），三个人带着身上的装备真打一场（骰子按天定），照结算入账。
     /// 返回（赢了 1 / 输了 -1 / 没得接 0，入账金币）。
     /// </summary>
-    private static (int Won, long Pay) TakeCommission(GameState state, int day)
+    private static (int Won, long Pay) TakeCommission(HubSession hub, GameState state, int day)
     {
         var open = QuestBoard.Open(state).Where(q => !q.Generated && q.Kind == QuestKind.Battle).ToList();
         if (open.Count == 0)
             return (0, 0);
         var def = open[day % open.Count];
-        var party = state.Roster.Members.Select(c => c.Id).Take(def.MaxPartySize).ToList();
-        var run = state.Quests.Start(def, party)!;
+        // 女仆留家干活，玩家带旅人去
+        var maidId = state.Roster.Members.Where(c => !c.IsMaster).Min(c => c.Id);
+        var party = state.Roster.Members.Where(c => c.Id != maidId).Select(c => c.Id).Take(def.MaxPartySize).ToList();
+        var run = hub.AcceptCommission(def, party)!;
         var before = state.Money;
         var battle = CombatBalanceTests.Brawl(state, def.Foes, def.Waves, day, fresh: false);
         var outcome = CombatSettlement.Settle(state, battle, run)!;

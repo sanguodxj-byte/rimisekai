@@ -350,9 +350,9 @@ public sealed class Territory
     /// 这门手艺此刻做不做这份配方：指定了目标就只做目标；没指定就做普通配方，
     /// 装备配方（兵器、甲）不会自己开炉——得有人下单，免得把铁锭全打成剑。
     /// </summary>
-    public bool Makes(Recipe recipe, ActionKind task)
+    public bool Makes(Recipe recipe, ActionKind task, Facility bench)
     {
-        if (recipe.Station != task)
+        if (recipe.Station != task || recipe.Craft != bench.Craft)
             return false;
         var target = GetTargetCraftItem(task);
         return target.Length > 0 ? recipe.ItemId == target : recipe.Gear == null;
@@ -1079,6 +1079,12 @@ public sealed class Territory
             return new MarketListing(weapon.Id, weapon.Name, -1, 0, sellOnly);
         }
 
+        // 甲与饰品实例：市场不卖成品甲，玩家做出来的只收不卖（同自己的武器）。
+        var equip = Equips.Get(itemId);
+        if (equip != null)
+            return new MarketListing(equip.Id, equip.Name, -1, 0,
+                Math.Max(1, ScaleBy(equip.Value, SellRatioPercent, WeaponPricePercent)));
+
         var facility = Defs.DefDatabase<Defs.FacilityDef>.All
             .FirstOrDefault(f => f.DefName.Equals(itemId, StringComparison.OrdinalIgnoreCase));
         if (facility == null)
@@ -1713,7 +1719,7 @@ public sealed class Territory
     private WorkLog? Craft(
         int slot, CharacterState character, Facility facility, ActionKind task)
     {
-        var recipe = Recipes.Find(r => Makes(r, task) && CanPayWith(character, r.Costs));
+        var recipe = Recipes.Find(r => Makes(r, task, facility) && CanPayWith(character, r.Costs));
         if (recipe == null || !PayWith(character, recipe.Costs))
             return null;
         Finish(character, recipe);

@@ -112,7 +112,7 @@ public sealed class WorkingState : BaseWorkerState
             };
         }
 
-        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task) && territory.CanPayAt(facility, character, r.Costs));
+        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task, facility) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
 

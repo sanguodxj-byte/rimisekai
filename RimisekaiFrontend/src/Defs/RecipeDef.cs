@@ -31,6 +31,9 @@ public sealed class RecipeDef : Def
     /// </summary>
     public RecipeGear? Gear { get; init; }
 
+    /// <summary>手艺门类（「锻」「窑」或空串）：只在门类相同的台子上做，见 <see cref="FacilityDef.Craft"/>。</summary>
+    public string Craft { get; init; } = "";
+
     /// <summary>转为运行时配方对象。</summary>
     public Recipe ToRuntime()
     {
@@ -41,6 +44,7 @@ public sealed class RecipeDef : Def
             OutputCount = OutputCount,
             Skill = Skill,
             Gear = Gear,
+            Craft = Craft,
         };
         recipe.Costs.AddRange(Costs);
         return recipe;

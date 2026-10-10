@@ -293,14 +293,15 @@ public partial class PortraitHubScreen
         var master = hub.State.Roster.Master;
         if (master != null && !deploy.Contains(master.Id))
             deploy.Add(master.Id);
-        var run = hub.State.Quests.Start(defs[_questSel], deploy);
+        var def = defs[_questSel];
+        // 接单即赶路办事：直接推过 8 小时，再开打或坐马车进地城。
+        var run = hub.AcceptCommission(def, deploy);
         if (run == null)
         {
-            SetNotice("这单现在接不了。");
+            SetNotice(def.Kind == QuestKind.Dungeon && hub.Layer != MapLayer.Territory ? "回到领地才能接这单。" : "这单现在接不了。");
             return;
         }
 
-        var def = defs[_questSel];
         // 地城探索委托＝包接送的地城：马车送进地城，正主倒下即了结接回（Core 收尾）。
         if (def.Kind == QuestKind.Dungeon)
         {

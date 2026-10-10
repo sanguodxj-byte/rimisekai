@@ -5,12 +5,13 @@
     材料轴单独一张（materials.xml），全项目只此一份。
   -->
 
-  <!-- 防具槽位：基础防御与物品名词（布甲/皮甲的“甲”，铁帽的“帽”）。 -->
+  <!-- 防具槽位：基础防御、基础身价（材料系数与品质系数乘在上面；皮甲照皮的用量定，卖价稳压过料钱）与物品名词（布甲/皮甲的“甲”，铁帽的“帽”）。 -->
   <ArmorSlotDef>
     <defName>Head</defName>
     <label>帽</label>
     <description>护持头部的防具，从软帽、轻皮盔到坚甲钢盔皆属此列。</description>
     <baseDefence>3</baseDefence>
+    <baseValue>80</baseValue>
     <noun>帽</noun>
   </ArmorSlotDef>
 
@@ -19,6 +20,7 @@
     <label>甲</label>
     <description>护持躯干要害的主体甲胄，布衣、硬皮甲与铁锁重铠皆属此列。</description>
     <baseDefence>8</baseDefence>
+    <baseValue>160</baseValue>
     <noun>甲</noun>
   </ArmorSlotDef>
 
@@ -27,6 +29,7 @@
     <label>腿</label>
     <description>护持下肢与膝腿的轻重护胫，兼顾防护与行步活动。</description>
     <baseDefence>5</baseDefence>
+    <baseValue>120</baseValue>
     <noun>腿</noun>
   </ArmorSlotDef>
 
@@ -35,6 +38,7 @@
     <label>手</label>
     <description>裹护腕掌的手甲与皮腕带，防滑减震，护持持械手腕。</description>
     <baseDefence>2</baseDefence>
+    <baseValue>40</baseValue>
     <noun>手</noun>
   </ArmorSlotDef>
 
@@ -43,6 +47,7 @@
     <label>靴</label>
     <description>耐磨坚实的行路软长靴或铁踏重靴，保暖防护并适于跋涉。</description>
     <baseDefence>2</baseDefence>
+    <baseValue>80</baseValue>
     <noun>靴</noun>
   </ArmorSlotDef>
 

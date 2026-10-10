@@ -20,6 +20,7 @@
         "Meal"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -44,6 +45,7 @@
       "storage": true,
       "actions": [],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -70,6 +72,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -96,6 +99,7 @@
         "Fell"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -122,6 +126,7 @@
         "Mine"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -146,6 +151,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -172,6 +178,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -196,6 +203,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -226,6 +234,7 @@
         "Forge"
       ],
       "roomTag": "",
+      "craft": "锻",
       "materialCost": [
         {
           "itemId": "石材",
@@ -233,7 +242,7 @@
         },
         {
           "itemId": "铁矿",
-          "count": 20
+          "count": 15
         }
       ],
       "marketValue": 0
@@ -256,6 +265,7 @@
         "Forge"
       ],
       "roomTag": "",
+      "craft": "锻",
       "materialCost": [
         {
           "itemId": "石材",
@@ -286,6 +296,7 @@
         "Woodwork"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -316,6 +327,7 @@
         "Sew"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -342,6 +354,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -369,6 +382,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -399,6 +413,7 @@
         "Sleep"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -426,6 +441,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -456,6 +472,7 @@
         "Pray"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -482,6 +499,7 @@
         "Store"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -508,6 +526,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -534,6 +553,7 @@
         "Store"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -564,6 +584,7 @@
         "Lookout"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -594,6 +615,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -618,6 +640,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -648,6 +671,7 @@
         "Trade"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -678,6 +702,7 @@
         "Store"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -708,6 +733,7 @@
         "Train"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -734,6 +760,7 @@
         "Read"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -764,6 +791,7 @@
         "Brew"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -799,6 +827,7 @@
         "Meal"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -830,6 +859,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -860,6 +890,7 @@
         "Bathe"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -886,6 +917,7 @@
         "Watch"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -916,6 +948,7 @@
         "Sleep"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -946,6 +979,7 @@
         "Store"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -974,6 +1008,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1000,6 +1035,7 @@
         "Lookout"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1034,6 +1070,7 @@
         "Meditate"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1064,6 +1101,7 @@
         "Stargaze"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1094,6 +1132,7 @@
         "Pray"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1125,6 +1164,7 @@
         "Store"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1151,6 +1191,7 @@
         "Train"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1181,6 +1222,7 @@
         "Mine"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1215,6 +1257,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1241,6 +1284,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1271,6 +1315,7 @@
         "Woodwork"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1302,6 +1347,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1332,6 +1378,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1362,6 +1409,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -1388,6 +1436,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1415,6 +1464,7 @@
         "Meal"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "石材",
@@ -1443,6 +1493,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2618,6 +2669,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2642,6 +2694,7 @@
       "storage": false,
       "actions": [],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2669,6 +2722,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2699,6 +2753,7 @@
         "Sleep"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2725,6 +2780,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [],
       "marketValue": 0
     },
@@ -2746,6 +2802,7 @@
         "Mine"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [],
       "marketValue": 0
     },
@@ -2767,6 +2824,7 @@
         "Fell"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [],
       "marketValue": 0
     },
@@ -2786,6 +2844,7 @@
       "storage": true,
       "actions": [],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2812,6 +2871,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2846,6 +2906,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2872,6 +2933,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2898,6 +2960,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2924,6 +2987,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2950,6 +3014,7 @@
         "Till"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -2976,6 +3041,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3006,6 +3072,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3036,6 +3103,7 @@
         "Tend"
       ],
       "roomTag": "室外",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3066,6 +3134,7 @@
         "Brew"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3096,6 +3165,7 @@
         "Forge"
       ],
       "roomTag": "",
+      "craft": "窑",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3126,6 +3196,7 @@
         "Sew"
       ],
       "roomTag": "",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",
@@ -3156,6 +3227,7 @@
         "Meal"
       ],
       "roomTag": "室内",
+      "craft": "",
       "materialCost": [
         {
           "itemId": "木材",

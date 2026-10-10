@@ -13,6 +13,9 @@ public sealed class ArmorSlotDef : Def
     /// <summary>基础防御（材料加成与品质乘数都算在这之上）。</summary>
     public int BaseDefence { get; init; }
 
+    /// <summary>基础身价（材料价值系数与品质系数都乘在这之上）。</summary>
+    public int BaseValue { get; init; }
+
     /// <summary>拼名字用的物品名词，如"盔""甲""腿""手""靴"。</summary>
     public string Noun { get; init; } = "";
 }
@@ -38,5 +41,15 @@ public static class ArmorSlots
         if (def == null)
             throw new System.Collections.Generic.KeyNotFoundException($"未在 equipment.xml 中配置防具槽位 {slot} 的基础防御 BaseDefence");
         return def.BaseDefence;
+    }
+
+    /// <summary>这个槽位的基础身价。</summary>
+    public static int BaseValue(EquipSlot slot)
+    {
+        DefLoader.EnsureInitialized();
+        var def = DefDatabase<ArmorSlotDef>.Get(slot.ToString());
+        if (def == null)
+            throw new System.Collections.Generic.KeyNotFoundException($"未在 equipment.xml 中配置防具槽位 {slot} 的基础身价 BaseValue");
+        return def.BaseValue;
     }
 }
