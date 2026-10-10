@@ -36,11 +36,8 @@ public enum PortraitAction
     CombatColumn,
     CombatMenu,
     CombatSettings,
-    SkillSector,
     SkillNode,
-    SkillReset,
-    SkillPrevious,
-    SkillNext,
+    SkillGroup,
     ScrollTrack,
     RosterPick,
     ScheduleMember,
@@ -82,13 +79,11 @@ public enum PortraitAction
     WorldGo,
     WorldStep,
     CharacterSegment,
-    SkillCard,
     TraitInfo,
     EquipInfo,
     EquipSlotPick,
     EquipOption,
     EquipRemove,
-    OpenDisc,
     CodexOpen,
     CodexEntry,
     StoreSegment,
@@ -134,7 +129,6 @@ public partial class PortraitHubScreen : Control
     {
         None,
         Character,
-        Disc,
         Build,
         System,
         Equip,
@@ -147,7 +141,6 @@ public partial class PortraitHubScreen : Control
         Room,
         Party,
         Slot,
-        Item,
         World,
         PortraitPicker,
     }
@@ -286,8 +279,6 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawPartySheet);
         else if (_sheet == SheetKind.Slot)
             OpenSheetLayer(DrawSlotSheet);
-        else if (_sheet == SheetKind.Item)
-            OpenSheetLayer(DrawItemSheet);
         else if (_sheet == SheetKind.World)
             OpenSheetLayer(DrawWorldSheet);
         else if (_sheet == SheetKind.PortraitPicker)
@@ -318,7 +309,6 @@ public partial class PortraitHubScreen : Control
         switch (page)
         {
             case PushPage.Character: DrawCharacterPage(); break;
-            case PushPage.Disc: DrawSkillPage(); break;
             case PushPage.Build: DrawDevelopment(); break;
             case PushPage.Equip: DrawEquipmentPage(); break;
             case PushPage.Codex: DrawCodexPage(); break;
@@ -555,7 +545,7 @@ public partial class PortraitHubScreen : Control
             ResetListDrag();
             return;
         }
-        if (HandleWorldInput(e) || HandleSkillInput(e) || HandleListInput(e))
+        if (HandleWorldInput(e) || HandleListInput(e))
             return;
         if (e is InputEventMouseMotion { ButtonMask: not 0 } motion)
         {
@@ -641,16 +631,6 @@ public partial class PortraitHubScreen : Control
         if (ExecuteWorld(w) || ExecuteTerritory(w) || ExecuteInteraction(w) || ExecuteEquipment(w) || ExecuteCharacter(w) || ExecuteSchedule(w)
             || ExecuteStore(w) || ExecutePages(w) || ExecuteDevelopment(w) || ExecuteCodex(w))
             return;
-        switch (w.Action)
-        {
-            case PortraitAction.SkillSector:
-            case PortraitAction.SkillNode:
-            case PortraitAction.SkillReset:
-            case PortraitAction.SkillPrevious:
-            case PortraitAction.SkillNext:
-                ExecuteSkillWidget(w);
-                break;
-        }
     }
 
     /// <summary>抽屉的收起：交互抽屉逐级退（赠礼 → 类别 → 关闭），存取抽屉关设施，其余直接收。</summary>
@@ -668,7 +648,7 @@ public partial class PortraitHubScreen : Control
     private void Back()
     {
         ResetSkillView();
-        if (_push is PushPage.Disc or PushPage.Equip)
+        if (_push == PushPage.Equip)
         {
             _push = PushPage.Character;
             return;

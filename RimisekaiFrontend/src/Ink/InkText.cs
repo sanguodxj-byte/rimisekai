@@ -77,14 +77,7 @@ public static class InkText
     public static string WorkType(Housing.WorkType type) => Housing.WorkTypeMap.LabelOf(type);
 
     /// <summary>工作时段名。0时00分 / 6时00分 / 12时00分 / 18时00分（项目禁用冒号）。</summary>
-    public static string FoodTier(Housing.FoodTier tier) => tier switch
-    {
-        Housing.FoodTier.Plain => "朴素",
-        Housing.FoodTier.Delicate => "精致",
-        Housing.FoodTier.Feast => "丰盛",
-        Housing.FoodTier.Exquisite => "绝味",
-        _ => "普通",
-    };
+    public static string FoodTier(Housing.FoodTier tier) => Housing.FoodTiers.Label(tier);
 
         public static string WorkSlot(int slot) => slot switch
     {

@@ -21,7 +21,6 @@ public partial class PortraitHubScreen
     private int _storeMode;
     private string _stockSearch = "";
     private int _stockCategory;
-    private string _stockSel = "";
     private bool _tradeSell;
     private readonly Dictionary<string, int> _tradeQty = new();
     private int _craftStation;
@@ -109,27 +108,16 @@ public partial class PortraitHubScreen
         var shown = _stockCategory == 0 ? all : all.Where(i => i.Category == categories[_stockCategory]).ToList();
 
         var view = PortraitLayout.StockView;
-        var cw = PortraitLayout.StockCardWidth;
-        var step = PortraitLayout.StockCardHeight + 20f;
-        var rows = (shown.Count + 2) / 3;
-        var total = (int)(rows * step);
+        var step = PortraitLayout.StockRowHeight + PortraitLayout.StockRowGap;
+        var total = (int)(shown.Count * step);
         var offset = Pan("stock", total, (int)view.Size.Y);
         for (var i = 0; i < shown.Count; i++)
         {
             var item = shown[i];
-            var r = new Rect2(PortraitLayout.Pad + i % 3 * (cw + 20f), view.Position.Y + i / 3 * step - offset,
-                cw, PortraitLayout.StockCardHeight);
+            var r = PortraitLayout.StockRow(i, offset);
             if (r.End.Y < view.Position.Y || r.Position.Y > view.End.Y)
                 continue;
-            PortraitFrame.Card(this, r, item.Id == _stockSel && _sheet == SheetKind.None);
-            var c = new Vector2(r.GetCenter().X, r.Position.Y + 92f);
-            InkDraw.Jewel(this, c, 54f, InkStyle.Dim);
-            InkDraw.Jewel(this, c, 50f, InkStyle.Bg);
-            InkDraw.Text(this, c, item.Name[..1], PortraitLayout.FontBody, InkStyle.Line, "cm");
-            // 物名居中对准上方菱形（2026-10-10 主人定：能对称居中的尽量居中）。
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 24f, r.Position.Y + 176f, r.Size.X - 48f, 60f), item.Name,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            InkDraw.Text(this, new Vector2(r.End.X - 24f, r.Position.Y + 140f), $"×{item.Count}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+            DrawStockRow(r, item.Id, item.Name, item.Count, view);
             AddClipped(r, view, PortraitAction.StockItem, all.IndexOf(item), true, item.Id);
         }
         if (shown.Count == 0)
@@ -169,30 +157,65 @@ public partial class PortraitHubScreen
         RegisterScroll(id, row, total, (int)row.Size.X, offset, v => _pan[id] = v, 1f, horizontal: true);
     }
 
-    /// <summary>物品详情抽屉：取库存模型的详情（名称 / 数量 / 品类 / 价 / 说明），只读。</summary>
-    private float DrawItemSheet()
+    /// <summary>
+    /// 库存一条（与战后结算战利品条同一套：缺角细框＋菱形首字）：上行物名，下行题签（品类 ◆ 品质 ◆ 单价），
+    /// 右侧件数；精致及以上铺左→右吹的稀有度雾。
+    /// </summary>
+    private void DrawStockRow(Rect2 r, string itemId, string name, int count, Rect2 view)
     {
-        var all = StockItems();
-        var index = all.FindIndex(i => i.Id == _stockSel);
-        var q = new InkPageQuery(index, index, -1, _stockSearch, false, 0, 0, false, -1, -1);
-        var model = InkPageBuilder.Build(_vm, InkPage.Stock, in q);
-        var lines = InkDraw.WrapLines(model.DetailNote, PortraitLayout.FullWidth - 40f, PortraitLayout.FontMeta);
-        var top = Mathf.Max(900f, PortraitLayout.CanvasHeight - 120f - PortraitLayout.SheetContentOffset - lines.Count * 64f);
-        PortraitFrame.Sheet(this, top);
-        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top + PortraitLayout.SheetTitleOffset - 40f, 760f, 80f),
-            model.DetailTitle, PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        var close = PortraitLayout.SheetClose(top);
-        PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
-        _widgets.Add(new PortraitWidget(close, PortraitAction.SheetClose, 0, true, "收起"));
-        var y = top + PortraitLayout.SheetContentOffset + 10f;
-        foreach (var line in lines)
+        var detail = _vm.Hub.DescribeItem(itemId);
+        var info = Items.Info(_vm.Hub.State.Territory, itemId)!.Value;
+        PortraitFrame.Bevel(this, r, 22f, PortraitFrame.IsPressed(r) ? PortraitFrame.PressFill : null, InkStyle.WoodDark, 3f);
+        if (detail.Quality is { } q)
+            _fog.Place(r.Grow(-4f), q, viewport: view);
+        var icon = new Vector2(r.Position.X + 66f, r.GetCenter().Y);
+        InkDraw.Jewel(this, icon, 38f, InkStyle.Dim);
+        InkDraw.Jewel(this, icon, 34f, InkStyle.Bg);
+        InkDraw.Text(this, icon, name[..1], PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        var countText = $"×{count}";
+        var countWidth = InkDraw.Measure(countText, PortraitLayout.FontBody).X;
+        var textLeft = r.Position.X + 128f;
+        var textRight = r.End.X - 56f - countWidth;
+        InkDraw.TextBounded(this, new Rect2(textLeft, r.Position.Y + 12f, textRight - textLeft, 66f), name,
+            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+        var tags = new List<string> { detail.Category };
+        if (detail.Quality is { } quality)
+            tags.Add(QualityOf.Label(quality));
+        tags.Add($"{info.MarketValue}G");
+        PortraitFrame.TagLine(this, textLeft, r.Position.Y + 110f, tags, textRight, InkStyle.Dim);
+        InkDraw.Text(this, new Vector2(r.End.X - 32f, r.GetCenter().Y), countText, PortraitLayout.FontBody, InkStyle.Line, "rm");
+    }
+
+    /// <summary>配方行右侧的材料：自右向左排「名 ×n」计数签，组间小菱；放不下的前段不画。</summary>
+    private void DrawCostTags(IReadOnlyList<RecipeCost> costs, float left, float right, float cy)
+    {
+        var x = right;
+        for (var i = costs.Count - 1; i >= 0; i--)
         {
-            if (y > PortraitLayout.CanvasHeight - 80f)
+            var label = ItemName(costs[i].ItemId);
+            var value = $"×{costs[i].Count}";
+            var w = InkDraw.Measure(label, PortraitLayout.FontMeta).X + 10f + InkDraw.Measure(value, PortraitLayout.FontMeta).X;
+            if (x - w < left)
                 break;
-            InkDraw.Text(this, new Vector2(PortraitLayout.Pad + 20f, y), line, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            y += 64f;
+            PortraitFrame.CountTag(this, x - w, cy, label, value, true);
+            x -= w;
+            if (i > 0)
+            {
+                InkDraw.Jewel(this, new Vector2(x - 20f, cy), 6f, new Color(InkStyle.Dim, 0.8f));
+                x -= 40f;
+            }
         }
-        return top;
+    }
+
+    /// <summary>点库存条：弹物品详情（标题、品类副题、逐行字段条、说明），与装备详情同一版式。</summary>
+    private void ShowStockDetail(string itemId)
+    {
+        var d = _vm.Hub.DescribeItem(itemId);
+        ModalWanted!(new InkModalPage
+        {
+            Title = d.Title,
+            Item = new InkModalItemData { Subtitle = d.Category, Quality = d.Quality, Lines = d.Lines, Flavor = d.Flavor },
+        });
     }
 
     // ---------- 交易 ----------
@@ -361,10 +384,10 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, icon, name[..1], PortraitLayout.FontMeta, payable ? InkStyle.Line : InkStyle.Dim, "cm");
             InkDraw.TextBounded(this, new Rect2(r.Position.X + 130f, r.Position.Y, 360f, r.Size.Y), name,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, payable ? InkStyle.Line : InkStyle.Dim, "lm");
-            var costs = string.Join(" · ", recipe.Costs.Select(c => $"{ItemName(c.ItemId)} ×{c.Count}"));
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 500f, r.Position.Y, r.Size.X - 540f, r.Size.Y),
-                recipe.ItemId == target ? "生产目标" : costs, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-                recipe.ItemId == target ? InkStyle.Line : InkStyle.Dim, "rm");
+            if (recipe.ItemId == target)
+                InkDraw.Text(this, new Vector2(r.End.X - 40f, r.GetCenter().Y), "生产目标", PortraitLayout.FontMeta, InkStyle.Line, "rm");
+            else
+                DrawCostTags(recipe.Costs, r.Position.X + 500f, r.End.X - 40f, r.GetCenter().Y);
             AddClipped(r, view, PortraitAction.CraftRecipe, i, true, recipe.ItemId);
         }
         RegisterScroll("craft", view, total, (int)view.Size.Y, offset, v => _pan["craft"] = v, 1f);
@@ -379,8 +402,8 @@ public partial class PortraitHubScreen
         var x = frame.Position.X + 50f;
         InkDraw.TextBounded(this, new Rect2(x, frame.Position.Y + 30f, frame.Size.X - 100f, 80f), ItemName(selRecipe.ItemId),
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
-        InkDraw.Text(this, new Vector2(x, frame.Position.Y + 136f),
-            $"产出 ×{selRecipe.OutputCount} · {InkText.LifeSkill(selRecipe.Skill)}", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        var after = PortraitFrame.CountTag(this, x, frame.Position.Y + 136f, "产出", $"×{selRecipe.OutputCount}", true);
+        PortraitFrame.TagLine(this, after, frame.Position.Y + 136f, new[] { InkText.LifeSkill(selRecipe.Skill) }, frame.End.X - 50f, InkStyle.Dim, continues: true);
         var y = frame.Position.Y + 210f;
         foreach (var cost in selRecipe.Costs.Take(3))
         {
@@ -420,8 +443,7 @@ public partial class PortraitHubScreen
                 _pan.Remove("stock");
                 return true;
             case PortraitAction.StockItem:
-                _stockSel = w.Label;
-                _sheet = SheetKind.Item;
+                ShowStockDetail(w.Label);
                 return true;
             case PortraitAction.TradeSegment:
                 _tradeSell = w.Index == 1;

@@ -161,9 +161,7 @@ public partial class PortraitHubScreen
             _widgets.Add(new PortraitWidget(PortraitFrame.SegmentRect(seg, CharacterSegmentLabels.Length, i),
                 PortraitAction.CharacterSegment, i, true, CharacterSegmentLabels[i]));
 
-        // 技能段的顶栏右侧给「星盘」入口（完整的战斗技能星盘与解锁门槛详情）。
-        DrawPageTop(who.Name, $"{RoleOf(who)} · Lv {who.Level}", _charSeg == 1 ? "星盘" : "",
-            _charSeg == 1 ? PortraitAction.OpenDisc : PortraitAction.Back);
+        DrawPageTop(who.Name, $"{RoleOf(who)} · Lv {who.Level}");
     }
 
     /// <summary>状态：2×2 体征卡 / 属性 3×2 / 战斗 3×2 / 特质签 / 装备双列。返回内容下沿。</summary>
@@ -289,65 +287,70 @@ public partial class PortraitHubScreen
         return y + (rows.Count + 2) / 3 * 130f + 40f;
     }
 
+    /// <summary>展开着的熟练分组（生活 / 武器 / 流派）；不在此集里的分组只露最高那一项。</summary>
+    private readonly HashSet<string> _skillGroupsOpen = new();
+
     /// <summary>
-    /// 技能：生活 / 武器 / 流派三段菱形刻度行（每段的熟练等级），再是战斗技能卡（已解锁亮、未解锁暗＋锁）。
-    /// 战斗技能卡点开即进技能星盘并选中该式；顶栏右侧「星盘」直接进星盘。
+    /// 技能：生活 / 武器 / 流派三组熟练，每组默认只露最高的一项（组底「全部 n ▾」），点该组展开整组（按等级从高到低），再点收起。
+    /// 其下直接是战斗技能星盘与所选技能的详情（不另开页面）。
     /// </summary>
     private float DrawSkillsSegment(CharacterState who, float y, Rect2 view)
     {
         var page = InkCharacterPageBuilder.Build(_vm, InkPage.Status, who)!;
-        var group = "";
+        var groups = new List<(string Name, List<InkPageRow> Rows)>();
         foreach (var row in page.Rows)
         {
             if (row.IsHeading)
-            {
-                group = row.Name;
-                PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, group);
-                y += 60f;
-                continue;
-            }
-            if (group.Length == 0)
-                continue;
-            var level = LevelOf(row.Value);
-            InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, y, 230f, 100f), row.Name, PortraitLayout.FontBody,
-                PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Ticks(this, 280f, y + 50f, 10, Mathf.Min(level, 10), 30f, 22f);
-            InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 10f, y + 50f),
-                row.Value.StartsWith("Lv") ? row.Value : $"Lv{row.Value}", PortraitLayout.FontMeta, InkStyle.Dim, "rm");
-            InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad, y + 104f),
-                new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 104f), InkStyle.Hover, 2f);
-            y += 110f;
+                groups.Add((row.Name, new List<InkPageRow>()));
+            else if (groups.Count > 0)
+                groups[^1].Rows.Add(row);
         }
-        y += 30f;
-
-        var disc = BuildSkillPage().Disc!;
-        var tiles = disc.Tiles.Where(t => t.Kind == InkSkillNodeKind.Skill && t.Id.Length > 0)
-            .OrderByDescending(t => t.Unlocked).ThenBy(t => t.Sector).ToArray();
-        if (tiles.Length > 0)
+        foreach (var (name, rows) in groups)
         {
-            PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "战斗技能");
-            y += 50f;
-            var cw = (PortraitLayout.FullWidth - 20f) / 2f;
-            for (var i = 0; i < tiles.Length; i++)
+            if (rows.Count == 0)
+                continue;
+            PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, name);
+            y += 40f;
+            var open = _skillGroupsOpen.Contains(name);
+            var sorted = rows.OrderByDescending(r => LevelOf(r.Value)).ToList();
+            var shown = open ? sorted : sorted.Take(1).ToList();
+            var groupTop = y;
+            for (var i = 0; i < shown.Count; i++)
             {
-                var tile = tiles[i];
-                var r = new Rect2(PortraitLayout.Pad + i % 2 * (cw + 20f), y + i / 2 * 196f, cw, 176f);
-                PortraitFrame.Card(this, r, tile.Id == _skillSelectedId);
-                if (tile.Unlocked)
-                    PortraitGlyph.Swords(this, r.Position.X + 70f, r.GetCenter().Y, 30f, InkStyle.Line);
-                else
-                    PortraitGlyph.Lock(this, r.Position.X + 70f, r.GetCenter().Y, 30f, InkStyle.WoodDark);
-                InkDraw.TextBounded(this, new Rect2(r.Position.X + 124f, r.Position.Y + 30f, r.Size.X - 150f, 64f), tile.Name,
-                    PortraitLayout.FontBody, PortraitLayout.FontMeta, tile.Unlocked ? InkStyle.Line : InkStyle.Dim, "lm");
-                var sector = tile.Sector < disc.SectorLabels.Count ? disc.SectorLabels[tile.Sector] : "";
-                InkDraw.TextBounded(this, new Rect2(r.Position.X + 124f, r.Position.Y + 100f, r.Size.X - 150f, 52f), sector,
-                    PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-                AddClipped(r, view, PortraitAction.SkillCard, i, true, tile.Id);
+                var row = shown[i];
+                var level = LevelOf(row.Value);
+                InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, y, 230f, 100f), row.Name, PortraitLayout.FontBody,
+                    PortraitLayout.FontMeta, InkStyle.Line, "lm");
+                PortraitFrame.Ticks(this, 280f, y + 50f, 10, Mathf.Min(level, 10), 30f, 22f);
+                InkDraw.Text(this, new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 10f, y + 50f),
+                    $"Lv{level}", PortraitLayout.FontMeta, i == 0 ? InkStyle.Line : InkStyle.Dim, "rm");
+                if (i < shown.Count - 1)
+                    InkDraw.InkLine(this, new Vector2(PortraitLayout.Pad, y + 104f),
+                        new Vector2(PortraitLayout.CanvasWidth - PortraitLayout.Pad, y + 104f), InkStyle.Hover, 2f);
+                y += 110f;
             }
-            y += (tiles.Length + 1) / 2 * 196f + 20f;
+            // 展开 / 收起钮：组底一枚居中的「全部 n ▾」或「收起 ▴」，与整组同一命中块。
+            if (sorted.Count > 1)
+            {
+                var label = open ? "收起" : $"全部 {sorted.Count}";
+                var cx = PortraitLayout.CanvasWidth / 2f;
+                var w = InkDraw.Measure(label, PortraitLayout.FontMeta).X;
+                InkDraw.Text(this, new Vector2(cx - 14f, y + 26f), label, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+                var tx = cx - 14f + w / 2f + 26f;
+                var ty = y + 28f;
+                DrawColoredPolygon(open
+                    ? new[] { new Vector2(tx - 12f, ty + 7f), new Vector2(tx + 12f, ty + 7f), new Vector2(tx, ty - 9f) }
+                    : new[] { new Vector2(tx - 12f, ty - 7f), new Vector2(tx + 12f, ty - 7f), new Vector2(tx, ty + 9f) }, InkStyle.Dim);
+                y += 60f;
+                AddClipped(new Rect2(PortraitLayout.Pad, groupTop, PortraitLayout.FullWidth, y - groupTop), view,
+                    PortraitAction.SkillGroup, groups.FindIndex(g => g.Name == name), true, name);
+            }
+            y += 40f;
         }
 
-        return y;
+        PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad, y, "战斗技能");
+        y += 40f;
+        return DrawSkillChart(who, y, view);
     }
 
     private static int LevelOf(string value)
@@ -369,12 +372,12 @@ public partial class PortraitHubScreen
                 if (_charSeg == 2)
                     OpenSchedule();
                 return true;
-            case PortraitAction.SkillCard:
+            case PortraitAction.SkillNode:
                 _skillSelectedId = w.Label;
-                _push = PushPage.Disc;
                 return true;
-            case PortraitAction.OpenDisc:
-                _push = PushPage.Disc;
+            case PortraitAction.SkillGroup:
+                if (!_skillGroupsOpen.Remove(w.Label))
+                    _skillGroupsOpen.Add(w.Label);
                 return true;
             case PortraitAction.TraitInfo:
                 ShowTraitInfo(w.Index);

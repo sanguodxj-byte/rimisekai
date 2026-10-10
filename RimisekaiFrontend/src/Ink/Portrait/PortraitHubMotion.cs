@@ -79,8 +79,8 @@ public partial class PortraitHubScreen
             _noticeAge += d;
             redraw |= _noticeAge > 3f;
         }
-        // 技能星盘视角动效。
-        redraw |= _push == PushPage.Disc && AdvanceSkillView(delta);
+        // 星盘里可学习的星在呼吸：停在角色技能段时逐帧重画。
+        redraw |= _push == PushPage.Character && _charSeg == 1 && !PortraitMotion.Instant;
 
         redraw |= _sheetMotion.Step(d);
         if (_sheetClosing && !_sheetMotion.Running)
@@ -204,7 +204,7 @@ public partial class PortraitHubScreen
     private static int Depth(PushPage page) => page switch
     {
         PushPage.None => 0,
-        PushPage.Disc or PushPage.Codex => 2,
+        PushPage.Codex => 2,
         _ => 1,
     };
 
@@ -218,7 +218,6 @@ public partial class PortraitHubScreen
         }
         _pushUnder = _push switch
         {
-            PushPage.Disc => PushPage.Character,
             PushPage.Codex => PushPage.System,
             _ => PushPage.None,
         };

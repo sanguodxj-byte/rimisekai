@@ -67,6 +67,12 @@ public sealed class CharacterState
     public Proficiency[] Weapons { get; } = NewProficiencies(Enum.GetValues<WeaponType>().Length);
     public Proficiency[] Styles { get; } = NewProficiencies(Enum.GetValues<StyleType>().Length);
 
+    /// <summary>
+    /// 已学习的战斗技能 Id。技能靠战斗中使用来源技能学会（见 <see cref="Combat.SkillLearning"/>），学会即永久记下；
+    /// 流派技能只在装备对应流派时可用。通用两式（无门槛）不记在这里，人人自带。
+    /// </summary>
+    public HashSet<string> LearnedSkills { get; } = new();
+
     private static Proficiency[] NewProficiencies(int count)
     {
         var list = new Proficiency[count];

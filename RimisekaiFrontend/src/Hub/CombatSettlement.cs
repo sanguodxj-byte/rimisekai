@@ -28,7 +28,7 @@ public static class CombatSettlement
     /// 结算并落账。战斗仍在进行中（未分胜负）时返回 null——那是中途撤离，不该出结算单。
     /// <paramref name="questRun"/> 为本场对应的任务运行时，传 null 表示测试战斗。
     /// </summary>
-    public static Outcome? Settle(GameState state, Battle battle, QuestRun? questRun = null)
+    public static Outcome? Settle(GameState state, Battle battle, QuestRun? questRun = null, System.Func<int>? d100 = null)
     {
         if (battle.Outcome == CombatOutcome.Ongoing)
             return null;
@@ -45,6 +45,9 @@ public static class CombatSettlement
             {
                 row.WeaponTotalExp = c.Weapons[(int)row.Weapon].Exp;
                 row.StyleTotalExp = c.Styles[(int)row.Style].Exp;
+                // 派生学习：按本场用过的技能逐次掷其派生技，一场至多学习一式。
+                if (SkillLearning.Roll(c, row.SkillUses, d100 ?? (() => System.Random.Shared.Next(100))) is { } skill)
+                    row.NewSkill = skill.Id;
             }
         state.Money += loot.Money;
         var carrier = state.Roster.Master;

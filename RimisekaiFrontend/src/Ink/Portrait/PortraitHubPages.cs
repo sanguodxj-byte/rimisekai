@@ -62,17 +62,17 @@ public partial class PortraitHubScreen
 
     private List<QuestDef> AvailableQuests() => QuestBoard.Open(_vm.Hub.State);
 
-    /// <summary>委托的敌人一行：同名合并计数；连战把各波都算上。</summary>
-    private static string FoesOf(QuestDef def) => string.Join(" · ", def.Foes.Concat(def.Waves.SelectMany(w => w))
-        .GroupBy(f => f.Name).Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key));
+    /// <summary>委托的敌人：同名合并计数；连战把各波都算上。一项一段，画成题签行。</summary>
+    private static List<string> FoesOf(QuestDef def) => def.Foes.Concat(def.Waves.SelectMany(w => w))
+        .GroupBy(f => f.Name).Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key).ToList();
 
     /// <summary>
     /// 委托卡的版式（自上而下）：名字行、难度行（敌方放得下就跟在菱形后，放不下就自下一行起按字宽换行）、
     /// 整段描述（按字宽换行，不截断）、分隔线、报酬行（放不下就换行）＋「接取」。
     /// 内容放得下时与原版一致（560 高）；放不下就往下长，不截「…」。
     /// </summary>
-    private readonly record struct QuestCardLayout(bool FoesInline, IReadOnlyList<string> Foes, IReadOnlyList<string> Body,
-        float DividerY, IReadOnlyList<string> Rewards, float Height);
+    private readonly record struct QuestCardLayout(bool FoesInline, IReadOnlyList<IReadOnlyList<string>> Foes, IReadOnlyList<string> Body,
+        float DividerY, IReadOnlyList<IReadOnlyList<string>> Rewards, float Height);
 
     private const float QuestLineStep = 66f;
     private const float QuestRewardStep = 54f;
@@ -80,24 +80,22 @@ public partial class PortraitHubScreen
     private static float QuestFoesX(QuestDef def, float x) =>
         x + 130f + Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty))) * 44f;
 
-    /// <summary>报酬按「 · 」分项折行：整项放得下就整项挪到下一行，不把「不明矿块」拆成「不 / 明矿块」；单项一行都放不下才按字宽断。</summary>
-    private static List<string> WrapRewards(IReadOnlyList<string> items, float width)
+    /// <summary>题签分项折行：整项放得下就整项挪到下一行，不把「不明矿块」拆成「不 / 明矿块」；单项一行都放不下才按字宽断。</summary>
+    private static List<IReadOnlyList<string>> WrapTags(IReadOnlyList<string> items, float width)
     {
-        var lines = new List<string>();
-        var line = "";
+        var lines = new List<IReadOnlyList<string>>();
+        var line = new List<string>();
         foreach (var item in items)
         {
-            var joined = line.Length == 0 ? item : $"{line} · {item}";
-            if (InkDraw.Measure(joined, PortraitLayout.FontMeta).X <= width)
-            {
-                line = joined;
+            line.Add(item);
+            if (PortraitFrame.TagWidth(line) <= width)
                 continue;
-            }
-            if (line.Length > 0)
+            line.RemoveAt(line.Count - 1);
+            if (line.Count > 0)
                 lines.Add(line);
             var parts = InkDraw.WrapLines(item, width, PortraitLayout.FontMeta);
-            lines.AddRange(parts.Take(parts.Count - 1));
-            line = parts[^1];
+            lines.AddRange(parts.Take(parts.Count - 1).Select(p => (IReadOnlyList<string>)new[] { p }));
+            line = new List<string> { parts[^1] };
         }
         lines.Add(line);
         return lines;
@@ -107,14 +105,14 @@ public partial class PortraitHubScreen
     {
         var x = r.Position.X + 50f;
         var foes = FoesOf(def);
-        var foesInline = InkDraw.Measure(foes, PortraitLayout.FontMeta).X <= r.End.X - 50f - QuestFoesX(def, x);
-        var foeLines = foesInline ? (IReadOnlyList<string>)Array.Empty<string>() : InkDraw.WrapLines(foes, r.Size.X - 100f, PortraitLayout.FontMeta);
+        var foesInline = PortraitFrame.TagWidth(foes) <= r.End.X - 50f - QuestFoesX(def, x);
+        var foeLines = foesInline ? new List<IReadOnlyList<string>>() : WrapTags(foes, r.Size.X - 100f);
         var body = def.Description.Length > 0 ? def.Description : def.Rumor.Length > 0 ? $"「{def.Rumor}」" : "";
         var bodyLines = InkDraw.WrapLines(body, r.Size.X - 100f, PortraitLayout.FontMeta);
         var lastLine = 150f + (foeLines.Count + bodyLines.Count) * QuestLineStep;
         var divider = Math.Max(420f, lastLine + 68f);
         var take = QuestTakeRect(r, divider, 0f);
-        var rewards = WrapRewards(def.Rewards, take.Position.X - x - 74f);
+        var rewards = WrapTags(def.Rewards, take.Position.X - x - 74f);
         // 折行时报酬带上下各多留一截，末行不贴到卡底内框线上。
         var band = Math.Max(PortraitLayout.TouchMin, rewards.Count * QuestRewardStep + 40f);
         return new QuestCardLayout(foesInline, foeLines, bodyLines, divider, rewards, divider + 12f + band + 10f);
@@ -157,10 +155,10 @@ public partial class PortraitHubScreen
             var stars = Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty)));
             PortraitFrame.Ticks(this, x + 110f, r.Position.Y + 150f, stars, (float)def.Difficulty, 30f, 14f);
             if (lay.FoesInline)
-                InkDraw.Text(this, new Vector2(QuestFoesX(def, x), r.Position.Y + 150f), FoesOf(def), PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+                PortraitFrame.TagLine(this, QuestFoesX(def, x), r.Position.Y + 150f, FoesOf(def), r.End.X - 40f, InkStyle.Dim);
             var lineY = r.Position.Y + 150f;
             foreach (var line in lay.Foes)
-                InkDraw.Text(this, new Vector2(x, lineY += QuestLineStep), line, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+                PortraitFrame.TagLine(this, x, lineY += QuestLineStep, line, r.End.X - 40f, InkStyle.Dim);
             foreach (var line in lay.Body)
                 InkDraw.Text(this, new Vector2(x, lineY += QuestLineStep), line,
                     PortraitLayout.FontMeta, def.Description.Length > 0 ? InkStyle.Line : InkStyle.Dim, "lm");
@@ -171,7 +169,7 @@ public partial class PortraitHubScreen
             var rewardTop = dividerY + 12f + band / 2f - (lay.Rewards.Count - 1) * QuestRewardStep / 2f;
             PortraitGlyph.Coin(this, x + 18f, rewardTop, 18f, InkStyle.Dim);
             for (var k = 0; k < lay.Rewards.Count; k++)
-                InkDraw.Text(this, new Vector2(x + 54f, rewardTop + k * QuestRewardStep), lay.Rewards[k], PortraitLayout.FontMeta, InkStyle.Line, "lm");
+                PortraitFrame.TagLine(this, x + 54f, rewardTop + k * QuestRewardStep, lay.Rewards[k], take.Position.X - 12f, InkStyle.Line);
             PortraitFrame.Plaque(this, take, "接取");
             AddClipped(take, view, PortraitAction.QuestTake, i, true, def.Id.ToString());
         }
@@ -275,8 +273,14 @@ public partial class PortraitHubScreen
 
         DrawRect(footer, InkStyle.Hover);
         PortraitFrame.FadingRule(this, 0f, PortraitLayout.CanvasWidth, footer.Position.Y);
-        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, footer.Position.Y + 20f, 480f, 140f), FoesOf(def),
-            PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+        // 来敌：题签行，至多两行，在出发钮左侧上下居中。
+        var foeLines = WrapTags(FoesOf(def), 480f).Take(2).ToList();
+        var foeY = footer.Position.Y + 90f - (foeLines.Count - 1) * 30f;
+        foreach (var line in foeLines)
+        {
+            PortraitFrame.TagLine(this, PortraitLayout.Pad + 20f, foeY, line, PortraitLayout.Pad + 500f, InkStyle.Dim);
+            foeY += 60f;
+        }
         var go = new Rect2(PortraitLayout.CanvasWidth - PortraitLayout.Pad - 440f, footer.Position.Y + 26f, 440f, 140f);
         PortraitFrame.Plaque(this, go, "出发", primary: true, glyph: PortraitGlyph.Swords);
         _widgets.Add(new PortraitWidget(go, PortraitAction.QuestStart, 0, true, "出发"));

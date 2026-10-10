@@ -20,8 +20,6 @@ public partial class PortraitHubScreen
                     new PortraitRegion("sheet", new Godot.Rect2(0, _sheetTop, PortraitLayout.CanvasWidth,
                         PortraitLayout.CanvasHeight - _sheetTop)),
                 };
-            if (_push == PushPage.Disc)
-                return SkillRegions();
             if (_push == PushPage.Build)
                 return DevelopmentRegions();
             if (_push != PushPage.None)

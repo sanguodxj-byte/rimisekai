@@ -55,13 +55,15 @@ public sealed class InkModalPage
     public bool HasInteractiveControls => Input != null || Choices.Count > 0;
 }
 
-/// <summary>物品详情：标题下一行副题（可空），其下逐行字段。</summary>
+/// <summary>物品详情：标题下一行副题（可空），其下逐行字段条，末尾一段风味说明（可空）。</summary>
 public sealed class InkModalItemData
 {
     public string Subtitle { get; init; } = "";
     /// <summary>装备品质：精致及以上时详情页铺一层上飘的稀有度雾。</summary>
     public Rimisekai.Defs.Quality? Quality { get; init; }
     public IReadOnlyList<Rimisekai.Defs.DetailLine> Lines { get; init; } = Array.Empty<Rimisekai.Defs.DetailLine>();
+    /// <summary>物品说明：字段条下方一道分节线后整段排出（暗字、居中折行）。</summary>
+    public string Flavor { get; init; } = "";
 }
 
 /// <summary>战后结算界面的结构化数据。</summary>
@@ -72,6 +74,8 @@ public sealed class InkModalSettlementData
     public long Money { get; init; }
     /// <summary>战利品物品，已按单件市场价值从高到低排好（同价按名字）；金钱另记在 Money。</summary>
     public List<Loot> Items { get; init; } = new();
+    /// <summary>本场学会的新技能：谁学会了哪一式（战利品条里排在金钱之后、物品之前）。</summary>
+    public List<(string Who, string Skill)> NewSkills { get; init; } = new();
 
     /// <summary>Quality：装备实例的品质（定稀有度雾），材料等定义物品为 null。</summary>
     public readonly record struct Loot(string ItemId, string Label, int MarketValue, int Count, Rimisekai.Defs.Quality? Quality);
@@ -270,6 +274,8 @@ public static class InkModalFactory
                 StyleLevelUp = sLevel > System.Math.Max(1, r.StyleLevel),
                 StyleExp = r.StyleExp,
             });
+            if (r.NewSkill.Length > 0)
+                settlement.NewSkills.Add((r.Name, Rimisekai.Combat.SkillTable.Get(r.NewSkill)!.Name));
         }
 
         // 价值排序：单件市场价值高的（高稀有度装备、高阶材料）排在上面。

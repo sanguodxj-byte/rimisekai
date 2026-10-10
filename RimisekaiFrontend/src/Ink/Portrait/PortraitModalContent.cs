@@ -239,9 +239,14 @@ public partial class PortraitModalLayer
         {
             var y = rect.Position.Y + 42f + i * 44f;
             var drop = drops[i];
-            var text = $"{drop.Name} {drop.Quantity} · {drop.Chance}";
-            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, y, rect.Size.X - 36f, 42f),
-                text, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            // 掉落一行：左物名，右「×数量」暗字＋几率亮字，分栏对齐而不是串成一句。
+            var chanceWidth = InkDraw.Measure(drop.Chance, PortraitLayout.FontMeta).X;
+            InkDraw.Text(ci, new Vector2(rect.End.X - 18f, y + 21f), drop.Chance, PortraitLayout.FontMeta, InkStyle.Line, "rm");
+            var qtyRight = rect.End.X - 18f - chanceWidth - 16f;
+            var qtyWidth = InkDraw.Measure(drop.Quantity, PortraitLayout.FontMeta).X;
+            InkDraw.Text(ci, new Vector2(qtyRight, y + 21f), drop.Quantity, PortraitLayout.FontMeta, InkStyle.Dim, "rm");
+            InkDraw.TextBounded(ci, new Rect2(rect.Position.X + 18f, y, qtyRight - qtyWidth - 12f - rect.Position.X - 18f, 42f),
+                drop.Name, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Line, "lm");
             if (i > 0)
                 ci.DrawLine(new Vector2(rect.Position.X + 16f, y - 4f),
                     new Vector2(rect.End.X - 16f, y - 4f), InkStyle.Dim, 2f);
@@ -319,6 +324,9 @@ public partial class PortraitModalLayer
         var loot = new List<(string Glyph, string Name, string Count, Rimisekai.Defs.Quality? Quality)>();
         if (data.Money > 0)
             loot.Add(("金", "金钱", $"+{data.Money}G", null));
+        // 新学会的技能：「学」字条，左技能名、右学会的人。
+        foreach (var (who, skill) in data.NewSkills)
+            loot.Add(("学", $"学会「{skill}」", who, null));
         foreach (var item in data.Items)
             loot.Add((item.Label[..1], item.Label, $"×{item.Count}", item.Quality));
         var capacity = SettlementLootCapacity(data.Rows.Count);
@@ -341,7 +349,7 @@ public partial class PortraitModalLayer
         var right = _modalPanel.End.X - 60f;
         if (loot.Count > 0)
         {
-            PortraitFrame.SectionRule(this, left, right, y, "战利品");
+            PortraitFrame.SectionRule(this, left, right, y, data.NewSkills.Count > 0 ? "收获" : "战利品");
             y += 60f;
             var listRight = scrolls ? right - 24f : right;
             var listHeight = shown * (StripHeight + StripGap) - StripGap;
@@ -415,7 +423,10 @@ public partial class PortraitModalLayer
         var rows = 0f;
         foreach (var line in data.Lines)
             rows += (line.Note.Length > 0 ? DetailNoteRow : DetailRow) + DetailGap;
-        _modalPanel = PortraitLayout.ModalBounds(PortraitLayout.ModalPad * 2f + heading + rows + PortraitLayout.ModalArrowBand);
+        var flavorWidth = PortraitLayout.ModalWidth - PortraitLayout.ModalPad * 2f - 60f;
+        IReadOnlyList<string> flavor = data.Flavor.Length > 0 ? InkDraw.WrapLines(data.Flavor, flavorWidth, PortraitLayout.FontMeta) : Array.Empty<string>();
+        var flavorHeight = flavor.Count > 0 ? FlavorHead + flavor.Count * FlavorLine : 0f;
+        _modalPanel = PortraitLayout.ModalBounds(PortraitLayout.ModalPad * 2f + heading + rows + flavorHeight + PortraitLayout.ModalArrowBand);
         _modalBody = new Rect2();
         _modalTotal = _modalVisible = 0;
         PortraitFrame.GothicFrame(this, _modalPanel, new Color(InkStyle.Panel, 1f));
@@ -433,6 +444,12 @@ public partial class PortraitModalLayer
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         PortraitFrame.FadingRule(this, _modalPanel.Position.X + 160f, _modalPanel.End.X - 160f, top + (data.Subtitle.Length > 0 ? 176f : 110f));
         var y = top + heading;
+        // 标签栏按最长标签定宽（至少 160，至多六成），数值栏占余下右对齐。
+        var labelWidth = 160f;
+        foreach (var line in data.Lines)
+            labelWidth = Mathf.Max(labelWidth, InkDraw.Measure(line.Label, PortraitLayout.FontMeta).X + 8f);
+        labelWidth = Mathf.Min(labelWidth, textWidth * 0.6f);
+        var valueLeft = 58f + labelWidth + 20f;
         foreach (var line in data.Lines)
         {
             var h = line.Note.Length > 0 ? DetailNoteRow : DetailRow;
@@ -440,17 +457,31 @@ public partial class PortraitModalLayer
             PortraitFrame.Bevel(this, rect, 22f, null, InkStyle.WoodDark, 3f);
             var mid = line.Note.Length > 0 ? rect.Position.Y + 54f : rect.GetCenter().Y;
             InkDraw.Jewel(this, new Vector2(rect.Position.X + 34f, mid), 7f, InkStyle.Dim);
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 58f, mid - 30f, 160f, 60f), line.Label,
+            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 58f, mid - 30f, labelWidth, 60f), line.Label,
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + 220f, mid - 32f, rect.Size.X - 252f, 64f), line.Value,
+            InkDraw.TextBounded(this, new Rect2(rect.Position.X + valueLeft, mid - 32f, rect.Size.X - valueLeft - 32f, 64f), line.Value,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "rm");
             if (line.Note.Length > 0)
-                InkDraw.TextBounded(this, new Rect2(rect.Position.X + 220f, rect.Position.Y + 88f, rect.Size.X - 252f, 50f), line.Note,
+                InkDraw.TextBounded(this, new Rect2(rect.Position.X + valueLeft, rect.Position.Y + 88f, rect.Size.X - valueLeft - 32f, 50f), line.Note,
                     PortraitLayout.FontMeta, 36, InkStyle.Dim, "rm");
             y += h + DetailGap;
         }
+        if (flavor.Count > 0)
+        {
+            // 说明：一道带名的分节线，下面暗字逐行居中，读起来像书页上的题注而不是又一条字段。
+            PortraitFrame.SectionRule(this, left, left + textWidth, y + 34f, "说明");
+            y += FlavorHead;
+            foreach (var text in flavor)
+            {
+                InkDraw.Text(this, new Vector2(left + textWidth / 2f, y + FlavorLine / 2f), text, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+                y += FlavorLine;
+            }
+        }
         DrawBreathingArrow();
     }
+
+    private const float FlavorHead = 84f;
+    private const float FlavorLine = 62f;
 
     private bool HandleModalScroll(InputEvent input)
     {

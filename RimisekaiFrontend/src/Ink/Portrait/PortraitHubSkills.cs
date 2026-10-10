@@ -1,406 +1,215 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Rimisekai.Catalog;
+using Rimisekai.Character;
+using Rimisekai.Combat;
 using Rimisekai.Ink;
 
 namespace Rimisekai.Portrait;
 
-/// <summary>竖屏技能页复用真实星盘；只有详情区响应纵向拖动，不平移星盘。</summary>
+/// <summary>
+/// 角色页技能段里的技能网（2026-10-10 重做）：一式一格，自上而下由浅入深，五列铺开；
+/// 格与格按来源技能连线成网（可跨流派）——用上方的技能，就有机会学会下方与它相连的技能。
+/// 已学习＝实心四芒星；此刻有学习率＝呼吸的空心星；尚远＝暗星。选中一式时，与它相连的线全部提亮。
+/// </summary>
 public partial class PortraitHubScreen
 {
-    private string _skillSelectedId = "";
-    private int _skillFocusedSector = -1;
-    private int _skillDetailFirst;
-    private int _skillDetailTotal;
-    private int _skillDetailPointer = -2;
-    private int _skillDetailPressFirst;
-    private float _skillDetailPressY;
-    private readonly record struct SkillDetailLine(string Text, int Size, Color Color, bool Rule);
-
-    // —— 星盘视角动效：横板时期的平滑推拉在竖屏迁移中被简化成跳变，这里还原插值 ——
-    // 目标视角由 _skillFocusedSector 决定（全景 1.16 / 聚焦 3.0），
-    // 当前视角逐帧向目标指数趋近；命中多边形与画面共用同一组当前值，动效期间点选依旧同源。
-    private float _skillViewZoom = PortraitLayout.SkillOverviewZoom;
-    private float _skillViewRotation;
-    private Vector2 _skillViewPivot;
-    private bool _skillViewInit;
-
-    private const float SkillViewRate = 9f;     // 指数趋近速率，约 0.35s 收敛
-    private const float SkillViewSnap = 0.002f; // 收敛阈值，低于即吸附目标并停止
-
-    private (float Zoom, Vector2 Pivot, float Rotation) SkillViewTarget => (
-        PortraitLayout.SkillViewZoom(_skillFocusedSector),
-        PortraitLayout.SkillViewPivot(_skillFocusedSector),
-        PortraitLayout.SkillViewRotation(_skillFocusedSector));
-
-    /// <summary>把当前视角向目标推进一帧；返回是否仍在运动（运动中由 _Process 持续重绘）。</summary>
-    private bool AdvanceSkillView(double delta)
-    {
-        var (targetZoom, targetPivot, targetRotation) = SkillViewTarget;
-        if (!_skillViewInit)
-        {
-            _skillViewZoom = targetZoom;
-            _skillViewPivot = targetPivot;
-            _skillViewRotation = targetRotation;
-            _skillViewInit = true;
-            return false;
-        }
-        var t = 1f - Mathf.Exp(-(float)delta * SkillViewRate);
-        _skillViewZoom = Mathf.Lerp(_skillViewZoom, targetZoom, t);
-        _skillViewPivot = _skillViewPivot.Lerp(targetPivot, t);
-        _skillViewRotation = Mathf.Wrap(
-            _skillViewRotation + Mathf.Wrap(targetRotation - _skillViewRotation, -Mathf.Pi, Mathf.Pi) * t,
-            -Mathf.Tau, Mathf.Tau);
-        if (Mathf.Abs(_skillViewZoom - targetZoom) < SkillViewSnap
-            && _skillViewPivot.DistanceTo(targetPivot) < 0.5f
-            && Mathf.Abs(Mathf.Wrap(targetRotation - _skillViewRotation, -Mathf.Pi, Mathf.Pi)) < SkillViewSnap)
-        {
-            _skillViewZoom = targetZoom;
-            _skillViewPivot = targetPivot;
-            _skillViewRotation = targetRotation;
-            return false;
-        }
-        return true;
-    }
+    private string _skillSelectedId = BattleSkills.AttackId;
 
     public string DebugSelectedSkill => _skillSelectedId;
-    public int DebugSkillSector => _skillFocusedSector;
-    public string[] DebugSkillIds => SkillTiles(BuildSkillPage().Disc!).Select(tile => tile.Id).ToArray();
-    private IReadOnlyList<PortraitRegion> SkillRegions() => new[]
+
+    /// <summary>呼吸：1.8 秒一拍（与全项目的呼吸箭头同拍），核对模式定格最亮。</summary>
+    private static float SkillPulse() => PortraitMotion.Instant
+        ? 1f : 0.35f + 0.65f * (0.5f + 0.5f * Mathf.Sin(Time.GetTicksMsec() / 1000f * Mathf.Tau / 1.8f));
+
+    /// <summary>画技能网与所选技能的详情，返回内容下沿。</summary>
+    private float DrawSkillChart(CharacterState who, float y, Rect2 view)
     {
-        new PortraitRegion("page_top", PortraitLayout.PageTop),
-        new PortraitRegion("skill_disc", PortraitLayout.SkillDiscPanel),
-        new PortraitRegion("skill_controls", PortraitLayout.SkillControls),
-        new PortraitRegion("skill_detail", PortraitLayout.SkillDetailArea),
-    };
+        var all = PortraitSkillChart.Build(who);
+        if (all.All(s => s.Def.Id != _skillSelectedId))
+            _skillSelectedId = BattleSkills.AttackId;
+        var web = PortraitLayout.SkillWebRect(y, PortraitSkillChart.Rows);
+        PortraitFrame.Panel(this, web);
+        var byId = all.ToDictionary(s => s.Def.Id);
+        Vector2 At(ChartSkill s) => PortraitLayout.SkillNodeCenter(web, s.Row, s.Column);
+        var pulse = SkillPulse();
+        var picked = byId[_skillSelectedId];
 
-    private InkPageModel BuildSkillPage() => InkCharacterPageBuilder.Build(_vm, InkPage.Skills,
-        Who,
-        selectedSkillId: _skillSelectedId, focusedSector: _skillFocusedSector,
-        viewZoom: _skillViewZoom, viewPivot: _skillViewPivot, viewRotation: _skillViewRotation)!;
-
-    // —— 星盘 2x 超采样：gl_compatibility 不支持 MSAA 2D（实测设置生效但渲染无变化），
-    //    多边形填充边在 1:1 下有明显锯齿。星盘几何画进 2 倍尺寸的透明离屏视口，
-    //    再线性缩回面板矩形，等价 4x 超采样；命中多边形仍走主画布投影，不受影响。 ——
-    private const float SkillSupersample = 2f;
-    private SubViewport _skillView;
-    private Vector2I _skillViewSize;
-
-    private sealed partial class SkillDiscProxy : Node2D
-    {
-        public PortraitHubScreen Screen = null!;
-
-        public override void _Draw() => Screen.DrawDiscContent(this);
-    }
-
-    /// <summary>懒建星盘离屏视口；只在技能页激活时更新，离开页面即停更省电。</summary>
-    private SubViewport EnsureSkillView()
-    {
-        if (_skillView != null)
-            return _skillView;
-        _skillViewSize = new Vector2I(
-            (int)(PortraitLayout.SkillDiscPanel.Size.X * SkillSupersample),
-            (int)(PortraitLayout.SkillDiscPanel.Size.Y * SkillSupersample));
-        _skillView = new SubViewport
+        // 底纹：每行一道极淡的横线，像星图的纬线。
+        for (var row = 0; row < PortraitSkillChart.Rows; row++)
         {
-            Name = "SkillDiscView",
-            Size = _skillViewSize,
-            TransparentBg = true,
-            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
-            CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Linear,
-        };
-        var proxy = new SkillDiscProxy { Name = "SkillDiscProxy", Screen = this };
-        proxy.Scale = new Vector2(SkillSupersample, SkillSupersample);
-        proxy.Position = -PortraitLayout.SkillDiscPanel.Position * SkillSupersample;
-        _skillView.AddChild(proxy);
-        AddChild(_skillView);
-        return _skillView;
-    }
-
-    private void DrawDiscContent(CanvasItem ci)
-    {
-        var disc = BuildSkillPage().Disc;
-        if (disc == null)
-            return;
-        InkSkillDisc.DrawContent(ci, disc, PortraitLayout.SkillDiscClip,
-            minLineWidth: PortraitLayout.LineHair, drawText: false);
-    }
-
-    /// <summary>星盘内容贴图（2x 超采样），由 DrawSkillPage 缩回面板矩形绘制。</summary>
-    private Texture2D? SkillDiscTexture()
-    {
-        if (_push != PushPage.Disc)
-            return null;
-        var view = EnsureSkillView();
-        var want = SubViewport.UpdateMode.Always;
-        if (view.RenderTargetUpdateMode != want)
-            view.RenderTargetUpdateMode = want;
-        return view.GetTexture();
-    }
-
-    private void StopSkillView()
-    {
-        if (_skillView == null)
-            return;
-        _skillView.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
-    }
-
-    private void DrawSkillPage()
-    {
-        var page = BuildSkillPage();
-        DrawPageTop(page.Title);
-        var disc = page.Disc;
-        if (disc == null)
-        {
-            DrawSkillDetails(page);
-            return;
+            var ly = PortraitLayout.SkillNodeCenter(web, row, 0).Y;
+            DrawLine(new Vector2(web.Position.X + 30f, ly), new Vector2(web.End.X - 30f, ly), new Color(InkStyle.Dim, 0.12f), 1f, true);
         }
-        _skillSelectedId = disc.SelectedId;
-        PortraitFrame.Panel(this, PortraitLayout.SkillDiscPanel);
-        var discTexture = SkillDiscTexture();
-        if (discTexture != null)
-            DrawTextureRect(discTexture, PortraitLayout.SkillDiscPanel, false);
-        else
-            InkSkillDisc.DrawContent(this, disc, PortraitLayout.SkillDiscClip,
-                minLineWidth: PortraitLayout.LineHair, drawText: false);
-        if (disc.FocusedSector < 0)
-        {
-            DrawSkillOverviewText(disc);
-            for (var sector = 0; sector < disc.SectorLabels.Count; sector++)
+
+        // 连线：先画暗线，再画亮线（两端已学习 / 正可学习的呼吸线 / 与所选相连的），亮的压在上面。
+        var edges = all.SelectMany(t => t.Def.DeriveFrom.Select(id => (Source: byId[id], Target: t))).ToList();
+        foreach (var pass in new[] { false, true })
+            foreach (var (source, target) in edges)
             {
-                AddSkillPolygon(PortraitAction.SkillSector, sector, disc.SectorLabels[sector],
-                    PortraitLayout.SkillSectorPolygon(disc, sector));
-                var labelTarget = PortraitLayout.SkillSectorLabelTarget(disc, sector);
-                if (PortraitLayout.SkillTouchTarget(labelTarget))
-                    _widgets.Add(new PortraitWidget(labelTarget, PortraitAction.SkillSector, sector, true, disc.SectorLabels[sector]));
+                var linked = source.Def.Id == _skillSelectedId || target.Def.Id == _skillSelectedId;
+                var lit = linked || source.Learned && (target.Learned || target.Chance > 0);
+                if (lit != pass)
+                    continue;
+                var color = linked ? InkStyle.Line
+                    : source.Learned && target.Learned ? new Color(InkStyle.Line, 0.75f)
+                    : lit ? new Color(InkStyle.Line, 0.2f + 0.5f * pulse)
+                    : new Color(InkStyle.Dim, 0.35f);
+                DrawEdge(At(source), At(target), source.Row, target.Row, source.Column == target.Column,
+                    color, linked ? 3f : lit ? 2f : 1.4f);
             }
-        }
-        else
+
+        for (var i = 0; i < all.Count; i++)
         {
-            for (var i = 0; i < disc.Tiles.Count; i++)
-            {
-                var tile = disc.Tiles[i];
-                if (tile.Kind == InkSkillNodeKind.Skill && tile.Sector == disc.FocusedSector)
-                    AddSkillPolygon(PortraitAction.SkillNode, i, tile.Name, PortraitLayout.SkillNodePolygon(disc, tile));
-            }
-            InkDraw.TextBounded(this, PortraitLayout.SkillFocusedLabel,
-                disc.SectorLabels[disc.FocusedSector], PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            PortraitFrame.Plaque(this, PortraitLayout.SkillResetButton, "全盘视角", glyph: PortraitGlyph.Back);
-            _widgets.Add(new PortraitWidget(PortraitLayout.SkillResetButton, PortraitAction.SkillReset, 0, true, "‹ 全盘视角"));
-            DrawSkillNavigation(PortraitLayout.SkillNavigation);
-            var canNavigate = SkillTiles(disc).Length > 0;
-            AddSkillPolygon(PortraitAction.SkillPrevious, 0, "", PortraitLayout.SkillNavigationPolygon(true), canNavigate);
-            AddSkillPolygon(PortraitAction.SkillNext, 0, "", PortraitLayout.SkillNavigationPolygon(false), canNavigate);
+            var s = all[i];
+            var at = At(s);
+            DrawSkillNode(at, s, pulse, s.Def.Id == _skillSelectedId);
+            var hit = PortraitLayout.SkillNodeHit(at);
+            if (view.Encloses(hit))
+                _widgets.Add(new PortraitWidget(hit, PortraitAction.SkillNode, i, true, s.Def.Id));
         }
-        DrawSkillDetails(page);
+
+        return DrawSkillDetail(who, picked, web.End.Y + 30f);
     }
 
     /// <summary>
-    /// 星盘右上角翻瓦片钮（原 disc_nav_button.svg 的同一几何，改为代码绘制）：正方形削去一段与星盘外弧同心的弧，
-    /// 沿对角线切成两翼，各一圈骨白外框＋银灰内框，左上翼一枚 ◤、右下翼一枚 ◢ 实心三角。坐标沿用原稿 254 见方的视框。
+    /// 一条来源线：从来源章底到目标章顶的三次曲线，上下竖直出入；同列跨行的线向右鼓出，免得穿过中间那一格。
     /// </summary>
-    private void DrawSkillNavigation(Rect2 rect)
+    private void DrawEdge(Vector2 from, Vector2 to, int fromRow, int toRow, bool sameColumn, Color color, float width)
     {
-        var k = rect.Size / 254f;
-        Vector2 P(float x, float y) => rect.Position + new Vector2(x - 650f, y - 174f) * k;
-        // 两翼外框 / 内框：直角三边＋一段半径 R 的弧（弧心在左下方，与星盘同侧）。
-        Vector2[] Wing(Vector2 a, Vector2 b, Vector2 c, float radius)
+        var r = PortraitLayout.SkillNodeRadius;
+        var a = from + new Vector2(0f, r);
+        var b = to - new Vector2(0f, r);
+        var bend = sameColumn && toRow - fromRow > 1 ? new Vector2(96f, 0f) : Vector2.Zero;
+        var c1 = a + new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
+        var c2 = b - new Vector2(0f, (b.Y - a.Y) * 0.5f) + bend;
+        var pts = new Vector2[25];
+        for (var k = 0; k < pts.Length; k++)
         {
-            var points = new List<Vector2> { a, b, c };
-            var mid = (c + a) / 2f;
-            var half = c.DistanceTo(a) / 2f;
-            var normal = (a - c).Normalized().Orthogonal();
-            var h = Mathf.Sqrt(radius * radius - half * half);
-            var o1 = mid + normal * h;
-            var o2 = mid - normal * h;
-            var center = o1.Y - o1.X > o2.Y - o2.X ? o1 : o2;
-            var a0 = (c - center).Angle();
-            var a1 = (a - center).Angle();
-            var span = Mathf.Wrap(a1 - a0, -Mathf.Pi, Mathf.Pi);
-            for (var i = 1; i < 12; i++)
-                points.Add(center + Vector2.FromAngle(a0 + span * i / 12f) * radius);
-            return points.ToArray();
+            var t = k / (float)(pts.Length - 1);
+            var u = 1f - t;
+            pts[k] = u * u * u * a + 3f * u * u * t * c1 + 3f * u * t * t * c2 + t * t * t * b;
         }
-        var scale = k.X;
-        var outerUpper = Wing(P(678f, 178f), P(898f, 178f), P(796f, 280f), 1018f * scale);
-        var innerUpper = Wing(P(696f, 184f), P(884f, 184f), P(796f, 272f), 1024f * scale);
-        var outerLower = Wing(P(902f, 402f), P(902f, 182f), P(800f, 284f), 1018f * scale);
-        var innerLower = Wing(P(896f, 384f), P(896f, 196f), P(808f, 284f), 1024f * scale);
-        foreach (var (outer, inner) in new[] { (outerUpper, innerUpper), (outerLower, innerLower) })
-        {
-            DrawColoredPolygon(outer, InkStyle.Bg);
-            InkDraw.Ink(this, outer.Append(outer[0]).ToArray(), InkStyle.Line, 2.5f * scale);
-            DrawColoredPolygon(inner, InkStyle.Panel);
-            InkDraw.Ink(this, inner.Append(inner[0]).ToArray(), InkStyle.Dim, 1.4f * scale);
-        }
-        DrawColoredPolygon(new[] { P(776f, 196f), P(824f, 196f), P(776f, 244f) }, InkStyle.Line);
-        DrawColoredPolygon(new[] { P(884f, 304f), P(884f, 256f), P(836f, 304f) }, InkStyle.Line);
+        DrawPolyline(pts, color, width, true);
+        // 目标端一枚小菱，标出方向（来源 → 学到）。
+        InkDraw.Jewel(this, b, 5f, color);
     }
 
-    private void DrawSkillOverviewText(InkSkillDiscModel disc)
+    /// <summary>一格：圆章里一枚四芒星，名字写在章下。</summary>
+    private void DrawSkillNode(Vector2 at, ChartSkill s, float pulse, bool selected)
     {
-        InkDraw.TextBounded(this, PortraitLayout.SkillHubName(disc), disc.CharacterName,
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-        var styleLines = InkDraw.WrapLines(disc.StyleLine, PortraitLayout.SkillHubStyleLine(disc, 0).Size.X, PortraitLayout.FontMeta);
-        for (var i = 0; i < styleLines.Count; i++)
+        var r = PortraitLayout.SkillNodeRadius;
+        if (selected)
         {
-            var rect = PortraitLayout.SkillHubStyleLine(disc, i);
-            if (PortraitLayout.SkillDiscClip.Encloses(rect))
-                InkDraw.Text(this, rect.GetCenter(), styleLines[i].Trim(), PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+            var hit = PortraitLayout.SkillNodeHit(at);
+            PortraitFrame.Brackets(this, hit.Grow(-6f), InkStyle.Line);
         }
-        for (var sector = 0; sector < disc.SectorLabels.Count; sector++)
-        {
-            var rect = PortraitLayout.SkillSectorLabel(disc, sector);
-            if (PortraitLayout.SkillDiscClip.Encloses(rect))
-                InkDraw.TextBounded(this, rect, disc.SectorLabels[sector], PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-        }
+        DrawCircle(at, r, InkStyle.Panel);
+        var rim = s.Learned ? InkStyle.Line : s.Chance > 0 ? new Color(InkStyle.Line, pulse) : new Color(InkStyle.Dim, 0.7f);
+        DrawArc(at, r, 0f, Mathf.Tau, 40, rim, selected ? 4f : 2f, true);
+        var star = StarPoints(at, r * 0.62f);
+        if (s.Learned)
+            DrawColoredPolygon(star, s.Usable ? InkStyle.Line : new Color(InkStyle.Line, 0.55f));
+        else
+            InkDraw.Ink(this, star.Append(star[0]).ToArray(), rim, 1.5f);
+        // 名字衬一块底色，压住从后面穿过的连线。
+        var nameWidth = Mathf.Min(InkDraw.Measure(s.Def.Name, PortraitLayout.FontMeta).X, 184f) + 12f;
+        DrawRect(new Rect2(at.X - nameWidth / 2f, at.Y + r + 6f, nameWidth, 48f), InkStyle.Panel);
+        InkDraw.TextBounded(this, new Rect2(at.X - 92f, at.Y + r + 4f, 184f, 52f), s.Def.Name,
+            PortraitLayout.FontMeta, PortraitLayout.FontMeta, s.Learned || selected ? InkStyle.Line : InkStyle.Dim, "cm");
     }
 
-    private void AddSkillPolygon(PortraitAction action, int index, string label, Vector2[] polygon, bool enabled = true)
+    private static Vector2[] StarPoints(Vector2 c, float r)
     {
-        if (polygon.Length < 3)
-            return;
-        var bounds = PortraitLayout.SkillPolygonBounds(polygon);
-        if (PortraitLayout.SkillTouchTarget(bounds))
-            _widgets.Add(new PortraitWidget(bounds, action, index, enabled, label, Polygon: polygon));
+        var pts = new Vector2[8];
+        for (var i = 0; i < 8; i++)
+            pts[i] = c + Vector2.FromAngle(-Mathf.Pi / 2f + i * Mathf.Pi / 4f) * (i % 2 == 0 ? r : r * 0.32f);
+        return pts;
     }
 
-    private void DrawSkillDetails(InkPageModel page)
+    /// <summary>详情框：名字＋状态签、题签、数值、附加状态、学习条件逐条。返回下沿。</summary>
+    private float DrawSkillDetail(CharacterState who, ChartSkill s, float y)
     {
-        var lines = new List<SkillDetailLine>();
-        AddText(page.DetailTitle, PortraitLayout.FontTitle, InkStyle.Line, true);
-        AddText(page.DetailNote, PortraitLayout.FontBody, InkStyle.Line);
-        AddText(page.DetailEffect, PortraitLayout.FontBody, InkStyle.Line);
-        foreach (var requirement in page.DetailRequirements)
-            AddText(requirement.Text, PortraitLayout.FontBody, requirement.Unmet ? InkStyle.Dim : InkStyle.Line);
-        AddText(page.EmptyHint, PortraitLayout.FontBody, InkStyle.Dim);
-        _skillDetailTotal = lines.Count;
-        _skillDetailFirst = Mathf.Clamp(_skillDetailFirst, 0, SkillDetailMaxFirst);
-        for (var row = 0; row < PortraitLayout.SkillDetailVisibleRows; row++)
+        var def = s.Def;
+        var reqs = PortraitSkillChart.Requirements(who, def);
+        var height = 70f + 72f + 64f + 64f + (def.Status.HasValue ? 64f : 0f) + 20f + 56f
+            + System.Math.Max(1, reqs.Count) * 64f + (s.Learned ? 30f : 96f);
+        var frame = new Rect2(PortraitLayout.Pad, y, PortraitLayout.FullWidth, height);
+        PortraitFrame.GothicFrame(this, frame);
+        var left = frame.Position.X + 56f;
+        var right = frame.End.X - 56f;
+        y = frame.Position.Y + 70f;
+
+        var status = s.Learned ? s.Usable ? "已学习" : "已学习 · 未持流派" : s.Chance > 0 ? $"学习率 {s.Chance}%" : "未学习";
+        var statusWidth = InkDraw.Measure(status, PortraitLayout.FontMeta).X + 56f;
+        var chip = new Rect2(right - statusWidth, y - 32f, statusWidth, 64f);
+        var lit = s.Learned || s.Chance > 0;
+        PortraitFrame.Brackets(this, chip, lit ? InkStyle.Line : InkStyle.Dim);
+        InkDraw.Text(this, chip.GetCenter(), status, PortraitLayout.FontMeta, lit ? InkStyle.Line : InkStyle.Dim, "cm");
+        InkDraw.TextBounded(this, new Rect2(left, y - 40f, chip.Position.X - left - 20f, 80f), def.Name,
+            PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
+        y += 72f;
+
+        var tags = new List<string> { InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target), InkText.SkillRange(def.Range) };
+        if (def.Gate.Style.HasValue)
+            tags.Insert(0, InkText.Style(def.Gate.Style.Value));
+        if (def.Gate.Attribute.HasValue)
+            tags.Insert(def.Gate.Style.HasValue ? 1 : 0, InkText.CoreStat(def.Gate.Attribute.Value));
+        if (def.ChantRounds > 0)
+            tags.Add($"咏唱{def.ChantRounds}回合");
+        if (def.Control)
+            tags.Add("打断咏唱");
+        PortraitFrame.TagLine(this, left, y, tags, right, InkStyle.Dim);
+        y += 64f;
+
+        var numbers = new List<(string, string)> { ("威力", $"{def.Power}%") };
+        if (def.HitMod != 0)
+            numbers.Add(("命中", def.HitMod.ToString("+0;-0")));
+        PortraitFrame.CountTags(this, left, y, numbers, right);
+        y += 64f;
+        if (def.Status.HasValue)
         {
-            var index = _skillDetailFirst + row;
-            if (index >= lines.Count)
-                break;
-            var line = lines[index];
-            var rect = PortraitLayout.SkillDetailRow(row);
-            InkDraw.Text(this, new Vector2(rect.Position.X, rect.GetCenter().Y), line.Text, line.Size, line.Color, "lm");
-            if (line.Rule)
-                PortraitFrame.FadingRule(this, rect.Position.X, rect.End.X, PortraitLayout.SkillDetailRuleY(row));
+            var effect = def.Status.Value switch
+            {
+                StatusKind.StatMod => $"{InkText.StatusStat(def.StatusStat)} {def.StatusPercent:+0;-0}%，持续 {def.StatusRounds} 回合",
+                StatusKind.Dot => $"每回合 {def.StatusPower} 点伤害，持续 {def.StatusRounds} 回合",
+                StatusKind.Points => $"点数护盾 {def.StatusPower} 点，持续 {def.StatusRounds} 回合",
+            };
+            PortraitFrame.CountTag(this, left, y, "附加", effect, true);
+            y += 64f;
         }
-        if (SkillDetailMaxFirst > 0)
+
+        y += 20f;
+        PortraitFrame.SectionRule(this, left - 20f, right + 20f, y, "学习条件");
+        y += 56f;
+        if (reqs.Count == 0)
         {
-            InkDraw.InkLine(this, PortraitLayout.SkillDetailTrackTop, PortraitLayout.SkillDetailTrackBottom, InkStyle.Dim, PortraitLayout.LineHair);
-            DrawRect(PortraitLayout.SkillDetailThumb(_skillDetailFirst, _skillDetailTotal), InkStyle.Line);
+            InkDraw.Text(this, new Vector2(left, y + 28f), "通用技能，人人都会", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            y += 64f;
         }
-        void AddText(string text, int size, Color color, bool title = false)
+        foreach (var (label, need, have, met) in reqs)
         {
-            if (text.Length == 0)
-                return;
-            var wrapped = InkDraw.WrapLines(text, PortraitLayout.SkillDetailText.Size.X, size);
-            for (var i = 0; i < wrapped.Count; i++)
-                lines.Add(new SkillDetailLine(wrapped[i], size, color, title && i == wrapped.Count - 1));
+            var row = new Rect2(left - 16f, y, right - left + 32f, 58f);
+            InkDraw.Jewel(this, new Vector2(row.Position.X + 22f, row.GetCenter().Y), 7f, met ? InkStyle.Line : InkStyle.WoodDark);
+            InkDraw.Text(this, new Vector2(row.Position.X + 46f, row.GetCenter().Y), label, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            // 右侧：要求（来源技能的名字 / 门槛数值）＋现值，达成亮字。
+            var haveX = row.End.X - 10f;
+            InkDraw.Text(this, new Vector2(haveX, row.GetCenter().Y), have, PortraitLayout.FontMeta,
+                met ? InkStyle.Line : InkStyle.Dim, "rm");
+            var needX = haveX - InkDraw.Measure(have, PortraitLayout.FontMeta).X - 36f;
+            InkDraw.Jewel(this, new Vector2(needX + 18f, row.GetCenter().Y), 4f, InkStyle.Dim);
+            InkDraw.Text(this, new Vector2(needX, row.GetCenter().Y), need, PortraitLayout.FontMeta, InkStyle.Line, "rm");
+            InkDraw.InkLine(this, new Vector2(row.Position.X + 40f, row.End.Y + 2f), new Vector2(row.End.X, row.End.Y + 2f), InkStyle.Hover, 1.5f);
+            y += 64f;
         }
+        if (!s.Learned)
+            InkDraw.TextBounded(this, new Rect2(left, y + 10f, right - left, 56f),
+                "战斗中使用来源技能时有机会学会",
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
+        return frame.End.Y + 30f;
     }
 
-    private int SkillDetailMaxFirst => System.Math.Max(0, _skillDetailTotal - PortraitLayout.SkillDetailVisibleRows);
-    private static InkSkillTile[] SkillTiles(InkSkillDiscModel disc) => disc.Tiles
-        .Where(tile => tile.Kind == InkSkillNodeKind.Skill && tile.Sector == disc.FocusedSector)
-        .OrderBy(tile => tile.Ring).ThenBy(tile => tile.Col).ThenBy(tile => tile.Upper).ToArray();
-
-    private void ExecuteSkillWidget(PortraitWidget widget)
-    {
-        if (_push != PushPage.Disc || !widget.Enabled)
-            return;
-        switch (widget.Action)
-        {
-            case PortraitAction.SkillSector:
-                _skillFocusedSector = widget.Index;
-                _skillSelectedId = "";
-                break;
-            case PortraitAction.SkillNode:
-                _skillSelectedId = BuildSkillPage().Disc!.Tiles[widget.Index].Id;
-                break;
-            case PortraitAction.SkillReset:
-                ResetSkillView();
-                break;
-            case PortraitAction.SkillPrevious:
-            case PortraitAction.SkillNext:
-                var disc = BuildSkillPage().Disc!;
-                var tiles = SkillTiles(disc);
-                if (tiles.Length == 0)
-                    return;
-                var current = System.Array.FindIndex(tiles, tile => tile.Id == disc.SelectedId);
-                var direction = widget.Action == PortraitAction.SkillPrevious ? -1 : 1;
-                _skillSelectedId = tiles[(current + direction + tiles.Length) % tiles.Length].Id;
-                break;
-            default:
-                return;
-        }
-        _skillDetailFirst = 0;
-        QueueRedraw();
-    }
-
-    private bool HandleSkillInput(InputEvent e)
-    {
-        if (_push != PushPage.Disc)
-            return false;
-        switch (e)
-        {
-            case InputEventMouseButton mouse when mouse.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown:
-                if (!mouse.Pressed || !PortraitLayout.SkillDetailArea.HasPoint(mouse.Position))
-                    return false;
-                _skillDetailFirst = Mathf.Clamp(_skillDetailFirst + (mouse.ButtonIndex == MouseButton.WheelUp ? -1 : 1), 0, SkillDetailMaxFirst);
-                QueueRedraw();
-                return true;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Left } mouse:
-                return mouse.Pressed ? BeginSkillDetailDrag(mouse.Position, -1) : EndSkillDetailDrag(-1);
-            case InputEventMouseMotion motion:
-                return MoveSkillDetailDrag(motion.Position, -1);
-            case InputEventScreenTouch touch:
-                return touch.Pressed ? BeginSkillDetailDrag(touch.Position, touch.Index) : EndSkillDetailDrag(touch.Index);
-            case InputEventScreenDrag drag:
-                return MoveSkillDetailDrag(drag.Position, drag.Index);
-            default:
-                return false;
-        }
-    }
-    private bool BeginSkillDetailDrag(Vector2 at, int pointer)
-    {
-        if (_skillDetailPointer != -2 || !PortraitLayout.SkillDetailArea.HasPoint(at))
-            return false;
-        _skillDetailPointer = pointer;
-        _skillDetailPressY = at.Y;
-        _skillDetailPressFirst = _skillDetailFirst;
-        return true;
-    }
-    private bool MoveSkillDetailDrag(Vector2 at, int pointer)
-    {
-        if (_skillDetailPointer != pointer)
-            return false;
-        var dy = at.Y - _skillDetailPressY;
-        if (Mathf.Abs(dy) >= PortraitLayout.SkillDragThreshold)
-        {
-            _skillDetailFirst = Mathf.Clamp(_skillDetailPressFirst - (int)(dy / PortraitLayout.SkillDetailLineHeight), 0, SkillDetailMaxFirst);
-            QueueRedraw();
-        }
-        return true;
-    }
-    private bool EndSkillDetailDrag(int pointer)
-    {
-        if (_skillDetailPointer != pointer)
-            return false;
-        _skillDetailPointer = -2;
-        return true;
-    }
-    private void ResetSkillView()
-    {
-        _skillSelectedId = "";
-        _skillFocusedSector = -1;
-        _skillDetailFirst = 0;
-        _skillDetailTotal = 0;
-        _skillDetailPointer = -2;
-        _skillDetailPressFirst = 0;
-        _skillDetailPressY = 0f;
-        _skillViewInit = false;
-    }
+    /// <summary>换人或离开角色页时选中项回到盘心（普通攻击）。</summary>
+    private void ResetSkillView() => _skillSelectedId = BattleSkills.AttackId;
 }

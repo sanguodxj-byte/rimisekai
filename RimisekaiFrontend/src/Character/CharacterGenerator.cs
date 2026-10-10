@@ -171,7 +171,16 @@ public sealed class CharacterGenerator
             scatterLeft -= add;
         }
         state.Condition.RecoverFull();
+        SeedLearned(state);
         return state;
+    }
+
+    /// <summary>出身即会：生成时门槛已全满足的流派技能直接记为已学习（老兵带着本事来，不必从零学起）。</summary>
+    private static void SeedLearned(CharacterState state)
+    {
+        foreach (var skill in Combat.SkillTable.MeetsGates(state))
+            if (!Combat.SkillLearning.Innate(skill))
+                state.LearnedSkills.Add(skill.Id);
     }
 
     /// <summary>两条生成路径共用的生活履历：初始属性、身份装备、3000 经验、满状态起步。</summary>
@@ -254,6 +263,7 @@ public sealed class CharacterGenerator
 
         // 满状态起步：生命与体力充沛
         state.Condition.RecoverFull();
+        SeedLearned(state);
     }
 
     // ---------- 身份轴（规范 11.8） ----------

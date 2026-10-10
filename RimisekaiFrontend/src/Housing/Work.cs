@@ -208,6 +208,18 @@ public enum FoodTier
     Exquisite = 3,
 }
 
+/// <summary>食物档次的显示名。</summary>
+public static class FoodTiers
+{
+    public static string Label(FoodTier tier) => tier switch
+    {
+        FoodTier.Plain => "朴素",
+        FoodTier.Delicate => "精致",
+        FoodTier.Feast => "丰盛",
+        FoodTier.Exquisite => "绝味",
+    };
+}
+
 /// <summary>领地里的客人。只记录人在哪、来干什么，不跑 AI。</summary>
 public sealed class Guest
 {

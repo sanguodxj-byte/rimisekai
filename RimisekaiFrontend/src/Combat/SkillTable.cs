@@ -22,11 +22,16 @@ public static class SkillTable
     }
 
     /// <summary>
-    /// 角色当前已解锁的能力。前置技能可以成链，故迭代求不动点：
-    /// 每轮把新解锁的技能并入已解锁集，直到一轮下来没有新增为止。
+    /// 角色此刻能用的战斗技能：已学会（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派）。
     /// </summary>
     public static IEnumerable<SkillDef> Known(CharacterState character) =>
-        Known(character, All);
+        All.Where(s => SkillLearning.Learned(character, s) && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style));
+
+    /// <summary>
+    /// 门槛全满足的技能（不论是否学会）。开局生成角色时据此「出身即会」：老兵带着本事入伍，不必从零悟起。
+    /// </summary>
+    public static IEnumerable<SkillDef> MeetsGates(CharacterState character) =>
+        MeetsGates(character, All);
 
     /// <summary>
     /// 求一组技能里角色已解锁的那些，按传入顺序输出。
@@ -34,7 +39,7 @@ public static class SkillTable
     /// 直到一轮下来没有新增为止——调用方不必自行给技能排序。
     /// 独立成方法是为了能用自造技能表直接测这条链式规则。
     /// </summary>
-    public static IEnumerable<SkillDef> Known(CharacterState character, IReadOnlyList<SkillDef> catalog)
+    public static IEnumerable<SkillDef> MeetsGates(CharacterState character, IReadOnlyList<SkillDef> catalog)
     {
         var unlocked = new HashSet<string>();
         var remaining = new List<SkillDef>(catalog);

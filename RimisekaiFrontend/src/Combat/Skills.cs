@@ -47,6 +47,10 @@ public sealed class BattleResult
         public int WeaponTotalExp { get; set; }
         /// <summary>落账后该流派熟练的累计经验。</summary>
         public int StyleTotalExp { get; set; }
+        /// <summary>本场派生学习的技能 Id；没学习为空串。</summary>
+        public string NewSkill { get; set; } = "";
+        /// <summary>本场各技能使用次数（掷派生学习的依据）。</summary>
+        public IReadOnlyDictionary<string, int> SkillUses { get; init; } = new Dictionary<string, int>();
     }
 }
 
@@ -98,6 +102,7 @@ public static class BattleRewards
                 Style = m.Style,
                 StyleLevel = m.StyleLevel,
                 Level = m.Level,
+                SkillUses = new Dictionary<string, int>(m.SkillUses),
             });
         }
         return result;
