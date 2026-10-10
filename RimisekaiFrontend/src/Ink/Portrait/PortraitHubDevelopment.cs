@@ -66,10 +66,10 @@ public partial class PortraitHubScreen
         if (_vm.Hub.CanUndoBuild)
         {
             var undo = PortraitLayout.DevelopmentUndo;
-            PortraitFrame.Pill(this, undo, $"撤销 {_vm.Hub.LastBuildName}", glyph: PortraitGlyph.Back);
+            PortraitFrame.Plaque(this, undo, $"撤销 {_vm.Hub.LastBuildName}", glyph: PortraitGlyph.Back);
             _widgets.Add(new PortraitWidget(undo, PortraitAction.BuildUndo, 0, true, "撤销"));
         }
-        DrawPageTop("建造", "", "完成", PortraitAction.BuildDone);
+        DrawPageTop("建造", "", "完成", PortraitAction.BuildDone, tall: true);
     }
 
     /// <summary>钱与建造常用料的计数签（钱、木材、石材：现有多少）。</summary>

@@ -144,24 +144,14 @@ public partial class PortraitHubScreen
             DrawBuildExisting(room!);
         else
             DrawBuildDoors(room!);
-        DrawPageTop("建造", site == BuildSite.Plot ? PlotName : room!.Name, "完成", PortraitAction.BuildDone);
+        DrawPageTop("建造", site == BuildSite.Plot ? PlotName : room!.Name, "完成", PortraitAction.BuildDone, tall: true);
     }
 
     private void DrawBuildChoices(BuildSite site, IReadOnlyList<BuildOption> options)
     {
         var (tabs, current, list) = BuildChoices(site, options);
         for (var i = 0; i < tabs.Count; i++)
-        {
-            var r = PortraitLayout.BuildTab(i);
-            var on = i == current;
-            PortraitFrame.Card(this, r, on, 20f);
-            var cx = r.GetCenter().X;
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 6f, r.Position.Y + 8f, r.Size.X - 12f, 52f), tabs[i].Label,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, on ? InkStyle.Line : InkStyle.Dim, "cm");
-            InkDraw.Text(this, new Vector2(cx, r.Position.Y + 86f), $"{tabs[i].Ready}/{tabs[i].Total}", PortraitLayout.FontMeta,
-                tabs[i].Ready > 0 ? InkStyle.Line : InkStyle.Dim, "cm");
-            _widgets.Add(new PortraitWidget(r, PortraitAction.BuildCategory, i, true, tabs[i].Label));
-        }
+            DrawBuildTab(PortraitLayout.BuildTab(i), i, tabs[i], i == current);
 
         var top = PortraitLayout.BuildBodyTop(true);
         var pick = list.FindIndex(o => (o.Target, o.DefId) == _buildPick);
@@ -179,7 +169,19 @@ public partial class PortraitHubScreen
             DrawBuildCard(list[pick], site);
     }
 
-    /// <summary>格子区：一屏 5 列 × 若干行，多出的按行拖。</summary>
+    /// <summary>分类页签＝铭牌（选中走主铭牌：银白实心深字），上行类名、下行「能建/总数」。</summary>
+    private void DrawBuildTab(Rect2 r, int index, BuildTab tab, bool on)
+    {
+        PortraitFrame.PlaqueBody(this, r, on, true, PortraitFrame.IsPressed(r));
+        var name = on ? InkStyle.Bg : tab.Ready > 0 ? InkStyle.Line : InkStyle.Dim;
+        InkDraw.TextBounded(this, new Rect2(r.Position.X + 8f, r.Position.Y + 14f, r.Size.X - 16f, 56f), tab.Label,
+            PortraitLayout.FontBody, PortraitLayout.FontMeta, name, "cm");
+        InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 110f), $"{tab.Ready}/{tab.Total}", PortraitLayout.FontMeta,
+            on ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+        _widgets.Add(new PortraitWidget(r, PortraitAction.BuildCategory, index, true, tab.Label));
+    }
+
+    /// <summary>格子区：一屏 4 列 × 若干行（见方 238），多出的按行拖。</summary>
     private void DrawBuildTiles(float top, int count, int pick, Func<int, (string Name, string Category, BuildState State)> item)
     {
         var rows = PortraitLayout.BuildTileRows(top);
@@ -190,65 +192,89 @@ public partial class PortraitHubScreen
         {
             var (name, category, state) = item(i);
             var r = PortraitLayout.BuildTile(top, i - first);
-            PortraitFrame.Card(this, r, i == pick, 22f);
-            var color = state == BuildState.Locked ? InkStyle.Dim : InkStyle.Line;
-            BuildGlyph(category)(this, r.GetCenter().X, r.Position.Y + 82f, 40f, state == BuildState.Short ? new Color(InkStyle.Line, 0.7f) : color);
-            InkDraw.TextBounded(this, new Rect2(r.Position.X + 6f, r.Position.Y + 134f, r.Size.X - 12f, 56f), name,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, color, "cm");
-            if (state == BuildState.Short)
-            {
-                var badge = new Rect2(r.End.X - 66f, r.Position.Y + 12f, 54f, 54f);
-                PortraitFrame.Bevel(this, badge, 12f, new Color(InkStyle.Panel, 0.95f), InkStyle.Line, 2f);
-                InkDraw.Text(this, badge.GetCenter(), HubSession.ShortBadge, PortraitLayout.FontMeta, InkStyle.Line, "cm");
-            }
-            else if (state == BuildState.Locked)
-                PortraitGlyph.Lock(this, r.End.X - 38f, r.Position.Y + 40f, 20f, InkStyle.Dim);
+            DrawBuildTile(r, name, category, state, i == pick);
             _widgets.Add(new PortraitWidget(r, PortraitAction.BuildTile, i, true, name));
         }
         RegisterScroll("build_tiles", PortraitLayout.BuildTileArea(top), totalRows, rows, _buildTileFirst,
             row => _buildTileFirst = row, PortraitLayout.BuildTileStep);
     }
 
+    /// <summary>
+    /// 一格：卡片（选中走卡片选中态）＋类别线描图标＋名。三态只用现成语汇：
+    /// 能建＝骨白字与图标；缺料＝同样骨白，右上挂一枚亮签「缺」；挡住＝字与图标压成银灰，右上一把锁。
+    /// </summary>
+    private void DrawBuildTile(Rect2 r, string name, string category, BuildState state, bool selected)
+    {
+        PortraitFrame.Card(this, r, selected, 26f);
+        var color = state == BuildState.Locked ? InkStyle.Dim : InkStyle.Line;
+        BuildGlyph(category)(this, r.GetCenter().X, r.Position.Y + 98f, 50f, color);
+        InkDraw.TextBounded(this, new Rect2(r.Position.X + 10f, r.End.Y - 82f, r.Size.X - 20f, 60f), name,
+            PortraitLayout.FontBody, PortraitLayout.FontMeta, color, "cm");
+        if (state == BuildState.Short)
+        {
+            var w = PortraitFrame.ChipWidth(HubSession.ShortBadge) - 16f;
+            PortraitFrame.Tag(this, new Vector2(r.End.X - 14f - w, r.Position.Y + 14f), HubSession.ShortBadge, 58f, lit: true);
+        }
+        else if (state == BuildState.Locked)
+            PortraitGlyph.Lock(this, r.End.X - 44f, r.Position.Y + 40f, 22f, InkStyle.Dim);
+    }
+
     private void DrawBuildCard(BuildOption option, BuildSite site)
     {
-        var card = DrawBuildCardHead(option.Name, option.Category, option.Tags);
+        DrawBuildCardHead(option.Name, option.Tags);
         var i = 0;
         if (option.Bundled.Length > 0)
         {
             var r = PortraitLayout.BuildCond(i++);
             var cy = r.GetCenter().Y;
-            PortraitGlyph.Diamond(this, r.Position.X + 20f, cy, 14f, InkStyle.Dim);
-            PortraitFrame.CountTag(this, r.Position.X + 52f, cy, HubSession.BundledLabel, option.Bundled, true);
+            PortraitGlyph.Diamond(this, r.Position.X + 22f, cy, 14f, InkStyle.Dim);
+            PortraitFrame.CountTag(this, r.Position.X + 56f, cy, HubSession.BundledLabel, option.Bundled, true);
         }
-        foreach (var c in option.Conditions)
-        {
-            var r = PortraitLayout.BuildCond(i++);
-            var cy = r.GetCenter().Y;
-            if (c.Met)
-                PortraitGlyph.Check(this, r.Position.X + 20f, cy, 16f, InkStyle.Dim);
-            else
-                PortraitGlyph.Close(this, r.Position.X + 20f, cy, 16f, InkStyle.Line);
-            if (c.Check == BuildCheck.Tag)
-                InkDraw.Text(this, new Vector2(r.Position.X + 52f, cy), c.Label, PortraitLayout.FontMeta, c.Met ? InkStyle.Dim : InkStyle.Line, "lm");
-            else
-                PortraitFrame.CountTag(this, r.Position.X + 52f, cy, c.Label, c.Value, !c.Met);
-        }
+        foreach (var c in option.Conditions.Take(6 - i))
+            DrawBuildCond(PortraitLayout.BuildCond(i++), c);
         DrawBuildButtons(site == BuildSite.Plot ? "开拓并建造" : "建造", option.State == BuildState.Ready);
     }
 
-    /// <summary>详情卡底板与首行（类别图标、名称、题签）。</summary>
-    private Rect2 DrawBuildCardHead(string name, string category, IReadOnlyList<string> tags)
+    /// <summary>一条条件：打勾（满足，银灰）/打叉（不满足，骨白）→ 料与钱带物品图标 → 「名 现有/需要」。</summary>
+    private void DrawBuildCond(Rect2 r, BuildCondition c)
+    {
+        var cy = r.GetCenter().Y;
+        if (c.Met)
+            PortraitGlyph.Check(this, r.Position.X + 22f, cy, 17f, InkStyle.Dim);
+        else
+            PortraitGlyph.Close(this, r.Position.X + 22f, cy, 17f, InkStyle.Line);
+        var x = r.Position.X + 56f;
+        if (c.Check == BuildCheck.Material && InkIcon.Has(c.Label))
+        {
+            InkIcon.Draw(this, c.Label, new Rect2(x, cy - 24f, 48f, 48f));
+            x += 60f;
+        }
+        else if (c.Check == BuildCheck.Money)
+        {
+            PortraitGlyph.Coin(this, x + 22f, cy, 20f, InkStyle.Dim);
+            x += 60f;
+        }
+        if (c.Check == BuildCheck.Tag)
+            InkDraw.Text(this, new Vector2(x, cy), c.Label, PortraitLayout.FontMeta, c.Met ? InkStyle.Dim : InkStyle.Line, "lm");
+        else
+            PortraitFrame.CountTag(this, x, cy, c.Label, c.Value, !c.Met);
+    }
+
+    /// <summary>详情卡底板（哥特框）与标题带：正中名（标题字号）压窗花底纹，名下一行题签。</summary>
+    private void DrawBuildCardHead(string name, IReadOnlyList<string> tags)
     {
         var card = PortraitLayout.BuildCard;
-        PortraitFrame.Card(this, card, false, 28f);
-        var cy = PortraitLayout.BuildCardNameY;
-        BuildGlyph(category)(this, card.Position.X + 74f, cy, 34f, InkStyle.Line);
-        var tagWidth = PortraitFrame.TagWidth(tags);
-        var tagLeft = card.End.X - 40f - tagWidth;
-        PortraitFrame.TagLine(this, tagLeft, cy, tags, card.End.X - 40f, InkStyle.Dim);
-        InkDraw.TextBounded(this, new Rect2(card.Position.X + 126f, cy - 40f, tagLeft - 30f - card.Position.X - 126f, 80f), name,
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-        return card;
+        PortraitFrame.GothicFrame(this, card, InkStyle.Panel);
+        PortraitTracery.TitleBackdrop(this, PortraitLayout.BuildCardBand);
+        var band = PortraitLayout.BuildCardBand;
+        InkDraw.TextBounded(this, new Rect2(band.Position.X, PortraitLayout.BuildCardNameY - 40f, band.Size.X, 80f), name,
+            PortraitLayout.FontTitle, PortraitLayout.FontMeta, InkStyle.Line, "cm");
+        if (tags.Count > 0)
+        {
+            var w = PortraitFrame.TagWidth(tags);
+            var x = card.GetCenter().X - w / 2f;
+            PortraitFrame.TagLine(this, x, PortraitLayout.BuildCardTagY, tags, x + w, InkStyle.Dim);
+        }
     }
 
     private void DrawBuildButtons(string label, bool enabled)
@@ -257,11 +283,11 @@ public partial class PortraitHubScreen
         var undo = hub.CanUndoBuild;
         if (undo)
         {
-            PortraitFrame.Pill(this, PortraitLayout.BuildUndo, $"撤销 {hub.LastBuildName}");
+            PortraitFrame.Plaque(this, PortraitLayout.BuildUndo, $"撤销 {hub.LastBuildName}");
             _widgets.Add(new PortraitWidget(PortraitLayout.BuildUndo, PortraitAction.BuildUndo, 0, true, "撤销"));
         }
         var main = PortraitLayout.BuildMain(undo);
-        PortraitFrame.Pill(this, main, label, primary: true, enabled: enabled);
+        PortraitFrame.Plaque(this, main, label, primary: true, enabled: enabled, size: PortraitLayout.FontTitle);
         _widgets.Add(new PortraitWidget(main, PortraitAction.BuildMain, 0, enabled, label));
     }
 
@@ -272,7 +298,7 @@ public partial class PortraitHubScreen
         var top = PortraitLayout.BuildBodyTop(false);
         DrawBuildTiles(top, items.Count, _buildExistingPick, i => (items[i].Name, items[i].Category, BuildState.Ready));
         var picked = items[_buildExistingPick];
-        DrawBuildCardHead(picked.Name, picked.Category, picked.Tags);
+        DrawBuildCardHead(picked.Name, picked.Tags);
         var territory = _vm.Hub.State.Territory;
         var cell = 0;
         List<RecipeCost> refund;
@@ -280,7 +306,8 @@ public partial class PortraitHubScreen
         {
             var r = PortraitLayout.BuildCond(cell++);
             var count = territory.FacilityCount(room.Id);
-            PortraitFrame.CountTag(this, r.Position.X + 52f, r.GetCenter().Y, HubSession.SlotLabel, $"{count}/{Room.MaxFacilities}", true);
+            PortraitGlyph.Chest(this, r.Position.X + 22f, r.GetCenter().Y, 18f, InkStyle.Dim);
+            PortraitFrame.CountTag(this, r.Position.X + 56f, r.GetCenter().Y, HubSession.SlotLabel, $"{count}/{Room.MaxFacilities}", true);
             var costs = new List<RecipeCost>(room.MaterialCost);
             foreach (var f in territory.Facilities.Where(f => f.RoomId == room.Id))
                 costs.AddRange(f.MaterialCost);
@@ -288,12 +315,16 @@ public partial class PortraitHubScreen
         }
         else
             refund = HubSession.DemolishRefund(picked.Facility.MaterialCost);
-        // 拆了返还什么（Core 的六成返还）：每样一格，「+件数」。
+        // 拆了返还什么（Core 的六成返还）：每样一格，物品图标＋「名 +件数」。
         foreach (var back in refund.Take(6 - cell))
         {
             var r = PortraitLayout.BuildCond(cell++);
-            PortraitGlyph.Plus(this, r.Position.X + 20f, r.GetCenter().Y, 14f, InkStyle.Dim);
-            PortraitFrame.CountTag(this, r.Position.X + 52f, r.GetCenter().Y, back.ItemId, $"+{back.Count}", true);
+            var cy = r.GetCenter().Y;
+            PortraitGlyph.Plus(this, r.Position.X + 22f, cy, 14f, InkStyle.Dim);
+            var x = r.Position.X + 56f;
+            if (InkIcon.Draw(this, back.ItemId, new Rect2(x, cy - 24f, 48f, 48f)))
+                x += 60f;
+            PortraitFrame.CountTag(this, x, cy, back.ItemId, $"+{back.Count}", true);
         }
         DrawBuildButtons("拆除", picked.Facility != null || _vm.Hub.PlayerRoomId != room.Id);
     }
@@ -306,12 +337,13 @@ public partial class PortraitHubScreen
         {
             var rect = PortraitLayout.BuildRow(top, i);
             var door = doors[i];
-            PortraitFrame.Card(this, rect, door.Open, 22f);
-            PortraitFrame.Tag(this, new Vector2(rect.Position.X + 30f, rect.GetCenter().Y - 33f), "门", 66f, door.Open);
-            PortraitFrame.TagLine(this, rect.Position.X + 150f, rect.GetCenter().Y,
-                new[] { Territory.DirName(door.Dir), door.Neighbor }, rect.Position.X + rect.Size.X * 0.6f, InkStyle.Line, PortraitLayout.FontBody);
-            InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.6f, rect.Position.Y, rect.Size.X * 0.4f - 40f, rect.Size.Y),
-                door.Open ? "连通" : "墙", PortraitLayout.FontMeta, PortraitLayout.FontMeta, door.Open ? InkStyle.Line : InkStyle.Dim, "rm");
+            var cy = rect.GetCenter().Y;
+            PortraitFrame.Card(this, rect, door.Open, 24f);
+            PortraitFrame.Tag(this, new Vector2(rect.Position.X + 32f, cy - 36f), "门", 72f, door.Open);
+            PortraitFrame.TagLine(this, rect.Position.X + 160f, cy,
+                new[] { Territory.DirName(door.Dir), door.Neighbor }, rect.Position.X + rect.Size.X * 0.62f, InkStyle.Line, PortraitLayout.FontBody);
+            InkDraw.TextBounded(this, new Rect2(rect.Position.X + rect.Size.X * 0.62f, rect.Position.Y, rect.Size.X * 0.38f - 44f, rect.Size.Y),
+                door.Open ? "连通" : "墙", PortraitLayout.FontBody, PortraitLayout.FontMeta, door.Open ? InkStyle.Line : InkStyle.Dim, "rm");
             _widgets.Add(new PortraitWidget(rect, PortraitAction.DevelopmentDoor, (int)door.Dir, true, $"{Territory.DirName(door.Dir)}门"));
         }
     }
