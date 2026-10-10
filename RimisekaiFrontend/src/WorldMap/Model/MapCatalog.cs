@@ -143,8 +143,10 @@ public sealed class QuestBoardDef
     public int MoneyBase { get; set; }
     public int MoneyPerStar { get; set; }
 
-    /// <summary>奖励行，{0} 为金币数。</summary>
-    public string RewardText { get; set; } = "";
+    /// <summary>正主按星数加码：每颗星多给的属性池与经验池（星数一样的正主一样强）。</summary>
+    public int CorePerStar { get; set; }
+    public int ExpPerStar { get; set; }
+
 
     /// <summary>人数上限＝此数＋危险等级。</summary>
     public int PartyBase { get; set; }

@@ -412,10 +412,7 @@ public sealed class TerritoryClock
     /// </summary>
     public static Recipe? FindAvailableRecipe(Territory territory, Facility bench, CharacterState character, ActionKind task)
     {
-        var candidates = territory.Recipes.Where(r => r.Station == task);
-        var target = territory.GetTargetCraftItem(task);
-        if (!string.IsNullOrEmpty(target))
-            candidates = candidates.Where(r => r.ItemId == target);
+        var candidates = territory.Recipes.Where(r => territory.Makes(r, task));
 
         Recipe? fetchable = null;
         foreach (var r in candidates)
@@ -575,13 +572,10 @@ public sealed class TerritoryClock
         }
         // 工作台只用“这个人背包 + 这台子自己的存货”付料：
         // 材料得有人搬过来，不能隔空从别的货架取。
-        var targetCraft = territory.GetTargetCraftItem(worker.Task);
-        var recipe = (!string.IsNullOrEmpty(targetCraft))
-            ? territory.Recipes.Find(r => r.Station == worker.Task && r.ItemId == targetCraft && territory.CanPayAt(facility, character, r.Costs))
-            : territory.Recipes.Find(r => r.Station == worker.Task && territory.CanPayAt(facility, character, r.Costs));
+        var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
-        territory.Produce(character, recipe.ItemId, recipe.OutputCount);
+        territory.Finish(character, recipe);
         character.GainLifeExp(recipe.Skill, Territory.CraftExp);
         character.Condition.Spend(0, GetSpiritCost(worker.Task));
         worker.Phase = WorkPhase.Idle;

@@ -56,15 +56,14 @@ public sealed class EquipInstance
         ? null
         : DefDatabase<EnchantDef>.Get(Enchant);
 
-    /// <summary>防具防御值：槽位基础 × 品质乘数，再加材料、强化与祝福的加成。</summary>
+    /// <summary>防具防御值：（槽位底防 + 材料甲加成）× 品质乘数，再加强化与祝福的加成。</summary>
     public int Defence
     {
         get
         {
             if (Kind != EquipKind.Armor)
                 return 0;
-            var total = ArmorSlots.BaseDefence(Slot) * QualityOf.PanelFactor(Quality) / 100;
-            total += Material?.DamageBonus ?? 0;
+            var total = (ArmorSlots.BaseDefence(Slot) + (Material?.ArmorBonus ?? 0)) * QualityOf.PanelFactor(Quality) / 100;
             total += Enhance;
             if (EnchantDef is { } e)
                 total += e.CoreBonus;

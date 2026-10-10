@@ -16,6 +16,7 @@ namespace Rimisekai.Tests;
 /// 领地经营闭环：采集 → 建造 → 排班干活 → 工坊加工 → 再建造，逻辑层按真实时间推进跑通。
 /// 开局照标准种子装配（与 InkWorldBootstrap.Create 同序，只是不灌台词），随机数全部定种，结果可复现。
 /// </summary>
+[Collection("Quest definition state")]
 public sealed class TerritoryLoopTests
 {
     private const int Quarry = 1006;  // 采石点：Mine → 石材
@@ -93,11 +94,11 @@ public sealed class TerritoryLoopTests
     }
 
     /// <summary>某物品在全领地（所有人背包 + 所有设施）的总数。</summary>
-    private static int Total(GameState state, string itemId) =>
+    internal static int Total(GameState state, string itemId) =>
         state.Roster.Members.Sum(c => c.Bag.Get(itemId))
         + state.Territory.Facilities.Sum(f => f.Contents.Get(itemId));
 
-    private static CharacterState Maid(GameState state) => state.Roster.Members.Single(c => !c.IsMaster);
+    internal static CharacterState Maid(GameState state) => state.Roster.Members.Single(c => !c.IsMaster);
 
     /// <summary>卧室里给女仆打一张床（开局那张是主人的，她好感不够不睡）。料另给，不动开局存货。</summary>
     internal static Facility GiveMaidABed(HubSession hub, GameState state)
@@ -198,7 +199,7 @@ public sealed class TerritoryLoopTests
         Assert.True(state.Money >= 0, $"金钱 {state.Money}");
     }
 
-    private static Facility Build(HubSession hub, GameState state, int defId, int roomId)
+    internal static Facility Build(HubSession hub, GameState state, int defId, int roomId)
     {
         Assert.True(hub.BuildFacilityDef(defId, roomId), $"建造 {defId} 进房间 {roomId}");
         var built = state.Territory.Facilities[^1];
@@ -486,7 +487,7 @@ public sealed class TerritoryLoopTests
     private static readonly string[] Provisions = { "干粮", "面包", "果实", "鸡蛋", "鱼" };
 
     /// <summary>台词包里的访客场景与它的定时事件（第 3 天 11 点）。生成层不在测试里跑，由 <see cref="DrainGeneration"/> 代写。</summary>
-    private static void LoadVisitorEvent(GameState state)
+    internal static void LoadVisitorEvent(GameState state)
     {
         var json = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoRoot(), "content", "voice.json"));
         Assert.True(Rimisekai.Voice.VoicePackJson.TryParse(json, out _, out _, out var scenes, out var events, out _, out var error), error);
@@ -497,13 +498,13 @@ public sealed class TerritoryLoopTests
     private static string RepoRoot() =>
         System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
 
-    private static void DrainGeneration(HubSession hub)
+    internal static void DrainGeneration(HubSession hub)
     {
         while (hub.TakeGenerationTask() is { } task)
             hub.CompleteGeneration(task, new[] { "（测试代写的台词。）" });
     }
 
-    private static void PlayScene(HubSession hub, int choice)
+    internal static void PlayScene(HubSession hub, int choice)
     {
         for (var guard = 0; guard < 100 && hub.ScenePlaying; guard++)
         {
@@ -572,7 +573,7 @@ public sealed class TerritoryLoopTests
         Assert.True(unknown.Count == 0, string.Join("\n", unknown));
     }
 
-    private static void MoveTo(HubSession hub, int roomId)
+    internal static void MoveTo(HubSession hub, int roomId)
     {
         if (hub.PlayerRoomId != roomId)
             Assert.True(hub.Arrive(roomId), $"走到房间 {roomId}");

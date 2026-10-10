@@ -35,9 +35,9 @@
         "weight": 30,
         "minTier": 1,
         "foes": [
-          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 1, "money": 8 },
-          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "primary": "strength", "secondary": "speed", "corePool": 10, "expPool": 700, "armour": 1, "threatTier": 2, "column": 2, "money": 14 },
-          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8 }
+          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 1, "money": 8, "loot": [{ "itemId": "兽皮", "min": 1, "max": 2, "ratePercent": 80 }, { "itemId": "肉", "min": 1, "max": 2, "ratePercent": 60 }] },
+          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "primary": "strength", "secondary": "speed", "corePool": 10, "expPool": 700, "armour": 1, "threatTier": 2, "column": 2, "money": 14, "loot": [{ "itemId": "兽皮", "min": 3, "max": 4, "ratePercent": 100 }, { "itemId": "肉", "min": 2, "max": 3, "ratePercent": 100 }] },
+          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8, "loot": [{ "itemId": "兽皮", "min": 1, "max": 2, "ratePercent": 80 }, { "itemId": "肉", "min": 1, "max": 2, "ratePercent": 60 }] }
         ],
         "detourMinutes": 90
       },
@@ -49,9 +49,9 @@
         "weight": 20,
         "minTier": 2,
         "foes": [
-          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 1, "money": 20 },
-          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "weapon": "axe", "primary": "strength", "secondary": "constitution", "corePool": 14, "expPool": 1400, "armour": 2, "threatTier": 2, "column": 2, "money": 40 },
-          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 3, "money": 20 }
+          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 1, "money": 20, "loot": [{ "itemId": "干粮", "min": 1, "max": 2, "ratePercent": 60 }, { "itemId": "布", "min": 1, "max": 2, "ratePercent": 50 }, { "itemId": "铁", "min": 1, "max": 1, "ratePercent": 30 }] },
+          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "weapon": "axe", "primary": "strength", "secondary": "constitution", "corePool": 14, "expPool": 1400, "armour": 2, "threatTier": 2, "column": 2, "money": 40, "loot": [{ "itemId": "铁", "min": 2, "max": 3, "ratePercent": 100 }, { "itemId": "布", "min": 2, "max": 2, "ratePercent": 100 }, { "itemId": "药剂", "min": 1, "max": 1, "ratePercent": 50 }] },
+          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 800, "armour": 1, "threatTier": 1, "column": 3, "money": 20, "loot": [{ "itemId": "干粮", "min": 1, "max": 2, "ratePercent": 60 }, { "itemId": "布", "min": 1, "max": 2, "ratePercent": 50 }, { "itemId": "铁", "min": 1, "max": 1, "ratePercent": 30 }] }
         ],
         "detourMinutes": 120
       },
@@ -63,8 +63,8 @@
         "weight": 25,
         "minTier": 1,
         "foes": [
-          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 4 },
-          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 2, "money": 4 }
+          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 4, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] },
+          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 2, "money": 4, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] }
         ],
         "detourMinutes": 60
       },
@@ -127,9 +127,9 @@
         "title": "石室守卫",
         "text": "黑暗里亮起几对眼睛，盘踞此处的东西被惊醒了。",
         "foes": [
-          { "id": "dg_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 5 },
-          { "id": "dg_rat_b", "portrait": "monster_giant_rat", "name": "鼠王", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 800, "armour": 1, "threatTier": 2, "column": 2, "money": 12, "size": 2 },
-          { "id": "dg_rat_c", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 4, "money": 5 }
+          { "id": "dg_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 1, "money": 5, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] },
+          { "id": "dg_rat_b", "portrait": "monster_giant_rat", "name": "鼠王", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 800, "armour": 1, "threatTier": 2, "column": 2, "money": 12, "size": 2, "loot": [{ "itemId": "铁矿", "min": 4, "max": 8, "ratePercent": 100 }, { "itemId": "兽皮", "min": 2, "max": 3, "ratePercent": 100 }] },
+          { "id": "dg_rat_c", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 300, "threatTier": 1, "column": 4, "money": 5, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] }
         ]
       },
       {
@@ -137,9 +137,9 @@
         "title": "石室守卫",
         "text": "几具披甲骸骨从壁龛里站起，锈剑在石地上拖出火星。",
         "foes": [
-          { "id": "dg_skel_a", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 1, "money": 12 },
-          { "id": "dg_skel_b", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 2, "money": 12 },
-          { "id": "dg_skel_c", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12 }
+          { "id": "dg_skel_a", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 1, "money": 12, "loot": [{ "itemId": "炼金尘", "min": 1, "max": 1, "ratePercent": 40 }, { "itemId": "铁矿", "min": 1, "max": 2, "ratePercent": 40 }] },
+          { "id": "dg_skel_b", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 2, "money": 12, "loot": [{ "itemId": "炼金尘", "min": 1, "max": 1, "ratePercent": 40 }, { "itemId": "铁矿", "min": 1, "max": 2, "ratePercent": 40 }] },
+          { "id": "dg_skel_c", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12, "loot": [{ "itemId": "炼金尘", "min": 1, "max": 1, "ratePercent": 40 }, { "itemId": "铁矿", "min": 1, "max": 2, "ratePercent": 40 }] }
         ]
       }
     ],
@@ -149,8 +149,8 @@
         "title": "遗迹之主",
         "text": "最深处的石座上，一头庞然的东西缓缓抬起头来。",
         "foes": [
-          { "id": "dg_boss_wolf", "portrait": "monster_dire_wolf", "name": "洞穴魔狼", "primary": "strength", "secondary": "speed", "corePool": 22, "expPool": 1800, "armour": 2, "threatTier": 3, "column": 1, "money": 80, "size": 2 },
-          { "id": "dg_boss_add", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8 }
+          { "id": "dg_boss_wolf", "portrait": "monster_dire_wolf", "name": "洞穴魔狼", "primary": "strength", "secondary": "speed", "corePool": 22, "expPool": 1800, "armour": 2, "threatTier": 3, "column": 1, "money": 80, "size": 2, "loot": [{ "itemId": "兽皮", "min": 3, "max": 5, "ratePercent": 100 }, { "itemId": "炼金尘", "min": 1, "max": 2, "ratePercent": 50 }] },
+          { "id": "dg_boss_add", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 400, "threatTier": 1, "column": 3, "money": 8, "loot": [{ "itemId": "兽皮", "min": 1, "max": 2, "ratePercent": 80 }, { "itemId": "肉", "min": 1, "max": 2, "ratePercent": 60 }] }
         ]
       },
       {
@@ -158,8 +158,8 @@
         "title": "遗迹之主",
         "text": "尘封的王座上坐着一具戴冠的骸骨，眼窝里燃起幽火。",
         "foes": [
-          { "id": "dg_boss_lich", "portrait": "", "name": "骸骨王", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 28, "expPool": 2400, "armour": 3, "threatTier": 4, "column": 1, "money": 160, "size": 2 },
-          { "id": "dg_boss_guard", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12 }
+          { "id": "dg_boss_lich", "portrait": "", "name": "骸骨王", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 28, "expPool": 2400, "armour": 3, "threatTier": 4, "column": 1, "money": 160, "size": 2, "loot": [{ "itemId": "炼金尘", "min": 3, "max": 5, "ratePercent": 100 }, { "itemId": "钢", "min": 1, "max": 2, "ratePercent": 100 }] },
+          { "id": "dg_boss_guard", "portrait": "", "name": "骸骨兵", "weapon": "sword", "primary": "constitution", "secondary": "strength", "corePool": 10, "expPool": 1000, "armour": 2, "threatTier": 1, "column": 3, "money": 12, "loot": [{ "itemId": "炼金尘", "min": 1, "max": 1, "ratePercent": 40 }, { "itemId": "铁矿", "min": 1, "max": 2, "ratePercent": 40 }] }
         ]
       }
     ],
@@ -184,7 +184,8 @@
         "rampDays": 20,
         "moneyBase": 100,
         "moneyPerStar": 70,
-        "rewardText": "金币 ×{0}",
+        "corePerStar": 2,
+        "expPerStar": 150,
         "partyBase": 2,
         "sites": [
           {

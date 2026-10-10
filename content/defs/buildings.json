@@ -695,7 +695,7 @@
       "defName": "Facility_1034",
       "label": "操练场",
       "id": 1034,
-      "usage": "Plain",
+      "usage": "Leisure",
       "capacity": 4,
       "buildCost": 9000,
       "startBuilt": true,

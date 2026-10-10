@@ -12,9 +12,11 @@
       "cooldownDays": 2,
       "maxPartySize": 3,
       "rewardMoney": 60,
-      "rewards": [
-        "金币 ×60",
-        "干粮 ×2"
+      "rewardItems": [
+        {
+          "itemId": "干粮",
+          "count": 2
+        }
       ],
       "rumor": "看门的大爷说夜里听见仓底有磨牙声，一声一声，跟数拍子似的。",
       "foes": [
@@ -28,7 +30,21 @@
           "expPool": 300,
           "threatTier": 1,
           "column": 1,
-          "money": 6
+          "money": 6,
+          "loot": [
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 50
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 30
+            }
+          ]
         },
         {
           "id": "rat_b",
@@ -40,7 +56,21 @@
           "expPool": 300,
           "threatTier": 1,
           "column": 2,
-          "money": 6
+          "money": 6,
+          "loot": [
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 50
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 30
+            }
+          ]
         },
         {
           "id": "rat_c",
@@ -52,7 +82,21 @@
           "expPool": 300,
           "threatTier": 1,
           "column": 3,
-          "money": 6
+          "money": 6,
+          "loot": [
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 50
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 30
+            }
+          ]
         }
       ]
     },
@@ -66,10 +110,15 @@
       "cooldownDays": 5,
       "maxPartySize": 6,
       "rewardMoney": 800,
-      "rewards": [
-        "金币 ×800",
-        "铁矿石 ×10",
-        "不明矿块 ×1"
+      "rewardItems": [
+        {
+          "itemId": "铁矿",
+          "count": 10
+        },
+        {
+          "itemId": "秘银",
+          "count": 2
+        }
       ],
       "rumor": "老矿工们提起来都要先啐一口：下到第七支道的灯，从来没人点回来过。",
       "foes": [
@@ -83,7 +132,21 @@
           "expPool": 1200,
           "threatTier": 2,
           "column": 4,
-          "money": 25
+          "money": 25,
+          "loot": [
+            {
+              "itemId": "铁矿",
+              "min": 1,
+              "max": 3,
+              "ratePercent": 70
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 20
+            }
+          ]
         },
         {
           "id": "mine_rat_b",
@@ -95,7 +158,21 @@
           "expPool": 1200,
           "threatTier": 1,
           "column": 4,
-          "money": 25
+          "money": 25,
+          "loot": [
+            {
+              "itemId": "铁矿",
+              "min": 1,
+              "max": 3,
+              "ratePercent": 70
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 20
+            }
+          ]
         },
         {
           "id": "mine_rat_c",
@@ -107,7 +184,21 @@
           "expPool": 1200,
           "threatTier": 3,
           "column": 4,
-          "money": 30
+          "money": 30,
+          "loot": [
+            {
+              "itemId": "铁矿",
+              "min": 1,
+              "max": 3,
+              "ratePercent": 70
+            },
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 1,
+              "ratePercent": 20
+            }
+          ]
         },
         {
           "id": "mine_king",
@@ -121,7 +212,21 @@
           "threatTier": 4,
           "column": 1,
           "size": 3,
-          "money": 120
+          "money": 120,
+          "loot": [
+            {
+              "itemId": "铁矿",
+              "min": 4,
+              "max": 8,
+              "ratePercent": 100
+            },
+            {
+              "itemId": "兽皮",
+              "min": 2,
+              "max": 3,
+              "ratePercent": 100
+            }
+          ]
         }
       ]
     },
@@ -136,9 +241,11 @@
       "cooldownDays": 3,
       "maxPartySize": 4,
       "rewardMoney": 200,
-      "rewards": [
-        "金币 ×200",
-        "兽皮 ×2"
+      "rewardItems": [
+        {
+          "itemId": "兽皮",
+          "count": 2
+        }
       ],
       "rumor": "放羊的孩子说那头狼站起来比人还高，眼睛只剩一只，夜里亮得像灯。",
       "foes": [
@@ -152,7 +259,21 @@
           "expPool": 400,
           "threatTier": 1,
           "column": 1,
-          "money": 10
+          "money": 10,
+          "loot": [
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 80
+            },
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 60
+            }
+          ]
         },
         {
           "id": "alpha_boss",
@@ -160,13 +281,27 @@
           "name": "独眼头狼",
           "primary": "constitution",
           "secondary": "strength",
-          "corePool": 18,
-          "expPool": 1000,
-          "armour": 2,
+          "corePool": 26,
+          "expPool": 2000,
+          "armour": 3,
           "threatTier": 2,
           "column": 2,
           "money": 60,
-          "size": 2
+          "size": 2,
+          "loot": [
+            {
+              "itemId": "兽皮",
+              "min": 4,
+              "max": 6,
+              "ratePercent": 100
+            },
+            {
+              "itemId": "肉",
+              "min": 3,
+              "max": 3,
+              "ratePercent": 100
+            }
+          ]
         },
         {
           "id": "wolf_right",
@@ -178,7 +313,21 @@
           "expPool": 400,
           "threatTier": 1,
           "column": 4,
-          "money": 10
+          "money": 10,
+          "loot": [
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 80
+            },
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 60
+            }
+          ]
         }
       ]
     },
@@ -193,9 +342,11 @@
       "cooldownDays": 3,
       "maxPartySize": 4,
       "rewardMoney": 320,
-      "rewards": [
-        "金币 ×320",
-        "兽皮 ×4"
+      "rewardItems": [
+        {
+          "itemId": "兽皮",
+          "count": 4
+        }
       ],
       "rumor": "猎户说今年冬天山里的狼饿疯了，成群往山下摸，连火把都不怕。",
       "foes": [
@@ -209,7 +360,21 @@
           "expPool": 400,
           "threatTier": 1,
           "column": 1,
-          "money": 10
+          "money": 10,
+          "loot": [
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 80
+            },
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 60
+            }
+          ]
         },
         {
           "id": "night_w1b",
@@ -221,7 +386,21 @@
           "expPool": 400,
           "threatTier": 1,
           "column": 3,
-          "money": 10
+          "money": 10,
+          "loot": [
+            {
+              "itemId": "兽皮",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 80
+            },
+            {
+              "itemId": "肉",
+              "min": 1,
+              "max": 2,
+              "ratePercent": 60
+            }
+          ]
         }
       ],
       "waves": [
@@ -236,7 +415,21 @@
             "expPool": 400,
             "threatTier": 1,
             "column": 1,
-            "money": 10
+            "money": 10,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 80
+              },
+              {
+                "itemId": "肉",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 60
+              }
+            ]
           },
           {
             "id": "night_w2b",
@@ -248,7 +441,21 @@
             "expPool": 400,
             "threatTier": 1,
             "column": 2,
-            "money": 10
+            "money": 10,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 80
+              },
+              {
+                "itemId": "肉",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 60
+              }
+            ]
           },
           {
             "id": "night_w2c",
@@ -260,7 +467,21 @@
             "expPool": 400,
             "threatTier": 1,
             "column": 3,
-            "money": 10
+            "money": 10,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 80
+              },
+              {
+                "itemId": "肉",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 60
+              }
+            ]
           }
         ],
         [
@@ -274,7 +495,21 @@
             "expPool": 400,
             "threatTier": 1,
             "column": 1,
-            "money": 10
+            "money": 10,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 80
+              },
+              {
+                "itemId": "肉",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 60
+              }
+            ]
           },
           {
             "id": "night_alpha",
@@ -282,13 +517,27 @@
             "name": "头狼",
             "primary": "strength",
             "secondary": "speed",
-            "corePool": 10,
-            "expPool": 700,
-            "armour": 1,
+            "corePool": 28,
+            "expPool": 2200,
+            "armour": 2,
             "threatTier": 2,
             "column": 2,
             "money": 40,
-            "size": 2
+            "size": 2,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 3,
+                "max": 4,
+                "ratePercent": 100
+              },
+              {
+                "itemId": "肉",
+                "min": 2,
+                "max": 3,
+                "ratePercent": 100
+              }
+            ]
           },
           {
             "id": "night_w3b",
@@ -300,7 +549,21 @@
             "expPool": 400,
             "threatTier": 1,
             "column": 4,
-            "money": 10
+            "money": 10,
+            "loot": [
+              {
+                "itemId": "兽皮",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 80
+              },
+              {
+                "itemId": "肉",
+                "min": 1,
+                "max": 2,
+                "ratePercent": 60
+              }
+            ]
           }
         ]
       ]

@@ -47,13 +47,14 @@ public sealed class ArchitectureTests
     public void Quest_move_requires_a_link()
     {
         var record = new QuestRecord();
-        record.Register(new QuestDef { Id = 1, Name = "q", Kind = QuestKind.Dungeon, CooldownDays = 1 });
-        var run = record.Start(1, new[] { 1 });
+        // 用内容里没有的编号：登记表是全局的，占了 1 号会顶掉内容里的委托。
+        record.Register(new QuestDef { Id = 9902, Name = "q", Kind = QuestKind.Dungeon, CooldownDays = 1 });
+        var run = record.Start(9902, new[] { 1 });
         Assert.NotNull(run);
 
         var map = new QuestMap
         {
-            QuestId = 1,
+            QuestId = 9902,
             Nodes =
             {
                 new MapNode { Id = 0, Links = { 1 } },
@@ -67,9 +68,9 @@ public sealed class ArchitectureTests
         Assert.False(run.MoveTo(map, 2));
 
         record.Complete(run);
-        Assert.False(record.IsAvailable(1));
+        Assert.False(record.IsAvailable(9902));
         record.TickDay();
-        Assert.True(record.IsAvailable(1));
+        Assert.True(record.IsAvailable(9902));
     }
 
     [Fact]
@@ -1399,8 +1400,9 @@ public sealed class ArchitectureTests
         var a = roster.Add("甲");
         a.Affect.Mood = 20;
         var record = new QuestRecord();
-        record.Register(new QuestDef { Id = 1, Name = "讨伐", Kind = QuestKind.Dungeon });
-        var run = record.Start(1, new[] { a.Id });
+        // 用内容里没有的编号：登记表是全局的，占了 1 号就把别的测试要用的「谷仓鼠患」顶掉了。
+        record.Register(new QuestDef { Id = 9901, Name = "讨伐", Kind = QuestKind.Dungeon });
+        var run = record.Start(9901, new[] { a.Id });
         Assert.NotNull(run);
         record.Complete(run, roster);
         Assert.Equal(28, a.Affect.Mood);

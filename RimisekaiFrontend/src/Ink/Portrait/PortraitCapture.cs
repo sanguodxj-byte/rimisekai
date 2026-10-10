@@ -1137,10 +1137,14 @@ public partial class PortraitCapture : Node
             .ToList();
         Require(labels.SequenceEqual(new[] { "攻击", "技能", "道具", "逃跑" }),
             "action panel lists attack skill item flee");
+        // 背包里带两瓶药剂进场：道具页多一枚「饮药剂」，技能页不重复列。
+        _root.HubScreen.DebugHub.State.Roster.Master!.Bag.Add("药剂", 2);
+        _battleProbe.Battle.Supplies["药剂"] = 2;
         _root.CombatView.DebugPress(PortraitAction.CombatMenu, 2);
         Require(_root.ModalLayer.Current?.Title == "道具"
-            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回"),
-            "item button opens the item popup");
+            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
+            && _root.ModalLayer.Current.Choices.Any(c => c.Id == "potion" && c.Label == "饮药剂 ×2"),
+            "item button opens the item popup with the potion to drink");
     }
 
     /// <summary>道具页返回后点「技能」：技能页含防御架势与返回、不含普攻。</summary>
@@ -1151,8 +1155,9 @@ public partial class PortraitCapture : Node
         Require(_root.ModalLayer.IsActive, "skill button opens the skill popup");
         Require(!_root.ModalLayer.Current!.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.AttackId)
             && _root.ModalLayer.Current.Choices.Any(c => c.Id == Rimisekai.Combat.BattleSkills.GuardId)
-            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回"),
-            "skill popup lists guard and back but not the basic attack");
+            && _root.ModalLayer.Current.Choices.Any(c => c.Label == "返回")
+            && !_root.ModalLayer.Current.Choices.Any(c => c.Id == "potion"),
+            "skill popup lists guard and back but neither the basic attack nor the potion");
     }
 
     /// <summary>技能页返回后点「攻击」，点选敌卡派发战斗动作。</summary>

@@ -80,7 +80,7 @@ public partial class PortraitHubScreen
     private static float QuestFoesX(QuestDef def, float x) =>
         x + 130f + Math.Min(10, Math.Max(5, (int)Math.Ceiling(def.Difficulty))) * 44f;
 
-    /// <summary>报酬按「 · 」分项折行：整项放得下就整项挪到下一行，不把「不明矿块」拆成「不 / 明矿块」；单项一行都放不下才按字宽断。</summary>
+    /// <summary>报酬按「 · 」分项折行：整项放得下就整项挪到下一行，不把「炼金尘」拆成「炼 / 金尘」；单项一行都放不下才按字宽断。</summary>
     private static List<string> WrapRewards(IReadOnlyList<string> items, float width)
     {
         var lines = new List<string>();

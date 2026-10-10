@@ -185,6 +185,11 @@ public sealed partial class HubSession
             case ActionKind.Meal:
                 EatAt(fixture);
                 break;
+            case ActionKind.Train:
+                Write(master != null && Territory.Drill(master)
+                    ? $"你在{fixture.Name}操练了一阵，手上更熟了。"
+                    : $"你在{fixture.Name}操练了一阵，这点功夫已经练不出长进了。");
+                break;
             default:
                 Write($"你在{fixture.Name}{InkVerb(action)}。");
                 break;
@@ -225,15 +230,15 @@ public sealed partial class HubSession
             return;
         }
 
-        // 制作：找这件设施上的配方，扣料出成品。
-        var recipe = State.Territory.Recipes.Find(r => r.Station == act);
-        if (recipe == null || !State.Territory.CanPayWith(master, recipe.Costs))
+        // 制作：这门手艺指定了目标就只做它，否则做第一样料够的普通配方；扣料出成品（装备配方锻一件实例）。
+        var recipe = State.Territory.Recipes.Find(r => State.Territory.Makes(r, act) && State.Territory.CanPayWith(master, r.Costs));
+        if (recipe == null)
         {
             Write($"{fixture.Name}上暂时没有能做的活。");
             return;
         }
         State.Territory.PayWith(master, recipe.Costs);
-        master.Bag.Add(recipe.ItemId, recipe.OutputCount);
+        State.Territory.Finish(master, recipe);
         master.GainLifeExp(ActionKindMap.SkillOf(act)!.Value, Territory.CraftExp);
         master.Condition.Spend(0, spiritCost);
         Write($"你在{fixture.Name}{ActionKindMap.LabelOf(act)}，做成{recipe.ItemId}×{recipe.OutputCount}。");

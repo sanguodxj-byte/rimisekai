@@ -59,7 +59,7 @@ public sealed class QuestTests : IDisposable
         var count = DefLoader.LoadJson("""
             { "defType": "QuestDef", "defs": [
                 { "defName": "Quest_A", "id": 1, "label": "委托A", "kind": "dungeon", "difficulty": 3.5,
-                  "maxPartySize": 4, "rewards": ["金币 x10"], "rumor": "传言A" },
+                  "maxPartySize": 4, "rewardMoney": 10, "rewardItems": [{ "itemId": "干粮", "count": 2 }], "rumor": "传言A" },
                 { "defName": "Quest_B", "id": 2, "label": "委托B", "kind": "battle", "difficulty": 12,
                   "maxPartySize": 6 }
             ] }
@@ -71,7 +71,7 @@ public sealed class QuestTests : IDisposable
         Assert.Equal(QuestKind.Dungeon, a.Kind);
         Assert.Equal(3.5, a.Difficulty);
         Assert.Equal("传言A", a.Rumor);
-        Assert.Equal(new[] { "金币 x10" }, a.Rewards);
+        Assert.Equal(new[] { "金币 ×10", "干粮 ×2" }, a.Rewards);
         Assert.Equal(4, a.MaxPartySize);
         Assert.Equal("★★★☆", a.DifficultyText);
         Assert.Equal("★×12", DefDatabase<QuestDef>.All.Single(d => d.DefName == "Quest_B").DifficultyText);

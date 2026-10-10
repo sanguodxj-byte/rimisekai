@@ -17,8 +17,11 @@ public sealed class MaterialDef : ThingDef
     /// <summary>能不能缝甲。</summary>
     public bool ArmorUsable { get; init; }
 
-    /// <summary>伤害/防御加成（叠加到基座值上，再随品质整体缩放）。</summary>
+    /// <summary>兵器面板加成：叠加到武器种类的基座面板上，再随品质整体缩放。</summary>
     public int DamageBonus { get; init; }
+
+    /// <summary>甲的防御加成：叠加到每件甲的槽位底防上，再随品质整体缩放。</summary>
+    public int ArmorBonus { get; init; }
 
     /// <summary>价值倍率（百分比，100 = 按基座原价）。</summary>
     public int ValueFactor { get; init; } = 100;

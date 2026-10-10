@@ -22,6 +22,20 @@ public static class Encounters
     private static int _nextEnemyId = 1000;
 
     /// <summary>
+    /// 把主人背包里的消耗品（耗物品技能要的那几样，如药剂）点数带进战斗；
+    /// 用掉多少由 <see cref="CombatSettlement.Settle"/> 从背包扣。
+    /// </summary>
+    public static void Pack(GameState state, Battle battle)
+    {
+        var bag = state.Roster.Master?.Bag;
+        if (bag == null)
+            return;
+        foreach (var skill in SkillTable.All)
+            if (skill.Item.Length > 0 && bag.Get(skill.Item) > 0)
+                battle.Supplies[skill.Item] = bag.Get(skill.Item);
+    }
+
+    /// <summary>
     /// 从敌人定义成军，与名册中全体非主人成员开战。
     /// 返回战斗会话（前端据此切入战斗页）；敌人清单为空或没有可用成员返回 null。
     /// <paramref name="partyIds"/> 传任务编成时，只让名单里的人上阵（玩家本人始终随行）；
@@ -67,9 +81,10 @@ public static class Encounters
 
         var battle = new Battle(catalog) { PlaceName = placeName };
         foreach (var c in starters)
-            battle.Add(Deploy.FromCharacter(c, CombatSide.Attacker, catalog));
+            battle.Add(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips));
         foreach (var c in reserves)
-            battle.AddReserve(Deploy.FromCharacter(c, CombatSide.Attacker, catalog));
+            battle.AddReserve(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips));
+        Pack(state, battle);
 
         foreach (var def in enemies)
             battle.Add(Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender));

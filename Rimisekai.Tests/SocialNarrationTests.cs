@@ -168,7 +168,7 @@ public class SocialNarrationTests
         var (hub, who) = SetupSocial();
         var master = hub.State.Roster.Master!;
         master.Bag.Add("药水", 2);
-        master.Bag.Add("铁矿石", 2);
+        master.Bag.Add("铁矿", 2);
 
         // 送心仪礼物（法师喜欢药水）：好感加成显著（+30）
         var favorBefore = who.Condition.Favor;
@@ -176,9 +176,9 @@ public class SocialNarrationTests
         var gainFav = who.Condition.Favor - favorBefore;
         Assert.True(gainFav >= 30);
 
-        // 送粗陋废料（铁矿石）：仅礼貌收下，好感微弱（+2）
+        // 送粗陋废料（铁矿）：仅礼貌收下，好感微弱（+2）
         favorBefore = who.Condition.Favor;
-        Assert.True(hub.Social(SocialAction.Gift, "铁矿石"));
+        Assert.True(hub.Social(SocialAction.Gift, "铁矿"));
         var gainWaste = who.Condition.Favor - favorBefore;
         Assert.True(gainWaste <= 5);
 

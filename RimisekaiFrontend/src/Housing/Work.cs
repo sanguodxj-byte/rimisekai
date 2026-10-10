@@ -224,6 +224,9 @@ public sealed class Recipe
     public int OutputCount { get; init; } = 1;
     public LifeSkill Skill { get; init; } = LifeSkill.Craft;
     public List<RecipeCost> Costs { get; init; } = new();
+
+    /// <summary>装备配方的规格；null = 普通物品配方。</summary>
+    public Defs.RecipeGear? Gear { get; init; }
 }
 
 public sealed class WorkLog

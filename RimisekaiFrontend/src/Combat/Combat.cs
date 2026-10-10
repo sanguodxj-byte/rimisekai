@@ -194,6 +194,8 @@ public static class BattleRules
     /// <summary>防御换算减伤：每点防御折 2% 减伤，封顶 60%。</summary>
     public const int DefPercentPerPoint = 2;
     public const int DefCapPercent = 60;
+    /// <summary>防具折护甲：五件甲的防御合计按此百分比折成护甲（每下伤害平减）。</summary>
+    public const int GearArmourPercent = 50;
     /// <summary>法术威力 = 法强 × Power% × 此系数。</summary>
     public const int SpellScale = 3;
     /// <summary>治疗量 = 法强 × Power% × 此系数。</summary>
@@ -262,6 +264,15 @@ public sealed class Battle
     public int Round { get; private set; } = 1;
     public CombatOutcome Outcome { get; private set; } = CombatOutcome.Ongoing;
     public List<BattleEvent> Events { get; } = new();
+
+    /// <summary>
+    /// 控制方随身带进来的消耗品（物品 DefName → 件数），由开战方从背包点数填入。
+    /// 带 <see cref="SkillDef.Item"/> 的技能（喝药剂）每用一次扣一件，用完就从菜单里消失。
+    /// </summary>
+    public Dictionary<string, int> Supplies { get; } = new();
+
+    /// <summary>本场用掉的消耗品，结算时从背包里扣。</summary>
+    public Dictionary<string, int> Consumed { get; } = new();
 
     public const int MaxAwakening = 100;
 
@@ -548,8 +559,21 @@ public sealed class Battle
         return SkillTable.Get(skillId);
     }
 
-    private SkillDef? SkillOf(Combatant actor, string skillId) =>
-        actor.Skills.Contains(skillId) ? Lookup(skillId) : null;
+    /// <summary>角色此刻能出的技能：得会，耗物品的还得是控制方且有存货。</summary>
+    private SkillDef? SkillOf(Combatant actor, string skillId)
+    {
+        if (!actor.Skills.Contains(skillId))
+            return null;
+        var def = Lookup(skillId);
+        if (def == null || def.Item.Length == 0)
+            return def;
+        return actor.Side == _controlled && Supplies.GetValueOrDefault(def.Item) > 0 ? def : null;
+    }
+
+    /// <summary>治疗量：耗物品的（药剂）按目标最大生命的 Power% 回，其余按法强。</summary>
+    private int HealAmount(Combatant actor, SkillDef def, Combatant target) => def.Item.Length > 0
+        ? Math.Max(1, target.MaxHp * def.Power / 100)
+        : Math.Max(1, actor.EffSpellPower * def.Power / 100 * BattleRules.HealScale);
 
     public void StartBattle()
     {
@@ -842,8 +866,13 @@ public sealed class Battle
             case SkillKind.Heal:
             {
                 var mult = (actor.Side == _controlled && AwakeningActive) ? 2 : 1;
-                var amount = Math.Max(1, actor.EffSpellPower * def.Power / 100 * BattleRules.HealScale) * mult;
+                var amount = HealAmount(actor, def, target) * mult;
                 var healed = Math.Min(amount, target.MaxHp - target.Hp);
+                if (def.Item.Length > 0)
+                {
+                    Supplies[def.Item]--;
+                    Consumed[def.Item] = Consumed.GetValueOrDefault(def.Item) + 1;
+                }
                 target.Hp += healed;
                 Events.Add(new BattleEvent
                 {
@@ -923,7 +952,7 @@ public sealed class Battle
             var hurt = WeakestHurt(actor.Side);
             if (hurt == null)
                 return 0;
-            return Math.Max(BattleRules.MinDamage, actor.EffSpellPower * def.Power / 100 * BattleRules.HealScale);
+            return HealAmount(actor, def, hurt);
         }
 
         if (def.Kind is SkillKind.Strike or SkillKind.Spell)
@@ -1205,7 +1234,7 @@ public sealed class Battle
         var bestScore = -1;
         foreach (var id in actor.Skills)
         {
-            var def = Lookup(id);
+            var def = SkillOf(actor, id);
             if (def == null)
                 continue;
             var score = def.Kind switch
@@ -1241,9 +1270,8 @@ public sealed class Battle
     /// <summary>有半血以下的同伴才考虑治疗，分给伤得最重的。</summary>
     private int HealScore(Combatant actor, SkillDef def)
     {
-        return WeakestHurt(actor.Side) == null
-            ? 0
-            : Math.Max(1, actor.EffSpellPower * def.Power / 100 * BattleRules.HealScale);
+        var hurt = WeakestHurt(actor.Side);
+        return hurt == null ? 0 : HealAmount(actor, def, hurt);
     }
 
     private Combatant? WeakestHurt(CombatSide side)
