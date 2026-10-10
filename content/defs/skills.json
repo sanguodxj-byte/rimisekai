@@ -3,7 +3,7 @@
   "defs": [
     {
       "defType": "SkillDef",
-      "defName": "attack", "chartRow": 0, "chartColumn": 2,
+      "defName": "attack",
       "label": "普通攻击",
       "kind": "Strike",
       "target": "Enemy",
@@ -25,7 +25,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "guard", "chartRow": 0, "chartColumn": 4,
+      "defName": "guard",
       "label": "防御架势",
       "kind": "Buff",
       "target": "Self",
@@ -70,7 +70,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "slash", "chartRow": 1, "chartColumn": 1, "deriveFrom": ["attack"],
+      "defName": "slash", "deriveFrom": ["attack"],
       "label": "疾斩",
       "kind": "Strike",
       "target": "Enemy",
@@ -92,7 +92,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "armor_break", "chartRow": 2, "chartColumn": 1, "deriveFrom": ["slash", "heavy_cleave"],
+      "defName": "armor_break", "deriveFrom": ["slash", "heavy_cleave"],
       "label": "破甲",
       "kind": "Strike",
       "target": "Enemy",
@@ -114,7 +114,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "cross_slash", "chartRow": 3, "chartColumn": 1, "deriveFrom": ["slash", "armor_break"],
+      "defName": "cross_slash", "deriveFrom": ["slash", "armor_break"],
       "label": "二连斩",
       "kind": "Strike",
       "target": "Enemy",
@@ -136,7 +136,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "heavy_cleave", "chartRow": 1, "chartColumn": 0, "deriveFrom": ["attack"],
+      "defName": "heavy_cleave", "deriveFrom": ["attack"],
       "label": "重劈",
       "kind": "Strike",
       "target": "Enemy",
@@ -158,7 +158,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "sweep", "chartRow": 2, "chartColumn": 0, "deriveFrom": ["heavy_cleave"],
+      "defName": "sweep", "deriveFrom": ["heavy_cleave"],
       "label": "横扫",
       "kind": "Strike",
       "target": "AllEnemies",
@@ -180,7 +180,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "shatter", "chartRow": 4, "chartColumn": 1, "deriveFrom": ["heavy_cleave", "sweep"],
+      "defName": "shatter", "deriveFrom": ["heavy_cleave", "sweep"],
       "label": "碎震",
       "kind": "Strike",
       "target": "Enemy",
@@ -202,7 +202,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "quick_stab", "chartRow": 2, "chartColumn": 2, "deriveFrom": ["attack", "slash"],
+      "defName": "quick_stab", "deriveFrom": ["attack", "slash"],
       "label": "速刺",
       "kind": "Strike",
       "target": "Enemy",
@@ -224,7 +224,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "swallow_cut", "chartRow": 3, "chartColumn": 2, "deriveFrom": ["quick_stab", "slash"],
+      "defName": "swallow_cut", "deriveFrom": ["quick_stab", "slash"],
       "label": "燕返",
       "kind": "Strike",
       "target": "Enemy",
@@ -246,7 +246,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "shadow_rush", "chartRow": 5, "chartColumn": 2, "deriveFrom": ["swallow_cut", "venom_blade"],
+      "defName": "shadow_rush", "deriveFrom": ["swallow_cut", "venom_blade"],
       "label": "影袭",
       "kind": "Strike",
       "target": "Enemy",
@@ -268,7 +268,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "venom_blade", "chartRow": 4, "chartColumn": 2, "deriveFrom": ["quick_stab", "pierce_shot"],
+      "defName": "venom_blade", "deriveFrom": ["quick_stab", "pierce_shot"],
       "label": "淬毒刃",
       "kind": "Strike",
       "target": "Enemy",
@@ -290,7 +290,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "aimed_shot", "chartRow": 1, "chartColumn": 2, "deriveFrom": ["attack"],
+      "defName": "aimed_shot", "deriveFrom": ["attack"],
       "label": "鹰眼射",
       "kind": "Strike",
       "target": "Enemy",
@@ -312,7 +312,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "pierce_shot", "chartRow": 3, "chartColumn": 3, "deriveFrom": ["aimed_shot", "armor_break"],
+      "defName": "pierce_shot", "deriveFrom": ["aimed_shot", "armor_break"],
       "label": "贯穿箭",
       "kind": "Strike",
       "target": "Enemy",
@@ -334,7 +334,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "volley", "chartRow": 4, "chartColumn": 3, "deriveFrom": ["aimed_shot", "pierce_shot", "sweep"],
+      "defName": "volley", "deriveFrom": ["aimed_shot", "pierce_shot", "sweep"],
       "label": "乱射",
       "kind": "Strike",
       "target": "AllEnemies",
@@ -356,7 +356,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "magic_missile", "chartRow": 1, "chartColumn": 3, "deriveFrom": ["attack"],
+      "defName": "magic_missile", "deriveFrom": ["attack"],
       "label": "魔弹",
       "kind": "Spell",
       "target": "Enemy",
@@ -378,7 +378,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "mend", "chartRow": 2, "chartColumn": 4, "deriveFrom": ["magic_missile", "guard"],
+      "defName": "mend", "deriveFrom": ["magic_missile", "guard"],
       "label": "治愈术",
       "kind": "Heal",
       "target": "Ally",
@@ -400,7 +400,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "flame_burst", "chartRow": 2, "chartColumn": 3, "deriveFrom": ["magic_missile"],
+      "defName": "flame_burst", "deriveFrom": ["magic_missile"],
       "label": "烈焰",
       "kind": "Spell",
       "target": "Enemy",
@@ -422,7 +422,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "frost_bind", "chartRow": 3, "chartColumn": 4, "deriveFrom": ["flame_burst", "mend"],
+      "defName": "frost_bind", "deriveFrom": ["flame_burst", "mend"],
       "label": "冻伤",
       "kind": "Spell",
       "target": "Enemy",
@@ -444,7 +444,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "iron_wall", "chartRow": 1, "chartColumn": 4, "deriveFrom": ["guard"],
+      "defName": "iron_wall", "deriveFrom": ["guard"],
       "label": "铁壁",
       "kind": "Buff",
       "target": "Self",
@@ -466,7 +466,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "palm_strike", "chartRow": 3, "chartColumn": 0, "deriveFrom": ["attack", "heavy_cleave"],
+      "defName": "palm_strike", "deriveFrom": ["attack", "heavy_cleave"],
       "label": "掌击",
       "kind": "Strike",
       "target": "Enemy",
@@ -488,7 +488,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "throw_down", "chartRow": 4, "chartColumn": 0, "deriveFrom": ["palm_strike", "sweep"],
+      "defName": "throw_down", "deriveFrom": ["palm_strike", "sweep"],
       "label": "摔技",
       "kind": "Strike",
       "target": "Enemy",
@@ -510,7 +510,7 @@
     },
     {
       "defType": "SkillDef",
-      "defName": "hurricane", "chartRow": 5, "chartColumn": 0, "deriveFrom": ["palm_strike", "throw_down"],
+      "defName": "hurricane", "deriveFrom": ["palm_strike", "throw_down"],
       "label": "连环拳",
       "kind": "Strike",
       "target": "Enemy",

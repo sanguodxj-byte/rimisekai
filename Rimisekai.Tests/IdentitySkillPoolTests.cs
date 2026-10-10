@@ -62,16 +62,47 @@ public class IdentitySkillPoolTests
     }
 
     [Fact]
-    public void A_draw_holds_exactly_one_core_and_six_distinct_skills_of_that_identity()
+    public void A_draw_holds_all_three_cores_and_distinct_basics_of_that_identity()
     {
         foreach (var pool in SkillPool.Pools)
             for (var seed = 0; seed < 50; seed++)
             {
                 var drawn = SkillPool.Draw(pool, new Random(seed));
-                Assert.Equal(SkillPool.PoolSize, drawn.Distinct().Count());
-                Assert.All(drawn, id => Assert.Contains(pool.Skills, s => s.Id == id));
-                Assert.Single(drawn, id => SkillTable.Get(id)!.Core != CoreKind.None);
+                Assert.Equal(3 + SkillPool.BasicDraw, drawn.Distinct().Count());
+                Assert.All(drawn, id => Assert.True(pool.Skills.Any(s => s.Id == id) || pool.SharedSkills.Contains(id), id));
+                Assert.Equal(3, drawn.Count(id => SkillTable.Get(id)!.Core != CoreKind.None));
             }
+    }
+
+    [Fact]
+    public void Shared_skills_are_existing_general_skills()
+    {
+        foreach (var pool in SkillPool.Pools)
+            Assert.All(pool.SharedSkills, id => Assert.Contains(SkillTable.All, s => s.Id == id && !SkillLearning.Innate(s)));
+    }
+
+    [Fact]
+    public void Tree_sorts_by_tier_downwards_and_keeps_the_cores_in_the_middle_row()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 7);
+        var master = state.Roster.Master!;
+        foreach (var pool in SkillPool.Pools)
+        {
+            Assert.True(hub.RerollSkillPool(pool.DefName, new Random(3)));
+            var slots = SkillTree.Layout(master);
+            Assert.Equal(slots.Count, slots.Select(s => s.Def.Id).Distinct().Count());
+            Assert.Equal(slots.Count, slots.Select(s => (s.Row, s.Column)).Distinct().Count());
+            Assert.All(slots, s => Assert.InRange(s.Column, 0f, SkillTree.Columns - 1));
+            var basics = slots.Where(s => s.Def.Core == CoreKind.None).OrderBy(s => s.Row).ToList();
+            for (var i = 1; i < basics.Count; i++)
+                Assert.True(SkillTier.Of(basics[i - 1].Def) <= SkillTier.Of(basics[i].Def), $"{pool.DefName}: {basics[i - 1].Def.Id} → {basics[i].Def.Id}");
+            var cores = slots.Where(s => s.Def.Core != CoreKind.None).ToList();
+            Assert.Equal(3, cores.Count);
+            Assert.Single(cores.Select(s => s.Row).Distinct());
+            var rows = slots.Max(s => s.Row) + 1;
+            Assert.Equal((rows - 1) / 2, cores[0].Row);
+            Assert.All(pool.SharedSkills, id => Assert.Contains(slots, s => s.Def.Id == id));
+        }
     }
 
     private static (Battle Battle, Combatant Hero, Combatant Foe) Duel(Func<int> d100, int foeHp = 5000)
@@ -155,10 +186,10 @@ public class IdentitySkillPoolTests
         var hub = TerritoryLoopTests.NewGame(out var state, 7);
         var master = state.Roster.Master!;
         Assert.Equal(master.Identity, master.PoolIdentity);
-        Assert.Equal(SkillPool.PoolOf(master.Identity) == null ? 0 : SkillPool.PoolSize, master.SkillPool.Count);
+        Assert.Equal(SkillPool.PoolOf(master.Identity) == null ? 0 : 3 + SkillPool.BasicDraw, master.SkillPool.Count);
         Assert.True(hub.RerollSkillPool("魔剑士", new Random(1)));
         Assert.Equal("魔剑士", master.PoolIdentity);
-        Assert.All(master.SkillPool, id => Assert.StartsWith("spellblade_", id));
+        Assert.All(master.SkillPool, id => Assert.True(id.StartsWith("spellblade_") || SkillPool.PoolOf("魔剑士")!.SharedSkills.Contains(id)));
         Assert.Contains(SkillTable.Known(master), s => s.Id == master.SkillPool[0]);
         hub.SetLayer(MapLayer.World);
         Assert.False(hub.RerollSkillPool("魔法师"));

@@ -271,7 +271,12 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() => Shoot("char_skills_open", _root.HubScreen));
         _steps.Enqueue(() => { _root.HubScreen.DebugPress(PortraitAction.SkillGroup, 0); _root.HubScreen.DebugPan("character", 0); });
-        _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 1500));
+        _steps.Enqueue(() =>
+        {
+            // 开局身份是掷的：先把主人定成骑士（池里并入了疾斩、破甲等通用技能），技能网才有确定的样子可核。
+            Require(_root.HubScreen.DebugHub.RerollSkillPool("骑士", new Random(1)), "the master can take the knight pool at home");
+            _root.HubScreen.DebugPan("character", 1500);
+        });
         _steps.Enqueue(() => { CheckSkills(); Shoot("skills_chart", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 2700));
         _steps.Enqueue(() => Shoot("skills_detail", _root.HubScreen));
@@ -279,13 +284,11 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw()); // 先按新内容高把滚动夹回底
         _steps.Enqueue(() =>
         {
-            // 身份技能池：主人在领地里可换身份、重抽；池里必有一式核心。
+            // 身份技能池：主人在领地里可换身份、重抽；三式核心全在池里。
             var master = _root.HubScreen.DebugHub.State.Roster.Master!;
-            // 开局身份是掷的；没有技能池的身份池为空，有的必是满池且含核心。
-            Require(Rimisekai.Combat.SkillPool.PoolOf(master.Identity) == null ? master.SkillPool.Count == 0
-                : master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
-                  && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 1,
-                "the master's pool follows the identity it was drawn from");
+            Require(master.SkillPool.Count == 3 + Rimisekai.Combat.SkillPool.BasicDraw
+                  && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 3,
+                "the master's pool holds all three cores and the drawn basics");
             Shoot("skills_pool", _root.HubScreen);
             Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.PoolIdentity && w.Enabled),
                 "at home the master can pick an identity and reroll the pool");
@@ -299,16 +302,25 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() =>
         {
             var master = _root.HubScreen.DebugHub.State.Roster.Master!;
-            Require(master.PoolIdentity == "魔剑士" && master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
-                && master.SkillPool.All(id => id.StartsWith("spellblade_"))
-                && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 1,
+            var pool = Rimisekai.Combat.SkillPool.PoolOf("魔剑士")!;
+            Require(master.PoolIdentity == "魔剑士"
+                && master.SkillPool.All(id => id.StartsWith("spellblade_") || pool.SharedSkills.Contains(id))
+                && master.SkillPool.Count(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None) == 3,
                 "choosing an identity redraws the pool from it");
-            Shoot("skills_pool_rerolled", _root.HubScreen);
+            _root.HubScreen.DebugPan("character", 1500);
         });
-        // 拉到底看池里各行：说明整句折行，不截断。
+        _steps.Enqueue(() =>
+        {
+            // 换了身份，技能网换成魔剑士的：核心一行居中，抽到的点亮。
+            var stars = _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.SkillNode).ToArray();
+            Require(stars.Any(w => w.Label == "spellblade_c1"), "the chart now shows the spellblade tree");
+            Shoot("skills_pool_rerolled", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.SkillNode, stars.First(w => w.Label == "spellblade_c3").Index);
+        });
+        // 选中一式核心，看详情：等阶签换成核心种类，说明整句折行，不截断。
         _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 99999));
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
-        _steps.Enqueue(() => Shoot("skills_pool_rows", _root.HubScreen));
+        _steps.Enqueue(() => Shoot("skills_core_detail", _root.HubScreen));
         _steps.Enqueue(() => { _root.HubScreen.DebugPan("character", 0); _root.HubScreen.DebugPress(PortraitAction.Back, 0); });
         // 设施抽屉、建造、系统
         _steps.Enqueue(() => _root.HubScreen.ShowTab(0));

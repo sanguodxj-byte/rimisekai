@@ -77,7 +77,7 @@ public static class SkillLearning
         var tries = 0;
         foreach (var (source, count) in uses.OrderBy(u => u.Key, StringComparer.Ordinal))
         {
-            var derived = SkillTable.All.Where(s => s.DeriveFrom.Contains(source))
+            var derived = SkillTree.Skills(c).Where(s => s.DeriveFrom.Contains(source))
                 .Select(s => (Skill: s, Chance: Chance(c, s))).Where(x => x.Chance > 0)
                 .OrderByDescending(x => x.Chance).ToList();
             if (derived.Count == 0)

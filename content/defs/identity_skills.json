@@ -5,6 +5,12 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "骑士",
    "label": "骑士",
+   "sharedSkills": [
+    "slash",
+    "armor_break",
+    "cross_slash",
+    "iron_wall"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -455,6 +461,12 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "魔剑士",
    "label": "魔剑士",
+   "sharedSkills": [
+    "slash",
+    "armor_break",
+    "magic_missile",
+    "flame_burst"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -905,6 +917,11 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "魔法师",
    "label": "魔法师",
+   "sharedSkills": [
+    "magic_missile",
+    "flame_burst",
+    "frost_bind"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -1355,6 +1372,12 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "刺客",
    "label": "刺客",
+   "sharedSkills": [
+    "quick_stab",
+    "swallow_cut",
+    "venom_blade",
+    "shadow_rush"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -1810,6 +1833,11 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "弓箭手",
    "label": "弓箭手",
+   "sharedSkills": [
+    "aimed_shot",
+    "pierce_shot",
+    "volley"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -2260,6 +2288,10 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "神官",
    "label": "神官",
+   "sharedSkills": [
+    "mend",
+    "iron_wall"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -2710,6 +2742,11 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "女仆",
    "label": "女仆",
+   "sharedSkills": [
+    "palm_strike",
+    "throw_down",
+    "hurricane"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -3165,6 +3202,9 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "吟游诗人",
    "label": "吟游诗人",
+   "sharedSkills": [
+    "aimed_shot"
+   ],
    "skills": [
     {
      "defType": "SkillDef",
@@ -3627,6 +3667,13 @@
    "defType": "IdentitySkillPoolDef",
    "defName": "圣骑士",
    "label": "圣骑士",
+   "sharedSkills": [
+    "heavy_cleave",
+    "sweep",
+    "shatter",
+    "iron_wall",
+    "mend"
+   ],
    "skills": [
     {
      "defType": "SkillDef",

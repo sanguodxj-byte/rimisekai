@@ -29,7 +29,8 @@ public partial class PortraitHubScreen
         var all = PortraitSkillChart.Build(who);
         if (all.All(s => s.Def.Id != _skillSelectedId))
             _skillSelectedId = BattleSkills.AttackId;
-        var web = PortraitLayout.SkillWebRect(y, PortraitSkillChart.Rows);
+        var rows = all.Max(s => s.Row) + 1;
+        var web = PortraitLayout.SkillWebRect(y, rows);
         PortraitFrame.Panel(this, web);
         var byId = all.ToDictionary(s => s.Def.Id);
         Vector2 At(ChartSkill s) => PortraitLayout.SkillNodeCenter(web, s.Row, s.Column);
@@ -37,14 +38,14 @@ public partial class PortraitHubScreen
         var picked = byId[_skillSelectedId];
 
         // 底纹：每行一道极淡的横线，像星图的纬线。
-        for (var row = 0; row < PortraitSkillChart.Rows; row++)
+        for (var row = 0; row < rows; row++)
         {
             var ly = PortraitLayout.SkillNodeCenter(web, row, 0).Y;
             DrawLine(new Vector2(web.Position.X + 30f, ly), new Vector2(web.End.X - 30f, ly), new Color(InkStyle.Dim, 0.12f), 1f, true);
         }
 
         // 连线：先画暗线，再画亮线（两端已学习 / 正可学习的呼吸线 / 与所选相连的），亮的压在上面。
-        var edges = all.SelectMany(t => t.Def.DeriveFrom.Select(id => (Source: byId[id], Target: t))).ToList();
+        var edges = all.SelectMany(t => t.Def.DeriveFrom.Where(byId.ContainsKey).Select(id => (Source: byId[id], Target: t))).ToList();
         foreach (var pass in new[] { false, true })
             foreach (var (source, target) in edges)
             {
@@ -70,43 +71,14 @@ public partial class PortraitHubScreen
                 _widgets.Add(new PortraitWidget(hit, PortraitAction.SkillNode, i, true, s.Def.Id));
         }
 
-        return DrawSkillPool(who, DrawSkillDetail(who, picked, web.End.Y + 30f) + 40f, view);
+        return DrawPoolButtons(who, DrawSkillDetail(who, picked, web.End.Y + 30f) + 10f, view);
     }
 
-    /// <summary>
-    /// 身份技能池（拟案，待主人核定）：抽到的几式，一式一行（名字、基础 / 核心种类、机制说明或数值）。
-    /// 玩家角色在领地里多两枚钮：换身份（弹身份清单，选了即按该身份重抽）、重抽（按当前身份再抽一池）。
-    /// </summary>
-    private float DrawSkillPool(CharacterState who, float y, Rect2 view)
+    /// <summary>玩家角色在领地里多两枚钮：换身份（弹身份清单，选了即按该身份重抽）、重抽（按当前身份再抽一池）。</summary>
+    private float DrawPoolButtons(CharacterState who, float y, Rect2 view)
     {
         var left = PortraitLayout.Pad;
         var right = PortraitLayout.CanvasWidth - PortraitLayout.Pad;
-        PortraitFrame.SectionRule(this, left, right, y, who.PoolIdentity.Length > 0 ? who.PoolIdentity : who.Identity);
-        y += 56f;
-        foreach (var def in SkillPool.Skills(who))
-        {
-            // 说明整句折行显示，行多格就高，不截断。
-            var textWidth = right - left - 60f;
-            var lines = def.Description.Length > 0
-                ? InkDraw.WrapLines(def.Description, textWidth, PortraitLayout.FontMeta)
-                : PoolSkillLines(def, textWidth);
-            var lineHeight = PortraitLayout.FontMeta * 1.4f;
-            var row = new Rect2(left, y, right - left, 84f + lines.Count * lineHeight + 20f);
-            PortraitFrame.Panel(this, row);
-            var kind = InkText.CoreKind(def.Core);
-            var chipWidth = InkDraw.Measure(kind, PortraitLayout.FontMeta).X + 56f;
-            var chip = new Rect2(row.End.X - 30f - chipWidth, row.Position.Y + 14f, chipWidth, 60f);
-            var core = def.Core != CoreKind.None;
-            PortraitFrame.Brackets(this, chip, core ? InkStyle.Line : InkStyle.Dim);
-            InkDraw.Text(this, chip.GetCenter(), kind, PortraitLayout.FontMeta, core ? InkStyle.Line : InkStyle.Dim, "cm");
-            InkDraw.TextBounded(this, new Rect2(row.Position.X + 30f, row.Position.Y + 10f, chip.Position.X - row.Position.X - 50f, 68f),
-                def.Name, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
-            for (var i = 0; i < lines.Count; i++)
-                InkDraw.Text(this, new Vector2(row.Position.X + 30f, row.Position.Y + 84f + (i + 0.5f) * lineHeight),
-                    lines[i], PortraitLayout.FontMeta, InkStyle.Dim, "lm");
-            y += row.Size.Y + 16f;
-        }
-
         if (!who.IsMaster)
             return y;
         var hub = _vm.Hub;
@@ -121,40 +93,6 @@ public partial class PortraitHubScreen
         if (view.Encloses(again))
             _widgets.Add(new PortraitWidget(again, PortraitAction.PoolReroll, 0, enabled && SkillPool.PoolOf(who.PoolIdentity) != null, "重抽"));
         return y + 10f + PortraitLayout.TouchMin;
-    }
-
-    /// <summary>基础技能的一行数值：种类、威力、咏唱、附加。</summary>
-    /// <summary>无说明的基础技能按「 · 」分段折行，一段（如「速度 -25% 2 回合」）不拆到两行。</summary>
-    private static List<string> PoolSkillLines(SkillDef def, float width)
-    {
-        var lines = new List<string>();
-        foreach (var part in PoolSkillLine(def).Split(" · "))
-        {
-            var joined = lines.Count == 0 ? part : lines[^1] + " · " + part;
-            if (lines.Count > 0 && InkDraw.Measure(joined, PortraitLayout.FontMeta).X <= width)
-                lines[^1] = joined;
-            else
-                lines.Add(part);
-        }
-        return lines;
-    }
-
-    private static string PoolSkillLine(SkillDef def)
-    {
-        var parts = new List<string> { InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target) };
-        if (def.Kind != SkillKind.Buff)
-            parts.Add($"威力 {def.Power}%");
-        if (def.ChantRounds > 0)
-            parts.Add($"咏唱 {def.ChantRounds} 回合");
-        if (def.Control)
-            parts.Add("打断咏唱");
-        if (def.Status is StatusKind.StatMod)
-            parts.Add($"{InkText.StatusStat(def.StatusStat)} {def.StatusPercent:+0;-0}% {def.StatusRounds} 回合");
-        else if (def.Status is StatusKind.Dot)
-            parts.Add($"每回合 {def.StatusPower} 伤害 {def.StatusRounds} 回合");
-        else if (def.Status is StatusKind.Points)
-            parts.Add($"护盾 {def.StatusPower} 点 {def.StatusRounds} 回合");
-        return string.Join(" · ", parts);
     }
 
     /// <summary>换身份：弹出有技能池的身份清单，选哪个就按哪个重抽。</summary>
@@ -202,6 +140,9 @@ public partial class PortraitHubScreen
             var hit = PortraitLayout.SkillNodeHit(at);
             PortraitFrame.Brackets(this, hit.Grow(-6f), InkStyle.Line);
         }
+        // 核心技能多一道外环。
+        if (s.Def.Core != CoreKind.None)
+            DrawArc(at, r + 9f, 0f, Mathf.Tau, 48, s.Learned ? InkStyle.Line : new Color(InkStyle.Dim, 0.7f), 2f, true);
         DrawCircle(at, r, InkStyle.Panel);
         var rim = s.Learned ? InkStyle.Line : s.Chance > 0 ? new Color(InkStyle.Line, pulse) : new Color(InkStyle.Dim, 0.7f);
         DrawArc(at, r, 0f, Mathf.Tau, 40, rim, selected ? 4f : 2f, true);
@@ -229,16 +170,22 @@ public partial class PortraitHubScreen
     private float DrawSkillDetail(CharacterState who, ChartSkill s, float y)
     {
         var def = s.Def;
-        var reqs = PortraitSkillChart.Requirements(who, def);
-        var height = 70f + 72f + 64f + 64f + (def.Status.HasValue ? 64f : 0f) + 20f + 56f
-            + System.Math.Max(1, reqs.Count) * 64f + (s.Learned ? 30f : 96f);
+        var own = SkillPool.Find(def.Id) != null;
+        var reqs = own ? new List<(string Label, string Need, string Have, bool Met)>() : PortraitSkillChart.Requirements(who, def);
+        var lineHeight = PortraitLayout.FontMeta * 1.4f;
+        var descLines = def.Description.Length > 0
+            ? InkDraw.WrapLines(def.Description, PortraitLayout.FullWidth - 112f, PortraitLayout.FontMeta) : new List<string>();
+        var footer = !s.Learned && def.DeriveFrom.Count > 0;
+        var height = 70f + 72f + 64f + 64f + (def.Status.HasValue ? 64f : 0f) + descLines.Count * lineHeight + 20f + 56f
+            + System.Math.Max(1, reqs.Count) * 64f + (footer ? 96f : 30f);
         var frame = new Rect2(PortraitLayout.Pad, y, PortraitLayout.FullWidth, height);
         PortraitFrame.GothicFrame(this, frame);
         var left = frame.Position.X + 56f;
         var right = frame.End.X - 56f;
         y = frame.Position.Y + 70f;
 
-        var status = s.Learned ? s.Usable ? "已学习" : "已学习 · 未持流派" : s.Chance > 0 ? $"学习率 {s.Chance}%" : "未学习";
+        var status = s.Drawn ? "已抽到" : own ? "未抽到"
+            : s.Learned ? s.Usable ? "已学习" : "已学习 · 未持流派" : s.Chance > 0 ? $"学习率 {s.Chance}%" : "未学习";
         var statusWidth = InkDraw.Measure(status, PortraitLayout.FontMeta).X + 56f;
         var chip = new Rect2(right - statusWidth, y - 32f, statusWidth, 64f);
         var lit = s.Learned || s.Chance > 0;
@@ -248,11 +195,15 @@ public partial class PortraitHubScreen
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
         y += 72f;
 
-        var tags = new List<string> { InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target), InkText.SkillRange(def.Range) };
+        var tags = new List<string>
+        {
+            def.Core != CoreKind.None ? InkText.CoreKind(def.Core) : InkText.SkillTier(SkillTier.Of(def)),
+            InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target), InkText.SkillRange(def.Range),
+        };
         if (def.Gate.Style.HasValue)
-            tags.Insert(0, InkText.Style(def.Gate.Style.Value));
+            tags.Insert(1, InkText.Style(def.Gate.Style.Value));
         if (def.Gate.Attribute.HasValue)
-            tags.Insert(def.Gate.Style.HasValue ? 1 : 0, InkText.CoreStat(def.Gate.Attribute.Value));
+            tags.Insert(def.Gate.Style.HasValue ? 2 : 1, InkText.CoreStat(def.Gate.Attribute.Value));
         if (def.ChantRounds > 0)
             tags.Add($"咏唱{def.ChantRounds}回合");
         if (def.Control)
@@ -276,13 +227,20 @@ public partial class PortraitHubScreen
             PortraitFrame.CountTag(this, left, y, "附加", effect, true);
             y += 64f;
         }
+        // 说明（核心技能的机制、部分基础技能的附注）：整句折行，不截断。
+        foreach (var line in descLines)
+        {
+            InkDraw.Text(this, new Vector2(left, y + lineHeight / 2f), line, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            y += lineHeight;
+        }
 
         y += 20f;
         PortraitFrame.SectionRule(this, left - 20f, right + 20f, y, "学习条件");
         y += 56f;
         if (reqs.Count == 0)
         {
-            InkDraw.Text(this, new Vector2(left, y + 28f), "通用技能，人人都会", PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            InkDraw.Text(this, new Vector2(left, y + 28f), own ? "身份技能，抽到即会，换身份或重抽可换" : "通用技能，人人都会",
+                PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             y += 64f;
         }
         foreach (var (label, need, have, met) in reqs)
@@ -300,7 +258,7 @@ public partial class PortraitHubScreen
             InkDraw.InkLine(this, new Vector2(row.Position.X + 40f, row.End.Y + 2f), new Vector2(row.End.X, row.End.Y + 2f), InkStyle.Hover, 1.5f);
             y += 64f;
         }
-        if (!s.Learned)
+        if (footer)
             InkDraw.TextBounded(this, new Rect2(left, y + 10f, right - left, 56f),
                 "战斗中使用来源技能时有机会学会",
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");

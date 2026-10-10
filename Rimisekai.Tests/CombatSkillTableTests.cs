@@ -384,14 +384,11 @@ public sealed class ChantTests
     }
 
     [Fact]
-    public void Skill_web_cells_are_unique_and_sources_sit_above()
+    public void Identities_without_a_pool_see_every_general_skill_in_tiers()
     {
-        // 技能网一格一式，五列；来源技能必在更上的行（线自上而下）。
-        var all = SkillTable.All;
-        Assert.Equal(all.Count, all.Select(s => (s.ChartRow, s.ChartColumn)).Distinct().Count());
-        Assert.All(all, s => Assert.InRange(s.ChartColumn, 0, 4));
-        foreach (var s in all)
-            foreach (var id in s.DeriveFrom)
-                Assert.True(SkillTable.Get(id)!.ChartRow < s.ChartRow, $"{id} → {s.Id}");
+        var c = new Rimisekai.Character.CharacterState(1) { PoolIdentity = "" };
+        var slots = SkillTree.Layout(c);
+        Assert.Equal(SkillTable.All.Count(s => s.Item.Length == 0), slots.Count);
+        Assert.Equal(slots.Count, slots.Select(s => (s.Row, s.Column)).Distinct().Count());
     }
 }

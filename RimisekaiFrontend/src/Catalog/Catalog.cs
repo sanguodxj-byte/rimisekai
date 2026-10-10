@@ -143,10 +143,6 @@ public sealed class SkillDef : Defs.Def
     /// </summary>
     public IReadOnlyList<string> DeriveFrom { get; init; } = System.Array.Empty<string>();
 
-    /// <summary>技能网里的格位：第几行（自上而下，来源技能必在更上的行）、第几列（0..4）。由内容表手摆，一格一式。</summary>
-    public int ChartRow { get; init; }
-    public int ChartColumn { get; init; }
-
     /// <summary>射程：近程打最前排，远程选列后按威胁权重落点。</summary>
     public SkillRange Range { get; init; } = SkillRange.Melee;
 

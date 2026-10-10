@@ -185,6 +185,9 @@ public static class InkText
         _ => "基础",
     };
 
+    /// <summary>技能等阶名：一阶到五阶（见 <see cref="Combat.SkillTier"/>）。</summary>
+    public static string SkillTier(int tier) => $"{"一二三四五"[tier - 1]}阶";
+
     // ---------- 技能门槛（技能盘瓦片与右栏详情用） ----------
 
     /// <summary>素质的中文名，从素质目录查（唯一来源在 Core）。</summary>

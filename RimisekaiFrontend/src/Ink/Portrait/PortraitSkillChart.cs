@@ -6,27 +6,29 @@ using Rimisekai.Combat;
 
 namespace Rimisekai.Portrait;
 
-/// <summary>技能网上的一式：格位（内容表 chartRow / chartColumn），学没学会、能不能用、此刻的学习率。</summary>
-public readonly record struct ChartSkill(SkillDef Def, int Row, int Column, bool Learned, bool Usable, int Chance);
+/// <summary>技能网上的一式：格位（见 <see cref="SkillTree"/>），学没学会、能不能用、此刻的学习率、是不是身份池里抽到的。</summary>
+public readonly record struct ChartSkill(SkillDef Def, int Row, float Column, bool Learned, bool Usable, int Chance, bool Drawn);
 
 /// <summary>
-/// 竖屏技能网的数据：一式一格，自上而下由浅入深；格与格按 <see cref="SkillDef.DeriveFrom"/> 连线（可跨流派），
-/// 用上方的来源技能，就有机会学会下方与它相连的技能。
+/// 竖屏技能网的数据：一式一格，按等阶自上而下由弱到强，核心技能一行居中；
+/// 格与格按 <see cref="SkillDef.DeriveFrom"/> 连线（两端都在网上才连），用上方的来源技能，就有机会学会下方与它相连的技能。
 /// </summary>
 public static class PortraitSkillChart
 {
-    public const int Columns = 5;
+    public const int Columns = SkillTree.Columns;
 
-    public static List<ChartSkill> Build(CharacterState who) => SkillTable.All
-        .Select(s =>
+    public static List<ChartSkill> Build(CharacterState who) => SkillTree.Layout(who)
+        .Select(slot =>
         {
-            var learned = SkillLearning.Learned(who, s);
-            var usable = learned && (!s.Gate.Style.HasValue || who.EquippedStyle == s.Gate.Style);
-            return new ChartSkill(s, s.ChartRow, s.ChartColumn, learned, usable, SkillLearning.Chance(who, s));
+            var s = slot.Def;
+            var drawn = who.SkillPool.Contains(s.Id);
+            // 身份自编的技能只能抽到（没有门槛也不算人人自带）；通用技能照旧按学习规则。
+            var own = SkillPool.Find(s.Id) != null;
+            var learned = drawn || !own && SkillLearning.Learned(who, s);
+            var usable = drawn || learned && (!s.Gate.Style.HasValue || who.EquippedStyle == s.Gate.Style);
+            return new ChartSkill(s, slot.Row, slot.Column, learned, usable, own ? 0 : SkillLearning.Chance(who, s), drawn);
         })
-        .OrderBy(s => s.Row).ThenBy(s => s.Column).ToList();
-
-    public static int Rows => SkillTable.All.Max(s => s.ChartRow) + 1;
+        .ToList();
 
     /// <summary>学习条件逐条：标签、要求、现值、是否达成。通用技能返回空表。</summary>
     public static List<(string Label, string Need, string Have, bool Met)> Requirements(CharacterState who, SkillDef s)

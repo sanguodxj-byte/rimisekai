@@ -33,6 +33,9 @@ public sealed class IdentityDef : Def
 public sealed class IdentitySkillPoolDef : Def
 {
     public List<Rimisekai.Catalog.SkillDef> Skills { get; init; } = new();
+
+    /// <summary>并入本身份池的通用技能（skills.json 里风格对得上本身份的那些，按 Id）：与本身份基础技能同列、同抽。</summary>
+    public List<string> SharedSkills { get; init; } = new();
 }
 
 /// <summary>

@@ -22,12 +22,16 @@ public static class SkillTable
     }
 
     /// <summary>
-    /// 角色此刻能用的战斗技能：已学会（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派），
+    /// 角色此刻能用的战斗技能：网上（<see cref="SkillTree"/>）已学会的（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派），
     /// 再加身份技能池里抽到的（<see cref="SkillPool"/>，不看流派）。
     /// </summary>
-    public static IEnumerable<SkillDef> Known(CharacterState character) =>
-        All.Where(s => SkillLearning.Learned(character, s) && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style))
-            .Concat(SkillPool.Skills(character));
+    public static IEnumerable<SkillDef> Known(CharacterState character)
+    {
+        var tree = SkillTree.Skills(character).Select(s => s.Id).ToHashSet();
+        return All.Where(s => (tree.Contains(s.Id) || s.Item.Length > 0) && SkillLearning.Learned(character, s)
+                && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style))
+            .Concat(SkillPool.Skills(character)).DistinctBy(s => s.Id);
+    }
 
     /// <summary>
     /// 门槛全满足的技能（不论是否学会）。开局生成角色时据此「出身即会」：老兵带着本事入伍，不必从零悟起。

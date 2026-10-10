@@ -175,10 +175,10 @@ public sealed class CharacterGenerator
         return state;
     }
 
-    /// <summary>出身即会：生成时门槛已全满足的流派技能直接记为已学习（老兵带着本事来，不必从零学起）。</summary>
+    /// <summary>出身即会：技能网上生成时门槛已全满足的流派技能直接记为已学习（老兵带着本事来，不必从零学起）。</summary>
     private static void SeedLearned(CharacterState state)
     {
-        foreach (var skill in Combat.SkillTable.MeetsGates(state))
+        foreach (var skill in Combat.SkillTable.MeetsGates(state, Combat.SkillTree.Skills(state).ToList()))
             if (!Combat.SkillLearning.Innate(skill))
                 state.LearnedSkills.Add(skill.Id);
     }
@@ -263,10 +263,10 @@ public sealed class CharacterGenerator
 
         // 满状态起步：生命与体力充沛
         state.Condition.RecoverFull();
-        SeedLearned(state);
         // 身份技能池：按本身份抽一池（身份没有技能池即空）。骰子由掷好的人推出、不动生成骰子，
         // 同一种子掷出的人与技能池都不变。
         Combat.SkillPool.Assign(state, identity.Name, new Random(PoolSeed(state)));
+        SeedLearned(state);
     }
 
     /// <summary>由已掷好的角色推出技能池种子：名字、编号、核心属性、经验，确定且与生成骰子无关。</summary>

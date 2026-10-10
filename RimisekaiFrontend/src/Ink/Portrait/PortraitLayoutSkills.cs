@@ -14,7 +14,7 @@ public static partial class PortraitLayout
         new(Pad, y, FullWidth, rows * SkillCellHeight + SkillWebPadY * 2f);
 
     /// <summary>某格的章心：格子上部，名字写在章下。</summary>
-    public static Vector2 SkillNodeCenter(Rect2 web, int row, int column) => new(
+    public static Vector2 SkillNodeCenter(Rect2 web, int row, float column) => new(
         web.Position.X + (web.Size.X - SkillCellWidth * PortraitSkillChart.Columns) / 2f + (column + 0.5f) * SkillCellWidth,
         web.Position.Y + SkillWebPadY + row * SkillCellHeight + 58f);
 
