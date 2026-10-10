@@ -134,10 +134,10 @@ public static class ModalProbe
             Mood = 8,
         });
         var loot = new LootResult { Money = 500 };
-        loot.Items.Add(("IronOre", 2));
+        loot.Items.Add(("铁", 2));
 
         var settleFinished = false;
-        var settlePage = InkModalFactory.CreateCombatSettlement(battleResult, loot, () => settleFinished = true);
+        var settlePage = InkModalFactory.CreateCombatSettlement(battleResult, loot, new Rimisekai.Housing.Territory(), () => settleFinished = true);
         Assert(!settlePage.HasInteractiveControls, "战后结算为纯展示，必须无强制阻塞控件");
         Assert(settlePage.Title == "战斗胜利", "获胜标题必须为战斗胜利");
         Assert(settlePage.Body.Contains("获得战利品"), "结算内容必须包含战利品");

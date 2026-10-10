@@ -23,6 +23,8 @@ public partial class PortraitRoot : Control
     private PortraitTitleView _title = null!;
     private PortraitHubScreen _hubScreen = null!;
     private PortraitCombatView _combat = null!;
+    private PortraitBattleWipe _wipe = null!;
+    private bool _combatHeld;
     private PortraitModalLayer _modal = null!;
     private PortraitGenerationPump _pump = null!;
 
@@ -39,6 +41,9 @@ public partial class PortraitRoot : Control
     public PortraitHubScreen HubScreen => _hubScreen;
     public PortraitTitleView TitleView => _title;
     public PortraitCombatView CombatView => _combat;
+
+    /// <summary>核对用：战斗转场层。</summary>
+    public PortraitBattleWipe BattleWipe => _wipe;
     public PortraitModalLayer ModalLayer => _modal;
     public Rimisekai.Flow.FlowPhase DebugPhase => _flow.Phase;
     public Rimisekai.Session.BattleSession? DebugCombat => _vm?.Combat;
@@ -137,6 +142,15 @@ public partial class PortraitRoot : Control
         AddChild(_hubScreen);
         AddChild(_combat);
         AddChild(_modal);
+        _wipe = new PortraitBattleWipe { Name = "PortraitBattleWipe" };
+        _wipe.Finished += () =>
+        {
+            if (!_combatHeld)
+                return;
+            _combatHeld = false;
+            _combat.SetProcess(true);
+        };
+        AddChild(_wipe);
 
         _flow.PhaseChanged += OnPhase;
         OnPhase((int)FlowPhase.Title);
@@ -198,8 +212,25 @@ public partial class PortraitRoot : Control
         if (_vm == null)
             return;
         _vm.Combat = session;
+        // 战斗转场：截下进战前的画面开演，转场期间战斗画面已就位但暂停推进。
+        if (!PortraitMotion.Instant && !_wipe.Running)
+        {
+            _wipe.Play("交战", FoeLine(session));
+            _combatHeld = true;
+        }
         _combat.Bind(_vm, _modal);
         _flow.Enter(FlowPhase.Combat);
+        if (_combatHeld)
+            _combat.SetProcess(false);
+    }
+
+    /// <summary>转场题字下一行：敌方名单，同名合并计数，至多列三种（「斥候 ×2、巫师 等 5 名」）。</summary>
+    public static string FoeLine(Rimisekai.Session.BattleSession session)
+    {
+        var foes = session.Battle.Members.Where(m => m.Side == Rimisekai.Combat.CombatSide.Defender).ToList();
+        var groups = foes.GroupBy(m => m.Name).Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key).ToList();
+        var line = string.Join("、", groups.Take(3));
+        return groups.Count > 3 ? $"{line} 等 {foes.Count} 名" : line;
     }
 
     private static readonly System.Collections.Generic.Dictionary<string, Texture2D?> MonsterArtCache = new();
@@ -615,8 +646,10 @@ public partial class PortraitModalLayer : Control
         // 弹窗自己不做按下反馈（点任意处推进），这里清掉据点层留下的按下矩形，
         // 免得坐标撞上时把弹窗的钮画成按下态。
         PortraitFrame.SetPress(null);
+        _fog.Begin();
         if (_session.Current != null)
             DrawModalPage(_session.Current);
+        _fog.End();
     }
 
     public override void _Process(double delta)

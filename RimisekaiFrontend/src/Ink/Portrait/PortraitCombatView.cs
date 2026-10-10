@@ -126,7 +126,7 @@ public partial class PortraitCombatView : Control
             var outcome = CombatSettlement.Settle(_vm.Hub.State, battle, _vm.Combat!.QuestRun);
             if (outcome != null)
                 _modal.Show(InkModalFactory.CreateCombatSettlement(outcome.Result, outcome.Loot,
-                    () => Finished?.Invoke()));
+                    _vm.Hub.State.Territory, () => Finished?.Invoke()));
             else
                 Finished?.Invoke();
             return;

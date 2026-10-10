@@ -17,6 +17,7 @@ public partial class PortraitCapture : Node
 {
     private string _prefix = "";
     private (int X, int Y) _travelTarget;
+    private int _poiStepDir;
     private string _dump = "";
     private string _blind = "";
     private SubViewport _sub = null!;
@@ -160,9 +161,17 @@ public partial class PortraitCapture : Node
         {
             var hub = _root.HubScreen.DebugHub;
             var material = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.MaterialDef>.All.First(m => m.ArmorUsable);
-            var helmet = Rimisekai.Defs.EquipForge.ForgeArmor(Rimisekai.Defs.EquipSlot.Head, material.DefName);
+            var helmet = Rimisekai.Defs.EquipForge.ForgeArmor(Rimisekai.Defs.EquipSlot.Head, material.DefName,
+                quality: Rimisekai.Defs.Quality.Legendary);
             hub.State.Equips.Add(helmet);
             hub.State.Roster.Master!.Bag.Add(helmet.Id, 1);
+            // 再塞两顶不同稀有度的，核对候选条的稀有度雾（精致蓝弱风、史诗紫中风）。
+            foreach (var (mat, q) in new[] { ("皮", Rimisekai.Defs.Quality.Fine), ("铁", Rimisekai.Defs.Quality.Epic) })
+            {
+                var extra = Rimisekai.Defs.EquipForge.ForgeArmor(Rimisekai.Defs.EquipSlot.Head, mat, quality: q, enchant: "", blessed: false);
+                hub.State.Equips.Add(extra);
+                hub.State.Roster.Master!.Bag.Add(extra.Id, 1);
+            }
             helmetId = helmet.Id;
             _root.HubScreen.DebugPress(PortraitAction.EquipInfo, 2);
         });
@@ -172,14 +181,14 @@ public partial class PortraitCapture : Node
                 && _root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.EquipOption && w.Label == helmetId),
                 "equipment slot opens the equipment page with bag candidates");
             Shoot("equip_page", _root.HubScreen);
-            _root.HubScreen.DebugHold(PortraitAction.EquipOption, 0);
+            _root.HubScreen.DebugHold(PortraitAction.EquipOption, HelmetIndex(helmetId));
         });
         _steps.Enqueue(() =>
         {
-            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Body.Length > 0, "holding a candidate shows its details");
+            Require(_root.ModalLayer.IsActive && _root.ModalLayer.Current?.Item?.Lines.Count > 0, "holding a candidate shows its details");
             Shoot("equip_hold", _root.HubScreen);
             _root.ModalLayer.Dismiss();
-            _root.HubScreen.DebugPress(PortraitAction.EquipOption, 0);
+            _root.HubScreen.DebugPress(PortraitAction.EquipOption, HelmetIndex(helmetId));
         });
         _steps.Enqueue(() =>
         {
@@ -297,14 +306,9 @@ public partial class PortraitCapture : Node
             var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
             _root.HubScreen.DebugWorldTap(poi.X, poi.Y);
         });
-        _steps.Enqueue(() => Shoot("world_poi_sheet", _root.HubScreen));
-        _steps.Enqueue(() => Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "前往"),
-            "poi sheet offers travel"));
-        _steps.Enqueue(() =>
-        {
-            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
-            _root.HubScreen.QueueRedraw();
-        });
+        // 点格逻辑已移除（2026-10-10）：轻点兴趣点格不弹抽屉。
+        _steps.Enqueue(() => Require(!_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo),
+            "tapping a world tile no longer opens a sheet"));
         _steps.Enqueue(() =>
         {
             _root.HubScreen.DebugPress(PortraitAction.HubWorld, 0);
@@ -390,21 +394,14 @@ public partial class PortraitCapture : Node
             Require(hub.Layer == Rimisekai.Hub.MapLayer.World && hub.WorldPartyPosition == (world.HomeX, world.HomeY) && hub.PlayerRoomId == -1,
                 "travel puts the party on the home tile, out of every territory room");
             var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
-            var dx = System.Math.Sign(poi.X - world.HomeX);
-            var dy = System.Math.Sign(poi.Y - world.HomeY);
-            var target = (X: world.HomeX + 2 * dx, Y: world.HomeY + 2 * dy);
-            if (hub.WorldTravelMinutes(target.X, target.Y) <= 0)
-                target = Enumerable.Range(-2, 5).SelectMany(x => Enumerable.Range(-2, 5).Select(y => (X: world.HomeX + x, Y: world.HomeY + y)))
-                    .First(t => hub.WorldTravelMinutes(t.X, t.Y) > 0 && world.PoiAt(t.X, t.Y) == null);
-            _travelTarget = target;
-            _root.HubScreen.DebugWorldTap(target.X, target.Y);
-        });
-        _steps.Enqueue(() =>
-        {
-            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "前往"),
-                "tile sheet offers travel with its journey time");
-            Shoot("world_go_sheet", _root.HubScreen);
-            _root.HubScreen.DebugPress(PortraitAction.WorldGo, 0);
+            // 走到兴趣点旁边一格（逐格耗时），再用方向键踩上去——踩上即自动弹出「进入」。
+            var near = new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }
+                .Select(d => (X: poi.X - d.Item1, Y: poi.Y - d.Item2, Dir: System.Array.IndexOf(new[] { (0, -1), (1, 0), (0, 1), (-1, 0) }, d)))
+                .Where(t => world.IsPassable(t.X, t.Y) && world.PoiAt(t.X, t.Y) == null && hub.WorldTravelMinutes(t.X, t.Y) > 0)
+                .OrderBy(t => hub.WorldTravelMinutes(t.X, t.Y)).First();
+            _travelTarget = (near.X, near.Y);
+            _poiStepDir = near.Dir;
+            Require(hub.TravelTo(near.X, near.Y), "walk up next to the nearest settlement");
         });
         _steps.Enqueue(() =>
         {
@@ -414,13 +411,13 @@ public partial class PortraitCapture : Node
             _root.HubScreen.QueueRedraw();
         });
         _steps.Enqueue(() => Shoot("world_walked", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.WorldStep, _poiStepDir));
         _steps.Enqueue(() =>
         {
-            var hub = _root.HubScreen.DebugHub;
-            var world = hub.State.World;
-            var poi = world.Pois.OrderBy(p => System.Math.Abs(p.X - world.HomeX) + System.Math.Abs(p.Y - world.HomeY)).First();
-            Require(hub.TravelToPoiDirect(poi.Id), "walk on to the nearest settlement and enter");
-            _root.HubScreen.QueueRedraw();
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.WorldGo && w.Enabled && w.Label == "进入"),
+                "stepping onto a settlement pops its enter option");
+            Shoot("world_poi_prompt", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.WorldGo, 0);
         });
         _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
         _steps.Enqueue(() =>
@@ -456,10 +453,29 @@ public partial class PortraitCapture : Node
             Shoot("world_back", _root.HubScreen);
         });
         EnqueueEncounterChecks();
+        // 战斗转场（2026-10-10）：定格在领地画面上开演，逐段停帧出图；开门段在战斗画面就位后出。
+        _steps.Enqueue(() => _root.BattleWipe.DebugBegin("交战", "斥候 ×2、巫师、石像鬼 等 5 名", 0.17f));
+        _steps.Enqueue(() => Shoot("battle_wipe_slash", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.58f));
+        _steps.Enqueue(() => Shoot("battle_wipe_shatter", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.66f));
+        _steps.Enqueue(() => Shoot("battle_wipe_clash", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(1.45f));
+        _steps.Enqueue(() => Shoot("battle_wipe_title", _root.HubScreen));
         foreach (var size in new[] { 1, 2, 3, 4 })
         {
             var capturedSize = size;
             _steps.Enqueue(() => BeginBattleProbe(capturedSize));
+            if (size == 1)
+            {
+                _steps.Enqueue(() => _root.BattleWipe.DebugSeek(1.78f));
+                _steps.Enqueue(() =>
+                {
+                    Require(_root.BattleWipe.Visible, "battle wipe stays over the combat screen while its doors open");
+                    Shoot("battle_wipe_doors", _root.CombatView);
+                    _root.BattleWipe.DebugEnd();
+                });
+            }
             _steps.Enqueue(() =>
             {
                 Require(_battleProbe.Battle.Outcome == CombatOutcome.Ongoing && TotalHp(_battleProbe) == _probeHp
@@ -1182,6 +1198,9 @@ public partial class PortraitCapture : Node
         File.WriteAllText(Path.Combine(dir, "key.txt"), key.ToString(), new UTF8Encoding(false));
         GD.Print($"blind icons exported: {exported}/{names.Count} -> {dir}");
     }
+
+    private int HelmetIndex(string itemId) =>
+        _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.EquipOption && w.Label == itemId).Index;
 
     private void Require(bool condition, string name)
     {

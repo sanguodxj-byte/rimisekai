@@ -157,7 +157,7 @@ public static class InkModalRenderer
                     // 格内单行（每个物品一列）：左侧名称（亮白 20），右侧数量（亮白 22）
                     var cy = box.GetCenter().Y;
                     InkDraw.Text(ci, new Vector2(box.Position.X + 20f, cy),
-                        item.ItemId, 20, InkStyle.Line, "lm");
+                        item.Label, 20, InkStyle.Line, "lm");
                     InkDraw.Text(ci, new Vector2(box.End.X - 20f, cy),
                         $"×{item.Count}", 22, InkStyle.Line, "rm");
                 }

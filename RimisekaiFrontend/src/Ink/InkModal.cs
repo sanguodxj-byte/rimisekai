@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Combat;
 
 namespace Rimisekai.Ink;
@@ -47,8 +48,20 @@ public sealed class InkModalPage
     /// <summary>怪物图鉴结构化详情（可选，属性、技能与掉落分区绘制）。</summary>
     public InkModalMonsterCodexData? MonsterCodex { get; set; }
 
+    /// <summary>物品详情结构化数据（可选，存在时按「暗标签＋亮数值」逐行排）。</summary>
+    public InkModalItemData? Item { get; set; }
+
     /// <summary>是否存在交互控件（输入框或选项）。若存在则点击空白处不跳过。</summary>
     public bool HasInteractiveControls => Input != null || Choices.Count > 0;
+}
+
+/// <summary>物品详情：标题下一行副题（可空），其下逐行字段。</summary>
+public sealed class InkModalItemData
+{
+    public string Subtitle { get; init; } = "";
+    /// <summary>装备品质：精致及以上时详情页铺一层上飘的稀有度雾。</summary>
+    public Rimisekai.Defs.Quality? Quality { get; init; }
+    public IReadOnlyList<Rimisekai.Defs.DetailLine> Lines { get; init; } = Array.Empty<Rimisekai.Defs.DetailLine>();
 }
 
 /// <summary>战后结算界面的结构化数据。</summary>
@@ -57,7 +70,11 @@ public sealed class InkModalSettlementData
     public int Rounds { get; init; }
     public List<Row> Rows { get; init; } = new();
     public long Money { get; init; }
-    public List<(string ItemId, int Count)> Items { get; init; } = new();
+    /// <summary>战利品物品，已按单件市场价值从高到低排好（同价按名字）；金钱另记在 Money。</summary>
+    public List<Loot> Items { get; init; } = new();
+
+    /// <summary>Quality：装备实例的品质（定稀有度雾），材料等定义物品为 null。</summary>
+    public readonly record struct Loot(string ItemId, string Label, int MarketValue, int Count, Rimisekai.Defs.Quality? Quality);
 
     public sealed class Row
     {
@@ -72,6 +89,9 @@ public sealed class InkModalSettlementData
         public int StyleLevel { get; init; } = 1;
         public float StyleRatio { get; init; } = 0.5f;
         public int StyleExp { get; init; }
+        /// <summary>本场让武器 / 流派熟练升了级：等级后挂上升箭头。</summary>
+        public bool WeaponLevelUp { get; init; }
+        public bool StyleLevelUp { get; init; }
     }
 }
 
@@ -212,6 +232,7 @@ public static class InkModalFactory
     public static InkModalPage CreateCombatSettlement(
         BattleResult result,
         LootResult loot,
+        Rimisekai.Housing.Territory territory,
         Action? onFinished = null)
     {
         var isWin = result.Outcome == CombatOutcome.AttackerWin;
@@ -228,10 +249,10 @@ public static class InkModalFactory
             var wName = WeaponNameOf(r.Weapon);
             var sName = StyleNameOf(r.Style);
 
-            var wRatio = (r.WeaponExp % 100) / 100f;
-            if (wRatio < 0.2f && r.WeaponExp > 0) wRatio = 0.35f;
-            var sRatio = (r.StyleExp % 100) / 100f;
-            if (sRatio < 0.2f && r.StyleExp > 0) sRatio = 0.25f;
+            // 等级与进度条都按落账后的熟练累计算（每 ExpPerLevel 一级），显示等级至少 1。
+            const int per = Rimisekai.Character.Proficiency.ExpPerLevel;
+            var wLevel = System.Math.Max(1, r.WeaponTotalExp / per);
+            var sLevel = System.Math.Max(1, r.StyleTotalExp / per);
 
             settlement.Rows.Add(new InkModalSettlementData.Row
             {
@@ -239,20 +260,27 @@ public static class InkModalFactory
                 Level = System.Math.Max(1, r.Level),
                 DamageDealt = r.DamageDealt,
                 WeaponName = wName,
-                WeaponLevel = System.Math.Max(1, r.WeaponLevel),
-                WeaponRatio = wRatio,
+                WeaponLevel = wLevel,
+                WeaponRatio = r.WeaponTotalExp % per / (float)per,
+                WeaponLevelUp = wLevel > System.Math.Max(1, r.WeaponLevel),
                 WeaponExp = r.WeaponExp,
                 StyleName = sName,
-                StyleLevel = System.Math.Max(1, r.StyleLevel),
-                StyleRatio = sRatio,
+                StyleLevel = sLevel,
+                StyleRatio = r.StyleTotalExp % per / (float)per,
+                StyleLevelUp = sLevel > System.Math.Max(1, r.StyleLevel),
                 StyleExp = r.StyleExp,
             });
         }
 
-        foreach (var item in loot.Items)
-        {
-            settlement.Items.Add((item.ItemId, item.Count));
-        }
+        // 价值排序：单件市场价值高的（高稀有度装备、高阶材料）排在上面。
+        settlement.Items.AddRange(loot.Items
+            .Select(item =>
+            {
+                var info = Rimisekai.Defs.Items.Info(territory, item.ItemId)!.Value;
+                return new InkModalSettlementData.Loot(item.ItemId, info.Label, info.MarketValue, item.Count, info.Quality);
+            })
+            .OrderByDescending(l => l.MarketValue)
+            .ThenBy(l => l.Label, StringComparer.Ordinal));
 
         return new InkModalPage
         {
@@ -324,7 +352,7 @@ public static class InkModalFactory
         Rimisekai.Character.WeaponType.Staff => "法杖",
         Rimisekai.Character.WeaponType.Dagger => "匕首",
         Rimisekai.Character.WeaponType.Crossbow => "弩",
-        Rimisekai.Character.WeaponType.Unarmed => "手",
+        Rimisekai.Character.WeaponType.Unarmed => "格斗",
         _ => "剑",
     };
 

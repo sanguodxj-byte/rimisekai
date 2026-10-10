@@ -49,7 +49,7 @@ public partial class PortraitHubScreen
         if (Crossing)
             DrawLogPanel();
 
-        if (!Crossing && !WorldLayer)
+        if (!WorldLayer)
             DrawFacilityStrip();
         PortraitFrame.SectionRule(this, PortraitLayout.Pad, PortraitLayout.CanvasWidth - PortraitLayout.Pad,
             PortraitLayout.NowRuleY, "此刻");
@@ -398,7 +398,7 @@ public partial class PortraitHubScreen
         var pager = PortraitLayout.NowPager;
         if (PortraitFrame.IsPressed(pager))
             PortraitFrame.PressMark(this, pager);
-        var c = new Vector2(pager.GetCenter().X, PortraitLayout.NowStrip.Position.Y + 84f);
+        var c = new Vector2(pager.GetCenter().X + 8f, PortraitLayout.NowStrip.Position.Y + 84f);
         DrawColoredPolygon(new[] { c + new Vector2(-18f, -30f), c + new Vector2(26f, 0f), c + new Vector2(-18f, 30f) }, InkStyle.Line);
         _widgets.Add(new PortraitWidget(pager, PortraitAction.NowPage, 0, true, "下一页"));
     }
@@ -409,15 +409,16 @@ public partial class PortraitHubScreen
     /// 字号自 50 往下收到恰好放下，下限 36；角色档只显示「此刻」当前页的至多 3 人，翻页同步换。
     /// 整块点一下即进日志页签（那里按时间看全部历史）。
     /// </summary>
-    private void DrawLogPanel()
+    private void DrawLogPanel(bool register = true)
     {
         var panel = PortraitLayout.LogPanel;
-        var pressed = PortraitFrame.IsPressed(panel);
+        var pressed = register && PortraitFrame.IsPressed(panel);
         PortraitFrame.GothicFrame(this, panel, InkStyle.Panel, ornate: false);
         PortraitFrame.CornerRivets(this, panel.Grow(-24f), InkStyle.Dim);
         if (pressed)
             PortraitFrame.PressMark(this, panel);
-        _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
+        if (register)
+            _widgets.Add(new PortraitWidget(panel, PortraitAction.Tab, 4, true, "日志"));
         var area = PortraitLayout.LogPanelText;
         // 角色档只留「此刻」当前页上的人（至多 3 人），与头像对齐；玩家动作与环境变化照常全显。
         // 门外搭话的人不在同房名单里，照常显示（声音隔着门听得见）。
@@ -484,9 +485,11 @@ public partial class PortraitHubScreen
     /// </summary>
     private void DrawFacilityStrip()
     {
-        if (Walking)
-            return;
-        var fixtures = _vm.Hub.FixturesIn(_vm.Hub.PlayerRoomId);
+        // 走动 / 过界期间设施栏不空置：照旧摆出发那间的设施（只画不登记），落定后才换成新房间的（2026-10-10 主人定）。
+        var moving = Walking || Crossing;
+        if (!moving)
+            _stripRoom = _vm.Hub.PlayerRoomId;
+        var fixtures = _vm.Hub.FixturesIn(_stripRoom);
         for (var i = 0; i < Rimisekai.Housing.Room.MaxFacilities; i++)
         {
             var r = PortraitLayout.FacilityPlaque(i);
@@ -505,9 +508,13 @@ public partial class PortraitHubScreen
             InkDraw.Text(this, new Vector2(cx, r.End.Y - 40f), f.Name, size, InkStyle.Line, "cm");
             // 正在用这件设施的人：与领地格、「此刻」同款的棋子标识，右上角一排（2026-10-10 主人定，不另造标记）。
             DrawFixturePieces(_vm.WorkersAtFixture(f.Id), r);
-            _widgets.Add(new PortraitWidget(r, PortraitAction.Fixture, f.Id, true, f.Name));
+            if (!moving)
+                _widgets.Add(new PortraitWidget(r, PortraitAction.Fixture, f.Id, true, f.Name));
         }
     }
+
+    /// <summary>设施栏此刻摆的是哪间房的设施：主角落定时跟着主角，走动 / 过界期间停在出发那间。</summary>
+    private int _stripRoom = -1;
 
     /// <summary>设施牌右上角的使用者棋子：底线对齐、自右向左排，多于 3 人时最左一枚换成「+」。</summary>
     private void DrawFixturePieces(IReadOnlyList<CharacterCard> cards, Rect2 plaque)
@@ -710,9 +717,9 @@ public partial class PortraitHubScreen
                     return true;
                 if (fixture.RoomId != hub.PlayerRoomId)
                     hub.Enter(fixture.RoomId);
+                // 走到设施跟前只是移动，不放过渡小动画（2026-10-10 主人定）；在设施里真正做事（FixtureRun）才放。
                 if (hub.Use(w.Index))
                 {
-                    PlayVeil(VeilIcon.Wait, fixture.Name);
                     hub.ClearSelection();
                     _sheet = SheetKind.None;
                     OpenInteraction();

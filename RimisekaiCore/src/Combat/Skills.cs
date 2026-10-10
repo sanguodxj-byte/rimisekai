@@ -43,6 +43,10 @@ public sealed class BattleResult
         public int WeaponLevel { get; init; } = 1;
         public StyleType Style { get; init; } = StyleType.OneHand;
         public int StyleLevel { get; init; } = 1;
+        /// <summary>落账后该武器熟练的累计经验（每 <see cref="Proficiency.ExpPerLevel"/> 一级）；结算回写名册时填。</summary>
+        public int WeaponTotalExp { get; set; }
+        /// <summary>落账后该流派熟练的累计经验。</summary>
+        public int StyleTotalExp { get; set; }
     }
 }
 

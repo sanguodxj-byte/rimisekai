@@ -993,9 +993,8 @@ public static class PortraitFrame
 
     /// <summary>
     /// 哥特框：倒角外线（骨白）＋内收 12px 暗木细线；ornate＝四角收位图卷草、上下沿正中各一枚小菱；
-    /// crest＝上沿正中再立一枚冠饰（弹窗用）。
     /// </summary>
-    public static void GothicFrame(CanvasItem ci, Rect2 r, Color? fill = null, bool ornate = true, bool crest = false)
+    public static void GothicFrame(CanvasItem ci, Rect2 r, Color? fill = null, bool ornate = true)
     {
         Poly(ci, ChamferPoints(r, 22f), fill ?? InkStyle.Panel);
         GothicFrameLines(ci, r);
@@ -1005,10 +1004,7 @@ public static class PortraitFrame
         PortraitOrnaments.Corners(ci, r.Grow(-16f), k, 0.5f);
         var cx = r.GetCenter().X;
         FrameJewel(ci, new Vector2(cx, r.End.Y));
-        if (crest)
-            PortraitOrnaments.Crest(ci, new Vector2(cx, r.Position.Y), Mathf.Min(560f, r.Size.X * 0.72f), 0.9f, above: true);
-        else
-            FrameJewel(ci, new Vector2(cx, r.Position.Y));
+        FrameJewel(ci, new Vector2(cx, r.Position.Y));
     }
 
     /// <summary>哥特框的两道框线（外线骨白 4px 切角、内线暗木 2px）。过界平移遮边时单独重描。</summary>

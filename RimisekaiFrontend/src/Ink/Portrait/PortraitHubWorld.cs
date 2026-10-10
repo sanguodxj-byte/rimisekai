@@ -12,8 +12,8 @@ namespace Rimisekai.Portrait;
 /// <summary>
 /// 世界层：领地页签的地图框里换成生成器的整张大世界（默认 128×128 格），可拖动平移、滚轮 / 按钮缩放。
 /// 底图由 <see cref="PortraitWorldAtlas"/> 烘好；聚落、领地、队伍、选中格运行时矢量绘制。全图可见，没有迷雾。
-/// 打开时视口以队伍为中心。点任一格弹出地点抽屉：走得过去的格可「前往」（沿最省时的路按地貌耗时逐格走过去），
-/// 到聚落即进场、到领地即回家。
+/// 打开时视口以队伍为中心。地图只拖动平移、不再点格（2026-10-10 主人定）：队伍用四向箭头逐格走，
+/// 踩上兴趣点或领地格即自动弹出地点抽屉，「进入」「回到领地」一按即到。每个兴趣点都有按类型区分的图标。
 /// </summary>
 public sealed partial class PortraitHubScreen
 {
@@ -48,10 +48,12 @@ public sealed partial class PortraitHubScreen
         return PortraitLayout.MapGrid.Grow(-20f).HasPoint(p) ? p : null;
     }
 
-    /// <summary>核对用：点世界地图上的某格（等同手指轻点）。</summary>
+    /// <summary>核对用：手指轻点世界地图上的某格——点格逻辑已移除，这一下什么都不该发生。</summary>
     public void DebugWorldTap(int x, int y)
     {
-        PickWorldTile(new Vector2I(x, y));
+        var p = WorldToScreen(new Vector2(x + 0.5f, y + 0.5f));
+        HandleWorldInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = p });
+        HandleWorldInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = p });
         QueueRedraw();
     }
 
@@ -342,37 +344,80 @@ public sealed partial class PortraitHubScreen
         {
             WorldPoiType.Capital => 0.62f,
             WorldPoiType.Town or WorldPoiType.Castle or WorldPoiType.Fortress => 0.5f,
-            _ => 0.38f,
-        }), 6f, 30f);
+            _ => 0.42f,
+        }), type == WorldPoiType.Capital ? 18f : 14f, 30f);
 
+    /// <summary>
+    /// 兴趣点标记（2026-10-10 主人定：每个兴趣点都要有图标）：黑底圆徽＋细环，徽里一枚按类型区分的线描图标——
+    /// 王都＝双环城堡、城镇＝城堡、城堡＝插旗主塔、要塞＝盾、村庄＝人字顶小屋、修道院＝尖顶十字、遗迹＝断柱残楣。
+    /// 线宽随半径收放（地图上图标小，不用页签图标那套粗线）。
+    /// </summary>
     private void DrawPoiMark(WorldPoiType type, Vector2 c)
     {
         var r = PoiRadius(type);
+        var major = type is WorldPoiType.Capital or WorldPoiType.Town or WorldPoiType.Castle or WorldPoiType.Fortress;
+        var ink = major ? InkStyle.Line : InkStyle.Wood;
+        DrawCircle(c, r + 3f, new Color(InkStyle.Bg, 0.88f));
+        DrawArc(c, r + 3f, 0f, Mathf.Tau, 40, type == WorldPoiType.Ruin ? InkStyle.Dim : ink, Mathf.Clamp(r / 9f, 1.5f, 2.5f), true);
+        if (type == WorldPoiType.Capital)
+            DrawArc(c, r + 8f, 0f, Mathf.Tau, 48, InkStyle.Dim, 1.5f, true);
+        DrawPoiIcon(type, c, r * 0.72f, type == WorldPoiType.Ruin ? InkStyle.Dim : ink);
+    }
+
+    private void DrawPoiIcon(WorldPoiType type, Vector2 c, float s, Color ink)
+    {
+        var w = Mathf.Clamp(s / 6f, 1.5f, 3.5f);
+        Vector2 P(float x, float y) => c + new Vector2(x * s, y * s);
+        void L(params Vector2[] pts) => DrawPolyline(pts, ink, w, true);
         switch (type)
         {
             case WorldPoiType.Capital:
-                DrawCircle(c, r + 4f, InkStyle.Bg);
-                DrawArc(c, r + 4f, 0f, Mathf.Tau, 40, InkStyle.Line, 2.5f, true);
-                PortraitGlyph.Castle(this, c.X, c.Y, r * 0.85f, InkStyle.Line);
-                break;
             case WorldPoiType.Town:
+                // 城堡：三段雉堞城墙＋拱门。
+                L(P(-.85f, .8f), P(-.85f, -.45f), P(-.5f, -.45f), P(-.5f, -.15f), P(-.18f, -.15f), P(-.18f, -.8f),
+                    P(.18f, -.8f), P(.18f, -.15f), P(.5f, -.15f), P(.5f, -.45f), P(.85f, -.45f), P(.85f, .8f), P(-.85f, .8f));
+                DrawArc(P(0f, .8f), s * .26f, Mathf.Pi, Mathf.Tau, 12, ink, w, true);
+                if (type == WorldPoiType.Capital)
+                    DrawColoredPolygon(new[] { P(-.2f, -.95f), P(-.1f, -1.12f), P(0f, -.97f), P(.1f, -1.12f), P(.2f, -.95f) }, ink);
+                break;
             case WorldPoiType.Castle:
+                // 主塔：窄高塔身、顶上雉堞、旗杆一面三角旗。
+                L(P(-.45f, .85f), P(-.45f, -.35f), P(-.6f, -.35f), P(-.6f, -.6f), P(-.3f, -.6f), P(-.3f, -.45f),
+                    P(-.1f, -.45f), P(-.1f, -.6f), P(.1f, -.6f), P(.1f, -.45f), P(.3f, -.45f), P(.3f, -.6f), P(.6f, -.6f),
+                    P(.6f, -.35f), P(.45f, -.35f), P(.45f, .85f), P(-.45f, .85f));
+                L(P(0f, -.6f), P(0f, -1.05f));
+                DrawColoredPolygon(new[] { P(0f, -1.05f), P(.5f, -.9f), P(0f, -.75f) }, ink);
+                DrawRect(new Rect2(P(-.1f, .05f), new Vector2(.2f * s, .32f * s)), ink);
+                break;
             case WorldPoiType.Fortress:
-                DrawRect(new Rect2(c - Vector2.One * (r + 2f), Vector2.One * (r + 2f) * 2f), InkStyle.Bg);
-                InkDraw.Ink(this, RectLoop(new Rect2(c - Vector2.One * (r + 2f), Vector2.One * (r + 2f) * 2f)), InkStyle.Wood, 2f);
-                PortraitGlyph.Castle(this, c.X, c.Y, r * 0.8f, InkStyle.Wood);
+                // 盾：平顶、两侧下收成尖，正中一道竖、一道横。
+                L(P(-.75f, -.75f), P(.75f, -.75f), P(.75f, -.05f), P(.4f, .55f), P(0f, .9f), P(-.4f, .55f), P(-.75f, -.05f), P(-.75f, -.75f));
+                L(P(0f, -.75f), P(0f, .9f));
+                L(P(-.75f, -.2f), P(.75f, -.2f));
+                break;
+            case WorldPoiType.Village:
+                // 小屋：人字顶、屋身、门；旁边一座矮的。
+                L(P(-.9f, -.05f), P(-.35f, -.65f), P(.2f, -.05f));
+                L(P(-.75f, -.18f), P(-.75f, .8f), P(.05f, .8f), P(.05f, -.18f));
+                DrawRect(new Rect2(P(-.47f, .35f), new Vector2(.24f * s, .45f * s)), ink);
+                L(P(.05f, .2f), P(.5f, -.2f), P(.92f, .2f));
+                L(P(.8f, .1f), P(.8f, .8f), P(.05f, .8f));
                 break;
             case WorldPoiType.Monastery:
-                DrawCircle(c, r + 2f, InkStyle.Bg);
-                PortraitGlyph.Bell(this, c.X, c.Y, r * 0.8f, InkStyle.Wood);
+                // 修道院：尖拱顶的礼拜堂＋顶上十字。
+                L(P(-.6f, .85f), P(-.6f, -.05f), P(0f, -.55f), P(.6f, -.05f), P(.6f, .85f), P(-.6f, .85f));
+                L(P(0f, -.55f), P(0f, -1.05f));
+                L(P(-.22f, -.85f), P(.22f, -.85f));
+                L(P(-.18f, .85f), P(-.18f, .3f), P(0f, .12f), P(.18f, .3f), P(.18f, .85f));
                 break;
             case WorldPoiType.Ruin:
-                InkDraw.Jewel(this, c, r, InkStyle.Bg);
-                InkDraw.Jewel(this, c, r, InkStyle.Dim, filled: false);
-                break;
-            default:
-                InkDraw.Jewel(this, c, r + 2f, InkStyle.Bg);
-                InkDraw.Jewel(this, c, r, InkStyle.Wood);
+                // 遗迹：一高一矮两根断柱，残楣斜搭，地上碎石。
+                L(P(-.55f, .8f), P(-.55f, -.6f));
+                L(P(-.25f, .8f), P(-.25f, -.45f));
+                L(P(-.75f, -.65f), P(-.05f, -.72f));
+                L(P(.25f, .8f), P(.25f, .05f), P(.42f, -.08f), P(.55f, .1f), P(.55f, .8f));
+                L(P(-.9f, .8f), P(.9f, .8f));
+                DrawColoredPolygon(new[] { P(.65f, .8f), P(.75f, .62f), P(.88f, .8f) }, ink);
                 break;
         }
     }
@@ -447,12 +492,8 @@ public sealed partial class PortraitHubScreen
                 }
                 if (!_worldPress)
                     return false;
+                // 只拖不点：轻点地图格不再弹地点抽屉。
                 _worldPress = false;
-                if (!_worldDrag)
-                {
-                    var t = ScreenToWorld(mb.Position);
-                    PickWorldTile(new Vector2I(Mathf.FloorToInt(t.X), Mathf.FloorToInt(t.Y)));
-                }
                 _worldDrag = false;
                 QueueRedraw();
                 return true;
@@ -496,16 +537,11 @@ public sealed partial class PortraitHubScreen
                 StepWorld((Territory.RegionDir)w.Index);
                 return true;
             case PortraitAction.WorldGo:
-                var map = World;
+                // 抽屉只在踩上兴趣点 / 领地格时弹出：兴趣点进场，领地格回家（原地 TravelTo 即回到领地）。
                 _sheet = SheetKind.None;
-                var poi = map.PoiAt(_worldPick.X, _worldPick.Y);
-                var standing = _vm.Hub.WorldPartyPosition == (_worldPick.X, _worldPick.Y);
-                // 已站在聚落格上＝直接进场；否则沿最省时的路走过去（到聚落进场、到领地回家）。
-                var done = standing && poi != null ? _vm.Hub.EnterWorldPoi(poi.Id) : _vm.Hub.TravelTo(_worldPick.X, _worldPick.Y);
-                if (!done)
-                    SetNotice("这里去不了。");
-                else if (WorldLayer)
-                    CenterWorldOnParty();
+                var poi = World.PoiAt(_worldPick.X, _worldPick.Y);
+                if (poi != null ? !_vm.Hub.EnterWorldPoi(poi.Id) : !_vm.Hub.TravelTo(_worldPick.X, _worldPick.Y))
+                    SetNotice("这里进不去。");
                 return true;
         }
         return false;
@@ -586,9 +622,8 @@ public sealed partial class PortraitHubScreen
             InkDraw.InkLine(this, new Vector2(row.Position.X, row.End.Y + 4f), new Vector2(row.End.X, row.End.Y + 4f), InkStyle.Hover, 2f);
         }
 
-        var canGo = standing ? poi != null || isHome : minutes > 0;
-        var goLabel = standing ? (poi != null ? "进入" : isHome ? "回到领地" : "已在此处")
-            : minutes < 0 ? "去不了" : isHome ? "回到领地" : "前往";
+        var canGo = standing && (poi != null || isHome);
+        var goLabel = poi != null ? "进入" : isHome ? "回到领地" : "已在此处";
         PortraitFrame.Plaque(this, PortraitLayout.SheetFooterRight, goLabel, primary: true, enabled: canGo);
         _widgets.Add(new PortraitWidget(PortraitLayout.SheetFooterRight, PortraitAction.WorldGo, 0, canGo, goLabel));
         return top;

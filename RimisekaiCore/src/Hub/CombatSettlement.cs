@@ -39,6 +39,13 @@ public static class CombatSettlement
 
         // 2. 落账：名册回写武器/流派经验与心情，金钱进账，缴获进产出者背包（无虚空库存）。
         BattleRewards.Apply(battle, state.Roster, CombatSide.Attacker);
+        // 结算单记下落账后的熟练累计，界面据此画进度条、判升级。
+        foreach (var row in result.Rows)
+            if (state.Roster.Find(row.CharacterId) is { } c)
+            {
+                row.WeaponTotalExp = c.Weapons[(int)row.Weapon].Exp;
+                row.StyleTotalExp = c.Styles[(int)row.Style].Exp;
+            }
         state.Money += loot.Money;
         var carrier = state.Roster.Master;
         if (carrier != null)

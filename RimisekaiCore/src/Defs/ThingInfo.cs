@@ -15,17 +15,18 @@ public readonly record struct ThingInfo(
     int MarketValue,
     bool IsFood,
     FoodTier FoodTier,
-    bool IsWeaponInstance)
+    bool IsWeaponInstance,
+    Quality? Quality)
 {
     public static ThingInfo Of(ThingDef def) => new(
         def.DefName, def.Label, def.Category, def.MarketValue,
-        def.IsFood, def.FoodTier, false);
+        def.IsFood, def.FoodTier, false, null);
 
     public static ThingInfo Of(WeaponInstance w) => new(
-        w.Id, w.Name, "Weapon", w.Value, false, FoodTier.Plain, true);
+        w.Id, w.Name, "Weapon", w.Value, false, FoodTier.Plain, true, w.Quality);
 
     public static ThingInfo Of(EquipInstance e) => new(
-        e.Id, e.Name, e.Kind.ToString(), e.Value, false, FoodTier.Plain, false);
+        e.Id, e.Name, e.Kind.ToString(), e.Value, false, FoodTier.Plain, false, e.Quality);
 }
 
 /// <summary>

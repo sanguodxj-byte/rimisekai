@@ -47,6 +47,9 @@ public partial class PortraitHubScreen
     /// </summary>
     private void PlayVeil(VeilIcon icon, string caption)
     {
+        // 移动中（王棋走动、过界平移）一律不放过渡小动画。
+        if (Walking || Crossing)
+            return;
         if (_veil == null)
         {
             _veil = new PortraitVeil();
@@ -159,6 +162,10 @@ public partial class PortraitHubScreen
         var shown = _sheetClosing ? 1f - _sheetMotion.Eased : _sheetMotion.Eased;
         DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight),
             new Color(InkStyle.Bg, PortraitFrame.ScrimAlpha * shown));
+        // 领地页签上开着抽屉（设施行动、房间、交流…）时，日志面板豁免压暗、重画在压暗之上，
+        // 操作结果当场看得见（2026-10-10 主人定）。只画不登记，点它仍是收起抽屉。
+        if (_tab == 0 && _push == PushPage.None)
+            DrawLogPanel(register: false);
         var travel = PortraitLayout.CanvasHeight - _lastSheetTop;
         PortraitFrame.SetLayer(this, new Vector2(0f, (1f - shown) * travel));
         PortraitFrame.SetSheetScrim(shown);

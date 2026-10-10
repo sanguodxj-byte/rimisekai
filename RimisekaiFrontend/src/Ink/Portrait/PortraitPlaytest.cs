@@ -604,21 +604,34 @@ public partial class PortraitPlaytest : Node
         var arrived = false;
         var hub = _root.DebugVm!.Hub;
         var start = hub.WorldPartyPosition;
-        foreach (var poi in hub.State.World.Pois.OrderBy(p => Math.Abs(p.X - start.Item1) + Math.Abs(p.Y - start.Item2)).Skip(1).Take(6))
+        // 点格已移除（2026-10-10）：用方向箭头逐格朝最近的兴趣点走，踩上即弹「进入」。
+        var poi = hub.State.World.Pois.OrderBy(p => Math.Abs(p.X - start.Item1) + Math.Abs(p.Y - start.Item2)).First();
+        for (var step = 0; step < 60 && !arrived; step++)
         {
-            var px = _root.HubScreen.DebugWorldScreenOf(poi.X, poi.Y);
-            if (px == null) continue;
-            await TapAt(px.Value);
-            if (!await TapAction(PortraitAction.WorldGo, $"go {poi.NameZh}")) { await TapAction(PortraitAction.SheetClose, "close"); continue; }
             for (var i = 0; i < 30 && (ModalOn || _root.CombatView.Visible); i++)
             {
                 if (_root.CombatView.Visible) await FinishCombat("出行遭遇");
                 else if (!await TapLabel("迎战", "encounter fight")) await Escape();
             }
-            arrived = hub.WorldPartyPosition != start;
-            Shoot("world_walked");
-            break;
+            if (await TapAction(PortraitAction.WorldGo, $"enter {poi.NameZh}", w => w.Label == "进入"))
+            {
+                arrived = true;
+                break;
+            }
+            var (x, y) = hub.WorldPartyPosition;
+            var dirs = new List<int>();
+            if (poi.X != x) dirs.Add(poi.X > x ? 1 : 3);
+            if (poi.Y != y) dirs.Add(poi.Y > y ? 2 : 0);
+            var moved = false;
+            foreach (var d in dirs)
+            {
+                if (!await TapAction(PortraitAction.WorldStep, "step", w => w.Index == d && w.Enabled)) continue;
+                moved = hub.WorldPartyPosition != (x, y);
+                if (moved) break;
+            }
+            if (!moved) break;
         }
+        Shoot("world_walked");
         var back = await TapAction(PortraitAction.HubWorld, "return home") || await TapAction(PortraitAction.WorldHome, "home btn");
         for (var i = 0; i < 30 && (ModalOn || _root.CombatView.Visible); i++)
         {
