@@ -433,16 +433,23 @@ public sealed class MapCatalog
         if (CustomJsonProvider != null)
             return CustomJsonProvider(fileName) ?? throw new FileNotFoundException($"内容包缺少 content/{fileName}");
 
-        var paths = new[]
+        var searchStarts = new[]
         {
-            Path.Combine(Directory.GetCurrentDirectory(), "content", fileName),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "content", fileName),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "content", fileName),
+            Directory.GetCurrentDirectory(),
+            AppDomain.CurrentDomain.BaseDirectory,
         };
 
-        foreach (var path in paths)
-            if (File.Exists(path))
-                return File.ReadAllText(path);
+        foreach (var start in searchStarts)
+        {
+            var cur = new DirectoryInfo(start);
+            while (cur != null)
+            {
+                var check = Path.Combine(cur.FullName, "content", fileName);
+                if (File.Exists(check))
+                    return File.ReadAllText(check);
+                cur = cur.Parent;
+            }
+        }
         throw new FileNotFoundException($"未找到数据表 content/{fileName}");
     }
 
