@@ -32,7 +32,7 @@ public sealed class ObserveLogTests
 
         Assert.True(hub.Act(PlaceAction.Observe));
         // 描述接在打量着后面，打量着xx后面永远是逗号，且为高质量具象场景细节
-        Assert.Contains(hub.Log, l => l.Text == "你打量着庭院，青石板路的中央立着一口带木篷的水井，回廊尖拱下放着歇脚的躺椅，石墙上的铁壁灯照亮了四周。");
+        Assert.Contains(hub.Log, l => l.Text == "你打量着庭院，青石板路的中央立着一口带木篷的水井，回廊尖拱下靠着几只汲水的木桶，石墙上的铁壁灯照亮了四周。");
     }
 
     [Fact]

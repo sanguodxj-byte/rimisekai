@@ -281,6 +281,10 @@ public partial class PortraitCapture
             Require(hub.State.Territory.RoomAt(hub.RegionId, _developmentProbeX, _developmentProbeY)?.Id == _developmentProbeRoom,
                 "development installs selected built room into vacant cell");
             Shoot("development_installed", _root.HubScreen);
+        });
+        EnqueueIndoorOnlyRow();
+        _steps.Enqueue(() =>
+        {
             _root.ModalLayer.Show(InkModalFactory.CreateQuestion("标题", "正文",
                 new[] { ("first", "选项一"), ("second", "选项二") }, id => _modalChoices = id == "second" ? 2 : 1));
         });
@@ -365,6 +369,44 @@ public partial class PortraitCapture
             _root.HubScreen.ShowTab(0);
         });
     }
+
+    /// <summary>
+    /// 建造页选中庭院（室外）：「床」那行灰着，行尾写「只能摆在室内」。
+    /// 操作列表很长，逐格往上拖到「床」那行露出来再拍。
+    /// </summary>
+    private void EnqueueIndoorOnlyRow()
+    {
+        _steps.Enqueue(() =>
+        {
+            var cell = _root.HubScreen.DebugWidgets.First(w => w.Action == PortraitAction.DevelopmentCell && w.Label == "庭院");
+            ClickHub(cell.Action, cell.Index);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.DevelopmentTab, 0));
+        for (var i = 0; i < 40; i++)
+            _steps.Enqueue(() =>
+            {
+                if (BedRow() != null)
+                    return;
+                var area = new Rect2(0, PortraitLayout.DevelopmentListTop, PortraitLayout.CanvasWidth,
+                    PortraitLayout.DevelopmentRows * PortraitLayout.SheetRowStep);
+                var from = new Vector2(area.GetCenter().X, area.End.Y - 8f);
+                var to = from - new Vector2(0, PortraitLayout.SheetRowStep * 3);
+                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = from });
+                _root.HubScreen._GuiInput(new InputEventMouseMotion { Position = to, ButtonMask = MouseButtonMask.Left });
+                _root.HubScreen._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = to });
+                _root.HubScreen.QueueRedraw();
+            });
+        _steps.Enqueue(() =>
+        {
+            var bed = BedRow();
+            Require(bed is { Enabled: false }, "bed row is greyed out in the courtyard");
+            Shoot("development_indoor_only", _root.HubScreen);
+        });
+    }
+
+    private PortraitWidget? BedRow() =>
+        _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.DevelopmentAction && w.Label == "床")
+            .Cast<PortraitWidget?>().FirstOrDefault();
 
     /// <summary>自己的房间（主人的床那间）的抽屉：左钮是门锁，点一下换一档，标签与提示签跟着变。</summary>
     private void EnqueueRoomLock()

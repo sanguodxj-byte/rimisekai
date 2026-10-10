@@ -55,6 +55,8 @@ public sealed class WorkingState : BaseWorkerState
         tick = Math.Max(1, tick * PersonalityTraits.WorkProgressPercent(character, worker.Task, ctx.CurrentHour) / 100);
         // 技能决定手快慢，与 Workday 的进度链同源。
         tick = Math.Max(1, tick * ActionKindMap.SpeedPercent(character, worker.Task) / 100);
+        // 对口的房间（铁匠铺里锻造、木工房里木作……）手更快。
+        tick = tick * territory.RoomWorkPercent(facility.RoomId, worker.Task) / 100;
 
         worker.Progress += tick;
 

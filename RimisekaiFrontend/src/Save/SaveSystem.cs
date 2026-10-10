@@ -95,6 +95,9 @@ public sealed class RoomData
 
     /// <summary>开拓出来的空房（可被已建房间安装顶替）。</summary>
     public bool Vacant { get; set; }
+
+    /// <summary>对口工作（进度加成）。</summary>
+    public List<ActionKind> BonusActions { get; set; } = new();
 }
 
 public sealed class FacilityData
@@ -134,6 +137,9 @@ public sealed class FacilityData
 
     /// <summary>是不是桌子。</summary>
     public bool IsTable { get; set; }
+
+    /// <summary>房间标签要求（室内/室外/空串）。</summary>
+    public string RoomTag { get; set; } = "";
 }
 
 public sealed class RecipeData
@@ -337,6 +343,7 @@ public static class SaveSystem
                 Tags = new List<string>(r.Tags),
                 Illustration = r.Illustration,
                 Vacant = r.Vacant,
+                BonusActions = new List<ActionKind>(r.BonusActions),
             });
         }
         foreach (var f in state.Territory.Facilities)
@@ -355,6 +362,7 @@ public static class SaveSystem
                 Contents = new Dictionary<string, int>(f.Contents.Items),
                 Actions = new List<ActionKind>(f.Actions),
                 IsTable = f.IsTable,
+                RoomTag = f.RoomTag,
             });
         }
         foreach (var r in state.Territory.Recipes)
@@ -505,6 +513,8 @@ public static class SaveSystem
             };
             foreach (var cost in r.Materials)
                 room.MaterialCost.Add(new RecipeCost(cost.ItemId, cost.Count));
+            foreach (var action in r.BonusActions)
+                room.BonusActions.Add(action);
             if (r.Tags != null)
             {
                 foreach (var tag in r.Tags)
@@ -527,6 +537,7 @@ public static class SaveSystem
                 Built = f.Built, BuildCost = f.BuildCost, EffectId = f.EffectId,
                 Buildable = f.Buildable, CanStore = f.Storage,
                 IsTable = f.IsTable,
+                RoomTag = f.RoomTag,
             };
             if (f.Actions != null)
             {

@@ -309,6 +309,8 @@ public sealed class TerritoryClock
                 tick = System.Math.Max(1, tick * Traits.WorkProgressPercent(character, worker.Task, ctx == null ? 12 : ctx.NowTotal / 60 % 24) / 100);
                 // 技能决定手快慢：同一个人干对口的活更快，干不对口的更慢。
                 tick = System.Math.Max(1, tick * ActionKindMap.SpeedPercent(character, worker.Task) / 100);
+                // 对口的房间（铁匠铺里锻造、木工房里木作……）手更快。
+                tick = tick * territory.RoomWorkPercent(facility.RoomId, worker.Task) / 100;
                 // 恶劣天气露天作业：耗时加倍，效率减半（产量不变）。
                 if (ctx != null && WorldEffects.IsSevere(ctx.Weather)
                     && WorldEffects.OutdoorRoom(territory, facility.RoomId))

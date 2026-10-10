@@ -97,7 +97,9 @@ public sealed partial class HubSession
                     }
                 }
             }
-            minutes = ActionKindMap.Ticks(action) * TerritoryClock.StepMinutes;
+            // 对口的房间里干得快：耗时按进度倍率折短，取整到一格时间。
+            var ticks = ActionKindMap.Ticks(action) * 100 / State.Territory.RoomWorkPercent(fixture.RoomId, action);
+            minutes = System.Math.Max(1, ticks) * TerritoryClock.StepMinutes;
             // 恶劣天气露天作业：同样的活耗时加倍。
             if (WorldEffects.IsSevere(State.Weather)
                 && WorldEffects.OutdoorRoom(State.Territory, fixture.RoomId))

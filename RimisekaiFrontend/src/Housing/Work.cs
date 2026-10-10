@@ -101,6 +101,9 @@ public sealed class Facility
     /// </summary>
     public bool IsTable { get; set; }
 
+    /// <summary>只能摆进带这个标签的房间（「室内」/「室外」）；空串哪儿都行。见 <see cref="Territory.Fits"/>。</summary>
+    public string RoomTag { get; init; } = "";
+
     /// <summary>
     /// 这件设施能不能存东西。由内容包声明（storage 字段）——
     /// 货架、仓库、矿脉这类能存，灶、床这类不能。

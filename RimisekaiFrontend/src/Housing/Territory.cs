@@ -68,6 +68,9 @@ public sealed class Room
     /// </summary>
     public bool Vacant { get; set; }
 
+    /// <summary>对口的工作（来自房间表）：在这间房里干这些活进度快 <see cref="Territory.RoomBonusPercent"/>%。</summary>
+    public HashSet<ActionKind> BonusActions { get; } = new();
+
     /// <summary>
     /// 房间细分标签（如“室内”、“室外”、“工作间”、“娱乐室”、“卧室”等）。
     /// 至少有 1 个标签，目前无上限。
@@ -1346,6 +1349,30 @@ public sealed class Territory
     /// <summary>这间房还摆不摆得下一件设施（上限见 <see cref="Room.MaxFacilities"/>）。</summary>
     public bool HasFacilitySlot(int roomId) => FacilityCount(roomId) < Housing.Room.MaxFacilities;
 
+    /// <summary>室内房间的标签：家具只能摆这种房，打地铺也只在这种房里打。</summary>
+    public const string IndoorTag = "室内";
+
+    /// <summary>室外房间的标签：田地、圈舍、资源点、井与营火只能建在这种房里。</summary>
+    public const string OutdoorTag = "室外";
+
+    /// <summary>房间对口工作的进度加成（百分比）。</summary>
+    public const int RoomBonusPercent = 20;
+
+    /// <summary>在这间房里干这项活的进度倍率（百分比）：对口 100+<see cref="RoomBonusPercent"/>，否则 100。</summary>
+    public int RoomWorkPercent(int roomId, ActionKind task) =>
+        Room(roomId)?.BonusActions.Contains(task) == true ? 100 + RoomBonusPercent : 100;
+
+    /// <summary>设施的房间标签要求这间房满足不满足（家具要室内、田地圈舍要室外）。</summary>
+    public static bool Fits(Room room, string roomTag) => roomTag.Length == 0 || room.HasTag(roomTag);
+
+    /// <summary>摆不进去的缘由，界面上灰掉的那一行写它。</summary>
+    public static string FitReason(string roomTag) => roomTag switch
+    {
+        IndoorTag => "只能摆在室内",
+        OutdoorTag => "只能建在室外",
+        _ => $"要{roomTag}的房间",
+    };
+
     public bool AddFacility(Facility facility)
     {
         if (Rooms.Find(r => r.Id == facility.RoomId) == null)
@@ -1415,7 +1442,8 @@ public sealed class Territory
     public bool PlaceFacility(int roomId, Facility facility)
     {
         var room = Rooms.Find(r => r.Id == roomId);
-        if (room == null || !room.Open || facility.RoomId >= 0 || !HasFacilitySlot(roomId))
+        if (room == null || !room.Open || facility.RoomId >= 0 || !HasFacilitySlot(roomId)
+            || !Fits(room, facility.RoomTag))
             return false;
         facility.RoomId = roomId;
         RegisterEffect(facility, +1);

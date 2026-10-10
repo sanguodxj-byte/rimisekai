@@ -344,6 +344,7 @@ Stargaze / Lookout / Trade / Store / Tend / Pass / Leisure / View。
 - 开局 5 房：庭院（水井/躺椅/篝火）、客厅（沙发）、卧室（床）、森林（草药丛）、山岳（矿脉）；起始木材×10、石材×10 在玩家背包，干粮×5 放在篝火里（NPC 够得着才有饭吃）
 - 开发（`HubSession`）：`AddRoomCopy/AddFacilityCopy`（照抄**可建造**类型，花材料）、`MoveRoom/MoveFacility`（空格子）、`SetRoomOpen`（开花钱/关免费）、`SetLink`（加拆通路）、`RemoveRoom/RemoveFacility`（材料按 60% 向下取整返还，拆房先挪人、级联拆设施、清通路；玩家在里面不给拆）。每次开发走 1 格时间；定义与运行时都有 `MaterialCost` + `Buildable`，存档保留
 - 开拓/安装（2026-10-01）：`DevelopEmptyRoom(roomId)`（已有实体、`Open == false`，花 `OpenCost` ＋ `MaterialCost`）、`DevelopVacantCell(x, y)`（空格子，越开越贵，生成 `Vacant` 空房）、`PlaceRoom(roomId, vacantRoomId)`（已建房间**只能装进空房**，空房被顶替）。`Room.Vacant` 随存档走
+- 建房与摆放（2026-10-10 主人定）：每类房间建成白送一件对口设施（`buildings.json` 房间行的 `bundledFacility`，如铁匠铺→铁砧、木工房→工作台、客卧→床、菜园→卷心菜田），**占房里 4 个设施位中的一个**，与自己建的一样能拆。设施的 `roomTag` 管摆放：家具（床、椅、桌、箱、柜、架、吧台、浴池等）只能摆在带「室内」标签的房间，田地、圈舍、资源点、井、营火、篝火、瞭望台、箭靶、操练场等只能建在「室外」；工作台、炉灶、窑、锯台这类留空，哪儿都能摆。建造页里不合的那行灰着，行尾写「只能摆在室内 / 只能建在室外」；不合规矩不扣料。房间行的 `bonusActions` 是对口工作：在这间房里干这些活进度 +20%（`Territory.RoomBonusPercent`；主人亲手干按耗时折短）。开局的躺椅挪到了卧室（庭院是室外）。铁砧 石材30＋铁矿20，缝纫台只要木材30
 - 可建造名单：`Territory.BuildableRooms/BuildableFacilities`（按名去重，开发菜单直接读）。当前房间仅客厅/卧室，设施除草药丛/矿脉外全可建；地形与野外资源不可建，删了也不返材料
 - 设施用途一览：水井 Gather、躺椅/床/沙发 Rest、晾衣绳 Tailoring、灶/餐桌 Cooking、工作台 Woodwork、草药 Gather、矿脉 Mine、神龛/货架 Free；`Territory.RoomActions(roomId)` 直接给某房能支撑的行动并集
 

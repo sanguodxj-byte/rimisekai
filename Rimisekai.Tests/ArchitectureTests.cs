@@ -1774,7 +1774,7 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         var vacant = new Room { Id = 2, Name = "空房", X = 3, Y = 3, Open = true, Vacant = true };
         state.Territory.AddRoom(vacant);
-        var roomDef = new RoomDef { Id = 101, Name = "测试菜园", Buildable = true };
+        var roomDef = new RoomDef { Id = 101, Name = "测试菜园", Buildable = true, BundledFacility = "测试菜地" };
         roomDef.MaterialCost.Add(new RecipeCost("木材", 3));
         var facilityDef = new FacilityDef
         {
@@ -1799,11 +1799,15 @@ public sealed class ArchitectureTests
         Assert.True(added.Open);
         Assert.True(added.Buildable);
         Assert.Null(state.Territory.Room(vacant.Id)); // 空房被顶替掉
+        // 房间建成白送一件对口设施，不另扣料。
+        var bundled = Assert.Single(state.Territory.Facilities);
+        Assert.Equal(added.Id, bundled.RoomId);
+        Assert.True(bundled.Supports(ActionKind.Till));
+        Assert.Equal("小麦", bundled.YieldItemId);
 
         Assert.True(hub.BuildFacilityDef(1001, added.Id));
         Assert.Equal(0, state.Roster.Master!.Bag.Get("木材"));
-        Assert.True(state.Territory.Facilities[0].Supports(ActionKind.Till));
-        Assert.Equal("小麦", state.Territory.Facilities[0].YieldItemId);
+        Assert.Equal(2, state.Territory.Facilities.Count(f => f.RoomId == added.Id));
         Assert.False(hub.BuildFacilityDef(1001, added.Id));
     }
 
