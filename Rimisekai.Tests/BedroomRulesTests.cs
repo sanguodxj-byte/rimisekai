@@ -20,7 +20,7 @@ public sealed class BedroomRulesTests
     private const int StartBed = 5;      // 卧室里开局那张床
     private const int BedDef = 5;        // 建筑表里的「床」：木材 10
     private const int Well = 1, Chest = 8, Woodlot = 11;
-    private const int GuestRoomDef = 145; // 客卧：建成自带一张床
+    private const int GuestRoomDef = 3;   // 卧室：建成自带一张床
 
     private readonly ITestOutputHelper _out;
 
@@ -46,8 +46,8 @@ public sealed class BedroomRulesTests
     }
 
     /// <summary>
-    /// 开拓客厅西边的空格、装一间客卧（建成自带一张床）。家具只能摆室内，
-    /// 庭院打不了床，外人要睡就得有间屋子。返回客卧的房间 Id。
+    /// 开拓客厅西边的空格、再装一间卧室（建成自带一张床）。家具只能摆室内，
+    /// 庭院打不了床，外人要睡就得有间屋子。返回第二间卧室的房间 Id。
     /// </summary>
     private static int GuestRoom(HubSession hub, GameState state)
     {
@@ -87,13 +87,13 @@ public sealed class BedroomRulesTests
         var maidDelta = WakeDeltaNextToMaster(hub, state, Maid(state), Bedroom);
         Assert.True(maidDelta > -10, $"女仆与主人同屋醒来心情 {maidDelta}");
 
-        // 对照：同一个人去掉女仆身份，与（睡在客卧的）主人同屋醒来就是挤房 -15。
-        // 外人不去主人的卧室睡（见 Lock_happy_sleepers_never_take_the_masters_bedroom），所以换到客卧比。
+        // 对照：同一个人去掉女仆身份，与（睡在第二间卧室的）主人同屋醒来就是挤房 -15。
+        // 外人不去主人的卧室睡（见 Lock_happy_sleepers_never_take_the_masters_bedroom），所以换到第二间卧室比。
         hub = TerritoryLoopTests.NewGame(out state, 11);
         var plain = Maid(state);
         plain.Talents.Remove((int)Trait.Maid);
         var guestRoom = GuestRoom(hub, state);
-        state.Territory.MasterAsleep = true; // 主人在客卧打地铺睡着：睡着的人不被请出门
+        state.Territory.MasterAsleep = true; // 主人在第二间卧室打地铺睡着：睡着的人不被请出门
         var plainDelta = WakeDeltaNextToMaster(hub, state, plain, guestRoom);
         Assert.True(plainDelta <= -10, $"外人与主人同屋醒来心情 {plainDelta}");
     }
@@ -179,10 +179,10 @@ public sealed class BedroomRulesTests
         var guest = state.Roster.Add("旅人", false);
         var guestRoom = GuestRoom(hub, state);
         hub.Place(guest.Id, guestRoom);
-        // 主人躺在卧室那张床上：旅人与女仆好感都不够同床，旅人只能去客卧那张。
+        // 主人躺在卧室那张床上：旅人与女仆好感都不够同床，旅人只能去第二间卧室那张。
         hub.Enter(Bedroom);
         Assert.True(hub.Use(StartBed));
-        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在客卧睡下");
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在第二间卧室睡下");
         var yard = state.Territory.Rooms.Single(r => r.Id == guestRoom);
         Assert.True(state.Territory.IsLocked(yard));
         Assert.Equal(guest.Id, state.Territory.SleeperLocks[guestRoom].SleeperId);
@@ -236,9 +236,9 @@ public sealed class BedroomRulesTests
         var guestRoom = GuestRoom(hub, state);
         hub.Place(guest.Id, guestRoom);
         hub.Enter(guestRoom);
-        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在客卧睡下");
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在第二间卧室睡下");
         Assert.NotEqual(guestRoom, hub.PlayerRoomId);
-        Assert.Contains(hub.Log, e => e.Text.Contains($"{guest.Name}锁门睡下，你被请出了客卧"));
+        Assert.Contains(hub.Log, e => e.Text.Contains($"{guest.Name}锁门睡下，你被请出了卧室"));
         Assert.False(hub.Arrive(guestRoom));
         Assert.True(hub.LockedOut(guestRoom));
     }
@@ -255,7 +255,7 @@ public sealed class BedroomRulesTests
         foreach (var id in room.Links.ToList())
             state.Territory.Rooms.Single(r => r.Id == id).Open = false;
         hub.Enter(guestRoom);
-        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在客卧睡下");
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在第二间卧室睡下");
         Assert.Equal(guestRoom, hub.PlayerRoomId);
     }
 

@@ -831,7 +831,7 @@ public static class InkCharacterPageBuilder
 
     /// <summary>
     /// 时段卡第三行：房间-设施-产出。只有真正的工作设施才拼产出链；
-    /// 非工作设施（如水井、床、沙发等纯摆设或起居设施）绝不报工作链。
+    /// 非工作设施（如水井、床、长椅等纯摆设或起居设施）绝不报工作链。
     /// </summary>
     private static string ChainOf(InkViewModel vm, int facilityId)
     {

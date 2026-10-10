@@ -273,7 +273,7 @@ public sealed class InkViewModel
         return "";
     }
 
-    /// <summary>设施交互页是否开着（玩家点了“打开货架”这类行动）。</summary>
+    /// <summary>设施交互页是否开着（玩家点了“打开箱子”这类行动）。</summary>
     public bool StorageOpen => Hub.OpenStorageFacility != null;
 
     /// <summary>当前打开操作的设施名；没开则空串。</summary>

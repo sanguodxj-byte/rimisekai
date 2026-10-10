@@ -42,7 +42,7 @@
     {
       "defName": "Recipe_IronIngot",
       "label": "冶炼铁锭",
-      "description": "在铁砧与熔炉前将金属原矿熔炼为铁锭。",
+      "description": "在铁砧前将金属原矿熔炼为铁锭。",
       "itemId": "铁",
       "station": "Forge",
       "outputCount": 1,

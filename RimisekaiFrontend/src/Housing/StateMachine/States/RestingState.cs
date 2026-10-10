@@ -4,7 +4,7 @@ using Rimisekai.Character;
 namespace Rimisekai.Housing.StateMachine.States;
 
 /// <summary>
-/// 休息状态：在能够休息的设施（椅子、沙发等）上闭目歇息，回复气力。
+/// 休息状态：在能够休息的设施（椅子、长椅等）上闭目歇息，回复气力。
 /// </summary>
 public sealed class RestingState : BaseWorkerState
 {

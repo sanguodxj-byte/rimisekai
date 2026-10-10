@@ -94,7 +94,7 @@ public sealed class Facility
 
     /// <summary>
     /// 是不是桌子。桌子本身没有行动，但“同一间房里有桌子”会让在这里吃饭的人不扣心情。
-    /// 用显式标记而不是名字或用途推断：同为桌子的长桌（Cooking）与会议桌（Free）用途并不一致。
+    /// 用显式标记而不是名字或用途推断：同为桌子的长桌与餐桌也不靠名字认。
     /// </summary>
     public bool IsTable { get; set; }
 
@@ -106,7 +106,7 @@ public sealed class Facility
 
     /// <summary>
     /// 这件设施能不能存东西。由内容包声明（storage 字段）——
-    /// 货架、仓库、矿脉这类能存，灶、床这类不能。
+    /// 箱子、仓库、矿脉这类能存，灶、床这类不能。
     /// 能存的设施自带一份 <see cref="Contents"/>，物品就放在这里，没有虚空库存。
     /// </summary>
     public bool CanStore { get; set; }

@@ -5,7 +5,7 @@ namespace Rimisekai.Housing;
 /// 行动就是 <see cref="ActionKind"/>——设施直接声明自己支持哪些行动，
 /// 不再有"用途表兜底"这一层间接（旧 FacilityActionTable 已删）。
 ///
-/// 设施能通过（城门）、能消遣（舞台）、有专属外观——这些是**设施标签**
+/// 设施能消遣（舞台）、有专属外观——这些是**设施标签**
 /// （<see cref="FacilityUsage"/>），不是行动，不参与本判据。
 /// </summary>
 public static class FacilityActions

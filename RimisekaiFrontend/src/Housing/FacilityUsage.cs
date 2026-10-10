@@ -15,6 +15,6 @@ public enum FacilityUsage
     /// <summary>消遣。戏台、吧台、书架这类闲时找乐子的去处。</summary>
     Leisure = 1,
 
-    /// <summary>摆设。没有专属角色的物件（货架、摊位、城门……）。</summary>
+    /// <summary>摆设。没有专属角色的物件（箱子、摊位……）。</summary>
     Plain = 2,
 }

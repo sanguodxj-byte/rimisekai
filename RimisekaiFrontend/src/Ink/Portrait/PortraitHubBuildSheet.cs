@@ -349,7 +349,6 @@ public partial class PortraitHubScreen
         "Build_Storage" => PortraitGlyph.Chest,
         "Build_Leisure" or "BuildRoom_Leisure" => PortraitGlyph.Book,
         "Build_Faith" => PortraitGlyph.Bell,
-        "Build_Military" or "BuildRoom_Military" => PortraitGlyph.Swords,
         "BuildRoom_Shop" => PortraitGlyph.Coin,
         _ => PortraitGlyph.Castle,
     };

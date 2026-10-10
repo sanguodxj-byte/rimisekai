@@ -58,7 +58,7 @@ public sealed class VisitReport
 ///   每间店按自己等级的几率（房间表 visitorChance）引来一位访客。
 /// - 访客从最外沿的露天房间进门（<see cref="EntryFor"/>），沿门走进店里；门锁一样拦他们。
 /// - 店里有人当班（在店里的交易设施上干「交易」——住户排班或主人自己站柜台）就招呼他：
-///   从店里仓储设施（摊位本身、货架等）的存货里随手挑一样、买走若干件，成交与件数随当班者的魅力与社交本领上浮。
+///   从店里仓储设施（摊位本身、箱子等）的存货里随手挑一样、买走若干件，成交与件数随当班者的魅力与社交本领上浮。
 /// - 买完（或等了 <see cref="WaitMinutes"/> 分钟没人招呼、店里没货）立刻往回走，到进门那间就离开领地。
 /// - 访客不是住户：不睡、不吃、不排班；来过的人记在访客名册里，下次可能还是他来。
 /// </summary>
@@ -111,7 +111,7 @@ public static class Commerce
     private static bool IsOwnShop(Room r) =>
         r.Commercial && r.Open && r.X >= 0 && r.RegionId < Territory.MaxTerritoryRegions;
 
-    /// <summary>店里的存货：店里每件能存东西的设施里、有身价的那些（摊位本身、货架……）。</summary>
+    /// <summary>店里的存货：店里每件能存东西的设施里、有身价的那些（摊位本身、箱子……）。</summary>
     public static List<(Facility Holder, string ItemId, int Count)> StockOf(Territory territory, Room shop) =>
         territory.Facilities
             .Where(f => f.Built && f.RoomId == shop.Id && f.CanStore)

@@ -65,7 +65,7 @@ public sealed class WaterTests
     {
         var state = new GameState();
         state.Territory.AddRoom(new Room { Id = 1, Name = "库房", Open = true });
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 1, Built = true };
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 1, Built = true };
         state.Territory.AddFacility(shelf);
 
         state.SettleDay(state.Clock.Season);

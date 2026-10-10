@@ -441,7 +441,7 @@ public sealed class Territory
 
     /// <summary>
     /// 据点所有设施存货 + 某个角色背包，能否付得起这些材料。
-    /// 据点级操作（建造/开拓/制作）用它，因此材料放在哪个货架上都能用。
+    /// 据点级操作（建造/开拓/制作）用它，因此材料放在哪个箱子里都能用。
     /// </summary>
     public bool CanPayWith(CharacterState? who, IReadOnlyList<RecipeCost> costs)
     {
@@ -542,7 +542,7 @@ public sealed class Territory
 
     /// <summary>
     /// 在某件设施处付料：只认这个人的背包 + 这件设施自己的存货。
-    /// 工作台用这个——材料得有人搬到台子上，不能隔空从别的货架取。
+    /// 工作台用这个——材料得有人搬到台子上，不能隔空从别的箱子取。
     /// </summary>
     public bool CanPayAt(Facility bench, CharacterState who, IReadOnlyList<RecipeCost> costs)
     {
@@ -635,7 +635,7 @@ public sealed class Territory
     public const int TrainLevelCap = 10;
 
     /// <summary>
-    /// 在箭靶、操练场上练一回：涨手上兵器（空手按格斗）的熟练与流派经验。
+    /// 在箭靶上练一回：涨手上兵器（空手按格斗）的熟练与流派经验。
     /// 熟练已到 <see cref="TrainLevelCap"/> 级就练不出东西了，返回 false。
     /// </summary>
     public static bool Drill(CharacterState c)
@@ -916,7 +916,7 @@ public sealed class Territory
 
     /// <summary>
     /// 搬运：把某人背包里的一件东西放进指定仓储。返回实际搬过去的件数。
-    /// 这是 NPC 搬运与玩家“放进货架”共同的底层。
+    /// 这是 NPC 搬运与玩家“放进箱子”共同的底层。
     /// </summary>
     public int Haul(CharacterState who, Facility storage, string itemId, int count) =>
         StoreFrom(who, storage, itemId, count);

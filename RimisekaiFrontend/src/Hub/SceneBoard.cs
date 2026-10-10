@@ -200,7 +200,7 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 新人留下了，可床不够每人一张：提一句怎么安顿——开一间客卧（建成自带床）或添张床；
+    /// 新人留下了，可床不够每人一张：提一句怎么安顿——开一间卧室（建成自带床）或添张床；
     /// 不安顿也不会卡住，他会在屋里打地铺（心情受罪）。
     /// </summary>
     private void HintHousing(CharacterState newcomer)
@@ -208,7 +208,7 @@ public sealed partial class HubSession
         var beds = State.Territory.Facilities.Count(f => f.Built && f.RoomId >= 0 && f.Supports(ActionKind.Sleep));
         if (beds >= State.Roster.Members.Count)
             return;
-        Write($"{newcomer.Name}还没有自己的床，今晚只能打地铺。开拓一格空地建间客卧（建成自带一张床），或在屋里添一张床。");
+        Write($"{newcomer.Name}还没有自己的床，今晚只能打地铺。开拓一格空地建间卧室（建成自带一张床），或在屋里添一张床。");
     }
 
     private SceneRunner ResolveSceneRunner() =>

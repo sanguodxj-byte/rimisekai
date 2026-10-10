@@ -37,11 +37,10 @@ public sealed class StationRulesTests
         Assert.True(territory.Makes(steel, ActionKind.Forge, anvil));
         Assert.False(territory.Makes(pottery, ActionKind.Forge, anvil));
         Assert.False(territory.Makes(dust, ActionKind.Forge, anvil));
-        // 每条 Forge 配方都归了门类，建出来的铁砧、熔炉、工坊带着门类
+        // 每条 Forge 配方都归了门类，建出来的铁砧、工坊带着门类
         Assert.All(territory.Recipes.Where(r => r.Station == ActionKind.Forge), r => Assert.NotEqual("", r.Craft));
         ContentDefs.EnsureInitialized();
         Assert.Equal("锻", DefDatabase<FacilityDef>.Get("Facility_1013")!.ToRuntime().Craft);
-        Assert.Equal("锻", DefDatabase<FacilityDef>.Get("Facility_1014")!.ToRuntime().Craft);
         Assert.Equal("工", DefDatabase<FacilityDef>.Get("Facility_1072")!.ToRuntime().Craft);
         Assert.Equal(15, DefDatabase<FacilityDef>.Get("Facility_1013")!.MaterialCost.Single(c => c.ItemId == "铁矿").Count);
     }

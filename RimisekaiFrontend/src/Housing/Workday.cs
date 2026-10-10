@@ -165,7 +165,7 @@ public enum LoiterKind
 {
     None,
 
-    /// <summary>找件能坐的东西歇着（沙发、椅子）。</summary>
+    /// <summary>找件能坐的东西歇着（长椅、椅子）。</summary>
     Sitting,
 
     /// <summary>在房里做点零活。仅女仆会打扫；其余人闲时只是待着。</summary>
@@ -576,7 +576,7 @@ public sealed class TerritoryClock
             return Log(worker, facility.YieldItemId, amount, ActionKindMap.SkillOf(worker.Task)!.Value);
         }
         // 工作台只用“这个人背包 + 这台子自己的存货”付料：
-        // 材料得有人搬过来，不能隔空从别的货架取。
+        // 材料得有人搬过来，不能隔空从别的箱子取。
         var recipe = territory.Recipes.Find(r => territory.Makes(r, worker.Task, facility) && territory.CanPayAt(facility, character, r.Costs));
         if (recipe == null || !territory.PayAt(facility, character, recipe.Costs))
             return null;
@@ -1268,7 +1268,7 @@ public sealed class TerritoryClock
     /// 返回 false 让调用方改做别的事（禁止在房间里凭空睡）。
     /// </summary>
     /// <summary>
-    /// 休息：找一把能坐的椅子/沙发，坐下歇着（RestingState 负责回复与结束）。
+    /// 休息：找一把能坐的椅子/长椅，坐下歇着（RestingState 负责回复与结束）。
     /// 找不到座位就返回假——上层会退回闲转。
     /// </summary>
     private static bool StartRest(CharacterState character, Worker worker, Territory territory,

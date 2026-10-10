@@ -201,8 +201,8 @@ public class SocialNarrationTests
         state.Territory.AddRoom(new Room { Id = 2, Name = "库房", Open = true });
         state.Territory.Link(1, 2);
 
-        // 货架位于库房，当前空无一物（零原材料）
-        var shelf = new Facility { Id = 1, Name = "货架", RoomId = 2, CanStore = true, Built = true };
+        // 箱子位于库房，当前空无一物（零原材料）
+        var shelf = new Facility { Id = 1, Name = "箱子", RoomId = 2, CanStore = true, Built = true };
         state.Territory.AddFacility(shelf);
         // 铁砧位于工坊，支持锻造
         var forge = new Facility { Id = 2, Name = "铁砧", RoomId = 1, Usage = FacilityUsage.Plain, Actions = { ActionKind.Forge }, Built = true };
@@ -229,7 +229,7 @@ public class SocialNarrationTests
         Assert.Equal(ActionKind.None, worker.Task);
         Assert.True(worker.Goal == ActionKind.Loiter || worker.Goal == ActionKind.Rest);
 
-        // 2. 原材料到货：向库房货架存入 2 个铁矿
+        // 2. 原材料到货：向库房箱子存入 2 个铁矿
         shelf.Contents.Add("铁矿", 2);
 
         // 3. 下一心跳立即检测到原材料：铁匠打断闲逛，立即自动发起备料搬运去库房取矿
