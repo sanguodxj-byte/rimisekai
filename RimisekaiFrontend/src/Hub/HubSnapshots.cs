@@ -68,9 +68,13 @@ public sealed partial class HubSession
         // 读档按门锁再筛一遍会把人从地图上抹掉（在场 -1，从此哪儿也去不了）。
         foreach (var pair in snapshot.Presence)
         {
+            // 访客不是住户，没有自主行动的身子；他在哪由这一趟的行程（Territory.Visits）定。
+            if (State.Roster.Find(pair.Key) == null)
+                continue;
             _presence[pair.Key] = pair.Value;
             Day.Track(pair.Key, pair.Value).RoomId = pair.Value;
         }
+        PlaceVisitors();
         if (snapshot.PlayerRoom >= 0)
             Enter(snapshot.PlayerRoom);
         if (snapshot.Selected >= 0)

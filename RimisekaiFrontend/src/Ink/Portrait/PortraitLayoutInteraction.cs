@@ -24,6 +24,20 @@ public static partial class PortraitLayout
     public static Rect2 StorageButton(Rect2 row, int b) =>
         new(row.End.X - 190f - (1 - b) * (190f + StorageButtonGap), row.Position.Y + 3f, 190f, TouchMin);
     public const float StorageButtonGap = 30f;
+    /// <summary>存取抽屉的存储设置入口：收起钮左侧、隔 16 的一枚方钮（标题框右缘 760 之外的空位）。</summary>
+    public static Rect2 StorageSettingsEntry(float top) =>
+        new(SheetClose(top).Position.X - 16f - TouchMin, top + 50f, TouchMin, TouchMin);
+
+    /// <summary>存储设置抽屉（与存取抽屉同上沿）：优先级五段 → 全部允许/全部清除 → 过滤树（可滚）。</summary>
+    public static Rect2 StoragePrioritySegment => new(Pad, StorageSheetTop + 190f, FullWidth, TouchMin);
+    public static Rect2 StorageAllowAll => new(Pad, StorageSheetTop + 330f, (FullWidth - 24f) / 2f, TouchMin);
+    public static Rect2 StorageClearAll => new(Pad + (FullWidth + 24f) / 2f, StorageSheetTop + 330f, (FullWidth - 24f) / 2f, TouchMin);
+    public static Rect2 StorageFilterRow(int i) => new(Pad, StorageSheetTop + 470f + i * SheetRowStep, FullWidth, TouchMin);
+    public static int StorageFilterRows => (int)((CanvasHeight - 60f - StorageFilterRow(0).Position.Y + SheetRowStep - TouchMin) / SheetRowStep);
+    /// <summary>过滤行右侧的收放钮（允许 / 部分 / 禁止），贴行右缘。</summary>
+    public static Rect2 StorageFilterToggle(Rect2 row) => new(row.End.X - 190f, row.Position.Y, 190f, TouchMin);
+    /// <summary>每深一级缩进。</summary>
+    public const float StorageFilterIndent = 56f;
 
     // ---------- 对话整屏 ----------
 

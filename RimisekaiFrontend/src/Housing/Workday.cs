@@ -324,9 +324,11 @@ public sealed class TerritoryClock
                     var log = Finish(territory, character, worker, facility, yieldFor, ctx?.Season ?? Season.Spring);
                     if (log != null)
                         logs.Add(log);
-                    else if (!ActionKindMap.IsExtractive(worker.Task) && worker.Task != ActionKind.Perform && worker.Task != ActionKind.Trade)
+                    else if (!ActionKindMap.IsExtractive(worker.Task))
                     {
-                        // 制作中途原料耗尽（未能产出）：自然退出工作，回退决策
+                        // 制作中途原料耗尽（未能产出）：自然退出工作，回退决策。
+                        // 表演、看店没有产物：干满一轮也放下回决策——饭点、换班、找人说话都在这里接上，
+                        // 不然人会一直钉在台子上，从早站到晚、饭也不吃。
                         EndRoutine(worker);
                         Release(worker, used);
                     }
@@ -762,6 +764,9 @@ public sealed class TerritoryClock
         // 搬运优先于娱乐——否则「每日一娱」无限重入，劳动产出永远躺在背包里。
         if (StartHaul(character, worker, territory, ctx, used))
             return;
+        // 手上空了：仓储之间倒库——低档里的东西倒进档更高、也收它的仓储（店里的摊位就是这样补货的）。
+        if (StartRehaul(character, worker, territory, ctx))
+            return;
         if (ctx.Day - character.Affect.LastPlayDay >= 1)
         {
             if (StartPlay(character, worker, territory, roster, ctx, used))
@@ -902,6 +907,51 @@ public sealed class TerritoryClock
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 倒库（<see cref="Territory.FindRehaul"/>）：走到源仓储当面取货，再送进目标仓储。人已在源那间房就当场取。
+    /// 没得倒返回 false。
+    /// </summary>
+    private static bool StartRehaul(CharacterState character, Worker worker, Territory territory, StepContext ctx)
+    {
+        if (territory.FindRehaul(worker.RoomId) is not { } job)
+            return false;
+        var moved = 0;
+        if (job.Source.RoomId == worker.RoomId)
+        {
+            moved = territory.TakeFrom(character, job.Source, job.ItemId, job.Count);
+            if (moved <= 0)
+                return false;
+        }
+        worker.StateMachine.TransitionTo(new StateMachine.States.HaulingState(), new StateMachine.WorkerContext
+        {
+            Territory = territory,
+            Character = character,
+            Worker = worker,
+            StepContext = ctx,
+        });
+        worker.Goal = ActionKind.Haul;
+        worker.Task = ActionKind.None;
+        worker.Progress = 0;
+        worker.HaulItemId = job.ItemId;
+        worker.HaulSourceId = job.Source.Id;
+        worker.HaulTargetId = job.Target.Id;
+        worker.FacilityId = -1;
+        if (moved > 0)
+        {
+            worker.HaulCount = moved;
+            worker.HaulPhase = HaulPhase.Delivering;
+            GotoRoom(worker, territory, job.Target.RoomId, character, ctx);
+        }
+        else
+        {
+            worker.HaulCount = job.Count;
+            worker.HaulPhase = HaulPhase.Fetching;
+            GotoRoom(worker, territory, job.Source.RoomId, character, ctx);
+        }
+        worker.Phase = worker.Path.Count > 0 ? WorkPhase.Moving : WorkPhase.Idle;
+        return true;
     }
 
     /// <summary>收尾搬运状态，回决策。</summary>
@@ -1612,7 +1662,7 @@ public sealed class TerritoryClock
             return true;
         if (character.Bag.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)))
             return true;
-        return territory.Facilities.Exists(f => f.Built && f.CanStore &&
+        return territory.Storages.Any(f => f.Built &&
             f.Contents.Items.Any(p => p.Value > 0 && territory.IsFood(p.Key)));
     }
 

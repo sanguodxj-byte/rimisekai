@@ -457,6 +457,81 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("territory_crowded_page2", _root.HubScreen));
         _steps.Enqueue(CheckNowPageTurned);
         _steps.Enqueue(CheckNowPageWrapped);
+        // 自家的店：开一间杂货铺、摊位摆货，访客从外沿走进店里；「此刻」列出访客，点他弹交互抽屉（邀请＝请他入伙）。
+        _steps.Enqueue(PrepareShopVisitor);
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw());
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.NowAvatar && w.Index == _shopVisitor),
+                "visitor in the shop is listed in the now band");
+            Shoot("shop_visitor", _root.HubScreen);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.NowAvatar, _shopVisitor));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugHub.SelectedCharacterId == _shopVisitor, "tapping the visitor selects them");
+            Shoot("shop_visitor_talk", _root.HubScreen);
+        });
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0));
+        _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.RoomGo), "shop room sheet opens");
+            Shoot("shop_room_sheet", _root.HubScreen);
+        });
+        // 仓储设置：摊位的存取抽屉 → 齿轮 → 存储设置（优先级五段、全部允许/清除、过滤树），展开品类、切一件，返回退回存取抽屉。
+        _steps.Enqueue(() =>
+        {
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+            Require(_root.HubScreen.DebugHub.OpenStorage(_shopStall), "open the stall storage");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.StorageSettings), "storage sheet offers settings");
+            Shoot("stall_storage", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.StorageSettings, 0);
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Count(w => w.Action == PortraitAction.StoragePriority) == 5, "five priority levels");
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.StorageToggle), "filter tree rows");
+            Shoot("storage_settings", _root.HubScreen);
+            PressLabelled(PortraitAction.StorageFold, "加工品");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            PressLabelled(PortraitAction.StorageFold, "杂货");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            Require(hub.StorageEntryState("Goods") == Rimisekai.Housing.FilterState.Some, "only pottery among goods");
+            PressLabelled(PortraitAction.StorageToggle, "Goods");
+            _root.HubScreen.DebugPress(PortraitAction.StoragePriority, 3);
+            Require(hub.OpenStorageFacility!.Priority == Rimisekai.Housing.StoragePriority.Important, "priority picked");
+            Require(hub.StorageEntryState("书本") == Rimisekai.Housing.FilterState.All, "the whole goods class is allowed");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() => Shoot("storage_settings_open", _root.HubScreen));
+        _steps.Enqueue(() => DragHubUp(new Rect2(0, PortraitLayout.StorageFilterRow(0).Position.Y, PortraitLayout.CanvasWidth,
+            PortraitLayout.StorageFilterRows * PortraitLayout.SheetRowStep)));
+        _steps.Enqueue(() => Shoot("storage_settings_scrolled", _root.HubScreen));
+        _steps.Enqueue(() =>
+        {
+            PressLabelled(PortraitAction.SheetClose, "返回");
+            _root.HubScreen.QueueRedraw();
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.StorageSettings), "back returns to the storage sheet");
+            _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        });
+        _steps.Enqueue(LeaveShop);
         _steps.Enqueue(() =>
         {
             // 开局前排留空：StartBattle 应收拢阵型——空列后排一路顶到第一排，同列被挡者停在阻挡者身后。
@@ -934,6 +1009,54 @@ public partial class PortraitCapture : Node
         }
     }
 
+    private int _shopStall = -1;
+    private int _shopVisitor = -1;
+    private int _shopReturnRoom = -1;
+
+    /// <summary>开拓庭院南边的空格建一间杂货铺（营业性），摊位摆上货；引一位访客，推到他走进店里，主人在店里等着。</summary>
+    private void PrepareShopVisitor()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        var state = hub.State;
+        _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        _shopReturnRoom = hub.PlayerRoomId;
+        state.Money += 5000;
+        state.Roster.Master!.Bag.Add("木材", 40);
+        Require(hub.DevelopVacantCell(0, 2, 3), "develop shop cell");
+        var cell = state.Territory.RoomAt(0, 2, 3)!;
+        Require(hub.BuildRoomDef(146, cell.Id), "build grocery");
+        var shop = state.Territory.RoomAt(0, 2, 3)!;
+        Require(shop.Commercial, "grocery is commercial");
+        var stall = state.Territory.Facilities.First(f => f.RoomId == shop.Id && Rimisekai.Housing.FacilityActions.Supports(f, Rimisekai.Housing.ActionKind.Trade));
+        Require(stall.StorageFilter.Rules.Count == 0, "a new stall allows nothing");
+        stall.StorageFilter.Only(new[] { "布", "陶罐" });
+        stall.Contents.Add("布", 12);
+        stall.Contents.Add("陶罐", 6);
+        _shopStall = stall.Id;
+        Require(hub.Arrive(shop.Id), "walk into the shop");
+        var visit = Rimisekai.Housing.Commerce.Spawn(state.Territory, state.Roster, shop, new Random(7));
+        Require(visit != null, "a visitor comes");
+        _shopVisitor = visit!.CharacterId;
+        for (var i = 0; i < 12 && visit.RoomId != shop.Id; i++)
+            hub.PassTime(Rimisekai.Housing.TerritoryClock.StepMinutes);
+        Require(visit.RoomId == shop.Id, "visitor reaches the shop");
+    }
+
+    /// <summary>按动作与标签点一个块（同一动作有多块、序号不定时用）。</summary>
+    private void PressLabelled(PortraitAction action, string label)
+    {
+        var widget = _root.HubScreen.DebugWidgets.FirstOrDefault(w => w.Action == action && w.Label == label);
+        Require(widget.Action == action && widget.Label == label, $"widget {action} {label}");
+        _root.HubScreen.DebugPress(action, widget.Index);
+    }
+
+    private void LeaveShop()
+    {
+        var hub = _root.HubScreen.DebugHub;
+        _root.HubScreen.DebugPress(PortraitAction.SheetClose, 0);
+        Require(hub.Arrive(_shopReturnRoom), "walk back from the shop");
+    }
+
     private void PrepareOverflowCases()
     {
         var hub = _root.HubScreen.DebugHub;
@@ -1361,6 +1484,8 @@ public partial class PortraitCapture : Node
     /// </summary>
     private void EnqueueFxChecks()
     {
+        Combatant? deathProbeFoe = null;
+        var deathProbeHp = 0;
         var cases = new (string Tag, string Skill, bool EnemyActs, CombatEventKind Kind, float At)[]
         {
             ("fx_attack", BattleSkills.AttackId, false, CombatEventKind.Hit, 0.18f),
@@ -1392,7 +1517,34 @@ public partial class PortraitCapture : Node
             });
             _steps.Enqueue(() => Shoot(fx.Tag, _root.CombatView));
         }
-        _steps.Enqueue(() => InkCombatFx.Clear());
+        _steps.Enqueue(() =>
+        {
+            var battle = _battleProbe.Battle;
+            var ally = battle.Members.First(m => m.Side == battle.ControlledSide && m.Alive);
+            var foe = battle.Members.First(m => m.Side != battle.ControlledSide && m.Alive);
+            var card = _root.CombatView.DebugUnitCard(foe);
+            deathProbeFoe = foe;
+            deathProbeHp = foe.Hp;
+            foe.Hp = 0;
+            Require(_root.CombatView.DebugUnitCenter(foe.Id).DistanceTo(card.GetCenter()) < 0.1f,
+                "dead enemy FX stays anchored to its card after leaving the live geometry");
+            _root.CombatView.DebugFx(new BattleEvent
+            {
+                Kind = CombatEventKind.Hit,
+                ActorId = ally.Id,
+                TargetId = foe.Id,
+                SkillId = BattleSkills.AttackId,
+                Amount = foe.MaxHp,
+                HpAfter = 0,
+            }, 0.18f);
+        });
+        _steps.Enqueue(() => Shoot("fx_death_slice", _root.CombatView));
+        _steps.Enqueue(() =>
+        {
+            if (deathProbeFoe != null)
+                deathProbeFoe.Hp = deathProbeHp;
+            InkCombatFx.Clear();
+        });
     }
 
     private void Shoot(string tag, Node source)

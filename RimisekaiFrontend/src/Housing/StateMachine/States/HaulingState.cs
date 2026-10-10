@@ -71,7 +71,8 @@ public sealed class HaulingState : BaseWorkerState
             return true;
         }
 
-        var moved = deliverTarget.CanStore
+        // 仓储网里的仓储照过滤与容量收；工作台（备料）不看过滤，点名要的料直接上台。
+        var moved = ctx.Territory.InStorageNetwork(deliverTarget)
             ? ctx.Territory.StoreFrom(ctx.Character, deliverTarget, worker.HaulItemId, worker.HaulCount)
             : Deposit(ctx.Character, deliverTarget, worker.HaulItemId, worker.HaulCount);
 

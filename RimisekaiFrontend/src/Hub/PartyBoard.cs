@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rimisekai.Hub;
 
@@ -26,11 +27,24 @@ public sealed partial class HubSession
         return list;
     }
 
-    /// <summary>左下角可选取的头像：主角不可选，只有同房的其他角色。</summary>
+    /// <summary>此刻在领地里的所有人：住户（<see cref="Party"/>）之后接正在店里进出的访客。地图格的棋子与「此刻」带都按它画。</summary>
+    public IReadOnlyList<CharacterCard> Present()
+    {
+        var list = new List<CharacterCard>(Party());
+        foreach (var visit in State.Territory.Visits)
+        {
+            var visitor = State.Roster.Visitor(visit.CharacterId)!;
+            list.Add(new CharacterCard(visitor.Id, visitor.Name, false,
+                _presence.GetValueOrDefault(visitor.Id, -1), visitor.ThreatTier, visitor.Condition.Favor));
+        }
+        return list;
+    }
+
+    /// <summary>左下角可选取的头像：主角不可选，只有同房的其他角色（住户在前，路过的访客在后）。</summary>
     public IReadOnlyList<CharacterCard> CardsHere()
     {
         var list = new List<CharacterCard>();
-        foreach (var character in State.Roster.Members)
+        foreach (var character in State.Roster.Members.Concat(State.Roster.Visitors))
         {
             if (character.IsMaster)
                 continue;
@@ -49,7 +63,7 @@ public sealed partial class HubSession
 
     public bool Select(int characterId)
     {
-        var character = State.Roster.Find(characterId);
+        var character = State.Roster.Person(characterId);
         if (character == null || character.IsMaster)
             return false;
         if (_presence.GetValueOrDefault(character.Id, -1) != PlayerRoomId)
@@ -86,7 +100,7 @@ public sealed partial class HubSession
     /// </summary>
     public void DropSelectionIfGone()
     {
-        var selected = State.Roster.Find(SelectedCharacterId);
+        var selected = State.Roster.Person(SelectedCharacterId);
         if (selected == null || selected.IsMaster
             || _presence.GetValueOrDefault(selected.Id, -1) != PlayerRoomId)
             SelectedCharacterId = -1;

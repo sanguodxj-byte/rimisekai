@@ -135,6 +135,13 @@ public partial class PortraitHubScreen
         var close = PortraitLayout.SheetClose(top);
         PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
         _widgets.Add(new PortraitWidget(close, PortraitAction.SheetClose, 0, true, "收起"));
+        // 存储设置入口：收起钮左侧的齿轮（水井、工作台没有设置，不画）
+        if (_vm.Hub.StorageConfigurable)
+        {
+            var gear = PortraitLayout.StorageSettingsEntry(top);
+            PortraitGlyph.Gear(this, gear.GetCenter().X, gear.GetCenter().Y, 30f, InkStyle.Line);
+            _widgets.Add(new PortraitWidget(gear, PortraitAction.StorageSettings, 0, true, "存储设置"));
+        }
 
         var rows = _vm.StorageRows();
         var visible = PortraitLayout.StorageRows;
@@ -160,7 +167,7 @@ public partial class PortraitHubScreen
             for (var b = 0; b < 2; b++)
             {
                 var br = PortraitLayout.StorageButton(rect, b);
-                var enabled = b == 0 ? row.InBag > 0 : row.InStorage > 0;
+                var enabled = b == 0 ? row.InBag > 0 && _vm.StorageAccepts(row.ItemId) : row.InStorage > 0;
                 PortraitFrame.Plaque(this, br, b == 0 ? "放入" : "取出", enabled: enabled);
                 _widgets.Add(new PortraitWidget(br, b == 0 ? PortraitAction.StoreIn : PortraitAction.StoreOut, at, enabled, row.ItemId));
             }

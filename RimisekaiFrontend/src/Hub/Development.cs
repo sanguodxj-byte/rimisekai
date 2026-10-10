@@ -574,6 +574,7 @@ public sealed partial class HubSession
         foreach (var tag in def.Tags)
             added.AddTag(tag);
         added.EnsureDefaultTag();
+        added.SetShop(def.SalesLevels, def.VisitorChance);
         if (!State.Territory.AddRoom(added))
             return false;
         // 房间建成白送一件对口的设施，占它的一个设施位。

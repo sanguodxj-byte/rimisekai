@@ -121,67 +121,29 @@ public sealed class Facility
     public int StorageCapacity { get; set; }
 
     /// <summary>
-    /// 存储过滤：收下哪些东西。集合里可以混存两种条目——
-    /// 物品 Id（只收这一件）与品类 DefName（收整个品类，含子品类）。
-    /// 空集表示来者不拒。玩家可在存储配置页按物品或品类勾选。
+    /// 存储过滤：允许放进来的物品（按品类或单件勾选，见 <see cref="ItemFilter"/>）。
+    /// 水井例外：只收水，与过滤怎么勾无关（<see cref="IsWell"/>）。
     /// </summary>
-    public HashSet<string> StorageFilter { get; } = new(System.StringComparer.OrdinalIgnoreCase);
+    public ItemFilter StorageFilter { get; } = new();
 
-    /// <summary>这条过滤条目是品类还是具体物品。用于界面区分两种开关。</summary>
-    public static bool IsCategoryEntry(string entry) =>
-        Defs.DefDatabase<Defs.ThingCategoryDef>.Get(entry) != null;
+    /// <summary>仓储优先级：搬运的人先往档高的送，低档里的东西会被倒进档更高、也收它的仓储。</summary>
+    public StoragePriority Priority { get; set; } = StoragePriority.Normal;
 
-    /// <summary>
-    /// 这件设施收不收这种物品：水井只收水；再过过滤（按物品 Id 或品类命中），再看有没有空位。
-    /// 命中规则：过滤为空→全收；否则物品 Id 直接命中，或其品类（含父链）命中任一条目。
-    /// </summary>
-    public bool Accepts(string itemId, Defs.WeaponRegistry? weapons = null)
+    /// <summary>水井：只存水，过滤与优先级都定死（关键档——井里的水不往外倒）。</summary>
+    public bool IsWell => YieldItemId == Territory.WellItemId;
+
+    /// <summary>过滤放不放行这件东西（不看容量）。<paramref name="category"/> 是它的品类或实例大类。</summary>
+    public bool Allows(string itemId, string category)
     {
         if (!CanStore || itemId.Length == 0)
             return false;
-        // 水井只存水：别的东西一律不收，与过滤怎么勾无关。
-        if (YieldItemId == Territory.WellItemId && itemId != Territory.WellItemId)
-            return false;
-        if (StorageFilter.Count > 0 && !FilterAccepts(itemId, weapons))
-            return false;
-        return FreeSpace() > 0;
+        if (IsWell)
+            return itemId == Territory.WellItemId;
+        return StorageFilter.Allows(itemId, category);
     }
 
-    /// <summary>过滤是否放行这件物品（不看容量）。武器实例要传登记表。</summary>
-    public bool FilterAccepts(string itemId, Defs.WeaponRegistry? weapons = null)
-    {
-        if (StorageFilter.Count == 0)
-            return true;
-        if (StorageFilter.Contains(itemId))
-            return true;
-
-        // 运行时武器实例：它归属武器大类，按大类命中。
-        var instance = weapons?.Get(itemId);
-        if (instance != null)
-            return MatchesCategory("Weapon");
-
-        var def = Defs.Items.Get(itemId);
-        if (def == null || string.IsNullOrEmpty(def.Category))
-            return false;
-
-        // 物品的品类自己命中，或它的任一父品类命中，都算收。
-        return MatchesCategory(def.Category);
-    }
-
-    /// <summary>从某个品类出发沿父链往上，看有没有任一条被过滤收下。</summary>
-    private bool MatchesCategory(string categoryDefName)
-    {
-        var cat = Defs.DefDatabase<Defs.ThingCategoryDef>.Get(categoryDefName);
-        while (cat != null)
-        {
-            if (StorageFilter.Contains(cat.DefName))
-                return true;
-            cat = string.IsNullOrEmpty(cat.ParentCategory)
-                ? null
-                : Defs.DefDatabase<Defs.ThingCategoryDef>.Get(cat.ParentCategory);
-        }
-        return false;
-    }
+    /// <summary>收不收：过滤放行、还有空位。</summary>
+    public bool Accepts(string itemId, string category) => Allows(itemId, category) && FreeSpace() > 0;
 
     /// <summary>这件设施此刻装着多少件东西。</summary>
     public int StoredCount()
@@ -218,15 +180,6 @@ public static class FoodTiers
         FoodTier.Feast => "丰盛",
         FoodTier.Exquisite => "绝味",
     };
-}
-
-/// <summary>领地里的客人。只记录人在哪、来干什么，不跑 AI。</summary>
-public sealed class Guest
-{
-    public int Id { get; init; }
-    public string Name { get; init; } = "";
-    public int RoomId { get; set; }
-    public string Purpose { get; init; } = "";
 }
 
 public sealed class Recipe

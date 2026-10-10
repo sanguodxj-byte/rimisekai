@@ -181,7 +181,7 @@ public partial class PortraitHubScreen
     private bool SheetCloseEndsLayer()
     {
         if (_vm.StorageOpen)
-            return !_interactionOpen && _sheet == SheetKind.None;
+            return !_storageSettings && !_interactionOpen && _sheet == SheetKind.None;
         if (_interactionOpen)
             return !_giftOpen && _socialCategory < 0 && _sheet == SheetKind.None;
         return true;

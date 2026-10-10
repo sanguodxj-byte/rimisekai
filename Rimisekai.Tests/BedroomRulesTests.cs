@@ -285,12 +285,14 @@ public sealed class BedroomRulesTests
         var well = state.Territory.Facilities.Single(f => f.Id == Well);
         var master = state.Roster.Master!;
         Assert.True(well.CanStore);
-        Assert.False(well.Accepts("木材"));
-        Assert.False(well.Accepts("肉"));
-        // 过滤勾成什么样都一样。
-        well.StorageFilter.Add("木材");
-        Assert.False(well.Accepts("木材"));
-        well.StorageFilter.Clear();
+        Assert.False(state.Territory.Allows(well, "木材"));
+        Assert.False(state.Territory.Allows(well, "肉"));
+        Assert.True(state.Territory.Allows(well, "水"));
+        Assert.Equal(StoragePriority.Critical, well.Priority);
+        // 过滤勾成什么样都一样；存储设置也改不了它。
+        well.StorageFilter.AllowAll();
+        Assert.False(state.Territory.Allows(well, "木材"));
+        Assert.False(state.Territory.StorageConfigurable(well));
         // 搬运找仓储不会挑中井：庭院里干活的石材送去客厅的箱子。
         Assert.Equal(Chest, state.Territory.FindStorageFor("石材", preferRoomId: Courtyard)!.Id);
         // 玩家亲手往井里放也放不进。
