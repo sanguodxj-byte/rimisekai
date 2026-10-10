@@ -21,6 +21,8 @@ public sealed class MemberData
     public bool Master { get; set; }
     public int Faction { get; set; }
     public int Employment { get; set; }
+    public string Identity { get; set; } = "";
+    public int PortraitDiff { get; set; } = 1;
     public int[] Core { get; set; } = new int[AttributeMap.CoreCount];
     public int[] CoreExp { get; set; } = new int[AttributeMap.CoreCount];
     public int LevelExp { get; set; }
@@ -425,6 +427,8 @@ public static class SaveSystem
         Master = c.IsMaster,
         Faction = c.FactionId,
         Employment = c.EmploymentDays,
+        Identity = c.Identity,
+        PortraitDiff = c.PortraitDiff,
         Core = (int[])c.Core.Clone(),
         CoreExp = (int[])c.CoreExp.Clone(),
         LevelExp = c.LevelExp,
@@ -602,7 +606,13 @@ public static class SaveSystem
     /// <summary>把一行存档还原成一个角色（不入名册；名册成员与暂存演员共用）。</summary>
     public static CharacterState RestoreMember(MemberData m)
     {
-        var c = new CharacterState(m.Id) { Name = m.Name, IsMaster = m.Master };
+        var c = new CharacterState(m.Id)
+        {
+            Name = m.Name,
+            IsMaster = m.Master,
+            Identity = m.Identity ?? "",
+            PortraitDiff = m.PortraitDiff > 0 ? m.PortraitDiff : 1,
+        };
         c.Restore(m.Core, m.CoreExp, m.LevelExp, m.LifeExp, m.WeaponExp, m.StyleExp,
             m.Talents, m.Employment, m.Faction,
             m.MainWeapon, m.OffWeapon, m.OffHandShield, m.Relations, m.Flags,

@@ -76,21 +76,23 @@ def process_image(src_path, dst_path):
 
 def main():
     # 输入：assets/portraits/{identity,identity_moe,special}；输出：assets/avatars/ 同构子目录
-    src_dirs = ["identity", "identity_moe", "special"]
+    # 仅从活跃目录 identity_moe 和 special 截取头像
+    src_dirs = ["identity_moe"]
     files = []
     for sub in src_dirs:
         src_dir = os.path.join(PROJ_DIR, "assets", "portraits", sub)
         for f in sorted(glob.glob(os.path.join(src_dir, "*.png"))):
             files.append((f, sub))
 
-    print(f"=== 开始全量截取 1:1 头像（共 {len(files)} 张，目标 512x512）===", flush=True)
+    print(f"=== 开始全量截取 1:1 角色头像（共 {len(files)} 张，目标 512x512）===", flush=True)
 
     count = 0
     for f, sub in files:
         base = os.path.basename(f)
         dst_dir = os.path.join(PROJ_DIR, "assets", "avatars", sub)
         os.makedirs(dst_dir, exist_ok=True)
-        dst_path = os.path.join(dst_dir, "avatar_" + base)
+        # 与立绘保持同名（对齐 PortraitAvatars.cs 规范）
+        dst_path = os.path.join(dst_dir, base)
         box = process_image(f, dst_path)
         count += 1
         if count % 10 == 0 or count == len(files):

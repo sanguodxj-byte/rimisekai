@@ -56,6 +56,8 @@ public sealed class CharacterGenerator
         var state = new CharacterState(roster.ReserveId()) { Name = name };
         var idList = GetIdentities();
         var identity = idList[_rng.Next(idList.Count)];
+        state.Identity = identity.Name;
+        state.PortraitDiff = 1;
         var traits = RollTraits();
 
         foreach (var mechanic in identity.Grants)
@@ -88,6 +90,8 @@ public sealed class CharacterGenerator
     {
         var idList = GetIdentities();
         var identity = idList[_rng.Next(idList.Count)];
+        state.Identity = identity.Name;
+        state.PortraitDiff = 1;
         foreach (var mechanic in identity.Grants)
             state.Grant(mechanic);
         var seed = traitNames.ToList();

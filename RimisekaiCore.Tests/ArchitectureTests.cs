@@ -1772,11 +1772,11 @@ public sealed class ArchitectureTests
         state.Territory.AddRoom(new Room { Id = 1, Name = "庭院", Open = true });
         var vacant = new Room { Id = 2, Name = "空房", X = 3, Y = 3, Open = true, Vacant = true };
         state.Territory.AddRoom(vacant);
-        var roomDef = new RoomDef { Id = 101, Name = "菜园", Buildable = true };
+        var roomDef = new RoomDef { Id = 101, Name = "测试菜园", Buildable = true };
         roomDef.MaterialCost.Add(new RecipeCost("木材", 3));
         var facilityDef = new FacilityDef
         {
-            Id = 1001, Name = "菜地", Usage = FacilityUsage.Plain, Actions = { ActionKind.Till },
+            Id = 1001, Name = "测试菜地", Usage = FacilityUsage.Plain, Actions = { ActionKind.Till },
             Capacity = 2, YieldItemId = "小麦", Buildable = true,
         };
         facilityDef.MaterialCost.Add(new RecipeCost("木材", 1));
@@ -2258,7 +2258,7 @@ public sealed class ArchitectureTests
         {
             DefName = "Room_Bakery",
             Id = 143,
-            Label = "面包房",
+            Label = "测试面包房",
             Tags = new List<string> { "室内", "工作间" },
             Buildable = true,
         };
@@ -2268,7 +2268,7 @@ public sealed class ArchitectureTests
         {
             DefName = "Facility_Oven_1043",
             Id = 1043,
-            Label = "烤炉",
+            Label = "测试烤炉",
             Usage = FacilityUsage.Plain, Actions = { ActionKind.Cook, ActionKind.Meal },
             Capacity = 2,
             Storage = true,
@@ -2283,12 +2283,12 @@ public sealed class ArchitectureTests
 
         // 实例化验证
         var runtimeRoom = roomDef.ToRuntime();
-        Assert.Equal("面包房", runtimeRoom.Name);
+        Assert.Equal("测试面包房", runtimeRoom.Name);
         Assert.True(runtimeRoom.HasTag("室内"));
         Assert.True(runtimeRoom.HasTag("工作间"));
 
         var runtimeFac = facDef.ToRuntime();
-        Assert.Equal("烤炉", runtimeFac.Name);
+        Assert.Equal("测试烤炉", runtimeFac.Name);
         Assert.True(runtimeFac.CanStore);
         Assert.True(runtimeFac.Supports(ActionKind.Cook));
     }

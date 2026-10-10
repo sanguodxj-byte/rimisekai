@@ -30,7 +30,8 @@ IDENTITY_EN = {
     "厨师": "cook", "花匠": "gardener", "信使": "courier", "修女": "nun",
     "僧侣": "monk", "德鲁伊": "druid", "游侠": "ranger", "圣骑士": "paladin",
     "贵族": "noble", "管家": "butler", "学者助手": "scholar_assistant",
-    "星术师": "astrologer",
+    "星术师": "astrologer", "龙骑士": "dragon_knight", "魔剑士": "magic_swordsman",
+    "驯兽师": "beast_tamer",
 }
 
 MONSTER_EN = {

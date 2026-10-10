@@ -42,6 +42,23 @@ OVERRIDES = {
     "monster_slime": (0.52, 0.47, 0.30),
     "monster_wraith": (0.52, 0.06, 0.34),
     "monster_wyvern_hatchling": (0.42, 0.22, 0.30),
+    # 2026-10-08 新增 53 只批次的人工定框（启发式切头/重心错位者）
+    "monster_basilisk": (0.50, 0.00, 0.52),
+    "monster_bone_hound": (0.49, 0.04, 0.52),
+    "monster_boss_abyss_worm": (0.50, 0.00, 0.52),
+    "monster_boss_ancient_thorn": (0.50, 0.12, 0.52),
+    "monster_boss_ancient_wyvern": (0.46, 0.30, 0.52),
+    "monster_boss_bone_colossus": (0.50, 0.00, 0.52),
+    "monster_boss_broodmother": (0.50, 0.30, 0.52),
+    "monster_boss_flesh_titan": (0.50, 0.00, 0.52),
+    "monster_boss_magma_behemoth": (0.50, 0.00, 0.52),
+    "monster_boss_plague_lord": (0.50, 0.00, 0.52),
+    "monster_boss_storm_sovereign": (0.50, 0.00, 0.52),
+    "monster_cyclops": (0.50, 0.23, 0.52),
+    "monster_death_knight": (0.50, 0.00, 0.52),
+    "monster_doppelganger": (0.50, 0.00, 0.52),
+    "monster_dust_wight": (0.50, 0.00, 0.52),
+    "monster_ogre_bruiser": (0.50, 0.00, 0.52),
 }
 
 

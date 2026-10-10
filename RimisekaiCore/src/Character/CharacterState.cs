@@ -26,6 +26,13 @@ public sealed class CharacterState
     public bool IsMaster { get; set; }
     public int FactionId { get; set; }
     public int EmploymentDays { get; set; }
+
+    /// <summary>角色的身份标签（如女仆、圣骑士、学者等）。空串时由特质/默认规则推导。</summary>
+    public string Identity { get; set; } = "";
+
+    /// <summary>当前选定的立绘/头像差分序号（1 起步，默认 1）。</summary>
+    public int PortraitDiff { get; set; } = 1;
+
     /// <summary>
     /// 威胁等级 1-3：队伍排位，越高越靠前。纯只读推导，由当前手持武器推导的流派决定，不存角色数据。
     /// </summary>
@@ -405,6 +412,9 @@ public sealed class Roster
     public CharacterState Add(string name, bool master = false)
     {
         var c = new CharacterState(_nextId++) { Name = name, IsMaster = master };
+        if (master) c.Identity = "圣骑士";
+        else if (name == "璐米埃尔") c.Identity = "女仆";
+        c.PortraitDiff = 1;
         Members.Add(c);
         return c;
     }

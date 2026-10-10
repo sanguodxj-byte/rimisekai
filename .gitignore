@@ -38,3 +38,19 @@ Godot/
 # ===== 一次性生图脚本（含密钥，不入库） =====
 tools/gen_*.py
 tools/fix_*.py
+
+# ===== 临时生图与测试产物 =====
+_pcap/
+*.log.txt
+*.import
+/monster_*.png
+/sheet_*.png
+/sheet_*.jpg
+/fx_preview_*.png
+/xjbh_test_*.png
+/立绘更换*.png
+/diff4_diff5_generation_log.txt
+/all_moe_generation_log.txt
+/monsters_*.txt
+
+

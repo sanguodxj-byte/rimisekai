@@ -18,25 +18,104 @@ namespace Rimisekai.Portrait;
 public static class PortraitAvatars
 {
     private const string Root = "res://assets/avatars/";
-    private const string PlayerAvatar = Root + "special/avatar_human_paladin.png";
+    private const string PlayerAvatar = Root + "identity_moe/paladin_moe_diff1.png";
 
-    /// <summary>31 个身份头像的英文名（与 assets/avatars/identity 目录一致）。</summary>
-    private static readonly string[] Identities =
+    /// <summary>正统萌化身份头像的英文名（与 assets/avatars/identity_moe 目录一致，全量 34 位）。</summary>
+    public static readonly string[] Identities =
     {
         "alchemist", "apothecary", "archer", "assassin", "astrologer", "bard",
-        "blacksmith", "butler", "carpenter", "cook", "courier", "dancer",
-        "druid", "gardener", "guard", "hunter", "knight", "mage",
-        "maid", "mercenary", "merchant", "monk", "noble", "nun",
-        "paladin", "priestess", "ranger", "scholar", "scholar_assistant", "thief", "warrior",
+        "beast_tamer", "blacksmith", "butler", "carpenter", "cook", "courier",
+        "dancer", "dragon_knight", "druid", "gardener", "guard", "hunter",
+        "knight", "mage", "magic_swordsman", "maid", "mercenary", "merchant",
+        "monk", "noble", "nun", "paladin", "priestess", "ranger",
+        "scholar", "scholar_assistant", "thief", "warrior",
     };
 
-    /// <summary>开局种子点名的角色 → 身份头像。</summary>
+    /// <summary>中文身份名称 → 英文身份目录标识。</summary>
+    public static readonly System.Collections.Generic.Dictionary<string, string> IdentityKeyMap = new()
+    {
+        ["女仆"] = "maid",
+        ["骑士"] = "knight",
+        ["商人"] = "merchant",
+        ["学者"] = "scholar",
+        ["神官"] = "priestess",
+        ["魔法师"] = "mage",
+        ["战士"] = "warrior",
+        ["护卫"] = "guard",
+        ["佣兵"] = "mercenary",
+        ["弓箭手"] = "archer",
+        ["猎人"] = "hunter",
+        ["刺客"] = "assassin",
+        ["盗贼"] = "thief",
+        ["吟游诗人"] = "bard",
+        ["舞娘"] = "dancer",
+        ["药师"] = "apothecary",
+        ["炼金术士"] = "alchemist",
+        ["铁匠"] = "blacksmith",
+        ["木匠"] = "carpenter",
+        ["厨师"] = "cook",
+        ["花匠"] = "gardener",
+        ["信使"] = "courier",
+        ["修女"] = "nun",
+        ["僧侣"] = "monk",
+        ["德鲁伊"] = "druid",
+        ["游侠"] = "ranger",
+        ["圣骑士"] = "paladin",
+        ["贵族"] = "noble",
+        ["管家"] = "butler",
+        ["学者助手"] = "scholar_assistant",
+        ["星术师"] = "astrologer",
+        ["龙骑士"] = "dragon_knight",
+        ["魔剑士"] = "magic_swordsman",
+        ["驯兽师"] = "beast_tamer",
+    };
+
+    /// <summary>开局初始唯一命名伙伴 → 身份头像（仅女仆璐米埃尔）。</summary>
     private static readonly System.Collections.Generic.Dictionary<string, string> ByName = new()
     {
         ["璐米埃尔"] = "maid",
-        ["瑞雅莉"] = "knight",
-        ["瑞茵"] = "scholar",
     };
+
+    /// <summary>解析角色的英文身份标识。</summary>
+    public static string ResolveIdentityKey(CharacterState? who)
+    {
+        if (who == null) return "paladin";
+        if (!string.IsNullOrEmpty(who.Identity))
+        {
+            if (IdentityKeyMap.TryGetValue(who.Identity, out var mapped))
+                return mapped;
+            if (System.Array.IndexOf(Identities, who.Identity) >= 0)
+                return who.Identity;
+        }
+        if (who.IsMaster || who.Name == "你")
+            return "paladin";
+        if (ByName.TryGetValue(who.Name, out var named))
+            return named;
+        if (who.IsMaid())
+            return "maid";
+        if (who.IsMage())
+            return "mage";
+        return Identities[who.Id % Identities.Length];
+    }
+
+    /// <summary>英文身份标识 → 对应中文身份名称。</summary>
+    public static string ResolveIdentityLabel(string identityKey)
+    {
+        foreach (var (k, v) in IdentityKeyMap)
+        {
+            if (v == identityKey) return k;
+        }
+        return identityKey;
+    }
+
+    /// <summary>某身份包含的立绘差分总数（默认为 5，mage 为 6）。</summary>
+    public static int DiffCountFor(string identityKey) => identityKey == "mage" ? 6 : 5;
+
+    public static string PortraitPath(string identityKey, int diff) =>
+        $"res://assets/portraits/identity_moe/{identityKey}_moe_diff{diff}.png";
+
+    public static string AvatarPath(string identityKey, int diff) =>
+        Root + $"identity_moe/{identityKey}_moe_diff{diff}.png";
 
     /// <summary>当前会话的名册：没有头像图时字标要与同名册里首字相同的人区分开。领地屏绑定会话时绑上（战斗页与领地屏同一会话）。</summary>
     private static Roster _roster = null!;
@@ -65,20 +144,16 @@ public static class PortraitAvatars
         return name[..1];
     }
 
-    private static string Identity(string key) => Root + $"identity/{key}_diff1.png";
-
     public static Texture2D? Resolve(CharacterState? who)
     {
         if (who == null)
             return null;
-        if (who.IsMaster)
-            return InkIllustration.LoadTexture(PlayerAvatar);
-        if (ByName.TryGetValue(who.Name, out var named))
-            return InkIllustration.LoadTexture(Identity(named));
-        if (who.IsMaid())
-            return InkIllustration.LoadTexture(Identity("maid"));
-        if (who.IsMage())
-            return InkIllustration.LoadTexture(Identity("mage"));
-        return InkIllustration.LoadTexture(Identity(Identities[who.Id % Identities.Length]));
+        var key = ResolveIdentityKey(who);
+        var diff = who.PortraitDiff > 0 ? who.PortraitDiff : 1;
+        var path = AvatarPath(key, diff);
+        var tex = InkIllustration.LoadTexture(path);
+        if (tex != null)
+            return tex;
+        return InkIllustration.LoadTexture(AvatarPath(key, 1));
     }
 }

@@ -133,6 +133,10 @@ public partial class PortraitHubScreen
             PortraitSystemArt.PortraitNiche(this, new Rect2(head.GetCenter().X - 230f, head.Position.Y + 50f, 460f, 570f),
                 PortraitAvatars.Resolve(who), who.Name);
 
+        var hitHead = head.Intersection(view);
+        if (hitHead.Size.Y >= PortraitLayout.TouchMin)
+            _widgets.Add(new PortraitWidget(hitHead, PortraitAction.OpenPortraitPicker, who.Id, true, "立绘"));
+
         var segAt = y0 + 640f;
         var y = segAt + PortraitLayout.TouchMin + 48f;
         // 内容命中块只登记在吸顶分段控件之下，免得与分段控件抢命中。
@@ -375,6 +379,13 @@ public partial class PortraitHubScreen
             case PortraitAction.TraitInfo:
                 ShowTraitInfo(w.Index);
                 return true;
+            case PortraitAction.OpenPortraitPicker:
+                _sheet = SheetKind.PortraitPicker;
+                return true;
+            case PortraitAction.PickPortraitDiff:
+                Who.PortraitDiff = w.Index;
+                _sheet = SheetKind.None;
+                return true;
             default:
                 return false;
         }
@@ -430,16 +441,95 @@ public partial class PortraitHubScreen
         tex = InkIllustration.LoadTexture(nameFile);
         if (tex != null) return tex;
 
-        if (who.Name == "璐米埃尔")
-            return InkIllustration.LoadTexture("res://assets/portraits/identity/maid_diff1.png");
-        if (who.Name == "瑞雅莉")
-            return InkIllustration.LoadTexture("res://assets/portraits/identity/knight_diff1.png");
-        if (who.Name == "瑞茵")
-            return InkIllustration.LoadTexture("res://assets/portraits/identity/scholar_diff1.png");
-        if (who.IsMaster || who.Name == "你")
-            return InkIllustration.LoadTexture("res://assets/portraits/special/portrait_human_paladin.png")
-                   ?? InkIllustration.LoadTexture("res://assets/portraits/identity/warrior_diff1.png");
-
-        return null;
+        var key = PortraitAvatars.ResolveIdentityKey(who);
+        var diff = who.PortraitDiff > 0 ? who.PortraitDiff : 1;
+        var path = PortraitAvatars.PortraitPath(key, diff);
+        tex = InkIllustration.LoadTexture(path);
+        if (tex != null) return tex;
+        return InkIllustration.LoadTexture(PortraitAvatars.PortraitPath(key, 1));
     }
+
+    /// <summary>同身份立绘选择抽屉：展示当前角色同身份下的全部差分立绘，点选即刻换上。</summary>
+    private float DrawPortraitPickerSheet()
+    {
+        var who = Who;
+        var top = 760f;
+        PortraitFrame.Sheet(this, top);
+        var idKey = PortraitAvatars.ResolveIdentityKey(who);
+        var idLabel = PortraitAvatars.ResolveIdentityLabel(idKey);
+
+        InkDraw.TextBounded(this, new Rect2(PortraitLayout.Pad + 20f, top + PortraitLayout.SheetTitleOffset - 40f, 700f, 80f),
+            $"立绘 · {idLabel}", PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
+
+        var close = PortraitLayout.SheetClose(top);
+        PortraitGlyph.Close(this, close.GetCenter().X, close.GetCenter().Y, 26f, InkStyle.Dim);
+        _widgets.Add(new PortraitWidget(close, PortraitAction.SheetClose, 0, true, "收起"));
+
+        var contentY = top + PortraitLayout.SheetContentOffset;
+        var diffCount = PortraitAvatars.DiffCountFor(idKey);
+
+        const int cols = 3;
+        const float gap = 24f;
+        var cardW = (PortraitLayout.FullWidth - (cols - 1) * gap) / cols;
+        var cardH = 500f;
+
+        var curDiff = who.PortraitDiff > 0 ? who.PortraitDiff : 1;
+
+        for (var i = 0; i < diffCount; i++)
+        {
+            var diffIndex = i + 1;
+            var col = i % cols;
+            var row = i / cols;
+
+            var itemsInRow = (row == diffCount / cols) ? (diffCount % cols == 0 ? cols : diffCount % cols) : cols;
+            var rowStartX = (itemsInRow < cols)
+                ? PortraitLayout.CanvasWidth / 2f - (itemsInRow * cardW + (itemsInRow - 1) * gap) / 2f
+                : PortraitLayout.Pad;
+
+            var r = new Rect2(rowStartX + col * (cardW + gap), contentY + row * (cardH + gap), cardW, cardH);
+            var isCurrent = curDiff == diffIndex;
+
+            PortraitFrame.Card(this, r, isCurrent, 16f);
+
+            var tex = InkIllustration.LoadTexture(PortraitAvatars.PortraitPath(idKey, diffIndex));
+            if (tex != null)
+            {
+                const float innerPad = 10f;
+                var innerRect = new Rect2(r.Position.X + innerPad, r.Position.Y + innerPad,
+                    r.Size.X - innerPad * 2f, r.Size.Y - innerPad * 2f - 40f);
+                PortraitFrame.Cover(this, tex, innerRect, 0.02f);
+                PortraitFrame.Fade(this, new Rect2(innerRect.Position.X, innerRect.End.Y - 70f, innerRect.Size.X, 70f), 0f, 0.75f);
+            }
+            else
+            {
+                var av = InkIllustration.LoadTexture(PortraitAvatars.AvatarPath(idKey, diffIndex));
+                if (av != null)
+                    PortraitFrame.Avatar(this, new Vector2(r.GetCenter().X, r.Position.Y + 180f), 90f, av, $"#{diffIndex}", ring: false);
+            }
+
+            var label = RomanNumber(diffIndex);
+            InkDraw.Text(this, new Vector2(r.GetCenter().X, r.End.Y - 26f), label,
+                PortraitLayout.FontBody, isCurrent ? InkStyle.Line : InkStyle.Dim, "cm");
+
+            if (isCurrent)
+            {
+                PortraitGlyph.Diamond(this, r.End.X - 24f, r.Position.Y + 24f, 10f, InkStyle.Line);
+            }
+
+            _widgets.Add(new PortraitWidget(r, PortraitAction.PickPortraitDiff, diffIndex, true, $"差分{diffIndex}"));
+        }
+
+        return top;
+    }
+
+    private static string RomanNumber(int n) => n switch
+    {
+        1 => "I",
+        2 => "II",
+        3 => "III",
+        4 => "IV",
+        5 => "V",
+        6 => "VI",
+        _ => n.ToString(),
+    };
 }

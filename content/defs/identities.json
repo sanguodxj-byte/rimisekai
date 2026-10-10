@@ -291,6 +291,35 @@
       "mainWeapon": null,
       "offWeapon": null,
       "offShield": false
+    },
+    {
+      "defName": "龙骑士",
+      "label": "龙骑士",
+      "catchphrase": "枪尖带起龙炎烈风",
+      "grants": [],
+      "mainWeapon": "Spear",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "魔剑士",
+      "label": "魔剑士",
+      "catchphrase": "剑锋过处术式自成",
+      "grants": [
+        "Mage"
+      ],
+      "mainWeapon": "Sword",
+      "offWeapon": null,
+      "offShield": false
+    },
+    {
+      "defName": "驯兽师",
+      "label": "驯兽师",
+      "catchphrase": "它们懂得风与爪牙的规矩",
+      "grants": [],
+      "mainWeapon": "Crossbow",
+      "offWeapon": null,
+      "offShield": false
     }
   ]
 }

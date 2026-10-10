@@ -105,7 +105,7 @@ public partial class PortraitCapture : Node
         {
             var detail = _root.ModalLayer.Current;
             Require(_root.ModalLayer.IsActive && detail?.Title.Length > 0
-                && detail.MonsterCodex?.Attributes.Count == 9
+                && detail.MonsterCodex?.Attributes.Count >= 9
                 && detail.Body.Length == 0,
                 $"monster codex entry opens structured details (attributes={detail?.MonsterCodex?.Attributes.Count}, body={detail?.Body.Length})");
             Shoot("codex_monster_detail", _root.ModalLayer);
@@ -122,7 +122,25 @@ public partial class PortraitCapture : Node
         // 角色详情三段＋技能星盘
         _steps.Enqueue(() => _root.HubScreen.ShowTab(1));
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.RosterPick, _root.HubScreen.DebugHub.State.Roster.Master!.Id));
-        _steps.Enqueue(() => { Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.CharacterSegment), "character page segments"); Shoot("char_status", _root.HubScreen); });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.CharacterSegment), "character page segments");
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.OpenPortraitPicker), "portrait picker clickable");
+            Shoot("char_status", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.OpenPortraitPicker, _root.HubScreen.DebugHub.State.Roster.Master!.Id);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.PickPortraitDiff), "portrait diffs displayed in sheet");
+            Shoot("char_portrait_picker", _root.HubScreen);
+            _root.HubScreen.DebugPress(PortraitAction.PickPortraitDiff, 4);
+        });
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            Require(master.PortraitDiff == 4, $"portrait diff switched to 4 (actual={master.PortraitDiff})");
+            Shoot("char_status_diff4", _root.HubScreen);
+        });
         // 特质签、装备格可点：各弹一枚纯展示弹窗（标题＝特质名 / 装备名或槽名）。
         _steps.Enqueue(() => _root.HubScreen.DebugPress(PortraitAction.TraitInfo, 0));
         _steps.Enqueue(() =>

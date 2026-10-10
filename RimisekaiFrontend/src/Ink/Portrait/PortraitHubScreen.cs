@@ -105,6 +105,8 @@ public enum PortraitAction
     VolumeSet,
     DevelopmentTab,
     CrossGate,
+    OpenPortraitPicker,
+    PickPortraitDiff,
 }
 
 /// <summary>一个可点块。命中判定按注册逆序（后注册者画在上、先命中）。</summary>
@@ -146,6 +148,7 @@ public partial class PortraitHubScreen : Control
         Slot,
         Item,
         World,
+        PortraitPicker,
     }
 
     private readonly List<PortraitWidget> _widgets = new();
@@ -275,6 +278,8 @@ public partial class PortraitHubScreen : Control
             OpenSheetLayer(DrawItemSheet);
         else if (_sheet == SheetKind.World)
             OpenSheetLayer(DrawWorldSheet);
+        else if (_sheet == SheetKind.PortraitPicker)
+            OpenSheetLayer(DrawPortraitPickerSheet);
         else
             _sheetWasOpen = false;
 
