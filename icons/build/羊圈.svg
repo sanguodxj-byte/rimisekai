@@ -1,21 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <rect width="512" height="512" fill="#000000"/>
   <g transform="translate(256, 256)">
-    <!-- 栅栏 -->
-    <rect x="-240" y="110" width="480" height="24" fill="#E9EFEA"/>
-    <rect x="-240" y="165" width="480" height="24" fill="#E9EFEA"/>
-    <rect x="-220" y="80" width="30" height="130" fill="#E9EFEA"/>
-    <rect x="190" y="80" width="30" height="130" fill="#E9EFEA"/>
-
-    <!-- 羊：卷毛脸 -->
-    <g transform="translate(0,-70)">
-      <circle cx="-70" cy="-60" r="55" fill="#E9EFEA"/><circle cx="0" cy="-90" r="60" fill="#E9EFEA"/><circle cx="70" cy="-60" r="55" fill="#E9EFEA"/>
-      <circle cx="-85" cy="20" r="50" fill="#E9EFEA"/><circle cx="85" cy="20" r="50" fill="#E9EFEA"/>
-      <path fill="#000000" d="M -55,-30 C -55,-60 55,-60 55,-30 L 40,110 C 30,135 -30,135 -40,110 Z"/>
-      <path fill="#E9EFEA" d="M -40,-30 C -40,-48 40,-48 40,-30 L 28,100 C 20,118 -20,118 -28,100 Z"/>
-      <circle cx="-16" cy="10" r="9" fill="#000000"/><circle cx="16" cy="10" r="9" fill="#000000"/>
-      <ellipse cx="-80" cy="-5" rx="40" ry="16" transform="rotate(20 -80 -5)" fill="#E9EFEA"/>
-      <ellipse cx="80" cy="-5" rx="40" ry="16" transform="rotate(-20 80 -5)" fill="#E9EFEA"/>
+    <!-- 后方围栏 -->
+    <rect x="-245" y="-40" width="490" height="24" fill="#E9EFEA"/>
+    <rect x="-245" y="40" width="490" height="24" fill="#E9EFEA"/>
+    <rect x="-235" y="-80" width="28" height="290" fill="#E9EFEA"/>
+    <rect x="207" y="-80" width="28" height="290" fill="#E9EFEA"/>
+    <g transform="translate(25,-15)">
+    <!-- 羊：卷毛身子（黑边与栏分开）、面朝左的头、四条腿 -->
+    <g stroke="#000000" stroke-width="14">
+      <rect x="-110" y="70" width="30" height="120" rx="8" fill="#E9EFEA"/>
+      <rect x="-40" y="70" width="30" height="125" rx="8" fill="#E9EFEA"/>
+      <rect x="60" y="70" width="30" height="120" rx="8" fill="#E9EFEA"/>
+      <rect x="120" y="70" width="30" height="125" rx="8" fill="#E9EFEA"/>
+      <path fill="#E9EFEA" d="M -130,40 C -175,10 -150,-60 -100,-60 C -90,-115 -20,-120 0,-85 C 30,-130 110,-120 115,-70 C 175,-80 200,-10 165,30 C 195,75 145,120 100,100 C 70,135 0,135 -20,105 C -60,130 -130,110 -120,75 C -160,75 -165,50 -130,40 Z"/>
+      <path fill="#E9EFEA" d="M -100,-50 C -140,-100 -205,-100 -232,-55 C -248,-25 -236,25 -205,40 C -170,55 -120,30 -95,5 Z"/>
+    </g>
+    <path fill="#000000" d="M -110,-80 C -130,-95 -165,-95 -175,-80 C -160,-70 -130,-68 -110,-80 Z"/>
+    <circle cx="-190" cy="-40" r="11" fill="#000000"/>
+    <ellipse cx="-228" cy="5" rx="8" ry="6" fill="#000000"/>
     </g>
   </g>
 </svg>
