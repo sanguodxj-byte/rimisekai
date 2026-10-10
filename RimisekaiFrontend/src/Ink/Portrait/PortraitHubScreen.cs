@@ -77,6 +77,8 @@ public enum PortraitAction
     WorldZoomOut,
     WorldHome,
     WorldGo,
+    PoolIdentity,
+    PoolReroll,
     WorldStep,
     CharacterSegment,
     TraitInfo,

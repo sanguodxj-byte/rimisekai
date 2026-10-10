@@ -568,3 +568,19 @@
 - 每句台词、每段场景剧情都必须写 `settings`（Territory 领地 / Wilds 野外 / Settlement 聚落 / Dungeon 地城），只在所写场景出现；没写的读表即报错。当前场景由 `HubSession.Setting` 按图层与是否在地城推出。
 - 主动对话＝`VoiceTrigger.Chatter`：时间流过、落脚后，「此刻」里同处的同伴按台词门槛（chance、cooldownMinutes、triggerCooldownMinutes）自己开口，进 `HubSession.PendingChatter`；换了场景或人不在眼前即作废。
 - 前端画成半透明黑底、白字气泡，盖地图网格下半部分，尖角指向「此刻」里说话人头像；整只气泡是一个命中块，点一下推进一句，说完收起。
+
+## 身份技能池（拟案，待主人核定，2026-10-10）
+
+- 技能池按身份取索引：`content/defs/identity_skills.json`，一个 `IdentitySkillPoolDef`（defName＝身份 defName）＝20 式基础技能＋3 式核心技能，格式即 `SkillDef`。预设由 LLM 生成（骑士、圣骑士、魔剑士、魔法师、刺客、弓箭手、神官、女仆、吟游诗人），日后可换成运行时 LLM 生成的同格式数据；没有技能池的身份池为空。
+- 角色的池＝从本身份抽 `SkillPool.PoolSize`＝6 式：必中一式核心，余下从剩下 22 式里随机。生成角色时按身份抽一次（种子由掷好的人推出，不动生成骰子）。池里的技能直接会用，不走流派门槛与派生学习，也不进技能网。
+- 玩家角色特权：领地里随时「换身份」（弹有技能池的身份清单，选了即按该身份重抽）或「重抽」（按当前身份再抽）；大地图、兴趣点、地城里不行。入口在角色页技能段技能网下方。
+- 核心技能种类（`CoreKind`）：
+  - 姿态 Stance：用了一直在到战斗结束，持续给 `effects`；同时只摆一种，换姿态顶掉旧的。
+  - 机制点 Charge：被动、不进菜单；逢 `trigger` 积 1 层（至多 `maxStacks`），每层一份 `effects`，再积刷新时长 `statusRounds`。
+  - 反应 Reaction：用了挂上，持续 `statusRounds`；逢 `trigger` 自动发动 `reactKind / reactTarget / reactPower`（不掷命中），发够 `reactUses` 次即撤。反应打出的伤害不再引发反应与积层。
+  - 光环 Aura（新增）：给全体友方挂 `effects`，到战斗结束。
+- 触发时机（`SkillTrigger`）：Hit 自己命中、Dodge 闪避敌方打击、Hurt 受到伤害（持续伤害不算）、FoeChant 有敌人开始咏唱、Kill 击倒敌人。
+- 修正 `StatEffect`：百分比与实数可同时有（迅捷姿态＝闪避 +30%、速度 +5）；新增数值面 Damage（技能伤害%，乘在伤害最后）与 Crit（暴击率，实数）。
+- 法术＝一种技能，必须咏唱至少一回合（内容测试卡住）；咏唱中挨了任何弱化（含持续伤害）即被打断，控制技照旧打断。
+- 点数护盾（Points）现在真的吸收物理伤害。
+- AI 估技能价值改为期望值：打击乘命中率，咏唱的法术按占用时长折算；姿态 / 光环没摆就先摆，反应没挂就挂。

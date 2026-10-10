@@ -70,7 +70,83 @@ public partial class PortraitHubScreen
                 _widgets.Add(new PortraitWidget(hit, PortraitAction.SkillNode, i, true, s.Def.Id));
         }
 
-        return DrawSkillDetail(who, picked, web.End.Y + 30f);
+        return DrawSkillPool(who, DrawSkillDetail(who, picked, web.End.Y + 30f) + 40f, view);
+    }
+
+    /// <summary>
+    /// 身份技能池（拟案，待主人核定）：抽到的几式，一式一行（名字、基础 / 核心种类、机制说明或数值）。
+    /// 玩家角色在领地里多两枚钮：换身份（弹身份清单，选了即按该身份重抽）、重抽（按当前身份再抽一池）。
+    /// </summary>
+    private float DrawSkillPool(CharacterState who, float y, Rect2 view)
+    {
+        var left = PortraitLayout.Pad;
+        var right = PortraitLayout.CanvasWidth - PortraitLayout.Pad;
+        PortraitFrame.SectionRule(this, left, right, y, who.PoolIdentity.Length > 0 ? $"身份技能池 · {who.PoolIdentity}" : "身份技能池");
+        y += 56f;
+        foreach (var def in SkillPool.Skills(who))
+        {
+            var row = new Rect2(left, y, right - left, 150f);
+            PortraitFrame.Panel(this, row);
+            var kind = InkText.CoreKind(def.Core);
+            var chipWidth = InkDraw.Measure(kind, PortraitLayout.FontMeta).X + 56f;
+            var chip = new Rect2(row.End.X - 30f - chipWidth, row.Position.Y + 14f, chipWidth, 60f);
+            var core = def.Core != CoreKind.None;
+            PortraitFrame.Brackets(this, chip, core ? InkStyle.Line : InkStyle.Dim);
+            InkDraw.Text(this, chip.GetCenter(), kind, PortraitLayout.FontMeta, core ? InkStyle.Line : InkStyle.Dim, "cm");
+            InkDraw.TextBounded(this, new Rect2(row.Position.X + 30f, row.Position.Y + 10f, chip.Position.X - row.Position.X - 50f, 68f),
+                def.Name, PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            var line = def.Description.Length > 0 ? def.Description : PoolSkillLine(def);
+            InkDraw.TextBounded(this, new Rect2(row.Position.X + 30f, row.Position.Y + 80f, row.Size.X - 60f, 60f),
+                line, PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
+            y += 166f;
+        }
+
+        if (!who.IsMaster)
+            return y;
+        var hub = _vm.Hub;
+        var half = (right - left - 24f) / 2f;
+        var pick = new Rect2(left, y + 10f, half, PortraitLayout.TouchMin);
+        var again = new Rect2(left + half + 24f, y + 10f, half, PortraitLayout.TouchMin);
+        var enabled = hub.CanRerollSkillPool;
+        PortraitFrame.Plaque(this, pick, "换身份", enabled: enabled);
+        PortraitFrame.Plaque(this, again, "重抽", primary: true, enabled: enabled && SkillPool.PoolOf(who.PoolIdentity) != null);
+        if (view.Encloses(pick))
+            _widgets.Add(new PortraitWidget(pick, PortraitAction.PoolIdentity, 0, enabled, "换身份"));
+        if (view.Encloses(again))
+            _widgets.Add(new PortraitWidget(again, PortraitAction.PoolReroll, 0, enabled && SkillPool.PoolOf(who.PoolIdentity) != null, "重抽"));
+        return y + 10f + PortraitLayout.TouchMin;
+    }
+
+    /// <summary>基础技能的一行数值：种类、威力、咏唱、附加。</summary>
+    private static string PoolSkillLine(SkillDef def)
+    {
+        var parts = new List<string> { InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target) };
+        if (def.Kind != SkillKind.Buff)
+            parts.Add($"威力 {def.Power}%");
+        if (def.ChantRounds > 0)
+            parts.Add($"咏唱 {def.ChantRounds} 回合");
+        if (def.Control)
+            parts.Add("打断咏唱");
+        if (def.Status is StatusKind.StatMod)
+            parts.Add($"{InkText.StatusStat(def.StatusStat)} {def.StatusPercent:+0;-0}% {def.StatusRounds} 回合");
+        else if (def.Status is StatusKind.Dot)
+            parts.Add($"每回合 {def.StatusPower} 伤害 {def.StatusRounds} 回合");
+        else if (def.Status is StatusKind.Points)
+            parts.Add($"护盾 {def.StatusPower} 点 {def.StatusRounds} 回合");
+        return string.Join(" · ", parts);
+    }
+
+    /// <summary>换身份：弹出有技能池的身份清单，选哪个就按哪个重抽。</summary>
+    private void OpenPoolIdentities()
+    {
+        var hub = _vm.Hub;
+        var page = new InkModalPage { Title = "换身份", Body = "选一个身份，按它的技能池重新抽取。" };
+        foreach (var identity in hub.PoolIdentities)
+        {
+            var chosen = identity;
+            page.Choices.Add(new InkModalChoice { Id = chosen, Label = chosen, OnSelected = () => { hub.RerollSkillPool(chosen); QueueRedraw(); } });
+        }
+        ModalWanted!(page);
     }
 
     /// <summary>

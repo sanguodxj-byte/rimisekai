@@ -57,6 +57,51 @@ public enum StatusStat
 
     /// <summary>行动速度：加速/减速，作用于战斗跑条的行动间隔。</summary>
     Speed,
+    /// <summary>技能伤害：打击与法术打出的伤害按百分比增减（剑光、杀意这类）。</summary>
+    Damage,
+    /// <summary>暴击率：只按实数增减（<see cref="StatEffect.Flat"/>），百分比无意义。</summary>
+    Crit,
+}
+
+/// <summary>
+/// 核心技能的机制种类（拟案，待主人核定）。身份技能池里每个身份 3 式核心，抽池时必中一式。
+/// 基础技能为 None，就是普通的打击 / 法术 / 治疗 / 增减益。
+/// </summary>
+public enum CoreKind
+{
+    None,
+    /// <summary>姿态：用了就一直在（到战斗结束），持续给 <see cref="SkillDef.Effects"/>；同一人同时只摆一种姿态，换姿态顶掉旧的。</summary>
+    Stance,
+    /// <summary>机制点：被动，不进行动菜单；每逢 <see cref="SkillDef.Trigger"/> 积 1 层（至多 <see cref="SkillDef.MaxStacks"/>），每层给一份 Effects，再积即刷新时长。</summary>
+    Charge,
+    /// <summary>反应：用了挂上一个状态，持续 StatusRounds；期间逢 Trigger 就自动发动 React* 定义的效果，发够 ReactUses 次即撤。</summary>
+    Reaction,
+    /// <summary>光环（新增类型）：用了给全体友方挂一份 Effects，一直在到战斗结束；同一施放者的光环再用即刷新。</summary>
+    Aura,
+}
+
+/// <summary>机制点积层 / 反应发动的时机。</summary>
+public enum SkillTrigger
+{
+    None,
+    /// <summary>自己的打击或法术命中（打出伤害）。</summary>
+    Hit,
+    /// <summary>闪避了敌方的打击。</summary>
+    Dodge,
+    /// <summary>自己受到伤害（持续伤害不算）。</summary>
+    Hurt,
+    /// <summary>有敌人开始咏唱。</summary>
+    FoeChant,
+    /// <summary>自己击倒了敌人。</summary>
+    Kill,
+}
+
+/// <summary>一项数值修正：百分比与实数可同时有（闪避 +30%、速度 +5）。</summary>
+public sealed class StatEffect
+{
+    public StatusStat Stat { get; init; }
+    public int Percent { get; init; }
+    public int Flat { get; init; }
 }
 
 public sealed class SkillDef : Defs.Def
@@ -147,6 +192,25 @@ public sealed class SkillDef : Defs.Def
     /// </summary>
     public string Item { get; init; } = "";
 
+    /// <summary>说明行（身份技能写给玩家看的一句话机制）。空串 = 不写。</summary>
+    public string Description { get; init; } = "";
+
+    // ---- 核心技能（身份技能池），见 <see cref="CoreKind"/> ----
+    public CoreKind Core { get; init; } = CoreKind.None;
+    /// <summary>姿态 / 光环的修正；机制点每层的修正；反应挂着时的修正（可无）。</summary>
+    public IReadOnlyList<StatEffect> Effects { get; init; } = System.Array.Empty<StatEffect>();
+    public SkillTrigger Trigger { get; init; } = SkillTrigger.None;
+    /// <summary>机制点层数上限。</summary>
+    public int MaxStacks { get; init; } = 1;
+    /// <summary>反应发动时的效果：打击 / 法术按威力打伤害（不掷命中），治疗按法强回血。</summary>
+    public SkillKind ReactKind { get; init; } = SkillKind.Strike;
+    /// <summary>反应的落点：Enemy＝触发它的那个敌人，AllEnemies＝全体敌人，Self＝自己。</summary>
+    public SkillTarget ReactTarget { get; init; } = SkillTarget.Enemy;
+    public int ReactPower { get; init; }
+    /// <summary>反应挂一次能发动几次。</summary>
+    public int ReactUses { get; init; } = 1;
+    /// <summary>被动（机制点）：不进行动菜单，开战即生效。</summary>
+    public bool Passive => Core == CoreKind.Charge;
 }
 
 public sealed class ItemDef

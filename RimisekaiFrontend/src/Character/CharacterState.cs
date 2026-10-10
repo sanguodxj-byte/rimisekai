@@ -72,6 +72,10 @@ public sealed class CharacterState
     /// 流派技能只在装备对应流派时可用。通用两式（无门槛）不记在这里，人人自带。
     /// </summary>
     public HashSet<string> LearnedSkills { get; } = new();
+    /// <summary>技能池按哪个身份抽的（IdentitySkillPoolDef 的 defName）。NPC 即本身份；玩家可自选。</summary>
+    public string PoolIdentity { get; set; } = "";
+    /// <summary>抽到的身份技能 Id（见 <see cref="Combat.SkillPool"/>）。</summary>
+    public List<string> SkillPool { get; } = new();
 
     private static Proficiency[] NewProficiencies(int count)
     {

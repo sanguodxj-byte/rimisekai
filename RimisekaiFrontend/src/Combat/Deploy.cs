@@ -26,9 +26,13 @@ public static class Deploy
         // 能力表：普通攻击与防御架势玩家侧角色自带（敌人没有防御动作）；
         // 流派能力按门槛解锁（流派＋熟练，必要时还有属性／生活技能／素质／前置）——
         // 换武器就换一套能力。
+        // 身份技能池里抽到的也在 Known 里：机制点核心是被动，单列，不进菜单。
         var skills = new List<string> { BattleSkills.AttackId, BattleSkills.GuardId };
+        var passives = new List<string>();
         foreach (var known in SkillTable.Known(c))
-            if (!skills.Contains(known.Id))
+            if (known.Passive)
+                passives.Add(known.Id);
+            else if (!skills.Contains(known.Id))
                 skills.Add(known.Id);
 
         var isTired = c.Condition.Tired;
@@ -67,6 +71,7 @@ public static class Deploy
         foreach (var id in skills)
             if (!c2.Skills.Contains(id))
                 c2.Skills.Add(id);
+        c2.Passives.AddRange(passives);
         return c2;
     }
 

@@ -33,6 +33,10 @@ public sealed class MemberData
     public List<int> Talents { get; set; } = new();
     /// <summary>已学习的战斗技能 Id。</summary>
     public List<string> LearnedSkills { get; set; } = new();
+    /// <summary>技能池按哪个身份抽的。</summary>
+    public string PoolIdentity { get; set; } = "";
+    /// <summary>抽到的身份技能 Id（按池序）。</summary>
+    public List<string> SkillPool { get; set; } = new();
     public WeaponType? MainWeapon { get; set; }
     public WeaponType? OffWeapon { get; set; }
     public bool OffHandShield { get; set; }
@@ -442,6 +446,8 @@ public static class SaveSystem
         StyleExp = StyleExps(c),
         Talents = new List<int>(c.Talents),
         LearnedSkills = c.LearnedSkills.OrderBy(id => id, System.StringComparer.Ordinal).ToList(),
+        PoolIdentity = c.PoolIdentity,
+        SkillPool = new List<string>(c.SkillPool),
         MainWeapon = c.MainWeapon,
         OffWeapon = c.OffWeapon,
         OffHandShield = c.OffHandShield,
@@ -627,6 +633,8 @@ public static class SaveSystem
         c.Condition.RestoreWetness(m.Wetness);
         c.RestoreEquipped(m.Equipped);
         c.LearnedSkills.UnionWith(m.LearnedSkills);
+        c.PoolIdentity = m.PoolIdentity;
+        c.SkillPool.AddRange(m.SkillPool);
         c.Affect.Mood = m.Mood;
         c.Affect.ChatDesire = m.ChatDesire;
         c.Affect.LastTalkAt = m.LastTalkAt;

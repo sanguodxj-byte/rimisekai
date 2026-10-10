@@ -306,6 +306,8 @@ public static class DefLoader
                 return Register(JsonSerializer.Deserialize<IdentityDef>(raw, Options));
             case "PersonaPartsDef":
                 return Register(JsonSerializer.Deserialize<PersonaPartsDef>(raw, Options));
+            case "IdentitySkillPoolDef":
+                return Register(JsonSerializer.Deserialize<IdentitySkillPoolDef>(raw, Options));
             case "SkillDef":
                 return Register(JsonSerializer.Deserialize<SkillDef>(raw, Options));
             case "RoomDef":

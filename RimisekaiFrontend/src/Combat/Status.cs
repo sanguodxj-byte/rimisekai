@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Rimisekai.Catalog;
 using Rimisekai.Character;
 
@@ -27,6 +28,14 @@ public enum StatusKind
     /// 护盾（吸收物理）是首个用途；连击计数、魔力解放这类战斗机制点数也走这一种。
     /// </summary>
     Points = 2,
+    /// <summary>姿态：<see cref="StatusEffect.Mods"/> 一直生效到战斗结束；一人同时一种。</summary>
+    Stance = 3,
+    /// <summary>机制点：<see cref="StatusEffect.Stacks"/> 层，每层一份 Mods；再积刷新时长。</summary>
+    Charge = 4,
+    /// <summary>反应：挂着等 <see cref="StatusEffect.Trigger"/>，发动 <see cref="StatusEffect.UsesLeft"/> 次后撤。</summary>
+    Reaction = 5,
+    /// <summary>光环：施放者给全体友方的 Mods，一直生效到战斗结束。</summary>
+    Aura = 6,
 }
 
 /// <summary>
@@ -62,6 +71,16 @@ public sealed class StatusEffect
     public int SourceId { get; init; }
 
     public int RoundsLeft { get; set; }
+    /// <summary>多项数值修正（姿态 / 机制点每层 / 光环 / 反应挂着时）。</summary>
+    public IReadOnlyList<StatEffect> Mods { get; init; } = System.Array.Empty<StatEffect>();
+    /// <summary>机制点层数；其余种类为 1。</summary>
+    public int Stacks { get; set; } = 1;
+    /// <summary>到战斗结束才撤（姿态、光环），不随回合递减。</summary>
+    public bool Permanent { get; init; }
+    /// <summary>反应的触发时机。</summary>
+    public SkillTrigger Trigger { get; init; } = SkillTrigger.None;
+    /// <summary>反应还能发动几次。</summary>
+    public int UsesLeft { get; set; }
 
     public bool IsDebuff => Category == StatusCategory.Debuff;
 }

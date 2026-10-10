@@ -22,10 +22,12 @@ public static class SkillTable
     }
 
     /// <summary>
-    /// 角色此刻能用的战斗技能：已学会（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派）。
+    /// 角色此刻能用的战斗技能：已学会（通用两式＋已学习，见 <see cref="SkillLearning"/>）且流派对得上（流派技能须装备该流派），
+    /// 再加身份技能池里抽到的（<see cref="SkillPool"/>，不看流派）。
     /// </summary>
     public static IEnumerable<SkillDef> Known(CharacterState character) =>
-        All.Where(s => SkillLearning.Learned(character, s) && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style));
+        All.Where(s => SkillLearning.Learned(character, s) && (!s.Gate.Style.HasValue || character.EquippedStyle == s.Gate.Style))
+            .Concat(SkillPool.Skills(character));
 
     /// <summary>
     /// 门槛全满足的技能（不论是否学会）。开局生成角色时据此「出身即会」：老兵带着本事入伍，不必从零悟起。
@@ -67,10 +69,10 @@ public static class SkillTable
         return result;
     }
 
-    /// <summary>按 Id 查能力，权威数据源为 DefDatabase。</summary>
+    /// <summary>按 Id 查能力，权威数据源为 DefDatabase：先查技能网的 SkillDef，再查身份技能池。</summary>
     public static SkillDef? Get(string id)
     {
         Defs.DefLoader.EnsureInitialized();
-        return Defs.DefDatabase<SkillDef>.Get(id);
+        return Defs.DefDatabase<SkillDef>.Get(id) ?? SkillPool.Find(id);
     }
 }

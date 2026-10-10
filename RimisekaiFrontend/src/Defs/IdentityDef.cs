@@ -26,6 +26,16 @@ public sealed class IdentityDef : Def
 }
 
 /// <summary>
+/// 身份技能池（拟案，待主人核定）：defName＝身份的 defName，按身份取索引。每个身份 20 式基础技能＋3 式核心技能
+/// （<see cref="Rimisekai.Catalog.CoreKind"/>）。角色的技能池从这里抽（见 <see cref="Rimisekai.Combat.SkillPool"/>）。
+/// 预设由 LLM 生成，日后可直接换成运行时 LLM 生成的同格式数据。
+/// </summary>
+public sealed class IdentitySkillPoolDef : Def
+{
+    public List<Rimisekai.Catalog.SkillDef> Skills { get; init; } = new();
+}
+
+/// <summary>
 /// 随机角色的独有层素材（经历 / 转折 / 来意 / 口癖）与名字音节。
 /// 全部是纯文本表，生成器只掷骰拼装，不含任何硬编码。
 /// </summary>

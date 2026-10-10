@@ -49,6 +49,10 @@ public enum CombatEventKind
     Supply,
     /// <summary>连战下一波敌人补上。Amount 记这是第几波。</summary>
     WaveArrived,
+    /// <summary>机制点积层。Amount 记积后的层数。</summary>
+    Stack,
+    /// <summary>反应发动。TargetId 为引发它的人，随后的 Hit/Heal 是它的效果。</summary>
+    React,
 }
 
 /// <summary>战斗里的一次结算记录。只带 Id 与数字，文案由 UI 侧拼。</summary>
@@ -116,6 +120,9 @@ public sealed class Combatant
     /// <summary>会用的技能。普通攻击与防御架势人人自带。</summary>
     public List<string> Skills { get; } = new() { BattleSkills.AttackId };
 
+    /// <summary>被动的身份核心（机制点）：不进菜单，逢触发时机自动积层。</summary>
+    public List<string> Passives { get; } = new();
+
     /// <summary>
     /// 咏唱中：正在咏唱的技能 Id（null = 没在咏唱）。
     /// 咏唱期间被任意控制状态命中即打断，法术作废。
@@ -176,13 +183,28 @@ public sealed class Combatant
     /// <summary>行动间隔：基准耗时 ÷ 有效速度，下限 20。</summary>
     public long ActInterval => Math.Max(20, BattleRules.ActTicks * 10 / EffSpeed);
 
+    /// <summary>暴击率（百分点）：底子加上状态里的实数修正。</summary>
+    public int EffCritRate => Mod(CritRate, StatusStat.Crit);
+
+    /// <summary>伤害倍率（百分比，100＝原样）：剑光、杀意这类按层加伤。</summary>
+    public int DamageScale => Mod(100, StatusStat.Damage);
+
     private int Mod(int baseValue, StatusStat stat)
     {
         var percent = 0;
+        var flat = 0;
         foreach (var s in Statuses)
+        {
             if (s.Kind == StatusKind.StatMod && s.Stat == stat)
                 percent += s.Percent;
-        return Math.Max(0, baseValue * (100 + percent) / 100);
+            foreach (var m in s.Mods)
+                if (m.Stat == stat)
+                {
+                    percent += m.Percent * s.Stacks;
+                    flat += m.Flat * s.Stacks;
+                }
+        }
+        return Math.Max(0, baseValue * (100 + percent) / 100 + flat);
     }
 }
 
@@ -667,6 +689,8 @@ public sealed class Battle
             // 时长递减：到期的状态移除（咏唱结算在状态之后）。
             for (var i = m.Statuses.Count - 1; i >= 0; i--)
             {
+                if (m.Statuses[i].Permanent)
+                    continue;
                 m.Statuses[i].RoundsLeft--;
                 if (m.Statuses[i].RoundsLeft <= 0)
                     m.Statuses.RemoveAt(i);
@@ -699,6 +723,8 @@ public sealed class Battle
                 Kind = CombatEventKind.Chant, Round = Round, ActorId = actor.Id,
                 SkillId = def.Id, TargetId = targetId,
             });
+            foreach (var foe in AliveFoes(actor))
+                Fire(foe, SkillTrigger.FoeChant, actor);
             return;
         }
 
@@ -850,13 +876,14 @@ public sealed class Battle
                         Kind = CombatEventKind.Miss, Round = Round, ActorId = actor.Id,
                         SkillId = def.Id, TargetId = target.Id, HpAfter = target.Hp,
                     });
+                    Fire(target, SkillTrigger.Dodge, actor);
                     return;
                 }
                 var mult = (actor.Side == _controlled && AwakeningActive) ? 2 : 1;
                 var damage = ResolveDamage(actor, target, def) * mult;
-                if (actor.CritRate > 0 && Roll() < actor.CritRate)
+                if (actor.EffCritRate > 0 && Roll() < actor.EffCritRate)
                     damage = damage * actor.CritMultiplier / 100;
-                Damage(actor, target, damage, def.Id);
+                Damage(actor, target, damage, def.Id, spell: false);
                 break;
             }
             case SkillKind.Spell:
@@ -864,7 +891,7 @@ public sealed class Battle
                 // 法术必中、不暴击，只吃一半减伤与护甲
                 var mult = (actor.Side == _controlled && AwakeningActive) ? 2 : 1;
                 var damage = ResolveDamage(actor, target, def) * mult;
-                Damage(actor, target, damage, def.Id);
+                Damage(actor, target, damage, def.Id, spell: true);
                 break;
             }
             case SkillKind.Heal:
@@ -887,7 +914,10 @@ public sealed class Battle
             }
         case SkillKind.Buff:
         {
-            ApplyStatus(actor, def, target);
+            if (def.Core == CoreKind.None)
+                ApplyStatus(actor, def, target);
+            else
+                ApplyCore(actor, def, target);
             break;
         }
     }
@@ -911,6 +941,9 @@ public sealed class Battle
 
         // 同 Token 刷新：移除旧条目再上新的。
         target.Statuses.RemoveAll(s => s.Token == def.Id);
+        // 咏唱中挨了任何弱化，咏唱即被打断。
+        if (category == StatusCategory.Debuff)
+            InterruptChant(target);
         target.Statuses.Add(new StatusEffect
         {
             Token = def.Id,
@@ -978,23 +1011,38 @@ public sealed class Battle
     /// 双层减伤结算：先按目标防御折出的减伤百分比乘算，再扣护甲实数；
     /// 法术两层各吃一半。返回未计暴击与护盾的伤害，保底 1。
     /// </summary>
-    private int ResolveDamage(Combatant actor, Combatant target, SkillDef def)
+    private int ResolveDamage(Combatant actor, Combatant target, SkillDef def) =>
+        ResolveDamage(actor, target, def.Kind, def.Power);
+
+    /// <summary>同一条公式，按种类与威力算（反应发动时用反应自己的种类与威力）。伤害倍率（技能伤害修正）乘在最后。</summary>
+    private static int ResolveDamage(Combatant actor, Combatant target, SkillKind kind, int power)
     {
-        if (def.Kind == SkillKind.Spell)
+        if (kind == SkillKind.Spell)
         {
-            var raw = actor.EffSpellPower * def.Power / 100 * BattleRules.SpellScale;
+            var raw = actor.EffSpellPower * power / 100 * BattleRules.SpellScale * actor.DamageScale / 100;
             var percent = target.DefPercent / BattleRules.SpellDefShare;
             var armour = target.Armour / BattleRules.SpellDefShare;
             return Math.Max(BattleRules.MinDamage, raw * (100 - percent) / 100 - armour);
         }
-        var strike = actor.EffStrikePower * def.Power / 100;
+        var strike = actor.EffStrikePower * power / 100 * actor.DamageScale / 100;
         return Math.Max(
             BattleRules.MinDamage,
             strike * (100 - target.DefPercent) / 100 - target.Armour);
     }
 
-    private void Damage(Combatant actor, Combatant target, int damage, string skillId)
+    /// <summary>
+    /// 落伤害：物理先被护盾（点数状态）吸收；之后按触发时机让双方的机制点积层、反应发动
+    /// （自己命中、对方受击、击倒）。反应打出的伤害不再引发反应与积层。
+    /// </summary>
+    private void Damage(Combatant actor, Combatant target, int damage, string skillId, bool spell)
     {
+        if (!spell)
+            foreach (var shield in target.Statuses.Where(s => s.Kind == StatusKind.Points && s.Points > 0))
+            {
+                var absorbed = Math.Min(shield.Points, damage);
+                shield.Points -= absorbed;
+                damage -= absorbed;
+            }
         target.Hp = Math.Max(0, target.Hp - damage);
         actor.DamageDealt += damage;
         AccumulateAwakening(damage, target.MaxHp);
@@ -1011,7 +1059,130 @@ public sealed class Battle
             Kind = CombatEventKind.Hit, Round = Round, ActorId = actor.Id,
             SkillId = skillId, TargetId = target.Id, Amount = damage, HpAfter = target.Hp,
         });
+        Fire(actor, SkillTrigger.Hit, target);
+        if (target.Alive)
+            Fire(target, SkillTrigger.Hurt, actor);
+        else
+            Fire(actor, SkillTrigger.Kill, target);
         Judge();
+    }
+
+    // ---------- 身份核心技能：姿态 / 光环 / 反应的施放，机制点与反应的触发 ----------
+
+    /// <summary>反应结算中：反应打出的伤害不再引发反应与积层。</summary>
+    private bool _reacting;
+
+    /// <summary>用出一式核心技能（姿态、光环、反应；机制点是被动不会走到这里）。</summary>
+    private void ApplyCore(Combatant actor, SkillDef def, Combatant target)
+    {
+        switch (def.Core)
+        {
+            case CoreKind.Stance:
+                target.Statuses.RemoveAll(s => s.Kind == StatusKind.Stance);
+                target.Statuses.Add(new StatusEffect
+                {
+                    Token = def.Id, Name = def.Name, Category = StatusCategory.Buff, Kind = StatusKind.Stance,
+                    Mods = def.Effects, Permanent = true, SourceId = actor.Id, RoundsLeft = 1,
+                });
+                break;
+            case CoreKind.Aura:
+                target.Statuses.RemoveAll(s => s.Token == def.Id);
+                target.Statuses.Add(new StatusEffect
+                {
+                    Token = def.Id, Name = def.Name, Category = StatusCategory.Buff, Kind = StatusKind.Aura,
+                    Mods = def.Effects, Permanent = true, SourceId = actor.Id, RoundsLeft = 1,
+                });
+                break;
+            case CoreKind.Reaction:
+                target.Statuses.RemoveAll(s => s.Token == def.Id);
+                target.Statuses.Add(new StatusEffect
+                {
+                    Token = def.Id, Name = def.Name, Category = StatusCategory.Buff, Kind = StatusKind.Reaction,
+                    Mods = def.Effects, Trigger = def.Trigger, UsesLeft = def.ReactUses, SourceId = actor.Id,
+                    RoundsLeft = def.StatusRounds,
+                });
+                break;
+        }
+        Events.Add(new BattleEvent
+        {
+            Kind = CombatEventKind.Status, Round = Round, ActorId = actor.Id,
+            SkillId = def.Id, TargetId = target.Id, HpAfter = target.Hp,
+        });
+    }
+
+    /// <summary>某人身上逢到一个触发时机：被动机制点积层，挂着的反应发动。other＝引发它的那个人。</summary>
+    private void Fire(Combatant owner, SkillTrigger trigger, Combatant other)
+    {
+        if (_reacting || !owner.Alive || Outcome != CombatOutcome.Ongoing)
+            return;
+        foreach (var id in owner.Passives)
+        {
+            var def = Lookup(id)!;
+            if (def.Trigger == trigger)
+                AddStack(owner, def);
+        }
+        foreach (var reaction in owner.Statuses.Where(s => s.Kind == StatusKind.Reaction && s.Trigger == trigger).ToList())
+            React(owner, reaction, other);
+    }
+
+    /// <summary>机制点积 1 层（至多上限），时长刷新。</summary>
+    private void AddStack(Combatant owner, SkillDef def)
+    {
+        var charge = owner.Statuses.Find(s => s.Token == def.Id);
+        if (charge == null)
+        {
+            charge = new StatusEffect
+            {
+                Token = def.Id, Name = def.Name, Category = StatusCategory.Buff, Kind = StatusKind.Charge,
+                Mods = def.Effects, Stacks = 0, SourceId = owner.Id,
+            };
+            owner.Statuses.Add(charge);
+        }
+        charge.Stacks = Math.Min(def.MaxStacks, charge.Stacks + 1);
+        charge.RoundsLeft = def.StatusRounds;
+        Events.Add(new BattleEvent
+        {
+            Kind = CombatEventKind.Stack, Round = Round, ActorId = owner.Id,
+            SkillId = def.Id, TargetId = owner.Id, Amount = charge.Stacks, HpAfter = owner.Hp,
+        });
+    }
+
+    /// <summary>反应发动：按反应自己的种类、威力、落点结算（不掷命中），用掉一次，用完即撤。</summary>
+    private void React(Combatant owner, StatusEffect reaction, Combatant other)
+    {
+        var def = Lookup(reaction.Token)!;
+        var targets = def.ReactTarget switch
+        {
+            SkillTarget.AllEnemies => AliveFoes(owner),
+            SkillTarget.Self => new List<Combatant> { owner },
+            _ => other.Alive && other.Side != owner.Side ? new List<Combatant> { other } : new List<Combatant>(),
+        };
+        if (targets.Count == 0)
+            return;
+        Events.Add(new BattleEvent
+        {
+            Kind = CombatEventKind.React, Round = Round, ActorId = owner.Id,
+            SkillId = def.Id, TargetId = other.Id,
+        });
+        _reacting = true;
+        foreach (var t in targets)
+        {
+            if (def.ReactKind == SkillKind.Heal)
+            {
+                var healed = Math.Min(Math.Max(1, owner.EffSpellPower * def.ReactPower / 100 * BattleRules.HealScale), t.MaxHp - t.Hp);
+                t.Hp += healed;
+                Events.Add(new BattleEvent
+                {
+                    Kind = CombatEventKind.Heal, Round = Round, ActorId = owner.Id,
+                    SkillId = def.Id, TargetId = t.Id, Amount = healed, HpAfter = t.Hp,
+                });
+            }
+            else if (t.Alive)
+                Damage(owner, t, ResolveDamage(owner, t, def.ReactKind, def.ReactPower), def.Id, def.ReactKind == SkillKind.Spell);
+        }
+        _reacting = false;
+        if (--reaction.UsesLeft <= 0)
+            owner.Statuses.Remove(reaction);
     }
 
     /// <summary>
@@ -1241,11 +1412,17 @@ public sealed class Battle
             var def = SkillOf(actor, id);
             if (def == null)
                 continue;
-            var score = def.Kind switch
+            var score = def.Core switch
             {
-                SkillKind.Strike or SkillKind.Spell => ResolveDamage(actor, foes[0], def),
-                SkillKind.Heal => HealScore(actor, def),
-                _ => 0,
+                // 姿态 / 光环没摆上就先摆；反应没挂上就挂（与一记普攻同分）。
+                CoreKind.Stance or CoreKind.Aura => actor.Statuses.Any(s => s.Token == def.Id) ? -1 : int.MaxValue,
+                CoreKind.Reaction => actor.Statuses.Any(s => s.Token == def.Id) ? -1 : ResolveDamage(actor, foes[0], BattleSkills.Attack),
+                _ => def.Kind switch
+                {
+                    SkillKind.Strike or SkillKind.Spell => ExpectedDamage(actor, foes[0], def),
+                    SkillKind.Heal => HealScore(actor, def),
+                    _ => 0,
+                },
             };
             if (score > bestScore)
             {
@@ -1269,6 +1446,19 @@ public sealed class Battle
         }
 
         Perform(actor, action, targetId);
+    }
+
+    /// <summary>
+    /// AI 估一式的出手价值：打击乘命中率（命中修正低的重击不再一味首选），咏唱的法术按占用的时间折算
+    /// （咏唱 N 回合抵得上 N 回合里能出的几手）。
+    /// </summary>
+    private int ExpectedDamage(Combatant actor, Combatant foe, SkillDef def)
+    {
+        var damage = ResolveDamage(actor, foe, def);
+        if (def.Kind == SkillKind.Strike)
+            damage = damage * Math.Clamp(actor.BaseHit + def.HitMod - foe.EffDodge, BattleRules.MinHit, BattleRules.MaxHit) / 100;
+        var busy = Math.Max(actor.ActInterval, def.ChantRounds * (long)BattleRules.RoundTicks);
+        return (int)(damage * actor.ActInterval / busy);
     }
 
     /// <summary>有半血以下的同伴才考虑治疗，分给伤得最重的。</summary>

@@ -275,6 +275,36 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => { CheckSkills(); Shoot("skills_chart", _root.HubScreen); });
         _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 2700));
         _steps.Enqueue(() => Shoot("skills_detail", _root.HubScreen));
+        _steps.Enqueue(() => _root.HubScreen.DebugPan("character", 99999));
+        _steps.Enqueue(() => _root.HubScreen.QueueRedraw()); // 先按新内容高把滚动夹回底
+        _steps.Enqueue(() =>
+        {
+            // 身份技能池：主人在领地里可换身份、重抽；池里必有一式核心。
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            // 开局身份是掷的；没有技能池的身份池为空，有的必是满池且含核心。
+            Require(Rimisekai.Combat.SkillPool.PoolOf(master.Identity) == null ? master.SkillPool.Count == 0
+                : master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
+                  && master.SkillPool.Any(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None),
+                "the master's pool follows the identity it was drawn from");
+            Shoot("skills_pool", _root.HubScreen);
+            Require(_root.HubScreen.DebugWidgets.Any(w => w.Action == PortraitAction.PoolIdentity && w.Enabled),
+                "at home the master can pick an identity and reroll the pool");
+            _root.HubScreen.DebugPress(PortraitAction.PoolIdentity, 0);
+        });
+        _steps.Enqueue(() =>
+        {
+            Require(_root.ModalLayer.IsActive, "picking an identity lists the identities with pools");
+            _root.ModalLayer.Choose("魔剑士");
+        });
+        _steps.Enqueue(() =>
+        {
+            var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+            Require(master.PoolIdentity == "魔剑士" && master.SkillPool.Count == Rimisekai.Combat.SkillPool.PoolSize
+                && master.SkillPool.All(id => id.StartsWith("spellblade_"))
+                && master.SkillPool.Any(id => Rimisekai.Combat.SkillTable.Get(id)!.Core != Rimisekai.Catalog.CoreKind.None),
+                "choosing an identity redraws the pool from it");
+            Shoot("skills_pool_rerolled", _root.HubScreen);
+        });
         _steps.Enqueue(() => { _root.HubScreen.DebugPan("character", 0); _root.HubScreen.DebugPress(PortraitAction.Back, 0); });
         // 设施抽屉、建造、系统
         _steps.Enqueue(() => _root.HubScreen.ShowTab(0));

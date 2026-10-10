@@ -372,6 +372,11 @@ public partial class PortraitHubScreen
                 if (_charSeg == 2)
                     OpenSchedule();
                 return true;
+            case PortraitAction.PoolIdentity:
+                OpenPoolIdentities();
+                return true;
+            case PortraitAction.PoolReroll:
+                return _vm.Hub.RerollSkillPool(_vm.Hub.State.Roster.Master!.PoolIdentity);
             case PortraitAction.SkillNode:
                 _skillSelectedId = w.Label;
                 return true;

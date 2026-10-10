@@ -264,6 +264,20 @@ public sealed class CharacterGenerator
         // 满状态起步：生命与体力充沛
         state.Condition.RecoverFull();
         SeedLearned(state);
+        // 身份技能池：按本身份抽一池（身份没有技能池即空）。骰子由掷好的人推出、不动生成骰子，
+        // 同一种子掷出的人与技能池都不变。
+        Combat.SkillPool.Assign(state, identity.Name, new Random(PoolSeed(state)));
+    }
+
+    /// <summary>由已掷好的角色推出技能池种子：名字、编号、核心属性、经验，确定且与生成骰子无关。</summary>
+    private static int PoolSeed(CharacterState state)
+    {
+        var seed = state.Id * 7919 + state.LevelExp;
+        foreach (var ch in state.Name)
+            seed = seed * 31 + ch;
+        foreach (var v in state.Core)
+            seed = seed * 17 + v;
+        return seed;
     }
 
     // ---------- 身份轴（规范 11.8） ----------

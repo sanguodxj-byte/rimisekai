@@ -272,6 +272,14 @@ public static class InkCombatRenderer
                         result.Add($"{actor} 防御");
                     else if (ev.SkillId == "awakening")
                         result.Add($"{actor} 觉醒");
+                    else if (battle.Lookup(ev.SkillId) is { Core: not CoreKind.None } core)
+                        result.Add($"{actor} {core.Name}");
+                    break;
+                case CombatEventKind.Stack:
+                    result.Add($"{actor} {battle.Lookup(ev.SkillId)!.Name} {ev.Amount} 层");
+                    break;
+                case CombatEventKind.React:
+                    result.Add($"{actor} {battle.Lookup(ev.SkillId)!.Name} 发动");
                     break;
                 case CombatEventKind.Chant:
                     result.Add($"{actor} 咏唱");
@@ -285,7 +293,7 @@ public static class InkCombatRenderer
                     break;
                 }
                 case CombatEventKind.Interrupt:
-                    result.Add($"{target} 咏唱打断");
+                    result.Add($"{actor} 咏唱打断");
                     break;
                 case CombatEventKind.Flee:
                     result.Add(ev.Amount == 1 ? $"{actor} 撤退成功" : $"{actor} 撤退失败");

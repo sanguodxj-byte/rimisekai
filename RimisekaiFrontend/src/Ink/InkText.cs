@@ -171,7 +171,19 @@ public static class InkText
         Catalog.StatusStat.Dodge => "闪避",
         Catalog.StatusStat.SpellPower => "法术",
         Catalog.StatusStat.Speed => "速度",
+        Catalog.StatusStat.Damage => "伤害",
+        Catalog.StatusStat.Crit => "暴击率",
         _ => "?",
+    };
+
+    /// <summary>身份核心技能的机制种类名；基础技能为「基础」。</summary>
+    public static string CoreKind(Catalog.CoreKind kind) => kind switch
+    {
+        Catalog.CoreKind.Stance => "核心·姿态",
+        Catalog.CoreKind.Charge => "核心·机制点",
+        Catalog.CoreKind.Reaction => "核心·反应",
+        Catalog.CoreKind.Aura => "核心·光环",
+        _ => "基础",
     };
 
     // ---------- 技能门槛（技能盘瓦片与右栏详情用） ----------
