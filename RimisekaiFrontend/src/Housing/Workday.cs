@@ -272,8 +272,8 @@ public sealed class TerritoryClock
                     worker.Phase = WorkPhase.Idle;
                     continue;
                 }
-                if (worker.Task != task)
-                    Retarget(territory, worker, task, used);
+                if (worker.Task != task || worker.FacilityId != assignment.FacilityId)
+                    Retarget(territory, worker, task, assignment.FacilityId, used);
             }
             // 干活时 Goal 就是那件具体的活（原 Assigned 语义）。
             worker.Goal = worker.Task;
@@ -451,13 +451,18 @@ public sealed class TerritoryClock
         return facility != null && facility.Supports(task);
     }
 
-    private void Retarget(Territory territory, Worker worker, ActionKind task, Dictionary<int, int> used)
+    /// <summary>
+    /// 换活：到排班点名的那件设施去（排班是「某时段到某件设施去」，不是「找任意一件同类设施」）。
+    /// 那件设施坐满了就原地待命，下一格再试。
+    /// </summary>
+    private void Retarget(Territory territory, Worker worker, ActionKind task, int facilityId, Dictionary<int, int> used)
     {
         Release(worker, used);
         worker.Task = task;
         worker.Progress = 0;
         worker.Path.Clear();
-        var facility = Pick(territory, task, used);
+        var facility = territory.Facilities.Find(f => f.Id == facilityId && f.Built && f.Supports(task)
+            && used.GetValueOrDefault(f.Id) < f.Capacity);
         if (facility == null)
         {
             worker.Phase = WorkPhase.Idle;
@@ -576,10 +581,6 @@ public sealed class TerritoryClock
         worker.Phase = WorkPhase.Idle;
     }
 
-    private static Facility? Pick(Territory territory, ActionKind task, Dictionary<int, int> used, int owned = -1) =>
-        territory.Facilities.Find(f => f.Built && f.Supports(task)
-            && (f.Id == owned || used.GetValueOrDefault(f.Id) < f.Capacity));
-
     private static List<int> Route(Territory territory, int fromRoom, int toRoom, Func<Room, bool>? passable = null) =>
         territory.Route(fromRoom, toRoom, passable);
 
@@ -671,10 +672,10 @@ public sealed class TerritoryClock
             var stove = territory.Facilities.Find(f => f.Id == assignment.FacilityId && f.Built);
             if (stove != null && FindAvailableRecipe(territory, stove, character, ActionKind.Cook) != null)
             {
-                if (StartFetchForBench(character, worker, territory, ctx, ActionKind.Cook))
+                if (StartFetchForBench(character, worker, territory, ctx, ActionKind.Cook, stove))
                     return;
-                if (worker.Task != ActionKind.Cook)
-                    Retarget(territory, worker, ActionKind.Cook, used);
+                if (worker.Task != ActionKind.Cook || worker.FacilityId != stove.Id)
+                    Retarget(territory, worker, ActionKind.Cook, stove.Id, used);
                 worker.Goal = ActionKind.Cook;
                 return;
             }
@@ -685,10 +686,11 @@ public sealed class TerritoryClock
         {
             // 工作台缺料就先去搬料，搬齐了再开工（RimWorld 的备料）。
             // 放在“认定委派”之前，否则会一直在空台子前干等。
-            if (StartFetchForBench(character, worker, territory, ctx, work))
+            var bench = territory.Facilities.Find(f => f.Id == assignment.FacilityId)!;
+            if (StartFetchForBench(character, worker, territory, ctx, work, bench))
                 return;
-            if (worker.Task != work)
-                Retarget(territory, worker, work, used);
+            if (worker.Task != work || worker.FacilityId != bench.Id)
+                Retarget(territory, worker, work, bench.Id, used);
             // 认定委派：Goal 就是那件活（原 Assigned 语义），主循环据此结算进度。
             worker.Goal = work;
             return;
@@ -734,12 +736,8 @@ public sealed class TerritoryClock
     /// 搬到位后下次决策就能开工（<see cref="Finish"/> 只认台子上的料）。
     /// </summary>
     private static bool StartFetchForBench(CharacterState character, Worker worker,
-        Territory territory, StepContext ctx, ActionKind task)
+        Territory territory, StepContext ctx, ActionKind task, Facility bench)
     {
-        var bench = territory.Facilities.Find(f => f.Built && f.Supports(task));
-        if (bench == null)
-            return false;
-
         var recipe = FindAvailableRecipe(territory, bench, character, task);
         if (recipe == null)
             return false;

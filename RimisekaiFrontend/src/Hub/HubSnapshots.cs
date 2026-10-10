@@ -68,8 +68,13 @@ public sealed partial class HubSession
     public void Restore(HubSnapshot snapshot)
     {
         SelectRegion(snapshot.Region);
+        // 在场记录原样落回，不走 Place 的进门规则：存档时人就在那里（例如睡在主人不在、自动上锁的卧室里），
+        // 读档按门锁再筛一遍会把人从地图上抹掉（在场 -1，从此哪儿也去不了）。
         foreach (var pair in snapshot.Presence)
-            Place(pair.Key, pair.Value);
+        {
+            _presence[pair.Key] = pair.Value;
+            Day.Track(pair.Key, pair.Value).RoomId = pair.Value;
+        }
         if (snapshot.PlayerRoom >= 0)
             Enter(snapshot.PlayerRoom);
         if (snapshot.Selected >= 0)
