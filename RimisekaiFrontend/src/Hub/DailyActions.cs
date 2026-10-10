@@ -154,7 +154,10 @@ public sealed partial class HubSession
         // 睡下的主人把门带上；一醒过来做别的事，门就还回去（下一次行动不再是睡）。
         State.Territory.MasterAsleep = action == ActionKind.Sleep;
         if (action == ActionKind.Sleep)
+        {
+            State.Territory.MasterBedId = fixture.Id; // 主人睡在哪张，哪张就是主人的床
             CoSleep(fixture); // 先安排同床/守候，再让一夜过去
+        }
         PassTime(sleepMinutes > 0 ? sleepMinutes
             : minutes > 0 ? minutes : FacilityActionTicks * TerritoryClock.StepMinutes);
         switch (action)

@@ -275,6 +275,12 @@ public static class PersonalityTraits
 
     public static bool RequiresWage(CharacterState c) => !c.Has(Trait.Maid);
 
+    /// <summary>与主人同屋睡不算挤（不吃与外人挤房的心情扣分）。同床仍要好感，见 <see cref="Intimacy.SharesBed"/>。</summary>
+    public static bool SharesRoomWithMaster(CharacterState c) => c.Has(Trait.Maid);
+
+    /// <summary>睡下就反锁房门、把醒着的旁人请出去。女仆不锁——她得随叫随到。</summary>
+    public static bool LocksDoorAsleep(CharacterState c) => !c.Has(Trait.Maid);
+
     public static bool AcceptsInvite(CharacterState c) =>
         c.Has(Trait.Maid) || c.Condition.Bond >= Bond.Fond;
 
@@ -415,6 +421,10 @@ public static class PersonalityTraits
 
         if (!RequiresWage(Probe(true, false, false)))
             lines.Add("不要工钱");
+        if (SharesRoomWithMaster(Probe(true, false, false)))
+            lines.Add("与主人同屋睡不扣心情（同床仍看好感）");
+        if (!LocksDoorAsleep(Probe(true, false, false)))
+            lines.Add("睡下不锁门");
         if (AcceptsInvite(Probe(true, false, false)) && !AcceptsInvite(Probe(false, false, false)))
             lines.Add("不看好感，邀请必应");
         if (trait == Trait.QuickChant)

@@ -201,6 +201,8 @@ public static class InkWorldBootstrap
             foreach (var pair in place.Contents)
                 facility.Contents.Add(pair.Key, pair.Value);
             state.Territory.AddFacility(facility);
+            if (place.MasterBed)
+                state.Territory.MasterBedId = facility.Id;
         }
 
         return state;

@@ -717,6 +717,8 @@ public partial class PortraitHubScreen
                     _sheet = SheetKind.None;
                     OpenInteraction();
                 }
+                else if (hub.UseRefusal.Length > 0)
+                    SetNotice(hub.UseRefusal);
                 return true;
             case PortraitAction.NowAvatar:
                 var card = _vm.Cards().First(c => c.Id == w.Index);

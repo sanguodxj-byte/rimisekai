@@ -176,6 +176,9 @@ public sealed class TerritoryData
     /// <summary>开拓过几格空地（定价按它每级涨 20%）。</summary>
     public int VacantDevelopCount { get; set; }
 
+    /// <summary>主人的床（设施 Id，-1 = 没有）。</summary>
+    public int MasterBedId { get; set; } = -1;
+
     public List<RoomData> Rooms { get; set; } = new();
     public List<FacilityData> Facilities { get; set; } = new();
     public List<RecipeData> Recipes { get; set; } = new();
@@ -317,6 +320,7 @@ public static class SaveSystem
         t.UnlockedRegions = hub?.TerritoryUnlockedRegions ?? state.Territory.UnlockedRegions;
         t.UnlockedRegionMask = state.Territory.UnlockedRegionMask;
         t.VacantDevelopCount = state.Territory.VacantDevelopCount;
+        t.MasterBedId = state.Territory.MasterBedId;
         // 兴趣点的房间是进场时按种子现生成的临时房，不进存档（读档即人在据点）。
         foreach (var r in state.Territory.Rooms)
         {
@@ -487,6 +491,7 @@ public static class SaveSystem
         state.Territory.SetUnlockedRegions(data.Territory.UnlockedRegions);
         state.Territory.SetUnlockedRegionMask(data.Territory.UnlockedRegionMask);
         state.Territory.VacantDevelopCount = data.Territory.VacantDevelopCount;
+        state.Territory.MasterBedId = data.Territory.MasterBedId;
         foreach (var r in data.Territory.Rooms)
         {
             var room = new Room

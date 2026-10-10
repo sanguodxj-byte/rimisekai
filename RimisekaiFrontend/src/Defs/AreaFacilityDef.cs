@@ -22,4 +22,7 @@ public sealed class AreaFacilityDef
 
     /// <summary>开局时设施里已存着的东西。</summary>
     public Dictionary<string, int> Contents { get; init; } = new();
+
+    /// <summary>这张床是主人的（开局卧室那张）。别人好感不够同床就不睡它，见 Territory.MasterBedId。</summary>
+    public bool MasterBed { get; init; }
 }

@@ -129,12 +129,15 @@ public sealed class Facility
         Defs.DefDatabase<Defs.ThingCategoryDef>.Get(entry) != null;
 
     /// <summary>
-    /// 这件设施收不收这种物品：先过过滤（按物品 Id 或品类命中），再看有没有空位。
+    /// 这件设施收不收这种物品：水井只收水；再过过滤（按物品 Id 或品类命中），再看有没有空位。
     /// 命中规则：过滤为空→全收；否则物品 Id 直接命中，或其品类（含父链）命中任一条目。
     /// </summary>
     public bool Accepts(string itemId, Defs.WeaponRegistry? weapons = null)
     {
         if (!CanStore || itemId.Length == 0)
+            return false;
+        // 水井只存水：别的东西一律不收，与过滤怎么勾无关。
+        if (YieldItemId == Territory.WellItemId && itemId != Territory.WellItemId)
             return false;
         if (StorageFilter.Count > 0 && !FilterAccepts(itemId, weapons))
             return false;

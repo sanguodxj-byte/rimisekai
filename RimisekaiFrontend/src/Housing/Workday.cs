@@ -323,7 +323,49 @@ public sealed class TerritoryClock
             if (ctx != null)
                 ctx.Narrate(character, Describe(character, worker, territory, ctx));
         }
+        if (ctx != null)
+            LockSleepersRooms(territory, roster, ctx);
         return logs;
+    }
+
+    /// <summary>
+    /// 睡下锁门：除女仆外，人在床上睡着了就反锁所在的房间——醒着的旁人请出门外（挪到隔壁开着的房间），
+    /// 锁着的门别人进不来（见 <see cref="Territory.IsLocked"/>），睡醒起床门就开。
+    /// 同屋已经睡着的人不叫醒、不赶；主人不受门锁拦，也不被赶（领主手里有每间房的钥匙）。
+    /// </summary>
+    private void LockSleepersRooms(Territory territory, Roster roster, StepContext ctx)
+    {
+        territory.SleeperLocks.Clear();
+        foreach (var sleeper in _workers)
+        {
+            if (sleeper.Goal != ActionKind.Sleep || sleeper.Path.Count > 0 || sleeper.CharacterId == ctx.MasterId)
+                continue;
+            var who = roster.Find(sleeper.CharacterId);
+            var bed = territory.Facilities.Find(f => f.Id == sleeper.FacilityId);
+            if (who == null || !who.LocksDoorAsleep() || bed == null || bed.RoomId != sleeper.RoomId)
+                continue;
+            territory.SleeperLocks.TryAdd(bed.RoomId, who.Id);
+        }
+        foreach (var (roomId, sleeperId) in territory.SleeperLocks)
+        {
+            var room = territory.Rooms.Find(r => r.Id == roomId)!;
+            foreach (var other in _workers)
+            {
+                if (other.RoomId != roomId || other.CharacterId == ctx.MasterId || other.Goal == ActionKind.Sleep)
+                    continue;
+                var outside = room.Links
+                    .Select(id => territory.Rooms.Find(r => r.Id == id))
+                    .FirstOrDefault(r => r != null && r.Open && !territory.IsLocked(r));
+                if (outside == null)
+                    continue;
+                var evicted = roster.Find(other.CharacterId);
+                if (evicted == null)
+                    continue;
+                EndRoutine(other);
+                other.RoomId = outside.Id;
+                ctx.Narrate(evicted, $"{roster.Find(sleeperId)!.Name}锁门睡下，{evicted.Name}被请出了{room.Name}。");
+            }
+        }
     }
 
     /// <summary>
@@ -854,20 +896,6 @@ public sealed class TerritoryClock
         return false;
     }
 
-    /// <summary>
-    /// <summary>把背包里的东西直接卸到设施台面（工作台备料用，不受仓储容量限制）。</summary>
-    private static int Deposit(CharacterState who, Facility target, string itemId, int count)
-    {
-        if (count <= 0 || itemId.Length == 0)
-            return 0;
-        var moved = System.Math.Min(count, who.Bag.Get(itemId));
-        if (moved <= 0)
-            return 0;
-        who.Bag.Add(itemId, -moved);
-        target.Contents.Add(itemId, moved);
-        return moved;
-    }
-
     /// <summary>收尾搬运状态，回决策。</summary>
     private static void EndHaul(Worker worker)
     {
@@ -1094,7 +1122,10 @@ public sealed class TerritoryClock
         }
     }
 
-    /// <summary>起床结算：与心仪同伴同室同寝醒来温馨安宁（加心情）；与外人挤房扣心情；没床再扣。起床即换了干衣服。</summary>
+    /// <summary>
+    /// 起床结算：与心仪同伴同室同寝醒来温馨安宁（加心情）；与外人挤房扣心情（女仆与主人同屋除外）；没床再扣。
+    /// 起床即换了干衣服。
+    /// </summary>
     private void WakeUp(CharacterState character, Worker worker, Roster roster, StepContext ctx)
     {
         character.Condition.ChangeIntoDryClothes();
@@ -1102,7 +1133,7 @@ public sealed class TerritoryClock
         var loverWithMe = false;
         foreach (var other in _workers)
         {
-            if (other.CharacterId != worker.CharacterId && other.RoomId == worker.RoomId)
+            if (other.CharacterId != worker.CharacterId && other.CharacterId != ctx.MasterId && other.RoomId == worker.RoomId)
             {
                 roommates++;
                 var otherChar = roster.Find(other.CharacterId);
@@ -1110,14 +1141,15 @@ public sealed class TerritoryClock
                     loverWithMe = true;
             }
         }
-        if (ctx.PlayerRoomId == worker.RoomId && (character.Relations.Has(ctx.MasterId, RelationFlag.Sworn) || character.Condition.Bond == Bond.Lover))
-        {
+        // 主人也是同屋的人。女仆与主人同屋不算挤（女仆特质）；够亲近到能同床的，同屋自然也不介意。
+        var masterHere = ctx.PlayerRoomId == worker.RoomId;
+        if (masterHere && (character.Relations.Has(ctx.MasterId, RelationFlag.Sworn) || character.Condition.Bond == Bond.Lover))
             loverWithMe = true;
-        }
+        var masterCrowds = masterHere && !character.SharesRoomWithMaster() && !Intimacy.SharesBed(character);
 
-        if (loverWithMe && roommates <= 1)
+        if (loverWithMe && roommates + (masterHere ? 1 : 0) <= 1)
             character.Affect.AddMood(8);
-        else if (roommates > 0)
+        else if (roommates > 0 || masterCrowds)
             character.Affect.AddMood(-15);
 
         if (worker.FacilityId < 0)
@@ -1203,23 +1235,23 @@ public sealed class TerritoryClock
 
     /// <summary>
     /// 找床睡：先找最近的、还没有外人睡着的卧处（与外人挤房醒来要扣心情，见 <see cref="WakeUp"/>）；
-    /// 处处都有人了再退回最近的有空床的房间。
+    /// 处处都有人了再退回最近的有空床的房间。有人锁门睡下的房间进不去，主人的床好感不够上不去
+    /// （见 <see cref="FreeBed"/>）。一张床都找不到就不睡——不在地上睡，退回日常决策（歇着/串门）。
     /// </summary>
     private bool StartSleep(CharacterState character, Worker worker, Territory territory, Roster roster, StepContext ctx, Dictionary<int, int> used)
     {
         var bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
-            r => HasAction(territory, r.Id, ActionKind.Sleep)
-                && FindFree(territory, r.Id, ActionKind.Sleep, used) != null
+            r => !territory.SleeperLocks.ContainsKey(r.Id)
+                && FreeBed(territory, r.Id, character, ctx, used) != null
                 && !SleepsWithStranger(character, worker, territory, roster, r.Id));
         if (bed < 0)
             bed = NearestRoomWith(territory, worker.RoomId, character, ctx,
-                r => HasAction(territory, r.Id, ActionKind.Sleep));
+                r => !territory.SleeperLocks.ContainsKey(r.Id)
+                    && FreeBed(territory, r.Id, character, ctx, used) != null);
         if (bed < 0)
             return false;
 
-        var mattress = FindFree(territory, bed, ActionKind.Sleep, used);
-        if (mattress == null)
-            return false;
+        var mattress = FreeBed(territory, bed, character, ctx, used)!;
 
         Release(worker, used);
         character.Affect.AddMood((Affect.Neutral - character.Affect.Mood) * 20 / 100);
@@ -1334,6 +1366,16 @@ public sealed class TerritoryClock
         territory.Facilities.Find(f => f.Built && f.RoomId == roomId
             && f.Supports(action)
             && used.GetValueOrDefault(f.Id) < f.Capacity);
+
+    /// <summary>
+    /// 某房间里一张能睡的空床。主人的床（<see cref="Territory.MasterBedId"/>）和主人此刻躺着（坐着）的那张，
+    /// 好感不够同床（<see cref="Intimacy.SharesBed"/>）就不上——女仆也一样：同屋不介意，同床得够亲近。
+    /// </summary>
+    private static Facility? FreeBed(Territory territory, int roomId, CharacterState character, StepContext ctx, Dictionary<int, int> used) =>
+        territory.Facilities.Find(f => f.Built && f.RoomId == roomId
+            && f.Supports(ActionKind.Sleep)
+            && used.GetValueOrDefault(f.Id) + (f.Id == ctx.PlayerFixtureId ? 1 : 0) < f.Capacity
+            && ((f.Id != ctx.PlayerFixtureId && f.Id != territory.MasterBedId) || Intimacy.SharesBed(character)));
 
     /// <summary>按设施用途找一处空位。用于消遣这类"看设施标签"的去处选择。</summary>
     private static Facility? FindFreeByUsage(Territory territory, int roomId, FacilityUsage usage, Dictionary<int, int> used) =>

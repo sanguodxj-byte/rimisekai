@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Rimisekai.Housing;
+using Rimisekai.Character;
 
 namespace Rimisekai.Hub;
 
@@ -93,16 +94,43 @@ public sealed partial class HubSession
     public string FacilityName(int facilityId) =>
         State.Territory.Facilities.Find(f => f.Id == facilityId)?.Name ?? "";
 
+    /// <summary>
+    /// 上一次 <see cref="Use"/> 被人拒在外头的那句话（如被睡在床上的人踢下床）；没被拒是空串。
+    /// 不进日志，界面弹成提示签。
+    /// </summary>
+    public string UseRefusal { get; private set; } = "";
+
     public bool Use(int fixtureId)
     {
+        UseRefusal = "";
         var facility = Fixture(fixtureId);
         if (facility == null || facility.RoomId != PlayerRoomId)
             return false;
+        // 往有人睡着的床上钻：好感不够同床（Intimacy.SharesBed），被人一脚踢下床，人不上床。
+        if (facility.Supports(ActionKind.Sleep) && BedHolderRefusing(facility) is { } holder)
+        {
+            UseRefusal = $"你刚钻进{facility.Name}，就被{holder.Name}一脚踢了下来。";
+            return false;
+        }
         LeaveFixture();
         UsingFixtureId = fixtureId;
         PassTime(CostUse * TerritoryClock.StepMinutes);
         Write($"你在{facility.Name}。");
         return true;
+    }
+
+    /// <summary>睡在这张床上、又不肯和主人同床的人；没有就是 null。</summary>
+    private CharacterState? BedHolderRefusing(Facility bed)
+    {
+        foreach (var worker in Day.Workers)
+        {
+            if (worker.FacilityId != bed.Id || worker.Goal != ActionKind.Sleep || worker.Path.Count > 0)
+                continue;
+            var who = State.Roster.Find(worker.CharacterId);
+            if (who != null && !who.IsMaster && !Intimacy.SharesBed(who))
+                return who;
+        }
+        return null;
     }
 
     /// <summary>

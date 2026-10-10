@@ -906,7 +906,8 @@ public partial class InkHubScreen : Control
             }
 
             case InkAction.Fixture:
-                _ui.Notice = vm.Hub.Use(widget.Index) ? "你在这里安顿下来。" : "这个位置已被占用。";
+                _ui.Notice = vm.Hub.Use(widget.Index) ? "你在这里安顿下来。"
+                    : vm.Hub.UseRefusal.Length > 0 ? vm.Hub.UseRefusal : "这个位置已被占用。";
                 break;
 
             // ---- 角色：再点一次同一张卡就取消选中 ----

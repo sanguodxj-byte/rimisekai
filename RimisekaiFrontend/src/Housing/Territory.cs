@@ -745,6 +745,9 @@ public sealed class Territory
     public int Haul(CharacterState who, Facility storage, string itemId, int count) =>
         StoreFrom(who, storage, itemId, count);
 
+    /// <summary>井的产出、也是井里唯一能存的东西。</summary>
+    public const string WellItemId = "水";
+
     /// <summary>每口井存水的上限。</summary>
     public const int WellWaterCap = 20;
 
@@ -757,19 +760,19 @@ public sealed class Territory
     {
         foreach (var facility in Facilities)
         {
-            if (!facility.Built || facility.YieldItemId != "水")
+            if (!facility.Built || facility.YieldItemId != WellItemId)
                 continue;
-            var shortOf = WellWaterCap - facility.Contents.Get("水");
+            var shortOf = WellWaterCap - facility.Contents.Get(WellItemId);
             if (shortOf > 0)
-                facility.Contents.Add("水", shortOf);
+                facility.Contents.Add(WellItemId, shortOf);
         }
     }
 
     /// <summary>新落的井自带一井水（之后每日回满，见 <see cref="TopUpWells"/>）。</summary>
     private static void SeedWellWater(Facility facility)
     {
-        if (facility.YieldItemId == "水" && facility.Contents.Get("水") <= 0)
-            facility.Contents.Add("水", WellWaterCap);
+        if (facility.YieldItemId == WellItemId && facility.Contents.Get(WellItemId) <= 0)
+            facility.Contents.Add(WellItemId, WellWaterCap);
     }
 
     public bool UnlockRegion()
@@ -1093,13 +1096,32 @@ public sealed class Territory
     /// <summary>主人此刻在哪间房（-1 = 不在领地里）。自动上锁按它判。</summary>
     public int MasterRoomId { get; set; } = -1;
 
+    /// <summary>
+    /// 主人的床：开局卧室那张（内容表 masterBed），之后是主人最近一次睡下的那张。
+    /// 别人好感不够同床（<see cref="Character.Intimacy.SharesBed"/>）就不睡它——女仆也一样，她得有自己的床。
+    /// </summary>
+    public int MasterBedId { get; set; } = -1;
+
     /// <summary>主人是不是正在睡。睡着的私室别人进不来。</summary>
     public bool MasterAsleep { get; set; }
 
-    /// <summary>这间房此刻锁不锁。手动锁/手动解锁压过自动规则；没打标签的房间永不锁。</summary>
+    /// <summary>
+    /// 有人睡着、把门反锁了的房间 → 睡着的那人。除了女仆，人一睡下就锁门，醒了才开
+    /// （由领地时钟每格按「谁在哪张床上睡着」重算，不进存档）。主人照旧不受门锁拦。
+    /// </summary>
+    public Dictionary<int, int> SleeperLocks { get; } = new();
+
+    /// <summary>
+    /// 这间房此刻锁不锁。有人在里头睡着锁了门就锁；
+    /// 否则只有卧室类（私人空间）才谈得上锁：手动锁/手动解锁压过自动规则。
+    /// </summary>
     public bool IsLocked(Room room)
     {
-        if (room == null || !room.HasTag(PrivateTag))
+        if (room == null)
+            return false;
+        if (SleeperLocks.ContainsKey(room.Id))
+            return true;
+        if (!room.HasTag(PrivateTag))
             return false;
         return room.Lock switch
         {

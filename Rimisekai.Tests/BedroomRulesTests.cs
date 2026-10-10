@@ -1,0 +1,242 @@
+using System;
+using System.Linq;
+using Rimisekai.Character;
+using Rimisekai.Housing;
+using Rimisekai.Hub;
+using Rimisekai.Save;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace Rimisekai.Tests;
+
+/// <summary>
+/// 起居规则：女仆与主人同屋不扣心情、同床看好感；主人躺着的床别人好感不够不上；
+/// 往睡着人的床上钻会被踢下来；别人睡下就锁门赶人；水井只存水；第一天伐木就够打一张床。
+/// 开局照标准种子装配（见 <see cref="TerritoryLoopTests.NewGame"/>）。
+/// </summary>
+public sealed class BedroomRulesTests
+{
+    private const int Courtyard = 1, Parlor = 2, Bedroom = 3, Forest = 4;
+    private const int StartBed = 5;      // 卧室里开局那张床
+    private const int BedDef = 5;        // 建筑表里的「床」：木材 10
+    private const int Well = 1, Chest = 8, Woodlot = 11;
+
+    private readonly ITestOutputHelper _out;
+
+    public BedroomRulesTests(ITestOutputHelper output) => _out = output;
+
+    private static CharacterState Maid(GameState state) => state.Roster.Members.Single(c => !c.IsMaster && c.IsMaid());
+
+    private static Worker W(HubSession hub, int characterId) => hub.Day.Workers.Single(w => w.CharacterId == characterId);
+
+    private static bool Asleep(HubSession hub, int characterId) =>
+        hub.Day.Workers.FirstOrDefault(w => w.CharacterId == characterId) is { Goal: ActionKind.Sleep, Path.Count: 0 };
+
+    /// <summary>按 10 分钟一格推进，直到条件成立；两天内不成立判失败。</summary>
+    private static void RunUntil(HubSession hub, Func<bool> done, string what)
+    {
+        for (var i = 0; i < 2 * 24 * 6; i++)
+        {
+            if (done())
+                return;
+            hub.PassTime(10);
+        }
+        Assert.Fail($"两天内没等到：{what}");
+    }
+
+    private static Facility BuildBed(HubSession hub, GameState state, int roomId)
+    {
+        state.Roster.Master!.Bag.Add("木材", 10);
+        Assert.True(hub.BuildFacilityDef(BedDef, roomId));
+        return state.Territory.Facilities[^1];
+    }
+
+    /// <summary>主人站在卧室里，等某人在卧室睡到天亮，返回起床那一下的心情变化。</summary>
+    private static int WakeDeltaNextToMaster(HubSession hub, GameState state, CharacterState who)
+    {
+        TerritoryLoopTests.GiveMaidABed(hub, state);
+        hub.Enter(Bedroom);
+        RunUntil(hub, () => Asleep(hub, who.Id) && W(hub, who.Id).RoomId == Bedroom && state.Clock.Minutes >= 5 * 60 + 50
+            && state.Clock.Minutes < 6 * 60, "睡到清晨五点五十");
+        var before = who.Affect.Mood;
+        RunUntil(hub, () => !Asleep(hub, who.Id), "起床");
+        return who.Affect.Mood - before;
+    }
+
+    [Fact]
+    public void Maid_shares_the_masters_room_without_the_crowding_penalty()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 11);
+        var maidDelta = WakeDeltaNextToMaster(hub, state, Maid(state));
+        Assert.True(maidDelta > -10, $"女仆与主人同屋醒来心情 {maidDelta}");
+
+        // 对照：同一个人去掉女仆身份，同样的屋子醒来就是挤房 -15。
+        hub = TerritoryLoopTests.NewGame(out state, 11);
+        var plain = Maid(state);
+        plain.Talents.Remove((int)Trait.Maid);
+        var plainDelta = WakeDeltaNextToMaster(hub, state, plain);
+        Assert.True(plainDelta <= -10, $"外人与主人同屋醒来心情 {plainDelta}");
+    }
+
+    [Fact]
+    public void Sharing_the_masters_bed_needs_the_co_sleep_affection_tier()
+    {
+        NewMaid(out var maid);
+        Assert.Equal(800, Intimacy.ShareBed);
+        Assert.Equal(HubSession.FavorCoSleep, Intimacy.ShareBed);
+        Assert.False(Intimacy.SharesBed(maid), "开局好感不够同床");
+        maid.Condition.AddFavor(Intimacy.ShareBed - maid.Condition.Favor);
+        Assert.True(Intimacy.SharesBed(maid), "好感到 800（心情 50）就肯同床");
+    }
+
+    private static HubSession NewMaid(out CharacterState maid)
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 12);
+        maid = Maid(state);
+        return hub;
+    }
+
+    [Fact]
+    public void Maid_sleeps_in_the_other_bed_when_the_master_is_in_hers()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 13);
+        var maid = Maid(state);
+        var second = BuildBed(hub, state, Bedroom);
+        hub.Enter(Bedroom);
+        Assert.True(hub.Use(StartBed));
+        RunUntil(hub, () => Asleep(hub, maid.Id), "女仆睡下");
+        Assert.Equal(second.Id, W(hub, maid.Id).FacilityId);
+        Assert.Equal(StartBed, hub.UsingFixtureId);
+        Assert.Empty(state.Territory.SleeperLocks); // 女仆睡下不锁门
+    }
+
+    [Fact]
+    public void Maid_never_climbs_into_the_bed_the_master_lies_in_without_affection()
+    {
+        // 卧室只有主人躺着的那张床：女仆去别处的床——一张都没有就不睡（不睡地上，见 Sleep_needs_a_bed_and_never_happens_on_the_floor），也不往主人床上挤。
+        var hub = TerritoryLoopTests.NewGame(out var state, 14);
+        var maid = Maid(state);
+        hub.Enter(Bedroom);
+        Assert.True(hub.Use(StartBed));
+        for (var i = 0; i < 24 * 6; i++)
+        {
+            hub.PassTime(10);
+            Assert.False(Asleep(hub, maid.Id) && W(hub, maid.Id).FacilityId == StartBed, $"{state.Clock.Minutes / 60} 点女仆上了主人的床");
+        }
+
+        // 好感够了就同床。
+        maid.Condition.AddFavor(1000);
+        RunUntil(hub, () => Asleep(hub, maid.Id), "好感满了同床");
+        Assert.Equal(StartBed, W(hub, maid.Id).FacilityId);
+    }
+
+    [Fact]
+    public void Master_climbing_into_the_sleeping_maids_bed_gets_kicked_out()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 15);
+        var maid = Maid(state);
+        var hers = TerritoryLoopTests.GiveMaidABed(hub, state);
+        RunUntil(hub, () => Asleep(hub, maid.Id) && W(hub, maid.Id).FacilityId == hers.Id, "女仆在她自己的床上睡下");
+        hub.Enter(Bedroom);
+        var log = hub.Log.Count;
+        Assert.False(hub.Use(hers.Id));
+        Assert.Null(hub.UsingFixtureId);
+        Assert.Equal($"你刚钻进床，就被{maid.Name}一脚踢了下来。", hub.UseRefusal);
+        Assert.Equal(log, hub.Log.Count); // 提示签，不进日志
+        // 自己的床照睡。
+        Assert.True(hub.Use(StartBed));
+
+        maid.Condition.AddFavor(1000);
+        Assert.True(hub.Use(hers.Id));
+        Assert.Equal("", hub.UseRefusal);
+    }
+
+    [Fact]
+    public void Other_sleepers_lock_their_door_evict_the_awake_and_keep_others_out_until_they_wake()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 16);
+        var maid = Maid(state);
+        var guest = state.Roster.Add("旅人", false);
+        BuildBed(hub, state, Courtyard);
+        hub.Place(guest.Id, Courtyard);
+        // 主人躺在卧室那张床上：旅人与女仆好感都不够同床，旅人只能去庭院那张。
+        hub.Enter(Bedroom);
+        Assert.True(hub.Use(StartBed));
+        RunUntil(hub, () => Asleep(hub, guest.Id), "旅人在庭院睡下");
+        var yard = state.Territory.Rooms.Single(r => r.Id == Courtyard);
+        Assert.True(state.Territory.IsLocked(yard));
+        Assert.Equal(guest.Id, state.Territory.SleeperLocks[Courtyard]);
+
+        // 醒着待在屋里的人被请出去。
+        hub.Day.EndRoutineOf(maid.Id);
+        W(hub, maid.Id).RoomId = Courtyard;
+        hub.PassTime(10);
+        Assert.NotEqual(Courtyard, W(hub, maid.Id).RoomId);
+        // 门锁着进不来。
+        hub.Place(maid.Id, Courtyard);
+        Assert.NotEqual(Courtyard, W(hub, maid.Id).RoomId);
+        // 主人有钥匙。
+        hub.Enter(Courtyard);
+        Assert.Equal(Courtyard, hub.PlayerRoomId);
+
+        RunUntil(hub, () => !Asleep(hub, guest.Id), "旅人起床");
+        hub.PassTime(10);
+        Assert.False(state.Territory.IsLocked(yard));
+    }
+
+    [Fact]
+    public void Well_stores_water_only()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 17);
+        var well = state.Territory.Facilities.Single(f => f.Id == Well);
+        var master = state.Roster.Master!;
+        Assert.True(well.CanStore);
+        Assert.False(well.Accepts("木材"));
+        Assert.False(well.Accepts("肉"));
+        // 过滤勾成什么样都一样。
+        well.StorageFilter.Add("木材");
+        Assert.False(well.Accepts("木材"));
+        well.StorageFilter.Clear();
+        // 搬运找仓储不会挑中井：庭院里干活的石材送去客厅的箱子。
+        Assert.Equal(Chest, state.Territory.FindStorageFor("石材", preferRoomId: Courtyard)!.Id);
+        // 玩家亲手往井里放也放不进。
+        hub.Enter(Courtyard);
+        Assert.True(hub.OpenStorage(Well));
+        Assert.False(hub.StoreOne("木材"));
+        Assert.Equal(0, well.Contents.Get("木材"));
+        // 水照存。
+        master.Bag.Add("水", 1);
+        well.Contents.Add("水", -well.Contents.Get("水"));
+        Assert.True(hub.StoreOne("水"));
+        Assert.Equal(1, well.Contents.Get("水"));
+    }
+
+    [Fact]
+    public void Day_one_wood_from_the_woodlot_builds_the_maid_a_bed()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 18);
+        var master = state.Roster.Master!;
+        // 开局的木材另有用处（采石点、猪圈）：清掉，只靠当天伐的木头。
+        master.Bag.Add("木材", -master.Bag.Get("木材"));
+        var chest = state.Territory.Facilities.Single(f => f.Id == Chest);
+        chest.Contents.Add("木材", -chest.Contents.Get("木材"));
+        var start = state.Clock.Minutes;
+
+        hub.Enter(Forest);
+        Assert.True(hub.Use(Woodlot));
+        var swings = 0;
+        while (master.Bag.Get("木材") < 10)
+        {
+            Assert.True(hub.ActAtFixture(ActionKind.Fell));
+            swings++;
+        }
+        Assert.Equal(1, state.Clock.Day);
+        _out.WriteLine($"伐木 {swings} 次，{start / 60}:{start % 60:00} → {state.Clock.Minutes / 60}:{state.Clock.Minutes % 60:00}，木材 {master.Bag.Get("木材")}");
+        Assert.True(state.Clock.Minutes <= 18 * 60, $"第一天天黑前伐够 10 木材（到 {state.Clock.Minutes / 60} 点）");
+
+        Assert.True(hub.BuildFacilityDef(BedDef, Bedroom), "卧室里给女仆打一张床");
+        var bed = state.Territory.Facilities[^1];
+        Assert.Equal(Bedroom, bed.RoomId);
+        Assert.True(bed.Supports(ActionKind.Sleep));
+    }
+}

@@ -51,6 +51,12 @@ public static class Traits
     public static bool IsMaid(this CharacterState character) =>
         character.Has(Trait.Maid);
 
+    public static bool SharesRoomWithMaster(this CharacterState character) =>
+        PersonalityTraits.SharesRoomWithMaster(character);
+
+    public static bool LocksDoorAsleep(this CharacterState character) =>
+        PersonalityTraits.LocksDoorAsleep(character);
+
     public static bool IsMage(this CharacterState character) =>
         character.Has(Trait.Mage);
 

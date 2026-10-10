@@ -27,7 +27,8 @@
       "facilityDefName": "床",
       "id": 5,
       "roomId": 3,
-      "contents": {}
+      "contents": {},
+      "masterBed": true
     },
     {
       "defType": "AreaFacilityDef",

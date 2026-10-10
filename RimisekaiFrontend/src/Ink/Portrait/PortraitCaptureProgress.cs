@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Godot;
+using Rimisekai.Character;
 using Rimisekai.Combat;
 using Rimisekai.Defs;
 using Rimisekai.Housing;
@@ -120,6 +121,7 @@ public partial class PortraitCapture
             Shoot("fixture_actions", _root.HubScreen);
             _root.HubScreen.ShowTab(0);
         });
+        EnqueueBedKickout();
         _steps.Enqueue(() =>
         {
             var hub = _root.HubScreen.DebugHub;
@@ -313,6 +315,50 @@ public partial class PortraitCapture
         });
         _steps.Enqueue(() => Require(_modalChoices == 3 && !_root.ModalLayer.IsActive,
             "display-only settlement advances by clicking inside panel"));
+    }
+
+    private int _kickBed = -1;
+    private int _kickFrom = -1;
+
+    /// <summary>
+    /// 被踢下床：女仆睡在卧室她自己那张床上（好感不够同床），玩家点那张床——不上床，底部弹提示签。
+    /// </summary>
+    private void EnqueueBedKickout()
+    {
+        _steps.Enqueue(() =>
+        {
+            var hub = _root.HubScreen.DebugHub;
+            var territory = hub.State.Territory;
+            var bedroom = territory.Facilities.First(f => f.Id == territory.MasterBedId).RoomId;
+            var maid = hub.State.Roster.Members.First(m => !m.IsMaster && m.IsMaid());
+            Require(!Intimacy.SharesBed(maid), "kick-out fixture: maid below the share-bed tier");
+            hub.State.Roster.Master!.Bag.Add("木材", 10);
+            Require(hub.BuildFacilityDef(DefDatabase<FacilityDef>.GetNamed("床").Id, bedroom), "kick-out fixture: maid bed built");
+            _kickBed = territory.Facilities[^1].Id;
+            var worker = hub.Day.Track(maid.Id, bedroom);
+            hub.Day.EndRoutineOf(maid.Id);
+            worker.RoomId = bedroom;
+            worker.FacilityId = _kickBed;
+            worker.Goal = ActionKind.Sleep;
+            worker.Phase = WorkPhase.Working;
+            _kickFrom = hub.PlayerRoomId;
+            hub.Enter(bedroom);
+            _root.HubScreen.ShowTab(0);
+        });
+        _steps.Enqueue(() => ClickHub(PortraitAction.Cell, _root.HubScreen.DebugHub.PlayerRoomId));
+        _steps.Enqueue(() => ClickHub(PortraitAction.Fixture, _kickBed));
+        _steps.Enqueue(() =>
+        {
+            var screen = _root.HubScreen;
+            var hub = screen.DebugHub;
+            Require(hub.UsingFixtureId != _kickBed, "kicked-out player is not placed in the bed");
+            Require(hub.UseRefusal.Contains("踢") && screen.DebugNotice == hub.UseRefusal, "kick-out shows as a toast");
+            Require(!hub.Log.Any(e => e.Text == hub.UseRefusal), "kick-out toast is not also logged");
+            Shoot("bed_kickout", screen);
+            hub.Day.EndRoutineOf(hub.State.Roster.Members.First(m => !m.IsMaster && m.IsMaid()).Id);
+            hub.Enter(_kickFrom); // 回到摆满设施的那间，后面的开发探针按它来
+            screen.ShowTab(0);
+        });
     }
 
     private void ClickHub(PortraitAction action, int index)

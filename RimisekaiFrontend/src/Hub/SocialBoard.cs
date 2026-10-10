@@ -209,11 +209,7 @@ public sealed partial class HubSession
 
     private bool RequireFavor(CharacterState who, int favor, string refusedText = "")
     {
-        // 接受判定：基础好感档 × 特质百分比，再叠心情修正
-        //（心情 50 为中点，每 10 点心情折 4 档；特质倍率见 PersonalityTraits.TouchGatePercent）。
-        var gate = favor * PersonalityTraits.TouchGatePercent(who) / 100
-            - (int)((who.Affect.Mood - 50) * 0.4f);
-        if (who.Condition.Favor >= System.Math.Max(0, gate))
+        if (Intimacy.Accepts(who, favor))
             return true;
         Write(refusedText.Length > 0 ? refusedText : $"{who.Name}躲开了。");
         return false;
