@@ -183,7 +183,7 @@ public static class BattleLoot
     /// <summary>
     /// 掷一方的掉落：只从倒下的成员身上掷，金钱全额入账，
     /// 掉落逐行按百分比判定、按数量区间取值。未倒下者（如逃散的敌人）不掉落。
-    /// 对方打赢时，倒下的敌人再按 <see cref="GearLoot"/> 掷装备（危险等级取 <see cref="Battle.DangerTier"/>，
+    /// 对方打赢时，倒下的敌人再按 <see cref="GearLoot"/> 掷装备（看敌人的挑战等级与正主标记，
     /// 委托首领看 <see cref="Combatant.QuestBoss"/>）；<paramref name="gearRng"/> 掷装备的骰子。
     /// </summary>
     public static LootResult Roll(Battle battle, CombatSide side, Func<int>? d100 = null, System.Random? gearRng = null)
@@ -200,7 +200,7 @@ public static class BattleLoot
             foreach (var (itemId, count) in LootGenerator.Roll(m.Loot, roll))
                 result.Add(itemId, count);
             if (won && m.Enemy != null)
-                result.Gear.AddRange(GearLoot.Roll(m.Enemy, battle.DangerTier, m.QuestBoss, rng));
+                result.Gear.AddRange(GearLoot.Roll(m.Enemy, m.QuestBoss, rng));
         }
         return result;
     }

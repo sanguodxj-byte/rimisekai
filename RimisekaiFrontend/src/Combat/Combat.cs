@@ -283,9 +283,6 @@ public sealed class Battle
     /// <summary>战斗发生地的地区/地城名称（与领地同级，如“迷宫地下城”）。战斗绝不在领地内。</summary>
     public string PlaceName { get; init; } = "迷宫地下城";
 
-    /// <summary>战斗发生地的危险等级 1–4（野外按离领地远近，地城按 run.Tier）：定装备掉落的材质窗口与附魔率。</summary>
-    public int DangerTier { get; init; } = 1;
-
     private readonly GameCatalog? _catalog;
     private readonly Func<int>? _d100;
     private readonly CombatSide _controlled;

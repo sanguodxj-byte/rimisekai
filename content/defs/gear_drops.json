@@ -4,17 +4,50 @@
     {
       "defName": "GearDrop_Standard",
       "label": "怪物掉装备",
-      "description": "所有敌人都可能掉装备，最好的装备都是掉的。字段写法见 docs/怪物表规范.md「装备掉落」。",
-      "threats": [
-        { "threat": 1, "dropPercent": 8 },
-        { "threat": 2, "dropPercent": 20 },
-        { "threat": 3, "dropPercent": 60 },
-        { "threat": 4, "dropPercent": 100 }
+      "description": "所有敌人都可能掉装备，最好的装备都是掉的。掉率、材质窗口、附魔率与小兵品质按敌人的挑战等级（CR）分段，正主（遭遇里的首领）另走首领那套。字段写法见 docs/怪物表规范.md「装备掉落」。",
+      "bands": [
+        {
+          "crMin": "0", "dropPercent": 8, "enchantPercent": 15,
+          "weapon": ["木材", "青铜", "珊瑚"], "armor": ["布", "皮"],
+          "quality": [
+            { "quality": "Crude", "weight": 30 }, { "quality": "Common", "weight": 45 }, { "quality": "Fine", "weight": 18 },
+            { "quality": "Epic", "weight": 6 }, { "quality": "Legendary", "weight": 1 }
+          ]
+        },
+        {
+          "crMin": "2", "dropPercent": 15, "enchantPercent": 30,
+          "weapon": ["青铜", "珊瑚", "铁"], "armor": ["皮", "铁"],
+          "quality": [
+            { "quality": "Crude", "weight": 20 }, { "quality": "Common", "weight": 45 }, { "quality": "Fine", "weight": 24 },
+            { "quality": "Epic", "weight": 9 }, { "quality": "Legendary", "weight": 2 }
+          ]
+        },
+        {
+          "crMin": "5", "dropPercent": 30, "enchantPercent": 50,
+          "weapon": ["铁", "钢", "秘银"], "armor": ["铁", "钢", "秘银"],
+          "quality": [
+            { "quality": "Crude", "weight": 10 }, { "quality": "Common", "weight": 40 }, { "quality": "Fine", "weight": 32 },
+            { "quality": "Epic", "weight": 14 }, { "quality": "Legendary", "weight": 4 }
+          ]
+        },
+        {
+          "crMin": "9", "dropPercent": 50, "enchantPercent": 70,
+          "weapon": ["钢", "秘银", "精金"], "armor": ["钢", "秘银", "精金"],
+          "quality": [
+            { "quality": "Common", "weight": 35 }, { "quality": "Fine", "weight": 35 },
+            { "quality": "Epic", "weight": 22 }, { "quality": "Legendary", "weight": 8 }
+          ]
+        },
+        {
+          "crMin": "14", "dropPercent": 70, "enchantPercent": 85,
+          "weapon": ["秘银", "精金", "以太"], "armor": ["秘银", "精金", "以太"],
+          "quality": [
+            { "quality": "Common", "weight": 20 }, { "quality": "Fine", "weight": 35 },
+            { "quality": "Epic", "weight": 30 }, { "quality": "Legendary", "weight": 15 }
+          ]
+        }
       ],
-      "extraDropThreat": 4,
-      "extraDropPercent": 40,
       "questBossMinDrops": 1,
-      "bossThreat": 3,
       "weaponWeight": 40,
       "armorWeight": 45,
       "accessoryWeight": 15,
@@ -22,28 +55,17 @@
         { "slot": "Ring1", "weight": 1 },
         { "slot": "Neck", "weight": 1 }
       ],
-      "tiers": [
-        { "tier": 1, "weapon": ["木材", "青铜", "珊瑚"], "armor": ["布", "皮"], "enchantPercent": 15 },
-        { "tier": 2, "weapon": ["青铜", "珊瑚", "铁"], "armor": ["皮", "铁"], "enchantPercent": 30 },
-        { "tier": 3, "weapon": ["铁", "钢", "秘银"], "armor": ["铁", "钢", "秘银"], "enchantPercent": 50 },
-        { "tier": 4, "weapon": ["钢", "秘银", "精金"], "armor": ["钢", "秘银", "精金"], "enchantPercent": 70 }
-      ],
-      "bossMaterialUpgradePercent": 30,
-      "bossEnchantBonus": 20,
       "minion": {
-        "quality": [
-          { "quality": "Crude", "weight": 30 },
-          { "quality": "Common", "weight": 45 },
-          { "quality": "Fine", "weight": 18 },
-          { "quality": "Epic", "weight": 6 },
-          { "quality": "Legendary", "weight": 1 }
-        ],
         "blessedPercent": 5,
         "enhancePercent": 15,
         "enhanceMin": 1,
         "enhanceMax": 2
       },
       "boss": {
+        "dropPercent": 100,
+        "extraDropPercent": 40,
+        "materialUpgradePercent": 30,
+        "enchantBonus": 20,
         "quality": [
           { "quality": "Common", "weight": 15 },
           { "quality": "Fine", "weight": 35 },

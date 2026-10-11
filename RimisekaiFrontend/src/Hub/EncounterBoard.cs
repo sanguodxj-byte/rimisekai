@@ -302,7 +302,7 @@ public sealed partial class HubSession
         // 委托地城的正主倒下必掉装备。
         var questBoss = e.Source == EncounterSource.DungeonBoss && _dungeon!.Quest != null;
         var session = Encounters.Start(State, e.Foes, catalog, e.Place, WorldPartyIds(),
-            dangerTier: e.Tier, questBoss: questBoss);
+            questBoss: questBoss);
         if (session == null)
             return null;
         if (e.Source == EncounterSource.DungeonBoss)

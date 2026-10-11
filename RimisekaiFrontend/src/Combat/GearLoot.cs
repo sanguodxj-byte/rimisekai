@@ -30,39 +30,40 @@ public sealed class LootGear
 
 /// <summary>
 /// 怪物掉装备：照 <see cref="GearDropDef"/>（content/defs/gear_drops.json）给一只倒下的敌人掷装备实例。
-/// 掉不掉看威胁等级（威胁 4 再掷第二件，委托首领保底），种类、材质（危险等级窗口，首领可升一档）、
-/// 品质、附魔、祝福、强化都按表掷好，再显式交给 <see cref="WeaponForge"/> / <see cref="EquipForge"/> 出实例。
+/// 掉不掉看 CR 段（正主走首领掉率并再掷第二件，委托首领保底），种类、材质（CR 段窗口，正主可升一档）、
+/// 品质（小兵按 CR 段、正主按首领表）、附魔、祝福、强化都按表掷好，再显式交给 <see cref="WeaponForge"/> / <see cref="EquipForge"/> 出实例。
+/// 站位层（threatTier）不参与。
 /// </summary>
 public static class GearLoot
 {
     /// <summary>一只倒下的敌人掉的装备。<paramref name="rng"/> 掷全部骰子（测试可注入定种子）。</summary>
-    public static List<LootGear> Roll(EnemyDef enemy, int dangerTier, bool questBoss, Random rng)
+    public static List<LootGear> Roll(EnemyDef enemy, bool questBoss, Random rng)
     {
         var rules = GearDropDef.Standard;
+        var band = rules.Band(enemy.Cr);
         var drops = new List<LootGear>();
         var row = enemy.Gear;
-        var firstRate = row == null ? rules.DropPercent(enemy.ThreatTier) : row.RatePercent;
+        var firstRate = row?.RatePercent ?? (enemy.Boss ? rules.Boss.DropPercent : band.DropPercent);
         if (rng.Next(100) < firstRate)
-            drops.Add(Forge(rules, enemy, row, dangerTier, rng));
-        if (enemy.ThreatTier >= rules.ExtraDropThreat && rng.Next(100) < rules.ExtraDropPercent)
-            drops.Add(Forge(rules, enemy, null, dangerTier, rng));
+            drops.Add(Forge(rules, band, enemy, row, rng));
+        if (enemy.Boss && rng.Next(100) < rules.Boss.ExtraDropPercent)
+            drops.Add(Forge(rules, band, enemy, null, rng));
         while (questBoss && drops.Count < rules.QuestBossMinDrops)
-            drops.Add(Forge(rules, enemy, row, dangerTier, rng));
+            drops.Add(Forge(rules, band, enemy, row, rng));
         return drops;
     }
 
     /// <summary>出一件：种类 → 材质 → 品质/附魔/祝福/强化，全部显式传给锻炉。</summary>
-    private static LootGear Forge(GearDropDef rules, EnemyDef enemy, EnemyGear? row, int dangerTier, Random rng)
+    private static LootGear Forge(GearDropDef rules, GearDropBand band, EnemyDef enemy, EnemyGear? row, Random rng)
     {
-        var boss = enemy.ThreatTier >= rules.BossThreat;
-        var grade = rules.Grade(enemy.ThreatTier);
-        var tier = rules.Tier(dangerTier);
+        var boss = enemy.Boss;
+        GearDropGrade grade = boss ? rules.Boss : rules.Minion;
         var kind = row?.Kind ?? RollKind(rules, rng);
 
-        var quality = Weighted(grade.Quality, q => q.Weight, rng).Quality;
+        var quality = Weighted(boss ? rules.Boss.Quality : band.Quality, q => q.Weight, rng).Quality;
         if (row?.MinQuality is { } floor && quality < floor)
             quality = floor;
-        var enchantPercent = tier.EnchantPercent + (boss ? rules.BossEnchantBonus : 0);
+        var enchantPercent = band.EnchantPercent + (boss ? rules.Boss.EnchantBonus : 0);
         var enchant = rng.Next(100) < enchantPercent ? WeaponForge.RollEnchantPublic(rng)! : "";
         var blessed = rng.Next(100) < grade.BlessedPercent;
         var enhance = rng.Next(100) < grade.EnhancePercent ? rng.Next(grade.EnhanceMin, grade.EnhanceMax + 1) : 0;
@@ -74,21 +75,21 @@ public static class GearLoot
             {
                 var types = DefDatabase<WeaponTypeDef>.All.ToList();
                 var type = row?.WeaponType ?? enemy.Weapon ?? types[rng.Next(types.Count)].Type;
-                var material = Material(rules, tier.Weapon, m => m.WeaponUsable, boss, minMaterial, rng);
+                var material = Material(rules, band.Weapon, m => m.WeaponUsable, boss, minMaterial, rng);
                 return LootGear.Of(WeaponForge.Forge(material, type, quality, enchant, blessed, enhance, rng: rng));
             }
             case EquipKind.Armor:
             {
                 var slots = DefDatabase<ArmorSlotDef>.All.ToList();
                 var slot = row?.Slot ?? Enum.Parse<EquipSlot>(slots[rng.Next(slots.Count)].DefName);
-                var material = Material(rules, tier.Armor, m => m.ArmorUsable, boss, minMaterial, rng);
+                var material = Material(rules, band.Armor, m => m.ArmorUsable, boss, minMaterial, rng);
                 return LootGear.Of(EquipForge.ForgeArmor(slot, material, quality, enchant, blessed, enhance, rng));
             }
             default:
             {
                 var slot = row?.Slot ?? Weighted(rules.AccessorySlots, s => s.Weight, rng).Slot;
                 var accessory = Weighted(DefDatabase<AccessoryDef>.All.Where(a => a.Weight > 0).ToList(), a => a.Weight, rng);
-                var material = Material(rules, tier.Armor, m => m.ArmorUsable, boss, minMaterial, rng);
+                var material = Material(rules, band.Armor, m => m.ArmorUsable, boss, minMaterial, rng);
                 return LootGear.Of(EquipForge.ForgeAccessory(slot, accessory.DefName, material, quality, enchant, blessed, enhance, rng));
             }
         }
@@ -103,7 +104,7 @@ public static class GearLoot
     }
 
     /// <summary>
-    /// 材质：危险等级窗口里等权抽一种；首领按升档率沿材料表（该种类能用的材料按 tier 排）再升一档，以太封顶；
+    /// 材质：CR 段窗口里等权抽一种；正主按升档率沿材料表（该种类能用的材料按 tier 排）再升一档，以太封顶；
     /// 覆盖行给了材质下限的，低于下限换成下限。
     /// </summary>
     private static string Material(GearDropDef rules, List<string> pool, Func<MaterialDef, bool> usable,
@@ -111,7 +112,7 @@ public static class GearLoot
     {
         var ladder = DefDatabase<MaterialDef>.All.Where(usable).OrderBy(m => m.Tier).ToList();
         var material = DefDatabase<MaterialDef>.Get(pool[rng.Next(pool.Count)])!;
-        if (boss && rng.Next(100) < rules.BossMaterialUpgradePercent
+        if (boss && rng.Next(100) < rules.Boss.MaterialUpgradePercent
             && ladder.FirstOrDefault(m => m.Tier > material.Tier) is { } better)
             material = better;
         if (minMaterial.Length > 0 && DefDatabase<MaterialDef>.Get(minMaterial)!.Tier > material.Tier)
