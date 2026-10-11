@@ -50,20 +50,6 @@
       "defaultPool": true
     },
     {
-      "id": 24,
-      "category": "Treasure",
-      "name": "藏宝库",
-      "terrain": "Plains",
-      "defaultPool": true
-    },
-    {
-      "id": 25,
-      "category": "Shrine",
-      "name": "神龛",
-      "terrain": "Plains",
-      "defaultPool": true
-    },
-    {
       "id": 1025,
       "category": "Nature",
       "name": "草地",
@@ -250,6 +236,216 @@
       "category": "Nature",
       "name": "禅思树林",
       "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1052,
+      "category": "Instance",
+      "name": "储藏间",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1053,
+      "category": "Instance",
+      "name": "石棺室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1054,
+      "category": "Instance",
+      "name": "祭坛间",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1055,
+      "category": "Instance",
+      "name": "藏书室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1056,
+      "category": "Instance",
+      "name": "积水石室",
+      "terrain": "Lake",
+      "defaultPool": false
+    },
+    {
+      "id": 1057,
+      "category": "Instance",
+      "name": "兵器库",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1058,
+      "category": "Instance",
+      "name": "囚室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1059,
+      "category": "Instance",
+      "name": "拱顶大厅",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1060,
+      "category": "Instance",
+      "name": "机关室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1061,
+      "category": "Instance",
+      "name": "炼金残室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1062,
+      "category": "Instance",
+      "name": "骨灰室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1063,
+      "category": "Instance",
+      "name": "瞭望室",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1064,
+      "category": "Instance",
+      "name": "林间空地",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1065,
+      "category": "Instance",
+      "name": "藤蔓小径",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1066,
+      "category": "Instance",
+      "name": "潭边石台",
+      "terrain": "Lake",
+      "defaultPool": false
+    },
+    {
+      "id": 1067,
+      "category": "Instance",
+      "name": "废弃营地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1068,
+      "category": "Instance",
+      "name": "古树空洞",
+      "terrain": "Forest",
+      "defaultPool": false
+    },
+    {
+      "id": 1069,
+      "category": "Instance",
+      "name": "林中石圈",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1070,
+      "category": "Instance",
+      "name": "壕沟入口",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1071,
+      "category": "Instance",
+      "name": "兵器残阵",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1072,
+      "category": "Instance",
+      "name": "阵亡者高地",
+      "terrain": "Grassland",
+      "defaultPool": false
+    },
+    {
+      "id": 1073,
+      "category": "Instance",
+      "name": "焦土营垒",
+      "terrain": "Plains",
+      "defaultPool": false
+    },
+    {
+      "id": 1074,
+      "category": "Instance",
+      "name": "断旗坡",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1075,
+      "category": "Instance",
+      "name": "破碎城垣",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1076,
+      "category": "Instance",
+      "name": "矿道岔口",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1077,
+      "category": "Instance",
+      "name": "崩塌支道",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1078,
+      "category": "Instance",
+      "name": "井下水窟",
+      "terrain": "Lake",
+      "defaultPool": false
+    },
+    {
+      "id": 1079,
+      "category": "Instance",
+      "name": "废弃工棚",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1080,
+      "category": "Instance",
+      "name": "矿脉石室",
+      "terrain": "Rocky",
+      "defaultPool": false
+    },
+    {
+      "id": 1081,
+      "category": "Instance",
+      "name": "深井底层",
+      "terrain": "Rocky",
       "defaultPool": false
     }
   ]

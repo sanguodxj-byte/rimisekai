@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Catalog;
+using Rimisekai.Combat;
 using Rimisekai.Housing;
 using Rimisekai.Session;
 using Rimisekai.WorldMap;
@@ -12,8 +14,7 @@ public enum EncounterSource
     Wild,
     DungeonGuard,
     DungeonBoss,
-    DungeonTreasure,
-    DungeonShrine,
+    DungeonFacility,
 }
 
 /// <summary>
@@ -29,9 +30,11 @@ public sealed class Encounter
     /// <summary>地城遭遇所在的地城编号（遗迹＝兴趣点编号）与生成器房号；野外为 -1。</summary>
     public int PoiId { get; init; } = -1;
     public int RoomId { get; init; } = -1;
+    public string FacilityName { get; init; } = "";
 
     /// <summary>落账的钱（可负）。</summary>
     public int Money { get; init; }
+    public List<(string ItemId, int Count)> Loot { get; init; } = new();
 
     public bool IsBattle => Def.Foes.Count > 0;
 
@@ -47,6 +50,8 @@ public sealed class Encounter
                 parts.Add($"获得 {Money} 金币。");
             if (Money < 0)
                 parts.Add($"失去 {-Money} 金币。");
+            foreach (var (itemId, count) in Loot)
+                parts.Add($"获得 {itemId} ×{count}。");
             if (!IsBattle && Def.Minutes > 0)
                 parts.Add($"耽搁了 {Def.Minutes} 分钟。");
             if (Def.Mood > 0)
@@ -157,8 +162,8 @@ public sealed partial class HubSession
     }
 
     /// <summary>
-    /// 地城里踏进一间石室：首领房（全图出口）、宝库、神龛各有其事；普通石室按 guardPercent 有守卫。
-    /// 已了结的石室不再起事；首领倒下的地城只剩宝库神龛还没动过的那些。
+    /// 地城里房间本身只可能直接遇敌（守卫或首领）；非战斗事件由房间所附设施提供。
+    /// 已了结的房间不再起事；首领倒下后仍可触发未探索设施。
     /// </summary>
     private void CheckDungeonRoom(int fromRoomId, int roomId)
     {
@@ -175,26 +180,23 @@ public sealed partial class HubSession
         var roll = Roll(run.Key, genId, run.Seed);
         EncounterDef? def = null;
         var source = EncounterSource.DungeonGuard;
+        var facilityName = "";
         if (room.IsEnd)
         {
             if (cleared)
                 return;
-            def = run.Boss ?? PickByTier(dungeon.Bosses, run.Tier);
+            def = run.Boss ?? dungeon.BossAtTier(run.Tier, roll >> 10);
             source = EncounterSource.DungeonBoss;
         }
-        else if (room.RoomType == PoiMap.PoiRoomType.Treasure)
+        else if (room.FacilityIds.Select(MapCatalog.Default.GetFacilityById).FirstOrDefault(f => f.DungeonEvent != null) is { } facility)
         {
-            def = dungeon.Treasure;
-            source = EncounterSource.DungeonTreasure;
-        }
-        else if (room.RoomType == PoiMap.PoiRoomType.Shrine)
-        {
-            def = dungeon.Shrine;
-            source = EncounterSource.DungeonShrine;
+            def = facility.DungeonEvent;
+            facilityName = facility.Name;
+            source = EncounterSource.DungeonFacility;
         }
         else if (!cleared && roll % 100 < (uint)dungeon.GuardPercent)
         {
-            def = PickByTier(dungeon.Guards, run.Tier);
+            def = dungeon.GuardAtTier(run.Tier, roll >> 10);
         }
         if (def == null)
             return;
@@ -204,9 +206,11 @@ public sealed partial class HubSession
             Def = def,
             Source = source,
             Place = room.Name,
+            FacilityName = facilityName,
             PoiId = run.Key,
             RoomId = genId,
             Money = RollMoney(def, roll >> 8),
+            Loot = RollFacilityLoot(def, run.Key, genId, run.Seed),
         };
         if (PendingEncounter.IsBattle)
             Write($"{room.Name}里，{def.Title}挡住了去路。");
@@ -225,11 +229,19 @@ public sealed partial class HubSession
         if (e.Def.Mood != 0)
             foreach (var id in WorldPartyIds())
                 State.Roster.Find(id)?.Affect.AddMood(e.Def.Mood);
+        var carrier = State.Roster.Master;
+        if (carrier != null)
+            foreach (var (itemId, count) in e.Loot)
+                State.Territory.Produce(carrier, itemId, count);
         if (e.Source != EncounterSource.Wild)
             _dungeon!.Ledger.Spend(e.PoiId, e.RoomId);
-        Write(e.Money > 0 ? $"{e.Title}：得了 {e.Money} 金币。"
-            : e.Money < 0 ? $"{e.Title}：破了 {-e.Money} 金币。"
-            : $"{e.Title}。");
+        var rewards = new List<string>();
+        if (e.Money > 0)
+            rewards.Add($"得了 {e.Money} 金币");
+        if (e.Money < 0)
+            rewards.Add($"破了 {-e.Money} 金币");
+        rewards.AddRange(e.Loot.Select(item => $"{item.ItemId}×{item.Count}"));
+        Write(rewards.Count == 0 ? $"{e.Title}。" : $"{e.Title}：{string.Join("、", rewards)}。");
     }
 
     /// <summary>避战：野外绕路多走一段（照样耗时），地城退回上一间石室。</summary>
@@ -353,20 +365,16 @@ public sealed partial class HubSession
         return pool[^1];
     }
 
-    /// <summary>挑够得着这一等级里门槛最高的那一档。</summary>
-    private static EncounterDef PickByTier(List<EncounterDef> defs, int tier)
-    {
-        EncounterDef? best = null;
-        foreach (var d in defs)
-            if (d.MinTier <= tier && (best == null || d.MinTier > best.MinTier))
-                best = d;
-        return best!;
-    }
-
     private static int RollMoney(EncounterDef def, uint roll) =>
         def.MoneyMax > def.MoneyMin
             ? def.MoneyMin + (int)(roll % (uint)(def.MoneyMax - def.MoneyMin + 1))
             : def.Money;
+
+    private static List<(string ItemId, int Count)> RollFacilityLoot(EncounterDef def, int poiId, int roomId, int seed)
+    {
+        var index = 0;
+        return LootGenerator.Roll(def.Loot, () => (int)(Roll(poiId, roomId, seed + index++) % 100));
+    }
 
     private static uint Roll(int a, int b, int c)
     {

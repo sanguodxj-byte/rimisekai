@@ -30,8 +30,6 @@ public static class PoiMapImageExporter
     public static readonly Rgb ColorRoomNormal = new(195, 205, 215);    // 浅灰蓝普通房
     public static readonly Rgb ColorRoomStart = new(70, 200, 110);      // 翠绿起点
     public static readonly Rgb ColorRoomEnd = new(235, 75, 75);         // 亮红终点（必须在边缘）
-    public static readonly Rgb ColorRoomTreasure = new(255, 215, 0);    // 金色宝藏
-    public static readonly Rgb ColorRoomShrine = new(130, 100, 240);    // 秘紫神龛
     public static readonly Rgb ColorRoomCorridor = new(160, 175, 190);  // 过道
 
     public static readonly Rgb ColorWall = new(60, 65, 75);             // 房间墙线
@@ -99,8 +97,6 @@ public static class PoiMapImageExporter
                         {
                             PoiRoomType.Start => ColorRoomStart,
                             PoiRoomType.End => ColorRoomEnd,
-                            PoiRoomType.Treasure => ColorRoomTreasure,
-                            PoiRoomType.Shrine => ColorRoomShrine,
                             PoiRoomType.Corridor => ColorRoomCorridor,
                             _ => ColorRoomNormal,
                         };

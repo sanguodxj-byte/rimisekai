@@ -23,6 +23,18 @@ public static class PoiAssemblyGenerator
     public static PoiMapData GenerateForPoi(WorldPoiType type, int seed = 42)
     {
         var (bw, bh, districts) = MapCatalog.Default.GetPoiScale(type);
+        if (MapCatalog.Default.GetPoiDungeonId(type) is { Length: > 0 } dungeonId)
+        {
+            var dungeonBlocks = new List<(int bx, int by)>();
+            var dungeonIds = new List<string>();
+            for (var by = 0; by < bh; by++)
+                for (var bx = 0; bx < bw; bx++)
+                {
+                    dungeonBlocks.Add((bx, by));
+                    dungeonIds.Add(dungeonId);
+                }
+            return GenerateCustom(seed, dungeonBlocks, dungeonIds: dungeonIds);
+        }
         var blockCoords = new List<(int bx, int by)>();
         for (var by = 0; by < bh; by++)
         {
@@ -32,6 +44,21 @@ public static class PoiAssemblyGenerator
             }
         }
         return GenerateCustom(seed, blockCoords, districts: districts);
+    }
+
+    /// <summary>按副本原型与数据表中的拼法生成 Roguelike 地图。</summary>
+    public static PoiMapData GenerateDungeon(string dungeonId, int seed = 42)
+    {
+        var layouts = MapCatalog.Default.Dungeon.Layouts;
+        var layout = layouts[(int)((uint)seed % (uint)layouts.Count)];
+        var blocks = new List<(int bx, int by)>();
+        var dungeonIds = new List<string>();
+        foreach (var cell in layout)
+        {
+            blocks.Add((cell[0], cell[1]));
+            dungeonIds.Add(dungeonId);
+        }
+        return GenerateCustom(seed, blocks, dungeonIds: dungeonIds);
     }
 
     /// <summary>
@@ -67,10 +94,13 @@ public static class PoiAssemblyGenerator
         int seed,
         IReadOnlyList<(int bx, int by)> blockCoords,
         int roomCountPerBlock = 25,
-        IReadOnlyList<string>? districts = null)
+        IReadOnlyList<string>? districts = null,
+        IReadOnlyList<string>? dungeonIds = null)
     {
         if (blockCoords.Count == 0)
             throw new ArgumentException("至少需要一个 5x5 块配置", nameof(blockCoords));
+        if (dungeonIds != null && dungeonIds.Count != blockCoords.Count)
+            throw new ArgumentException("副本原型 ID 数量必须与区块数量一致", nameof(dungeonIds));
 
         var map = new PoiMapData(seed);
         var rng = new SeededRng(seed);
@@ -85,6 +115,7 @@ public static class PoiAssemblyGenerator
             // 首块起点置于外边缘 (如西门 0,2)，其他块由内部自动排布
             (int x, int y)? preferredStart = i == 0 ? (0, 2) : null;
             var district = districts != null && i < districts.Count ? districts[i] : "";
+            var dungeonId = dungeonIds == null ? "" : dungeonIds[i];
 
             var block = PoiBlockGenerator.GenerateBlock(
                 blockX: bx,
@@ -94,7 +125,8 @@ public static class PoiAssemblyGenerator
                 seed: blockSeed,
                 targetRoomCount: roomCountPerBlock,
                 preferredStart: preferredStart,
-                district: district);
+                district: district,
+                dungeonId: dungeonId);
 
             map.Blocks.Add(block);
 
@@ -223,6 +255,10 @@ public static class PoiAssemblyGenerator
 
         if (candidatePairs.Count > 0)
         {
+            var variedPairs = candidatePairs.FindAll(pair => pair.roomA.RoomTemplateId != pair.roomB.RoomTemplateId);
+            if (variedPairs.Count > 0)
+                candidatePairs = variedPairs;
+
             // 打通 1~2 条边界通道
             var connectsToMake = System.Math.Min(candidatePairs.Count, rng.NextRange(1, 3));
             // 洗牌

@@ -168,7 +168,7 @@ public sealed partial class HubSession
             worker.FollowsPlayer = true;
             _dungeon.Recruited.Add(id);
         }
-        var start = ImportScene(State.EnterQuestDungeon(seed));
+        var start = ImportScene(State.EnterQuestDungeon(seed, def.DungeonId));
         LeaveTerritoryBody();
         SetLayer(MapLayer.QuestPlace, def.Name);
         Enter(start);
