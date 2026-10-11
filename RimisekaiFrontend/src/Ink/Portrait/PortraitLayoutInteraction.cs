@@ -52,8 +52,9 @@ public static partial class PortraitLayout
     /// <summary>对白框高：顶部名牌行 + 分隔线 + 5 行正文。</summary>
     public const float SceneDialogHeight = 560f;
 
-    /// <summary>对话立绘（上半身）：贴左缘（出血 40），宽 920、高 1250，往下沉到只有头露在对白框上缘之上（框顶上方 470 起），身子压在半透明对白框后。</summary>
-    public static Rect2 SceneBust(int visibleChoices) => new(-40f, SceneDialog(visibleChoices).Position.Y - 470f, 920f, 1250f);
+    /// <summary>对话立绘（大半身）：顶栏下起，左右各出血 60 铺满屏宽，下沿压进对白框顶 60（对白框不透明，身子藏在框后）。</summary>
+    public static Rect2 SceneBust(int visibleChoices) =>
+        new(-60f, SafeTop + 20f + TouchMin + 40f, CanvasWidth + 120f, SceneDialog(visibleChoices).Position.Y + 60f - (SafeTop + 20f + TouchMin + 40f));
     /// <summary>名牌行（框内左上）：说话人名字 + 好感签，竖向中线。</summary>
     public static float SceneNameY(Rect2 dialog) => dialog.Position.Y + 62f;
     /// <summary>名牌行下的分隔线 y。</summary>
