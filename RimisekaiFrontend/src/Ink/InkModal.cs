@@ -279,7 +279,9 @@ public static class InkModalFactory
         }
 
         // 价值排序：单件市场价值高的（高稀有度装备、高阶材料）排在上面。
+        // 掉落的装备实例已由结算登记进领地的两张实例表，与物品同走 Items.Info 取名字、身价与品质。
         settlement.Items.AddRange(loot.Items
+            .Concat(loot.Gear.Select(gear => (ItemId: gear.Id, Count: 1)))
             .Select(item =>
             {
                 var info = Rimisekai.Defs.Items.Info(territory, item.ItemId)!.Value;

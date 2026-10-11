@@ -290,6 +290,8 @@ public static class DefLoader
                 return Register(JsonSerializer.Deserialize<ArmorSlotDef>(raw, Options));
             case "AccessoryDef":
                 return Register(JsonSerializer.Deserialize<AccessoryDef>(raw, Options));
+            case "GearDropDef":
+                return Register(JsonSerializer.Deserialize<GearDropDef>(raw, Options));
             case "ActionDef":
                 return Register(JsonSerializer.Deserialize<ActionDef>(raw, Options));
             case "RecipeDef":

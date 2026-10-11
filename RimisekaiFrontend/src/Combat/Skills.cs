@@ -138,11 +138,14 @@ public static class BattleRewards
         side == CombatSide.Attacker ? CombatOutcome.AttackerWin : CombatOutcome.DefenderWin;
 }
 
-/// <summary>一方阵营的掉落汇总：金钱进账与物品清单，落袋由调用方决定。</summary>
+/// <summary>一方阵营的掉落汇总：金钱进账、物品清单与装备实例，落袋由调用方决定。</summary>
 public sealed class LootResult
 {
     public long Money { get; set; }
     public List<(string ItemId, int Count)> Items { get; } = new();
+
+    /// <summary>掉落的装备实例（一件一条，不并行）；只在胜利时有。</summary>
+    public List<LootGear> Gear { get; } = new();
 
     /// <summary>记一笔掉落：同种物品并成一行（结算单上不重复列「兽皮 ×1」十几行）。</summary>
     public void Add(string itemId, int count)
@@ -180,10 +183,14 @@ public static class BattleLoot
     /// <summary>
     /// 掷一方的掉落：只从倒下的成员身上掷，金钱全额入账，
     /// 掉落逐行按百分比判定、按数量区间取值。未倒下者（如逃散的敌人）不掉落。
+    /// 对方打赢时，倒下的敌人再按 <see cref="GearLoot"/> 掷装备（危险等级取 <see cref="Battle.DangerTier"/>，
+    /// 委托首领看 <see cref="Combatant.QuestBoss"/>）；<paramref name="gearRng"/> 掷装备的骰子。
     /// </summary>
-    public static LootResult Roll(Battle battle, CombatSide side, Func<int>? d100 = null)
+    public static LootResult Roll(Battle battle, CombatSide side, Func<int>? d100 = null, System.Random? gearRng = null)
     {
         var roll = d100 ?? (() => System.Random.Shared.Next(100));
+        var rng = gearRng ?? System.Random.Shared;
+        var won = battle.Outcome == (side == CombatSide.Defender ? CombatOutcome.AttackerWin : CombatOutcome.DefenderWin);
         var result = new LootResult();
         foreach (var m in battle.Members)
         {
@@ -192,6 +199,8 @@ public static class BattleLoot
             result.Money += m.MoneyReward;
             foreach (var (itemId, count) in LootGenerator.Roll(m.Loot, roll))
                 result.Add(itemId, count);
+            if (won && m.Enemy != null)
+                result.Gear.AddRange(GearLoot.Roll(m.Enemy, battle.DangerTier, m.QuestBoss, rng));
         }
         return result;
     }

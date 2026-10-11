@@ -41,11 +41,13 @@ public static class Encounters
     /// <paramref name="partyIds"/> 传任务编成时，只让名单里的人上阵（玩家本人始终随行）；
     /// 不传或为空则按名册全员出动（据点遭遇战用）。
     /// <paramref name="waves"/> 为连战在首波之后依次补上的各波（每清一波有补给回合）；不传即一波打完。
+    /// <paramref name="dangerTier"/> 为战斗发生地的危险等级（定装备掉落的材质与附魔）；
+    /// <paramref name="questBoss"/> 为委托的正主之战：首波里威胁等级最高的敌人记为委托首领，倒下必掉装备。
     /// </summary>
     public static BattleSession? Start(
         GameState state, IReadOnlyList<EnemyDef> enemies, GameCatalog? catalog = null,
         string placeName = "迷宫地下城", IReadOnlyList<int>? partyIds = null,
-        IReadOnlyList<IReadOnlyList<EnemyDef>>? waves = null)
+        IReadOnlyList<IReadOnlyList<EnemyDef>>? waves = null, int dangerTier = 1, bool questBoss = false)
     {
         if (enemies.Count == 0)
             return null;
@@ -79,15 +81,19 @@ public static class Encounters
         var starters = sorted.Take(4).ToList();
         var reserves = sorted.Skip(4).Take(2).ToList();
 
-        var battle = new Battle(catalog) { PlaceName = placeName };
+        var battle = new Battle(catalog) { PlaceName = placeName, DangerTier = dangerTier };
         foreach (var c in starters)
             battle.Add(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips));
         foreach (var c in reserves)
             battle.AddReserve(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips));
         Pack(state, battle);
 
+        var bossThreat = enemies.Max(def => def.ThreatTier);
         foreach (var def in enemies)
             battle.Add(Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender));
+        if (questBoss)
+            foreach (var foe in battle.Members.Where(m => m.Enemy is { } def && def.ThreatTier == bossThreat))
+                foe.QuestBoss = true;
         if (waves != null)
             foreach (var wave in waves)
                 battle.QueueWave(wave.Select(def => Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender)).ToList());

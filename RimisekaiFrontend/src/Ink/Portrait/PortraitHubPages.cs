@@ -321,8 +321,10 @@ public partial class PortraitHubScreen
 
         // 战斗委托：接下即开打（普通战斗 / 首领战一波打完；连战首波之后依次补上各波，清一波一个补给回合）。
         // 结算侧按 QuestRun 记通关与冷却。
+        // 危险等级按委托难度定；首领战的首领倒下必掉装备。
         var session = Encounters.Start(hub.State, def.Foes, placeName: def.Name, partyIds: deploy,
-            waves: def.Battle == QuestBattle.Waves ? def.Waves : null);
+            waves: def.Battle == QuestBattle.Waves ? def.Waves : null,
+            dangerTier: QuestBoard.TierOf(def.Difficulty), questBoss: def.Battle == QuestBattle.Boss);
         if (session == null)
         {
             SetNotice("这单现在接不了。");

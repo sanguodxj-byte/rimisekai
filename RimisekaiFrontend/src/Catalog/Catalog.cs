@@ -228,6 +228,32 @@ public sealed class EnemyLoot
     public int RatePercent { get; init; } = 100;
 }
 
+/// <summary>
+/// 敌人的装备掉落覆盖行：写了就把这只怪的第一件掉落定死成指定的种类（专属装备），
+/// 掉率用 <see cref="RatePercent"/> 代替威胁等级掉率；材质、品质只给下限，掷出来更好的照留。
+/// 威胁 4 的第二件与其余随机项（附魔、祝福、强化）仍按规则表掷。
+/// </summary>
+public sealed class EnemyGear
+{
+    /// <summary>种类：weapon / armor / accessory。</summary>
+    public Rimisekai.Defs.EquipKind Kind { get; init; }
+
+    /// <summary>武器类型；不写用敌人自己的武器，徒手的随机。只对 weapon 有意义。</summary>
+    public Rimisekai.Character.WeaponType? WeaponType { get; init; }
+
+    /// <summary>槽位：防具填六个甲位之一，饰品填 Ring1 / Neck；不写随机。</summary>
+    public Rimisekai.Defs.EquipSlot? Slot { get; init; }
+
+    /// <summary>材质下限（materials.xml 的 defName）；掷出的材质档次低于它就换成它。空串＝不设下限。</summary>
+    public string MinMaterial { get; init; } = "";
+
+    /// <summary>品质下限；不写不设。</summary>
+    public Rimisekai.Defs.Quality? MinQuality { get; init; }
+
+    /// <summary>这件的掉率（百分比，0~100）。</summary>
+    public int RatePercent { get; init; } = 100;
+}
+
 public sealed class EnemyDef
 {
     public string Id { get; init; } = "";
@@ -277,13 +303,16 @@ public sealed class EnemyDef
     /// <summary>掉落表，击坠后逐行掷骰。</summary>
     public List<EnemyLoot> Loot { get; init; } = new();
 
+    /// <summary>装备掉落覆盖行；不写即全按 gear_drops.json 的规则掷。</summary>
+    public EnemyGear? Gear { get; init; }
+
     /// <summary>同一只怪的加强版：属性池与经验池各多给一些（委托板按星数给正主加码用），其余照抄。</summary>
     public EnemyDef Stronger(int corePool, int expPool) => new()
     {
         Id = Id, Name = Name, Weapon = Weapon, Primary = Primary, Secondary = Secondary,
         CorePool = CorePool + corePool, ExpPool = ExpPool + expPool,
         ThreatTier = ThreatTier, Column = Column, Size = Size, ActionPoints = ActionPoints,
-        Portrait = Portrait, Armour = Armour, Money = Money, Skills = Skills, Loot = Loot,
+        Portrait = Portrait, Armour = Armour, Money = Money, Skills = Skills, Loot = Loot, Gear = Gear,
     };
 }
 

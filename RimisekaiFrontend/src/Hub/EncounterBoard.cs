@@ -32,6 +32,9 @@ public sealed class Encounter
     public int RoomId { get; init; } = -1;
     public string FacilityName { get; init; } = "";
 
+    /// <summary>撞上处的危险等级 1–4（野外按离领地远近，地城按 run.Tier）：迎战时交给战斗定装备掉落。</summary>
+    public required int Tier { get; init; }
+
     /// <summary>落账的钱（可负）。</summary>
     public int Money { get; init; }
     public List<(string ItemId, int Count)> Loot { get; init; } = new();
@@ -155,6 +158,7 @@ public sealed partial class HubSession
             Def = def,
             Source = EncounterSource.Wild,
             Place = State.World.TileName(x, y),
+            Tier = tier,
             Money = RollMoney(def, roll >> 20),
         };
         Write($"行至{PendingEncounter.Place}，遇上了{def.Title}。");
@@ -209,6 +213,7 @@ public sealed partial class HubSession
             FacilityName = facilityName,
             PoiId = run.Key,
             RoomId = genId,
+            Tier = run.Tier,
             Money = RollMoney(def, roll >> 8),
             Loot = RollFacilityLoot(def, run.Key, genId, run.Seed),
         };
@@ -275,7 +280,10 @@ public sealed partial class HubSession
         var e = PendingEncounter;
         if (e == null || !e.IsBattle)
             return null;
-        var session = Encounters.Start(State, e.Def.Foes, catalog, e.Place, WorldPartyIds());
+        // 委托地城的正主倒下必掉装备。
+        var questBoss = e.Source == EncounterSource.DungeonBoss && _dungeon!.Quest != null;
+        var session = Encounters.Start(State, e.Def.Foes, catalog, e.Place, WorldPartyIds(),
+            dangerTier: e.Tier, questBoss: questBoss);
         if (session == null)
             return null;
         if (e.Source == EncounterSource.DungeonBoss)
@@ -346,6 +354,7 @@ public sealed partial class HubSession
             Def = def,
             Source = EncounterSource.Wild,
             Place = State.World.TileName(Trek.X, Trek.Y),
+            Tier = DangerTier(Trek.X, Trek.Y),
             Money = RollMoney(def, Roll(Trek.X, Trek.Y, State.Clock.TotalMinutes)),
         };
     }

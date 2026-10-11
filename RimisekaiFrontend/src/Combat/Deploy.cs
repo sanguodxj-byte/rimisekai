@@ -123,6 +123,7 @@ public static class Deploy
             ActionPoints = def.ActionPoints,
             Portrait = def.Portrait,
             MoneyReward = def.Money,
+            Enemy = def,
         };
         // 敌人不架防御、不喝药。
         foreach (var skill in sheet.Skills)

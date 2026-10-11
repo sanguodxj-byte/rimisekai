@@ -153,6 +153,12 @@ public sealed class Combatant
     public long MoneyReward { get; init; }
     public List<EnemyLoot> Loot { get; } = new();
 
+    /// <summary>敌人成军时的目录行（装备掉落按它的威胁等级、武器与 gear 覆盖行掷）；角色与手搭的参战者为 null，不掉装备。</summary>
+    public EnemyDef? Enemy { get; init; }
+
+    /// <summary>委托首领：倒下至少掉 <see cref="Defs.GearDropDef.QuestBossMinDrops"/> 件装备。由开战方标记。</summary>
+    public bool QuestBoss { get; set; }
+
     /// <summary>物理出手总量吃 Attack 类状态修正。</summary>
     public int EffStrikePower => Mod(StrikePower, StatusStat.Attack);
     public int EffDefence => Mod(Defence, StatusStat.Defence);
@@ -276,6 +282,9 @@ public sealed class Battle
 
     /// <summary>战斗发生地的地区/地城名称（与领地同级，如“迷宫地下城”）。战斗绝不在领地内。</summary>
     public string PlaceName { get; init; } = "迷宫地下城";
+
+    /// <summary>战斗发生地的危险等级 1–4（野外按离领地远近，地城按 run.Tier）：定装备掉落的材质窗口与附魔率。</summary>
+    public int DangerTier { get; init; } = 1;
 
     private readonly GameCatalog? _catalog;
     private readonly Func<int>? _d100;

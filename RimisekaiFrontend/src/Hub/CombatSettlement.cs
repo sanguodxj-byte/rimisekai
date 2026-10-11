@@ -35,7 +35,7 @@ public static class CombatSettlement
         if (battle.Outcome == CombatOutcome.Ongoing)
             return null;
 
-        // 1. 汇总本方战绩单与敌方掉落（只从倒下的敌人身上掷）。
+        // 1. 汇总本方战绩单与敌方掉落（只从倒下的敌人身上掷；装备只在打赢时掉）。
         var result = BattleRewards.Summary(battle, CombatSide.Attacker);
         var loot = BattleLoot.Roll(battle, CombatSide.Defender);
 
@@ -59,6 +59,15 @@ public static class CombatSettlement
         {
             foreach (var (itemId, count) in loot.Items)
                 state.Territory.Produce(carrier, itemId, count);
+            // 掉落的装备实例登记进武器 / 防具饰品表，按实例 Id 记 1 件进主人背包（与锻造、原配同一条路）。
+            foreach (var gear in loot.Gear)
+            {
+                if (gear.Weapon != null)
+                    state.Weapons.Add(gear.Weapon);
+                else
+                    state.Equips.Add(gear.Equip!);
+                carrier.Bag.Add(gear.Id, 1);
+            }
             // 战斗里喝掉的药剂从背包里扣。
             foreach (var (itemId, count) in battle.Consumed)
                 carrier.Bag.Add(itemId, -count);

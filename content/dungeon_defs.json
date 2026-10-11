@@ -833,7 +833,13 @@
                 "max": 2,
                 "ratePercent": 100
               }
-            ]
+            ],
+            "gear": {
+              "kind": "weapon",
+              "weaponType": "sword",
+              "minMaterial": "钢",
+              "ratePercent": 100
+            }
           },
           {
             "id": "dg_boss_guard",
