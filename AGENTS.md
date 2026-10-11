@@ -125,7 +125,7 @@
   新区网格自箭头一侧滑入、两块首尾相接（像在同一张大地图上推过去）；平移用 `PortraitFrame.SetLayer` 叠在当前 `LayerOffset` 上、画完恢复，
   滑出网格的部分用 `GothicArt.BackdropPart`＋边框带黑底＋`PortraitFrame.GothicFrameLines`/`FrameJewel` 原样盖回；
   命中块按终态登记，平移期间不收输入、不画箭头。离开通道房箭头即消失；落脚房若有回头的通道，箭头出现在对边。横版的「去往X」钮竖屏不再用。
-- 对话/演出铺满整屏：立绘作底、名牌、缺角双线框正文、铭牌选项。战斗：顶栏 → 行动顺序条 → 首领血条
+- 对话/演出铺满整屏：立绘取上半身贴左上（`SceneBust`，顶栏下起高 1250，右缘与下缘渐隐进纯暗底；2026-10-11 主人定，不再全身铺满）、名牌、缺角双线框正文、铭牌选项。战斗：顶栏 → 行动顺序条 → 首领血条
   → 敌阵 → 我方卡一排 → 底部 2×2 行动面板。
 - 组件语汇在 `PortraitFrame`（Plaque 刻字铭牌钮 / Bevel 倒角 / Segmented 燕尾横幅 / Brackets〔〕签 / Chip 菱头签 /
   石板卡＋CornerRivets / Tablet 石碑抽屉（尖拱冠，无把手）/ GothicFrame 哥特框 / SectionRule 十字珠分节线 /

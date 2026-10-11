@@ -51,6 +51,9 @@ public static partial class PortraitLayout
         new(30f, CanvasHeight - 40f - visibleChoices * SceneChoiceStep - 24f - SceneDialogHeight, CanvasWidth - 60f, SceneDialogHeight);
     /// <summary>对白框高：顶部名牌行 + 分隔线 + 5 行正文。</summary>
     public const float SceneDialogHeight = 560f;
+
+    /// <summary>对话立绘（上半身）：贴左上，顶栏下起，左缘出血 40，宽 920、高 1250。</summary>
+    public static Rect2 SceneBust => new(-40f, SafeTop + 20f + TouchMin + 20f, 920f, 1250f);
     /// <summary>名牌行（框内左上）：说话人名字 + 好感签，竖向中线。</summary>
     public static float SceneNameY(Rect2 dialog) => dialog.Position.Y + 62f;
     /// <summary>名牌行下的分隔线 y。</summary>

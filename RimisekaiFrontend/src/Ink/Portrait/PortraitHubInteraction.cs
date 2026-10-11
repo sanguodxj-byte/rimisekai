@@ -219,13 +219,21 @@ public partial class PortraitHubScreen
         var art = actor != null ? LoadCharacterPortrait(actor) : null;
         if (art != null)
         {
-            // 立绘铺满整屏（按高度铺满、水平居中裁两侧），全身入画；对白框半透明压在下半身上。
-            // 顶部一道浅渐隐托住地名与页签，底部从名字上方起渐暗，保证名字与正文可读。
-            PortraitFrame.Cover(this, art, new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), 0.5f);
+            // 立绘只取上半身（原图上部 52%、居中 66% 宽），贴在左上角：顶栏下起、高 1250，右缘与下缘渐隐进暗底；
+            // 底色纯暗底（与立绘黑底一致，渐隐处无接缝），对白框照旧压在下方（2026-10-11 主人定：全身立绘对话观感不好）。
+            DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), InkStyle.Bg);
+            var bust = PortraitLayout.SceneBust;
+            var size = art.GetSize();
+            var srcW = size.X * 0.66f;
+            var srcH = srcW * bust.Size.Y / bust.Size.X;
+            DrawTextureRectRegion(art, bust, new Rect2((size.X - srcW) / 2f, 0f, srcW, srcH));
+            var clear = new Color(InkStyle.Bg, 0f);
+            var solid = InkStyle.Bg;
+            var edgeX = bust.End.X - 260f;
+            DrawPolygon(new[] { new Vector2(edgeX, bust.Position.Y), new Vector2(bust.End.X, bust.Position.Y), new Vector2(bust.End.X, bust.End.Y), new Vector2(edgeX, bust.End.Y) },
+                new[] { clear, solid, solid, clear });
+            PortraitFrame.Fade(this, new Rect2(bust.Position.X, bust.End.Y - 360f, bust.Size.X + 2f, 362f), 0f, 1f);
             PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, 260f), 0.7f, 0f);
-            var shade = PortraitLayout.SceneDialog(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3)).Position.Y - 260f;
-            PortraitFrame.Fade(this, new Rect2(0, shade, PortraitLayout.CanvasWidth, 260f), 0f, 0.55f);
-            DrawRect(new Rect2(0, shade + 260f, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - shade - 260f), new Color(InkStyle.Bg, 0.55f));
         }
         else if (actor != null)
         {
