@@ -685,8 +685,12 @@ public partial class PortraitCapture : Node
         _steps.Enqueue(() => Shoot("boss_wipe_cleave", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.56f));
         _steps.Enqueue(() => Shoot("boss_wipe_sword", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.62f));
+        _steps.Enqueue(() => Shoot("boss_wipe_plunge", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.70f));
         _steps.Enqueue(() => Shoot("boss_wipe_impact", _root.HubScreen));
+        _steps.Enqueue(() => _root.BattleWipe.DebugSeek(0.80f));
+        _steps.Enqueue(() => Shoot("boss_wipe_recoil", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugSeek(2.0f));
         _steps.Enqueue(() => Shoot("boss_wipe_title", _root.HubScreen));
         _steps.Enqueue(() => _root.BattleWipe.DebugEnd());

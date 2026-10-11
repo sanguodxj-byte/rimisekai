@@ -399,7 +399,8 @@ public sealed partial class PortraitBattleWipe : Control
             return;
         var e = EaseIn2(fall);
         // 双手巨剑剑尖朝下（本地剑尖朝上 -y，转半圈）：剑尖自画面上方落到首领名上方的细线之上一点（C.Y + 405），剑身贯穿整扇窗，护手正好落在荆棘环上缘；剑首仍在上黑幕带之下。
-        var tipY = Mathf.Lerp(-120f, C.Y + 405f, e);
+        // 弹性：落下时冲过落点 90 插得更深，随后像被弹回般往上拔、来回衰减几下停在落点。
+        var tipY = Mathf.Lerp(-120f, C.Y + 405f + Overshoot, e) - Overshoot + Recoil();
         SetT(ci, new Transform2D(Mathf.Pi, new Vector2(O.X, tipY - ZweiBlade)));
         DrawZweihander(ci);
         SetT(ci, Transform2D.Identity);
@@ -426,6 +427,18 @@ public sealed partial class PortraitBattleWipe : Control
         var flash = Seg(0.62f, 0.78f);
         if (flash > 0f && flash < 1f)
             ci.DrawRect(new Rect2(0, 0, W, H), new Color(InkStyle.Line, 0.45f * (1f - flash)));
+    }
+
+    /// <summary>巨剑插入时冲过落点的深度。</summary>
+    private const float Overshoot = 90f;
+
+    /// <summary>插入后的回弹：自冲过落点的 +90 起，阻尼振荡收回到 0（0.62 秒起，约 0.5 秒停稳）。</summary>
+    private float Recoil()
+    {
+        if (_t < 0.62f)
+            return Overshoot;
+        var u = _t - 0.62f;
+        return u >= 0.6f ? 0f : Overshoot * MathF.Exp(-7f * u) * MathF.Cos(18f * u);
     }
 
     /// <summary>巨剑剑身长（护手到剑尖）。</summary>
