@@ -219,13 +219,22 @@ public partial class PortraitHubScreen
         var art = actor != null ? LoadCharacterPortrait(actor) : null;
         if (art != null)
         {
-            // 立绘铺满整屏（按高度铺满、水平居中裁两侧），全身入画；对白框半透明压在下半身上。
-            // 顶部一道浅渐隐托住地名与页签，底部从名字上方起渐暗，保证名字与正文可读。
-            PortraitFrame.Cover(this, art, new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), 0.5f);
-            PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, 260f), 0.7f, 0f);
-            var shade = PortraitLayout.SceneDialog(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3)).Position.Y - 260f;
-            PortraitFrame.Fade(this, new Rect2(0, shade, PortraitLayout.CanvasWidth, 260f), 0f, 0.55f);
-            DrawRect(new Rect2(0, shade + 260f, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight - shade - 260f), new Color(InkStyle.Bg, 0.55f));
+            // 大半身压框：立绘取上半身放大铺满上半屏（顶栏下起），头肩居中，身子沉到不透明对白框后；左右与上下缘渐隐进纯暗底
+            // （2026-10-11 主人定：全身立绘、贴左上胸像、下沉露头三版都不好，选此版）。
+            DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), InkStyle.Bg);
+            var bust = PortraitLayout.SceneBust(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3));
+            var top = bust.Position.Y;
+            var size = art.GetSize();
+            var srcW = size.X * 0.66f;
+            var srcH = srcW * bust.Size.Y / bust.Size.X;
+            DrawTextureRectRegion(art, bust, new Rect2((size.X - srcW) / 2f, size.Y * 0.01f, srcW, srcH));
+            var clear = new Color(InkStyle.Bg, 0f);
+            var solid = InkStyle.Bg;
+            DrawPolygon(new[] { new Vector2(0, top), new Vector2(140f, top), new Vector2(140f, bust.End.Y), new Vector2(0, bust.End.Y) }, new[] { solid, clear, clear, solid });
+            var rx = PortraitLayout.CanvasWidth;
+            DrawPolygon(new[] { new Vector2(rx - 140f, top), new Vector2(rx, top), new Vector2(rx, bust.End.Y), new Vector2(rx - 140f, bust.End.Y) }, new[] { clear, solid, solid, clear });
+            PortraitFrame.Fade(this, new Rect2(0, bust.End.Y - 280f, PortraitLayout.CanvasWidth, 222f), 0f, 1f);
+            PortraitFrame.Fade(this, new Rect2(0, 0, PortraitLayout.CanvasWidth, top + 160f), 1f, 0f);
         }
         else if (actor != null)
         {
@@ -254,7 +263,7 @@ public partial class PortraitHubScreen
         var visibleChoices = Math.Min(choices.Length, 3);
         var dialog = PortraitLayout.SceneDialog(visibleChoices);
 
-        PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, art != null ? 0.6f : 0.92f));
+        PortraitFrame.GothicFrame(this, dialog, new Color(InkStyle.Panel, art != null ? 0.97f : 0.92f));
         // 名牌收进对白框内左上：名字 + 好感签同一行，下方一道细分隔线，再接正文。
         if (actor != null || !string.IsNullOrEmpty(speaker))
         {
