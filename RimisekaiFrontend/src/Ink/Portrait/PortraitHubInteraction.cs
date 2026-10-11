@@ -219,10 +219,10 @@ public partial class PortraitHubScreen
         var art = actor != null ? LoadCharacterPortrait(actor) : null;
         if (art != null)
         {
-            // 立绘只取上半身（原图上部 52%、居中 66% 宽），贴在左上角：顶栏下起、高 1250，右缘与下缘渐隐进暗底；
+            // 立绘只取上半身（原图上部、居中 66% 宽），贴左缘、往下沉到只有头露在对白框之上，身子压在半透明对白框后，右缘与下缘渐隐进暗底；
             // 底色纯暗底（与立绘黑底一致，渐隐处无接缝），对白框照旧压在下方（2026-10-11 主人定：全身立绘对话观感不好）。
             DrawRect(new Rect2(0, 0, PortraitLayout.CanvasWidth, PortraitLayout.CanvasHeight), InkStyle.Bg);
-            var bust = PortraitLayout.SceneBust;
+            var bust = PortraitLayout.SceneBust(Math.Min(scene ? hub.SceneChoices.Count : _observing ? 0 : overlay!.Choices.Count, 3));
             var size = art.GetSize();
             var srcW = size.X * 0.66f;
             var srcH = srcW * bust.Size.Y / bust.Size.X;
