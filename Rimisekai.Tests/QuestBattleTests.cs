@@ -3,6 +3,7 @@ using System.Linq;
 using Rimisekai.Catalog;
 using Rimisekai.Combat;
 using Rimisekai.Defs;
+using Rimisekai.Hub;
 using Rimisekai.Quest;
 using Xunit;
 
@@ -68,6 +69,29 @@ public sealed class QuestBattleTests
                         }
                 }
             }
+        }
+    }
+
+    [Fact]
+    public void Fixed_quest_lineups_reference_monster_templates_and_still_start_a_battle()
+    {
+        var hub = TerritoryLoopTests.NewGame(out var state, 1);
+        foreach (var q in DefDatabase<QuestDef>.All.Where(q => !q.Generated))
+        {
+            // 每只都引用模板，属性照样走模板 CR。
+            foreach (var foe in q.Lineup.Concat(q.WaveLineups.SelectMany(w => w)))
+                Assert.NotNull(DefDatabase<MonsterDef>.Get(foe.Monster));
+            Assert.All(q.Foes.Concat(q.Waves.SelectMany(w => w)),
+                f => Assert.Equal(DefDatabase<MonsterDef>.GetNamed(f.Id).Cr, f.Cr));
+            if (q.Battle == QuestBattle.Boss || q.Kind == QuestKind.Dungeon)
+                Assert.Single(q.Foes, f => f.Boss);
+            if (q.Kind != QuestKind.Battle)
+                continue;
+            var session = Encounters.Start(state, q.Foes, placeName: q.Name,
+                waves: q.Battle == QuestBattle.Waves ? q.Waves : null, questBoss: true)!;
+            Assert.NotNull(session);
+            Assert.Equal(q.Foes.Count, session.Battle.Members.Count(m => m.Side == CombatSide.Defender));
+            Assert.Equal(q.Foes.Count(f => f.Boss), session.Battle.Members.Count(m => m.QuestBoss));
         }
     }
 

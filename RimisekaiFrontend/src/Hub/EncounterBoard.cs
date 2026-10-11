@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rimisekai.Catalog;
 using Rimisekai.Combat;
+using Rimisekai.Defs;
 using Rimisekai.Housing;
 using Rimisekai.Session;
 using Rimisekai.WorldMap;
@@ -32,14 +33,17 @@ public sealed class Encounter
     public int RoomId { get; init; } = -1;
     public string FacilityName { get; init; } = "";
 
-    /// <summary>撞上处的危险等级 1–4（野外按离领地远近，地城按 run.Tier）：迎战时交给战斗定装备掉落。</summary>
+    /// <summary>撞上处的危险等级 1–4（野外按离领地远近，地城按 run.Tier）：定 CR 窗口与预算。</summary>
     public required int Tier { get; init; }
+
+    /// <summary>撞上时就组好的阵容（同种子同阵容）；空＝事件。</summary>
+    public List<EnemyDef> Foes { get; init; } = new();
 
     /// <summary>落账的钱（可负）。</summary>
     public int Money { get; init; }
     public List<(string ItemId, int Count)> Loot { get; init; } = new();
 
-    public bool IsBattle => Def.Foes.Count > 0;
+    public bool IsBattle => Foes.Count > 0;
 
     public string Title => Def.Title;
 
@@ -148,17 +152,19 @@ public sealed partial class HubSession
         if (roll % 1000 >= (uint)permille)
             return false;
         var tier = DangerTier(x, y);
-        var pool = wilds.Events.FindAll(e => e.MinTier <= tier
-            && (e.Terrains.Count == 0 || e.Terrains.Contains(terrain.ToString())));
+        var habitat = Habitat.Wild(terrain.ToString());
+        var pool = EncounterTable.Eligible(wilds.Events.Where(e => e.Terrains.Count == 0 || e.Terrains.Contains(terrain.ToString())),
+            EncounterKind.Wild, tier, habitat);
         if (pool.Count == 0)
             return false;
-        var def = PickWeighted(pool, roll >> 10);
+        var def = EncounterTable.Pick(pool, roll >> 10);
         PendingEncounter = new Encounter
         {
             Def = def,
             Source = EncounterSource.Wild,
             Place = State.World.TileName(x, y),
             Tier = tier,
+            Foes = EncounterTable.Lineup(def, EncounterKind.Wild, tier, habitat, (int)(roll >> 1)),
             Money = RollMoney(def, roll >> 20),
         };
         Write($"行至{PendingEncounter.Place}，遇上了{def.Title}。");
@@ -183,14 +189,25 @@ public sealed partial class HubSession
         var cleared = run.Ledger.Cleared.Contains(run.Key);
         var roll = Roll(run.Key, genId, run.Seed);
         EncounterDef? def = null;
+        var foes = new List<EnemyDef>();
         var source = EncounterSource.DungeonGuard;
         var facilityName = "";
+        var habitat = Habitat.InDungeon(run.DungeonId, room.Terrain.ToString());
         if (room.IsEnd)
         {
             if (cleared)
                 return;
-            def = run.Boss ?? dungeon.BossAtTier(run.Tier, roll >> 10);
             source = EncounterSource.DungeonBoss;
+            if (run.Boss != null)
+            {
+                def = run.Boss;
+                foes = run.BossFoes;
+            }
+            else
+            {
+                def = EncounterTable.Pick(EncounterTable.Eligible(dungeon.Bosses, EncounterKind.Boss, run.Tier, habitat), roll >> 10);
+                foes = EncounterTable.Lineup(def, EncounterKind.Boss, run.Tier, habitat, (int)(roll >> 1));
+            }
         }
         else if (room.FacilityIds.Select(MapCatalog.Default.GetFacilityById).FirstOrDefault(f => f.DungeonEvent != null) is { } facility)
         {
@@ -200,7 +217,8 @@ public sealed partial class HubSession
         }
         else if (!cleared && roll % 100 < (uint)dungeon.GuardPercent)
         {
-            def = dungeon.GuardAtTier(run.Tier, roll >> 10);
+            def = EncounterTable.Pick(EncounterTable.Eligible(dungeon.Guards, EncounterKind.Guard, run.Tier, habitat), roll >> 10);
+            foes = EncounterTable.Lineup(def, EncounterKind.Guard, run.Tier, habitat, (int)(roll >> 1));
         }
         if (def == null)
             return;
@@ -214,6 +232,7 @@ public sealed partial class HubSession
             PoiId = run.Key,
             RoomId = genId,
             Tier = run.Tier,
+            Foes = foes,
             Money = RollMoney(def, roll >> 8),
             Loot = RollFacilityLoot(def, run.Key, genId, run.Seed),
         };
@@ -282,7 +301,7 @@ public sealed partial class HubSession
             return null;
         // 委托地城的正主倒下必掉装备。
         var questBoss = e.Source == EncounterSource.DungeonBoss && _dungeon!.Quest != null;
-        var session = Encounters.Start(State, e.Def.Foes, catalog, e.Place, WorldPartyIds(),
+        var session = Encounters.Start(State, e.Foes, catalog, e.Place, WorldPartyIds(),
             dangerTier: e.Tier, questBoss: questBoss);
         if (session == null)
             return null;
@@ -345,33 +364,29 @@ public sealed partial class HubSession
         return ids;
     }
 
-    /// <summary>调试 / 出图入口：按编号在队伍脚下摆一桩野外遭遇。</summary>
+    /// <summary>
+    /// 调试 / 出图入口：按编号在队伍脚下摆一桩野外遭遇。脚下地形不在条目地形里就按条目的第一种地形组阵，
+    /// 此处危险等级组不出这群怪就逐级往下找组得出的那级（只为摆得出来）。
+    /// </summary>
     public void ForceWildEncounter(string id)
     {
         var def = MapCatalog.Default.Wilds.Events.Find(e => e.Id == id)!;
+        var tile = State.World.Tiles[Trek.X, Trek.Y];
+        var terrain = (tile.IsRiver ? WorldTerrainType.River : tile.Terrain).ToString();
+        var habitat = Habitat.Wild(def.Terrains.Count == 0 || def.Terrains.Contains(terrain) ? terrain : def.Terrains[0]);
+        var tier = DangerTier(Trek.X, Trek.Y);
+        while (def.IsBattle && !EncounterGenerator.CanCompose(EncounterKind.Wild, tier, habitat, def.Families))
+            tier--;
+        var roll = Roll(Trek.X, Trek.Y, State.Clock.TotalMinutes);
         PendingEncounter = new Encounter
         {
             Def = def,
             Source = EncounterSource.Wild,
             Place = State.World.TileName(Trek.X, Trek.Y),
-            Tier = DangerTier(Trek.X, Trek.Y),
-            Money = RollMoney(def, Roll(Trek.X, Trek.Y, State.Clock.TotalMinutes)),
+            Tier = tier,
+            Foes = EncounterTable.Lineup(def, EncounterKind.Wild, tier, habitat, (int)(roll >> 1)),
+            Money = RollMoney(def, roll),
         };
-    }
-
-    private static EncounterDef PickWeighted(List<EncounterDef> pool, uint roll)
-    {
-        var total = 0;
-        foreach (var e in pool)
-            total += e.Weight;
-        var pick = (int)(roll % (uint)total);
-        foreach (var e in pool)
-        {
-            pick -= e.Weight;
-            if (pick < 0)
-                return e;
-        }
-        return pool[^1];
     }
 
     private static int RollMoney(EncounterDef def, uint roll) =>
@@ -396,4 +411,42 @@ public sealed partial class HubSession
             return h ^ (h >> 13);
         }
     }
+}
+
+/// <summary>
+/// 遭遇条目的抽选与组队：条目只写叙事与族群，阵容交给 <see cref="EncounterGenerator"/> 按危险等级、栖息地与族群现组。
+/// 组不出阵容的战斗条目不参与抽选。
+/// </summary>
+public static class EncounterTable
+{
+    /// <summary>首领房（地城出口）的房间地形：生成器把出口一律铺成道路（见 DungeonBlockGenerator）。</summary>
+    public const string BossRoom = nameof(WorldTerrainType.Road);
+
+    /// <summary>此处可抽的条目：危险等级够得着，战斗条目还要组得出阵容。</summary>
+    public static List<EncounterDef> Eligible(IEnumerable<EncounterDef> entries, EncounterKind kind, int tier, Habitat habitat) =>
+        entries.Where(e => e.MinTier <= tier
+            && (!e.IsBattle || EncounterGenerator.CanCompose(kind, tier, habitat, e.Families))).ToList();
+
+    /// <summary>按 weight 抽一条；同一 roll 永远得到同一条。</summary>
+    public static EncounterDef Pick(List<EncounterDef> pool, uint roll)
+    {
+        if (pool.Count == 0)
+            throw new System.InvalidOperationException("此处没有组得出阵容的遭遇条目。");
+        var total = pool.Sum(e => e.Weight);
+        var pick = (int)(roll % (uint)total);
+        foreach (var e in pool)
+        {
+            pick -= e.Weight;
+            if (pick < 0)
+                return e;
+        }
+        throw new System.InvalidOperationException("遭遇条目权重和为 0。");
+    }
+
+    /// <summary>组阵容；事件条目没有阵容。<paramref name="leaderCrBonus"/> 为委托板正主的加码档数。</summary>
+    public static List<EnemyDef> Lineup(EncounterDef def, EncounterKind kind, int tier, Habitat habitat, int seed,
+        int leaderCrBonus = 0) =>
+        def.IsBattle
+            ? EncounterGenerator.Compose(kind, tier, habitat, def.Families, seed, leaderCrBonus).Select(s => s.ToEnemy()).ToList()
+            : new List<EnemyDef>();
 }

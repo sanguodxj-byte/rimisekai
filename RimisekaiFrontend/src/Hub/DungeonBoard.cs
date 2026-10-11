@@ -17,13 +17,21 @@ public sealed partial class HubSession
     {
         /// <summary>地城编号：遗迹是兴趣点编号，委托地城是 <see cref="QuestDungeonKey"/>。</summary>
         public int Key { get; init; }
+
+        /// <summary>地城类型（dungeon_defs.json dungeons[].id）：守卫与首领按它从怪物模板里抽。</summary>
+        public string DungeonId { get; init; } = "";
         public int Seed { get; init; }
         public int Tier { get; init; }
         public DungeonLedger Ledger { get; init; } = null!;
 
-        /// <summary>委托地城：委托运行时与最深处的正主；遗迹为空。</summary>
+        /// <summary>委托地城：委托运行时；遗迹为空。</summary>
         public QuestRun? Quest { get; init; }
+
+        /// <summary>委托地城最深处那一间的描写；遗迹为空（首领房按首领表现抽）。</summary>
         public EncounterDef? Boss { get; init; }
+
+        /// <summary>委托地城最深处的正主阵容（委托写定的）；遗迹为空。</summary>
+        public List<Catalog.EnemyDef> BossFoes { get; init; } = new();
 
         /// <summary>为委托临时拉进队伍的人（原本没跟着你），接回领地时各回各的日子。</summary>
         public List<int> Recruited { get; } = new();
@@ -150,11 +158,13 @@ public sealed partial class HubSession
         _dungeon = new DungeonRun
         {
             Key = QuestDungeonKey,
+            DungeonId = def.DungeonId,
             Seed = seed,
             Tier = tier,
             Ledger = new DungeonLedger(),
             Quest = run,
-            Boss = new EncounterDef { Title = def.Name, Text = quest.BossText, Foes = def.Foes },
+            Boss = new EncounterDef { Title = def.Name, Text = quest.BossText },
+            BossFoes = def.Foes,
         };
         _territoryHomeRoomId = PlayerRoomId;
         var master = State.Roster.Master;

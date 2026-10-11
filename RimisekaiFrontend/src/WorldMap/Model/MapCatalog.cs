@@ -46,7 +46,8 @@ public sealed class TerrainDefEntry
 }
 
 /// <summary>
-/// 一条遭遇：有敌人＝战斗（可迎战、可绕开），没有敌人＝事件（一枚钮收下结果）。
+/// 一条遭遇：写了族群＝战斗（可迎战、可绕开；阵容由遭遇生成器按危险等级 → CR 窗口、栖息地与这些族群现组），
+/// 没写＝事件（一枚钮收下结果）。
 /// 结果按字段落账：钱（可负）、额外耗时、同行者心情。
 /// </summary>
 public sealed class EncounterDef
@@ -61,7 +62,11 @@ public sealed class EncounterDef
 
     /// <summary>危险等级下限：离领地越远等级越高（见 <c>HubSession.DangerTier</c>）。</summary>
     public int MinTier { get; set; } = 1;
-    public List<Rimisekai.Catalog.EnemyDef> Foes { get; set; } = new();
+
+    /// <summary>战斗遭遇从哪些族群（monsters.json 的 family）里挑怪，叙事与阵容对得上；空＝不是战斗。</summary>
+    public List<string> Families { get; set; } = new();
+
+    public bool IsBattle => Families.Count > 0;
 
     /// <summary>战斗遭遇选择绕开时多花的分钟数。</summary>
     public int DetourMinutes { get; set; }
@@ -95,7 +100,11 @@ public sealed class DungeonDef
 
     /// <summary>地城里普通房间直接遇敌的百分率。</summary>
     public int GuardPercent { get; set; }
+
+    /// <summary>守卫房的遭遇条目（叙事＋族群）：在本地城、本房间地形、本危险等级组得出阵容的条目里按 weight 抽。</summary>
     public List<EncounterDef> Guards { get; set; } = new();
+
+    /// <summary>首领房的遭遇条目（叙事＋族群）：同上，阵容必有正主。</summary>
     public List<EncounterDef> Bosses { get; set; } = new();
 
     /// <summary>首领倒下后的日志，{0} 为地城名。</summary>
@@ -106,34 +115,6 @@ public sealed class DungeonDef
 
     /// <summary>委托地城（包接送）。</summary>
     public QuestDungeonDef Quest { get; set; } = new();
-
-    /// <summary>在当前危险级可达的最高档中，按内容权重抽一组守卫；同一 roll 永远得到同一组。</summary>
-    public EncounterDef GuardAtTier(int tier, uint roll) => PickAtTier(Guards, tier, roll);
-
-    /// <summary>在当前危险级可达的最高档中，按内容权重抽一位首领。</summary>
-    public EncounterDef BossAtTier(int tier, uint roll) => PickAtTier(Bosses, tier, roll);
-
-    private static EncounterDef PickAtTier(List<EncounterDef> entries, int tier, uint roll)
-    {
-        var highestTier = 0;
-        foreach (var entry in entries)
-            if (entry.MinTier <= tier && entry.MinTier > highestTier)
-                highestTier = entry.MinTier;
-
-        var candidates = entries.FindAll(entry => entry.MinTier == highestTier);
-        var totalWeight = 0;
-        foreach (var entry in candidates)
-            totalWeight += entry.Weight;
-
-        var pick = (int)(roll % (uint)totalWeight);
-        foreach (var entry in candidates)
-        {
-            pick -= entry.Weight;
-            if (pick < 0)
-                return entry;
-        }
-        return candidates[^1];
-    }
 }
 
 /// <summary>
@@ -172,7 +153,7 @@ public sealed class DungeonArchetypeDef
 /// <summary>
 /// 委托板现生成地城探索委托：每天张贴 <see cref="PerDay"/> 张，每张挂 <see cref="LifeDays"/> 天，了结即撕下；
 /// 地点按张贴顺序轮转 <see cref="Sites"/>，发单的聚落取世界上的一处聚落，难度在星数区间里按半星掷，
-/// 正主从 <c>dungeon_defs.json rules.bosses</c> 里按危险等级挑，酬金＝<see cref="MoneyBase"/>＋<see cref="MoneyPerStar"/>×星数（取整到十）。
+/// 正主从 <c>dungeon_defs.json rules.bosses</c> 里按地城类型与危险等级组队（正主 CR 按星数加码），酬金＝<see cref="MoneyBase"/>＋<see cref="MoneyPerStar"/>×星数（取整到十）。
 /// </summary>
 public sealed class QuestBoardDef
 {
@@ -190,9 +171,8 @@ public sealed class QuestBoardDef
     public int MoneyBase { get; set; }
     public int MoneyPerStar { get; set; }
 
-    /// <summary>正主按星数加码：每颗星多给的属性池与经验池（星数一样的正主一样强）。</summary>
-    public int CorePerStar { get; set; }
-    public int ExpPerStar { get; set; }
+    /// <summary>正主按星数加码：星数×此数（四舍五入）档整数 CR 加在正主模板的 CR 上（星数一样的正主一样强）。</summary>
+    public double CrPerStar { get; set; }
 
 
     /// <summary>人数上限＝此数＋危险等级。</summary>
@@ -627,7 +607,7 @@ public sealed class MapCatalog
                     throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 引用了不存在的 roomId {roomId}");
             if (facility.DungeonEvent is { } dungeonEvent)
             {
-                if (dungeonEvent.Foes.Count > 0)
+                if (dungeonEvent.IsBattle)
                     throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 的事件不能直接配置敌人");
                 if (dungeonEvent.Loot.Exists(drop => drop.Min < 0 || drop.Max < drop.Min || drop.RatePercent is < 0 or > 100))
                     throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 的战利品行无效");

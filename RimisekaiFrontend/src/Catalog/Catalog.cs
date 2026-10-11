@@ -270,13 +270,16 @@ public sealed class EnemyDef
     /// <summary>天资副属性（注 3 点）；不写随机。</summary>
     public Rimisekai.Character.CoreStat? Secondary { get; init; }
 
-    /// <summary>属性池：底线 6 之上再分多少点。角色是 21；杂兵往下、首领往上。</summary>
-    public int CorePool { get; init; } = Rimisekai.Character.CharacterGenerator.CorePool;
+    /// <summary>
+    /// 挑战等级：按 <see cref="Defs.ChallengeDef"/> 换成我方等级，再推出属性池与经验池交给角色生成器；
+    /// 装备掉落的掉率、材质、品质档也看它。
+    /// </summary>
+    public ChallengeRating Cr { get; init; }
 
-    /// <summary>经验池：一半给手持武器与流派、一半随机散发（落到生活轨的作废）。角色是 3000。</summary>
-    public int ExpPool { get; init; } = Rimisekai.Character.CharacterGenerator.ExpPool;
+    /// <summary>遭遇里的正主（首领房的首领、委托写明的首领）：装备掉落走首领那套，委托里还必掉。</summary>
+    public bool Boss { get; init; }
 
-    /// <summary>威胁等级 1-4：越高越靠前（同列更高层级），敌方近战只打最前的玩家。</summary>
+    /// <summary>站位层 1-4：越高越靠前（同列更高层级），敌方近战只打最前的玩家。只管站位，不代表强弱。</summary>
     public int ThreatTier { get; init; } = 1;
 
     /// <summary>站位列 1-4：跨列的精英/首领以其最左列声明，整场最多 4x4。</summary>
@@ -306,13 +309,12 @@ public sealed class EnemyDef
     /// <summary>装备掉落覆盖行；不写即全按 gear_drops.json 的规则掷。</summary>
     public EnemyGear? Gear { get; init; }
 
-    /// <summary>同一只怪的加强版：属性池与经验池各多给一些（委托板按星数给正主加码用），其余照抄。</summary>
-    public EnemyDef Stronger(int corePool, int expPool) => new()
+    /// <summary>按模板落一只到阵里：列、站位层、是否正主、按哪档 CR 生成（委托板正主会加码）。</summary>
+    public static EnemyDef Place(Rimisekai.Defs.MonsterDef m, int column, int threatTier, bool boss, ChallengeRating cr) => new()
     {
-        Id = Id, Name = Name, Weapon = Weapon, Primary = Primary, Secondary = Secondary,
-        CorePool = CorePool + corePool, ExpPool = ExpPool + expPool,
-        ThreatTier = ThreatTier, Column = Column, Size = Size, ActionPoints = ActionPoints,
-        Portrait = Portrait, Armour = Armour, Money = Money, Skills = Skills, Loot = Loot, Gear = Gear,
+        Id = m.Id, Name = m.Name, Weapon = m.Weapon, Primary = m.Primary, Secondary = m.Secondary, Cr = cr, Boss = boss,
+        ThreatTier = threatTier, Column = column, Size = m.Size, ActionPoints = m.ActionPoints,
+        Portrait = m.Portrait, Armour = m.Armour, Money = m.Money, Skills = m.Skills, Loot = m.Loot, Gear = m.Gear,
     };
 }
 

@@ -21,7 +21,6 @@ public sealed class GearDropTests
     private static EnemyDef Foe(int threat, WeaponType? weapon = null, EnemyGear? gear = null) => new()
     {
         Id = $"gear_test_{threat}", Name = "试刀怪", ThreatTier = threat, Weapon = weapon, Gear = gear,
-        CorePool = 0, ExpPool = 0,
     };
 
     private static IEnumerable<LootGear> Drops(EnemyDef def, int tier, bool questBoss = false) =>
@@ -116,7 +115,8 @@ public sealed class GearDropTests
     {
         ContentDefs.EnsureInitialized();
         // 骸骨王的示例覆盖：必掉钢或更好材质的剑——危险等级 3 的窗口里有铁，也照样不低于钢。
-        var lich = MapCatalog.Default.Dungeon.Bosses.SelectMany(b => b.Foes).Single(f => f.Id == "dg_boss_lich");
+        var king = DefDatabase<MonsterDef>.GetNamed("skeleton_king");
+        var lich = EnemyDef.Place(king, 1, king.ThreatTier, true, king.Cr);
         Assert.NotNull(lich.Gear);
         var steel = DefDatabase<MaterialDef>.Get("钢")!.Tier;
         for (var seed = 0; seed < Seeds; seed++)
@@ -215,7 +215,7 @@ public sealed class GearDropTests
     public void Encounter_start_carries_danger_tier_and_marks_the_quest_boss()
     {
         var hub = TerritoryLoopTests.NewGame(out var state, 1);
-        var foes = new List<EnemyDef> { Foe(3), Foe(1) };
+        var foes = new List<EnemyDef> { new() { Id = "gear_test_boss", Name = "试刀首领", Boss = true, ThreatTier = 3, Column = 2 }, Foe(1) };
         var session = Encounters.Start(state, foes, dangerTier: 3, questBoss: true)!;
         Assert.Equal(3, session.Battle.DangerTier);
         var enemies = session.Battle.Members.Where(m => m.Side == CombatSide.Defender).ToList();

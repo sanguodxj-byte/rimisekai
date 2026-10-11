@@ -2,6 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Rimisekai.Combat;
+using Rimisekai.Defs;
+using Rimisekai.Hub;
 using Rimisekai.PoiMap.Generator;
 using Rimisekai.WorldMap;
 using Xunit;
@@ -134,15 +137,23 @@ public sealed class MapCatalogTableTests
     }
 
     [Fact]
-    public void Dungeon_encounter_pools_use_the_highest_reachable_tier_and_exact_weights()
+    public void Dungeon_encounter_entries_cover_every_dungeon_room_and_tier_with_exact_weights()
     {
-        var dungeon = MapCatalog.Default.Dungeon;
-        for (var tier = 1; tier <= 4; tier++)
+        Rimisekai.Defs.ContentDefs.EnsureInitialized();
+        var catalog = MapCatalog.Default;
+        var dungeon = catalog.Dungeon;
+        foreach (var dungeonId in new[] { "ruins", "forest", "ancient_battlefield", "mine" })
         {
-            Assert.True(dungeon.Guards.Count(guard => guard.MinTier == tier) >= 2,
-                $"危险级 {tier} 至少要有两组不同守卫");
-            CheckPool(dungeon.Guards, dungeon.GuardAtTier, tier);
-            CheckPool(dungeon.Bosses, dungeon.BossAtTier, tier);
+            var rooms = catalog.GetDungeonRoomTemplates(dungeonId).Select(room => room.Terrain).Distinct().ToList();
+            for (var tier = 1; tier <= 4; tier++)
+            {
+                // 每种房间都组得出守卫，首领房（出口）都组得出首领：条目按 weight 精确分布。
+                foreach (var room in rooms)
+                    CheckPool(EncounterTable.Eligible(dungeon.Guards, EncounterKind.Guard, tier, Habitat.InDungeon(dungeonId, room)),
+                        $"{dungeonId}/{room}/危险级 {tier} 守卫");
+                CheckPool(EncounterTable.Eligible(dungeon.Bosses, EncounterKind.Boss, tier, Habitat.InDungeon(dungeonId, EncounterTable.BossRoom)),
+                    $"{dungeonId}/危险级 {tier} 首领");
+            }
         }
     }
 
@@ -154,27 +165,21 @@ public sealed class MapCatalogTableTests
         Assert.Equal("封存宝箱", chest.Name);
         Assert.NotNull(chest.DungeonEvent);
         Assert.NotEmpty(chest.DungeonEvent!.Loot);
-        Assert.Empty(chest.DungeonEvent.Foes);
+        Assert.False(chest.DungeonEvent.IsBattle);
 
         var ruin = PoiAssemblyGenerator.GenerateForPoi(WorldPoiType.Ruin, seed: 999);
         Assert.Contains(ruin.AllRooms, room => room.Name == "储藏间"
             && room.FacilityIds.Select(catalog.GetFacilityById).Any(facility => facility.DungeonEvent != null));
-        Assert.All(catalog.Dungeon.Guards.Concat(catalog.Dungeon.Bosses), encounter => Assert.NotEmpty(encounter.Foes));
+        Assert.All(catalog.Dungeon.Guards.Concat(catalog.Dungeon.Bosses), encounter => Assert.True(encounter.IsBattle));
     }
 
-    private static void CheckPool(
-        System.Collections.Generic.List<EncounterDef> entries,
-        Func<int, uint, EncounterDef> pick,
-        int tier)
+    private static void CheckPool(System.Collections.Generic.List<EncounterDef> eligible, string what)
     {
-        var eligible = entries.Where(entry => entry.MinTier <= tier).ToArray();
-        var highestTier = eligible.Max(entry => entry.MinTier);
-        var expected = eligible.Where(entry => entry.MinTier == highestTier).ToArray();
-        Assert.All(expected, entry => Assert.True(entry.Weight > 0, $"{entry.Id} 的权重必须为正"));
-        var totalWeight = expected.Sum(entry => entry.Weight);
-        var selected = Enumerable.Range(0, totalWeight).Select(roll => pick(tier, (uint)roll)).ToArray();
-        Assert.All(selected, entry => Assert.Equal(highestTier, entry.MinTier));
-        foreach (var entry in expected)
+        Assert.True(eligible.Count > 0, $"{what} 没有组得出阵容的条目");
+        Assert.All(eligible, entry => Assert.True(entry.Weight > 0, $"{entry.Title} 的权重必须为正"));
+        var totalWeight = eligible.Sum(entry => entry.Weight);
+        var selected = Enumerable.Range(0, totalWeight).Select(roll => EncounterTable.Pick(eligible, (uint)roll)).ToArray();
+        foreach (var entry in eligible)
             Assert.Equal(entry.Weight, selected.Count(selectedEntry => ReferenceEquals(selectedEntry, entry)));
     }
 

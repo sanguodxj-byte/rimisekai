@@ -303,6 +303,7 @@ public sealed partial class HubSession
             _dungeon = new DungeonRun
             {
                 Key = poi.Id,
+                DungeonId = MapCatalog.Default.GetPoiDungeonId(poi.Type)!,
                 Seed = State.WorldSeed,
                 Tier = DangerTier(poi.X, poi.Y),
                 Ledger = State.Dungeons,

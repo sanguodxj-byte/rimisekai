@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rimisekai.Catalog;
 using Rimisekai.Character;
 using Rimisekai.Defs;
@@ -62,8 +63,19 @@ public sealed class QuestDef : Def, IIdentifiedDef
     /// <summary>战斗委托的打法；地城委托不看。</summary>
     public QuestBattle Battle { get; init; }
 
+    /// <summary>内容表里的连战各波阵容（引用怪物模板）；运行时读 <see cref="Waves"/>。</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("waves")]
+    public List<List<QuestFoe>> WaveLineups { get; init; } = new();
+
+    private List<List<EnemyDef>>? _waves;
+
     /// <summary>连战在首波（<see cref="Foes"/>）之后依次补上的各波敌人；非连战为空。</summary>
-    public List<List<EnemyDef>> Waves { get; init; } = new();
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<List<EnemyDef>> Waves
+    {
+        get => _waves ??= WaveLineups.Select(wave => wave.Select(f => f.ToEnemy()).ToList()).ToList();
+        init => _waves = value;
+    }
 
     /// <summary>委托卡上的类别字：普通战斗 / 首领战 / 连战 N 波 / 地城探索。</summary>
     public string KindText => Kind == QuestKind.Dungeon
@@ -109,8 +121,19 @@ public sealed class QuestDef : Def, IIdentifiedDef
     /// <summary>传言，展示时包在直角括号里以暗色显示。</summary>
     public string Rumor { get; init; } = "";
 
-    /// <summary>战斗委托的首波阵容；地城委托为最深处的正主（玩家可见的敌人名权威在此）。</summary>
-    public List<EnemyDef> Foes { get; init; } = new();
+    /// <summary>内容表里的首波阵容（引用怪物模板）；运行时读 <see cref="Foes"/>。</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("foes")]
+    public List<QuestFoe> Lineup { get; init; } = new();
+
+    private List<EnemyDef>? _foes;
+
+    /// <summary>战斗委托的首波阵容；地城委托为最深处的正主（玩家可见的敌人名权威在此）。委托板现生成的直接给。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<EnemyDef> Foes
+    {
+        get => _foes ??= Lineup.Select(f => f.ToEnemy()).ToList();
+        init => _foes = value;
+    }
 
     /// <summary>难度显示：实心为整星，镂空 ☆ 为半星；超过 10 星改为 ★×数量。</summary>
     public string DifficultyText
@@ -125,6 +148,24 @@ public sealed class QuestDef : Def, IIdentifiedDef
                 text += "☆";
             return text;
         }
+    }
+}
+
+/// <summary>
+/// 委托固定阵容里的一只：引用怪物模板 id，写明列与站位层（不写站位层用模板的默认层），首领写 boss。
+/// 属性照样走模板的 CR → 等级 → 属性池。
+/// </summary>
+public sealed class QuestFoe
+{
+    public string Monster { get; init; } = "";
+    public int Column { get; init; }
+    public int? ThreatTier { get; init; }
+    public bool Boss { get; init; }
+
+    public EnemyDef ToEnemy()
+    {
+        var m = DefDatabase<MonsterDef>.GetNamed(Monster);
+        return EnemyDef.Place(m, Column, ThreatTier ?? m.ThreatTier, Boss, m.Cr);
     }
 }
 

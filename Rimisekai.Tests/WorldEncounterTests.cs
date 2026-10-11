@@ -168,11 +168,15 @@ public sealed class WorldEncounterTests
             Assert.Equal(targetRoomId, hub.PlayerRoomId);
     }
 
+    /// <summary>非空时记下 <see cref="Resolve"/> 了结的每一桩遭遇（同一类里的测试顺序执行）。</summary>
+    private static System.Collections.Generic.List<Encounter>? _seen;
+
     private static void Resolve(HubSession hub)
     {
         var e = hub.PendingEncounter;
         if (e == null)
             return;
+        _seen?.Add(e);
         if (!e.IsBattle)
         {
             hub.AcceptEncounter();
@@ -202,6 +206,56 @@ public sealed class WorldEncounterTests
         var loaded = SaveSystem.Restore(SaveSystem.Capture(state, hub));
         Assert.Contains(ruin.Id, loaded.Dungeons.Cleared);
         Assert.True(loaded.Dungeons.IsSpent(ruin.Id, end.Id));
+    }
+
+    [Fact]
+    public void Dungeon_lineups_come_from_the_dungeon_type_and_the_boss_room_has_a_leader()
+    {
+        var (hub, state) = Setup(rate: 0);
+        var ruin = EnterRuin(hub, state);
+        var dungeonId = MapCatalog.Default.GetPoiDungeonId(ruin.Type)!;
+        var end = state.CurrentPoi!.AllRooms.First(r => r.IsEnd);
+        _seen = new System.Collections.Generic.List<Encounter>();
+        try
+        {
+            WalkTo(hub, HubSession.PoiRoomIdBase + end.Id);
+            var battles = _seen.Where(e => e.IsBattle).ToList();
+            Assert.Contains(battles, e => e.Source == EncounterSource.DungeonBoss);
+            foreach (var e in battles)
+            {
+                // 阵容全是该地城类型的怪，站位合法。
+                Assert.All(e.Foes, f => Assert.Contains(dungeonId, DefDatabase<MonsterDef>.GetNamed(f.Id).Dungeons));
+                ChallengeRatingTests.AssertLegal(e.Foes.Select(f =>
+                    new MonsterSlot(DefDatabase<MonsterDef>.GetNamed(f.Id), f.Column, f.ThreatTier, f.Boss, f.Cr)).ToList());
+                if (e.Source == EncounterSource.DungeonBoss)
+                    Assert.Single(e.Foes, f => f.Boss);
+                else
+                    Assert.DoesNotContain(e.Foes, f => f.Boss);
+            }
+        }
+        finally
+        {
+            _seen = null;
+        }
+    }
+
+    [Fact]
+    public void Wild_lineups_are_reproducible_and_follow_the_terrain()
+    {
+        var (hub, state) = Setup(rate: 0);
+        hub.SwitchToWorld();
+        var target = FarTile(state);
+        hub.TravelTo(target.X, target.Y);
+        hub.ForceWildEncounter("bandits");
+        var first = hub.PendingEncounter!;
+        hub.ForceWildEncounter("bandits");
+        var again = hub.PendingEncounter!;
+        Assert.NotEmpty(first.Foes);
+        Assert.Equal(first.Foes.Select(f => (f.Id, f.Column, f.ThreatTier)), again.Foes.Select(f => (f.Id, f.Column, f.ThreatTier)));
+        Assert.All(first.Foes, f => Assert.Equal("bandit", DefDatabase<MonsterDef>.GetNamed(f.Id).Family));
+        var tile = state.World.Tiles[target.X, target.Y];
+        var terrain = (tile.IsRiver ? Rimisekai.WorldMap.WorldTerrainType.River : tile.Terrain).ToString();
+        Assert.All(first.Foes, f => Assert.Contains(terrain, DefDatabase<MonsterDef>.GetNamed(f.Id).Terrains));
     }
 
     [Fact]
@@ -352,13 +406,15 @@ public sealed class WorldEncounterTests
             Assert.Contains(board.Sites, s => s.Name == q.Name);
             Assert.Equal(board.Sites.Single(s => s.Name == q.Name).DungeonId, q.DungeonId);
             Assert.DoesNotContain("{", q.Description);
-            // 守关的是某个够格的首领，按星数加厚：每星 CorePerStar 点核心、ExpPerStar 点经验。
-            var core = (int)Math.Round(board.CorePerStar * q.Difficulty);
-            var exp = (int)Math.Round(board.ExpPerStar * q.Difficulty);
-            Assert.Contains(MapCatalog.Default.Dungeon.Bosses, b => b.MinTier <= QuestBoard.TierOf(q.Difficulty)
-                && b.Foes.Count == q.Foes.Count
-                && b.Foes.Zip(q.Foes).All(p => p.First.Name == p.Second.Name
-                    && p.Second.CorePool == p.First.CorePool + core && p.Second.ExpPool == p.First.ExpPool + exp));
+            // 守关的是该地城类型里够格的正主，CR 按星数加码：星数×CrPerStar 档整数 CR。
+            var rules = Rimisekai.Defs.ChallengeDef.Standard.Tier(QuestBoard.TierOf(q.Difficulty));
+            var bonus = (int)Math.Round(board.CrPerStar * q.Difficulty, MidpointRounding.AwayFromZero);
+            var leader = Assert.Single(q.Foes, f => f.Boss);
+            var template = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.MonsterDef>.GetNamed(leader.Id);
+            Assert.True(template.CanLead && template.Dungeons.Contains(q.DungeonId));
+            Assert.InRange(template.Cr.Eighths, rules.BossCrMin.Eighths, rules.BossCrMax.Eighths);
+            Assert.Equal(template.Cr.Plus(bonus), leader.Cr);
+            Assert.All(q.Foes, f => Assert.Contains(q.DungeonId, Rimisekai.Defs.DefDatabase<Rimisekai.Defs.MonsterDef>.GetNamed(f.Id).Dungeons));
             Assert.Equal($"金币 ×{q.RewardMoney}", q.Rewards.Single());
             Assert.True(q.RewardMoney > 0);
         }

@@ -1343,12 +1343,15 @@ public partial class PortraitCapture : Node
                     Portrait = new[] { "monster_acid_slime", "monster_banshee", "monster_basilisk", "monster_bog_leech" }[i - 1],
                 });
         else if (size == 4)
-            foes.AddRange(Rimisekai.WorldMap.MapCatalog.Default.Dungeon.BossAtTier(4, 3).Foes);
+        {
+            var worm = Rimisekai.Defs.DefDatabase<Rimisekai.Defs.MonsterDef>.GetNamed("abyss_worm");
+            foes.Add(Rimisekai.Catalog.EnemyDef.Place(worm, 1, 4, true, worm.Cr));
+        }
         else
         {
             foes.Add(new Rimisekai.Catalog.EnemyDef
             {
-                Id = "probe_boss", Name = "首领", CorePool = 40, ExpPool = 6000,
+                Id = "probe_boss", Name = "首领", Cr = Rimisekai.Catalog.ChallengeRating.Whole(20), Boss = true,
                 ThreatTier = 4, Column = size == 4 ? 1 : 2, Size = size,
                 ActionPoints = size, Portrait = size switch { 2 => "monster_boss_magma_behemoth", 3 => "monster_boss_bone_colossus", _ => "monster_boss_flesh_titan" },
             });

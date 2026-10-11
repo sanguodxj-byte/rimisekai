@@ -34,11 +34,7 @@
         "terrains": ["Forest", "DenseForest", "Taiga", "Hills", "Grassland", "Plains", "Snow"],
         "weight": 30,
         "minTier": 1,
-        "foes": [
-          { "id": "wild_wolf_a", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 100, "threatTier": 1, "column": 1, "money": 8, "loot": [{ "itemId": "兽皮", "min": 1, "max": 2, "ratePercent": 80 }, { "itemId": "肉", "min": 1, "max": 2, "ratePercent": 60 }] },
-          { "id": "wild_wolf_b", "portrait": "monster_dire_wolf", "name": "头狼", "primary": "strength", "secondary": "speed", "corePool": 10, "expPool": 170, "armour": 1, "threatTier": 2, "column": 2, "money": 14, "loot": [{ "itemId": "兽皮", "min": 3, "max": 4, "ratePercent": 100 }, { "itemId": "肉", "min": 2, "max": 3, "ratePercent": 100 }] },
-          { "id": "wild_wolf_c", "portrait": "monster_dire_wolf", "name": "野狼", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 100, "threatTier": 1, "column": 3, "money": 8, "loot": [{ "itemId": "兽皮", "min": 1, "max": 2, "ratePercent": 80 }, { "itemId": "肉", "min": 1, "max": 2, "ratePercent": 60 }] }
-        ],
+        "families": ["wolf"],
         "detourMinutes": 90
       },
       {
@@ -48,11 +44,7 @@
         "terrains": [],
         "weight": 20,
         "minTier": 2,
-        "foes": [
-          { "id": "wild_bandit_a", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 190, "armour": 1, "threatTier": 1, "column": 1, "money": 20, "loot": [{ "itemId": "干粮", "min": 1, "max": 2, "ratePercent": 60 }, { "itemId": "布", "min": 1, "max": 2, "ratePercent": 50 }, { "itemId": "铁", "min": 1, "max": 1, "ratePercent": 30 }] },
-          { "id": "wild_bandit_b", "portrait": "", "name": "匪首", "weapon": "axe", "primary": "strength", "secondary": "constitution", "corePool": 14, "expPool": 340, "armour": 2, "threatTier": 2, "column": 2, "money": 40, "loot": [{ "itemId": "铁", "min": 2, "max": 3, "ratePercent": 100 }, { "itemId": "布", "min": 2, "max": 2, "ratePercent": 100 }, { "itemId": "药剂", "min": 1, "max": 1, "ratePercent": 50 }] },
-          { "id": "wild_bandit_c", "portrait": "", "name": "拦路匪", "weapon": "sword", "primary": "strength", "secondary": "dexterity", "corePool": 8, "expPool": 190, "armour": 1, "threatTier": 1, "column": 3, "money": 20, "loot": [{ "itemId": "干粮", "min": 1, "max": 2, "ratePercent": 60 }, { "itemId": "布", "min": 1, "max": 2, "ratePercent": 50 }, { "itemId": "铁", "min": 1, "max": 1, "ratePercent": 30 }] }
-        ],
+        "families": ["bandit"],
         "detourMinutes": 120
       },
       {
@@ -62,10 +54,7 @@
         "terrains": ["Swamp", "Bog", "River", "Wasteland"],
         "weight": 25,
         "minTier": 1,
-        "foes": [
-          { "id": "wild_rat_a", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 70, "threatTier": 1, "column": 1, "money": 4, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] },
-          { "id": "wild_rat_b", "portrait": "monster_giant_rat", "name": "大鼠", "primary": "speed", "secondary": "dexterity", "corePool": 4, "expPool": 70, "threatTier": 1, "column": 2, "money": 4, "loot": [{ "itemId": "肉", "min": 1, "max": 1, "ratePercent": 50 }, { "itemId": "兽皮", "min": 1, "max": 1, "ratePercent": 30 }] }
-        ],
+        "families": ["rat"],
         "detourMinutes": 60
       },
       {

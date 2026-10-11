@@ -67,29 +67,27 @@ public partial class PortraitHubScreen
         DrawPageTop("怪物图鉴");
     }
 
+    /// <summary>图鉴一条一个怪物模板（同名同立绘的合成一条）：武器、挑战等级与对应等级、站位、掉落。</summary>
     private static IReadOnlyList<CodexEntry> BuildMonsterEntries()
     {
-        var map = MapCatalog.Default;
-        var enemies = DefDatabase<QuestDef>.All.SelectMany(quest => quest.Foes)
-            .Concat(map.Wilds.Events.SelectMany(encounter => encounter.Foes))
-            .Concat(map.Dungeon.Guards.SelectMany(encounter => encounter.Foes))
-            .Concat(map.Dungeon.Bosses.SelectMany(encounter => encounter.Foes));
-
-        return enemies.GroupBy(enemy => (enemy.Name, enemy.Portrait))
+        var rules = ChallengeDef.Standard;
+        return DefDatabase<MonsterDef>.All.GroupBy(monster => (monster.Name, monster.Portrait))
             .OrderBy(group => group.Key.Name, StringComparer.Ordinal)
             .ThenBy(group => group.Key.Portrait, StringComparer.Ordinal)
             .Select(group =>
             {
                 var variants = group.ToArray();
+                var cr = Range(variants.Select(monster => monster.Cr.ToString()));
+                var level = Range(variants.Select(monster => rules.LevelOf(monster.Cr)));
                 var summary = new[]
                 {
-                    ("武器", Range(variants.Select(enemy => WeaponName(enemy.Weapon)))),
-                    ("属性池", Range(variants.Select(enemy => enemy.CorePool))),
-                    ("经验池", Range(variants.Select(enemy => enemy.ExpPool))),
+                    ("武器", Range(variants.Select(monster => WeaponName(monster.Weapon)))),
+                    ("挑战等级", cr),
+                    ("等级", level),
                 };
-                var skills = variants.SelectMany(enemy => enemy.Skills).Distinct(StringComparer.Ordinal)
+                var skills = variants.SelectMany(monster => monster.Skills).Distinct(StringComparer.Ordinal)
                     .Select(id => DefDatabase<SkillDef>.Get(id)!.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray();
-                var loot = variants.SelectMany(enemy => enemy.Loot).GroupBy(drop => drop.ItemId)
+                var loot = variants.SelectMany(monster => monster.Loot).GroupBy(drop => drop.ItemId)
                     .OrderBy(grouping => Items.Get(grouping.Key)!.Label, StringComparer.Ordinal);
                 var drops = loot.Select(grouping =>
                 {
@@ -107,23 +105,26 @@ public partial class PortraitHubScreen
                     RecordCount = variants.Length,
                     Attributes = new List<InkModalMonsterCodexData.Metric>
                     {
-                        new() { Label = "武器", Value = Range(variants.Select(enemy => WeaponName(enemy.Weapon))) },
-                        new() { Label = "主天资", Value = Range(variants.Select(enemy => StatName(enemy.Primary))) },
-                        new() { Label = "副天资", Value = Range(variants.Select(enemy => StatName(enemy.Secondary))) },
-                        new() { Label = "属性池", Value = $"{Range(variants.Select(enemy => enemy.CorePool))} 点" },
-                        new() { Label = "经验池", Value = $"{Range(variants.Select(enemy => enemy.ExpPool))} 点" },
-                        new() { Label = "威胁层", Value = Range(variants.Select(enemy => enemy.ThreatTier)) },
-                        new() { Label = "站位列", Value = Range(variants.Select(enemy => enemy.Column)) },
-                        new() { Label = "占格", Value = Range(variants.Select(enemy => enemy.Size)) },
-                        new() { Label = "护甲", Value = Range(variants.Select(enemy => enemy.Armour)) },
-                        new() { Label = "行动点", Value = Range(variants.Select(enemy => enemy.ActionPoints)) },
-                        new() { Label = "金币", Value = $"{Range(variants.Select(enemy => enemy.Money))} G" },
+                        new() { Label = "武器", Value = Range(variants.Select(monster => WeaponName(monster.Weapon))) },
+                        new() { Label = "主天资", Value = Range(variants.Select(monster => StatName(monster.Primary))) },
+                        new() { Label = "副天资", Value = Range(variants.Select(monster => StatName(monster.Secondary))) },
+                        new() { Label = "挑战等级", Value = cr },
+                        new() { Label = "等级", Value = level },
+                        new() { Label = "威胁层", Value = Range(variants.Select(monster => monster.ThreatTier)) },
+                        new() { Label = "定位", Value = Range(variants.Select(RoleName)) },
+                        new() { Label = "占格", Value = Range(variants.Select(monster => monster.Size)) },
+                        new() { Label = "护甲", Value = Range(variants.Select(monster => monster.Armour)) },
+                        new() { Label = "行动点", Value = Range(variants.Select(monster => monster.ActionPoints)) },
+                        new() { Label = "金币", Value = $"{Range(variants.Select(monster => monster.Money))} G" },
                     },
                     Skills = skills.ToList(),
                     Drops = drops.ToList(),
                 });
             }).ToArray();
     }
+
+    private static string RoleName(MonsterDef monster) =>
+        monster.CanLead && monster.CanFollow ? "随从 / 正主" : monster.CanLead ? "正主" : "随从";
 
     private static string WeaponName(WeaponType? weapon) => weapon switch
     {

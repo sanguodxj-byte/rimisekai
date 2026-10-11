@@ -42,7 +42,7 @@ public static class Encounters
     /// 不传或为空则按名册全员出动（据点遭遇战用）。
     /// <paramref name="waves"/> 为连战在首波之后依次补上的各波（每清一波有补给回合）；不传即一波打完。
     /// <paramref name="dangerTier"/> 为战斗发生地的危险等级（定装备掉落的材质与附魔）；
-    /// <paramref name="questBoss"/> 为委托的正主之战：首波里威胁等级最高的敌人记为委托首领，倒下必掉装备。
+    /// <paramref name="questBoss"/> 为委托之战：阵中（含各波）标了正主的敌人记为委托首领，倒下必掉装备。
     /// </summary>
     public static BattleSession? Start(
         GameState state, IReadOnlyList<EnemyDef> enemies, GameCatalog? catalog = null,
@@ -88,15 +88,17 @@ public static class Encounters
             battle.AddReserve(Deploy.FromCharacter(c, CombatSide.Attacker, state.Weapons, state.Equips));
         Pack(state, battle);
 
-        var bossThreat = enemies.Max(def => def.ThreatTier);
+        Combatant Foe(EnemyDef def)
+        {
+            var foe = Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender);
+            foe.QuestBoss = questBoss && def.Boss;
+            return foe;
+        }
         foreach (var def in enemies)
-            battle.Add(Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender));
-        if (questBoss)
-            foreach (var foe in battle.Members.Where(m => m.Enemy is { } def && def.ThreatTier == bossThreat))
-                foe.QuestBoss = true;
+            battle.Add(Foe(def));
         if (waves != null)
             foreach (var wave in waves)
-                battle.QueueWave(wave.Select(def => Deploy.FromEnemy(def, _nextEnemyId++, CombatSide.Defender)).ToList());
+                battle.QueueWave(wave.Select(Foe).ToList());
 
         battle.StartBattle();
         return new BattleSession(state.Roster, battle);

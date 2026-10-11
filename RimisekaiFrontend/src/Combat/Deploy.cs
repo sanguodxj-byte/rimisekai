@@ -82,7 +82,8 @@ public static class Deploy
     }
 
     /// <summary>
-    /// 敌人成军：怪物视为没有生活技能的角色——按目录行的武器、天资与属性/经验池交给角色生成器掷出身板，
+    /// 敌人成军：怪物视为没有生活技能的角色——挑战等级按 <see cref="Defs.ChallengeDef"/> 换成我方等级，
+    /// 再推出属性池与经验池，连同武器、天资交给角色生成器掷出身板，
     /// 再走与角色同一条 <see cref="FromCharacter"/> 快照（生命、出手、防御、闪避、法力、速度、流派能力同一套公式）。
     /// 目录行只管站位（威胁层、列、占格）、护甲、行动点、立绘、赏金、掉落与额外技能。
     /// 同行敌人按 <paramref name="id"/> 区分，个体之间有差异；同一 id 掷出的身板固定。
@@ -91,8 +92,10 @@ public static class Deploy
     public static Combatant FromEnemy(EnemyDef def, int id, CombatSide side)
     {
         var rng = new Random(unchecked(StableHash(def.Id) * 31 + id));
+        var rules = Defs.ChallengeDef.Standard;
+        var level = rules.LevelOf(def.Cr);
         var body = new CharacterGenerator(rng).RollMonster(id, def.Name, def.Weapon, def.Primary, def.Secondary,
-            def.CorePool, def.ExpPool);
+            rules.CorePool(level), rules.ExpPool(level));
         var sheet = FromCharacter(body, side);
         var c = new Combatant
         {

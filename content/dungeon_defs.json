@@ -73,1148 +73,122 @@
     "guardPercent": 35,
     "guards": [
       {
-        "minTier": 1,
         "weight": 4,
         "title": "石室守卫",
         "text": "黑暗里亮起几对眼睛，盘踞此处的东西被惊醒了。",
-        "foes": [
-          {
-            "id": "dg_rat_a",
-            "portrait": "monster_giant_rat",
-            "name": "大鼠",
-            "primary": "speed",
-            "secondary": "dexterity",
-            "corePool": 4,
-            "expPool": 70,
-            "threatTier": 1,
-            "column": 1,
-            "money": 5,
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 50
-              },
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 30
-              }
-            ]
-          },
-          {
-            "id": "dg_rat_b",
-            "portrait": "monster_giant_rat",
-            "name": "鼠王",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 10,
-            "expPool": 190,
-            "armour": 1,
-            "threatTier": 2,
-            "column": 2,
-            "money": 12,
-            "size": 2,
-            "loot": [
-              {
-                "itemId": "铁矿",
-                "min": 4,
-                "max": 8,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "兽皮",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 100
-              }
-            ]
-          },
-          {
-            "id": "dg_rat_c",
-            "portrait": "monster_giant_rat",
-            "name": "大鼠",
-            "primary": "speed",
-            "secondary": "dexterity",
-            "corePool": 4,
-            "expPool": 70,
-            "threatTier": 1,
-            "column": 4,
-            "money": 5,
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 50
-              },
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 30
-              }
-            ]
-          }
-        ]
+        "families": ["rat"]
       },
       {
-        "minTier": 2,
         "weight": 4,
         "title": "石室守卫",
         "text": "几具披甲骸骨从壁龛里站起，锈剑在石地上拖出火星。",
-        "foes": [
-          {
-            "id": "dg_skel_a",
-            "portrait": "",
-            "name": "骸骨兵",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 10,
-            "expPool": 240,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 1,
-            "money": 12,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 40
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 40
-              }
-            ]
-          },
-          {
-            "id": "dg_skel_b",
-            "portrait": "",
-            "name": "骸骨兵",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 10,
-            "expPool": 240,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 2,
-            "money": 12,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 40
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 40
-              }
-            ]
-          },
-          {
-            "id": "dg_skel_c",
-            "portrait": "",
-            "name": "骸骨兵",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 10,
-            "expPool": 240,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 3,
-            "money": 12,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 40
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 40
-              }
-            ]
-          }
-        ]
+        "families": ["skeleton"]
       },
       {
         "id": "acid_slimes",
-        "minTier": 1,
         "weight": 3,
         "title": "酸液软泥",
         "text": "墙缝里淌出几团灰绿的黏液，腐蚀声沿着石缝一路爬近。",
-        "foes": [
-          {
-            "id": "dg_acid_slime_a",
-            "portrait": "monster_acid_slime",
-            "name": "酸液软泥",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 3,
-            "expPool": 60,
-            "threatTier": 1,
-            "column": 1,
-            "money": 3,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 15
-              }
-            ]
-          },
-          {
-            "id": "dg_acid_slime_b",
-            "portrait": "monster_acid_slime",
-            "name": "酸液软泥",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 3,
-            "expPool": 60,
-            "threatTier": 1,
-            "column": 3,
-            "money": 3,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 15
-              }
-            ]
-          }
-        ]
+        "families": ["slime"]
       },
       {
         "id": "bog_leeches",
-        "minTier": 1,
         "weight": 2,
         "title": "墓沼水蛭",
         "text": "一滩发黑的水忽然鼓起，几条吸饱血的水蛭扭动着扑来。",
-        "foes": [
-          {
-            "id": "dg_bog_leech_a",
-            "portrait": "monster_bog_leech",
-            "name": "墓沼水蛭",
-            "weapon": "dagger",
-            "primary": "speed",
-            "secondary": "constitution",
-            "corePool": 5,
-            "expPool": 110,
-            "armour": 1,
-            "threatTier": 1,
-            "column": 1,
-            "money": 5,
-            "skills": [
-              "venom_blade"
-            ],
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 60
-              },
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 35
-              }
-            ]
-          },
-          {
-            "id": "dg_bog_leech_b",
-            "portrait": "monster_bog_leech",
-            "name": "墓沼水蛭",
-            "weapon": "dagger",
-            "primary": "speed",
-            "secondary": "constitution",
-            "corePool": 5,
-            "expPool": 110,
-            "armour": 1,
-            "threatTier": 1,
-            "column": 3,
-            "money": 5,
-            "skills": [
-              "venom_blade"
-            ],
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 60
-              },
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 35
-              }
-            ]
-          }
-        ]
+        "families": ["leech"]
       },
       {
         "id": "grave_hounds",
-        "minTier": 2,
         "weight": 2,
         "title": "墓穴猎犬",
         "text": "锈蚀的锁链拖过地面，几头骨犬从侧廊包抄过来。",
-        "foes": [
-          {
-            "id": "dg_bone_hound_a",
-            "portrait": "monster_bone_hound",
-            "name": "墓穴猎犬",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 11,
-            "expPool": 290,
-            "armour": 1,
-            "threatTier": 2,
-            "column": 1,
-            "money": 14,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 80
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 45
-              }
-            ]
-          },
-          {
-            "id": "dg_bone_hound_b",
-            "portrait": "monster_bone_hound",
-            "name": "墓穴猎犬",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 11,
-            "expPool": 290,
-            "armour": 1,
-            "threatTier": 1,
-            "column": 4,
-            "money": 14,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 80
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 45
-              }
-            ]
-          }
-        ]
+        "families": ["hound"]
       },
       {
         "id": "banshee_choir",
-        "minTier": 2,
         "weight": 1,
         "title": "墓窟哀歌",
         "text": "石壁深处传来一声长啸，寒意随着第二道回声灌入骨髓。",
-        "foes": [
-          {
-            "id": "dg_banshee_a",
-            "portrait": "monster_banshee",
-            "name": "墓窟女妖",
-            "weapon": "staff",
-            "primary": "intellect",
-            "secondary": "speed",
-            "corePool": 13,
-            "expPool": 350,
-            "threatTier": 2,
-            "column": 1,
-            "money": 18,
-            "skills": [
-              "frost_bind"
-            ],
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 75
-              }
-            ]
-          },
-          {
-            "id": "dg_banshee_b",
-            "portrait": "monster_banshee",
-            "name": "墓窟女妖",
-            "weapon": "staff",
-            "primary": "intellect",
-            "secondary": "speed",
-            "corePool": 13,
-            "expPool": 350,
-            "threatTier": 1,
-            "column": 4,
-            "money": 18,
-            "skills": [
-              "magic_missile"
-            ],
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 75
-              }
-            ]
-          }
-        ]
+        "families": ["banshee"]
       },
       {
         "id": "basilisk_guard",
-        "minTier": 3,
         "weight": 3,
         "title": "石化蜥卫",
         "text": "一道冷光从石柱间掠过，鳞甲摩擦声已逼到近前。",
-        "foes": [
-          {
-            "id": "dg_basilisk_a",
-            "portrait": "monster_basilisk",
-            "name": "石化蜥卫",
-            "weapon": "dagger",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 18,
-            "expPool": 460,
-            "armour": 2,
-            "threatTier": 3,
-            "column": 1,
-            "size": 2,
-            "actionPoints": 2,
-            "money": 34,
-            "skills": [
-              "venom_blade"
-            ],
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "钢",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 30
-              }
-            ]
-          },
-          {
-            "id": "dg_basilisk_b",
-            "portrait": "monster_basilisk",
-            "name": "幼年石蜥",
-            "primary": "speed",
-            "secondary": "constitution",
-            "corePool": 12,
-            "expPool": 290,
-            "threatTier": 1,
-            "column": 4,
-            "money": 18,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 75
-              }
-            ]
-          }
-        ]
+        "families": ["basilisk"]
       },
       {
         "id": "blood_beasts",
-        "minTier": 3,
         "weight": 2,
         "title": "血肉兽群",
         "text": "暗红色的肉块从阴影里挤出，喘息声像漏风的风箱。",
-        "foes": [
-          {
-            "id": "dg_blood_beast_a",
-            "portrait": "monster_blood_beast",
-            "name": "血肉兽",
-            "weapon": "axe",
-            "primary": "strength",
-            "secondary": "constitution",
-            "corePool": 17,
-            "expPool": 430,
-            "armour": 2,
-            "threatTier": 2,
-            "column": 1,
-            "money": 28,
-            "skills": [
-              "heavy_cleave"
-            ],
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 100
-              }
-            ]
-          },
-          {
-            "id": "dg_blood_beast_b",
-            "portrait": "monster_blood_beast",
-            "name": "血肉兽",
-            "weapon": "axe",
-            "primary": "strength",
-            "secondary": "constitution",
-            "corePool": 17,
-            "expPool": 430,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 3,
-            "money": 28,
-            "skills": [
-              "sweep"
-            ],
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 100
-              }
-            ]
-          }
-        ]
+        "families": ["flesh"]
       },
       {
         "id": "abyss_larvae",
-        "minTier": 4,
         "weight": 2,
         "title": "深渊幼体",
         "text": "石门后传来湿重的刮擦声，幼小的深渊蠕虫扭身钻出裂缝。",
-        "foes": [
-          {
-            "id": "dg_abyss_larva_a",
-            "portrait": "monster_boss_abyss_worm",
-            "name": "深渊幼虫",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 24,
-            "expPool": 620,
-            "armour": 3,
-            "threatTier": 4,
-            "column": 1,
-            "size": 2,
-            "actionPoints": 2,
-            "money": 48,
-            "skills": [
-              "shatter"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 65
-              }
-            ]
-          },
-          {
-            "id": "dg_abyss_larva_b",
-            "portrait": "monster_boss_abyss_worm",
-            "name": "深渊幼虫",
-            "primary": "constitution",
-            "secondary": "speed",
-            "corePool": 21,
-            "expPool": 550,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 4,
-            "money": 36,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 50
-              }
-            ]
-          }
-        ]
+        "families": ["abyss"]
       },
       {
         "id": "flesh_hunters",
-        "minTier": 4,
         "weight": 2,
         "title": "肉瘤猎手",
         "text": "血肉从石棺里撕裂而出，带着腥气分两路扑向队伍。",
-        "foes": [
-          {
-            "id": "dg_flesh_hunter_a",
-            "portrait": "monster_blood_beast",
-            "name": "肉瘤猎手",
-            "weapon": "axe",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 23,
-            "expPool": 590,
-            "armour": 3,
-            "threatTier": 3,
-            "column": 1,
-            "size": 2,
-            "actionPoints": 2,
-            "money": 42,
-            "skills": [
-              "heavy_cleave"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 50
-              },
-              {
-                "itemId": "肉",
-                "min": 2,
-                "max": 4,
-                "ratePercent": 100
-              }
-            ]
-          },
-          {
-            "id": "dg_flesh_hunter_b",
-            "portrait": "monster_blood_beast",
-            "name": "肉瘤猎手",
-            "weapon": "axe",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 21,
-            "expPool": 540,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 4,
-            "money": 36,
-            "skills": [
-              "sweep"
-            ],
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 2,
-                "max": 4,
-                "ratePercent": 100
-              }
-            ]
-          }
-        ]
+        "families": ["flesh"]
       }
     ],
     "bosses": [
       {
-        "minTier": 1,
         "weight": 3,
         "title": "遗迹之主",
         "text": "最深处的石座上，一头庞然的东西缓缓抬起头来。",
-        "foes": [
-          {
-            "id": "dg_boss_wolf",
-            "portrait": "monster_dire_wolf",
-            "name": "洞穴魔狼",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 22,
-            "expPool": 430,
-            "armour": 2,
-            "threatTier": 3,
-            "column": 1,
-            "money": 80,
-            "size": 2,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 3,
-                "max": 5,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 50
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_add",
-            "portrait": "monster_dire_wolf",
-            "name": "野狼",
-            "primary": "speed",
-            "secondary": "dexterity",
-            "corePool": 4,
-            "expPool": 100,
-            "threatTier": 1,
-            "column": 3,
-            "money": 8,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 80
-              },
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 60
-              }
-            ]
-          }
-        ]
+        "families": ["wolf"]
       },
       {
-        "minTier": 3,
         "weight": 3,
         "title": "遗迹之主",
         "text": "尘封的王座上坐着一具戴冠的骸骨，眼窝里燃起幽火。",
-        "foes": [
-          {
-            "id": "dg_boss_lich",
-            "portrait": "",
-            "name": "骸骨王",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 28,
-            "expPool": 580,
-            "armour": 3,
-            "threatTier": 4,
-            "column": 1,
-            "money": 160,
-            "size": 2,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 3,
-                "max": 5,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "钢",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 100
-              }
-            ],
-            "gear": {
-              "kind": "weapon",
-              "weaponType": "sword",
-              "minMaterial": "钢",
-              "ratePercent": 100
-            }
-          },
-          {
-            "id": "dg_boss_guard",
-            "portrait": "",
-            "name": "骸骨兵",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 10,
-            "expPool": 240,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 3,
-            "money": 12,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 40
-              },
-              {
-                "itemId": "铁矿",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 40
-              }
-            ]
-          }
-        ]
+        "families": ["skeleton"]
       },
       {
-        "minTier": 1,
         "weight": 1,
         "title": "腐蚀母体",
         "text": "房间中央的黏液聚成一团，表面浮起一张模糊的人脸。",
-        "foes": [
-          {
-            "id": "dg_boss_acid_mother",
-            "portrait": "monster_acid_slime",
-            "name": "锈月软泥母体",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 16,
-            "expPool": 350,
-            "armour": 2,
-            "threatTier": 2,
-            "column": 1,
-            "size": 2,
-            "actionPoints": 2,
-            "money": 110,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "药剂",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 25
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_acid_add",
-            "portrait": "monster_acid_slime",
-            "name": "酸浆分体",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 4,
-            "expPool": 100,
-            "threatTier": 1,
-            "column": 4,
-            "money": 8,
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 20
-              }
-            ]
-          }
-        ]
+        "families": ["slime"]
       },
       {
-        "minTier": 2,
         "weight": 1,
         "title": "墓窟女妖",
         "text": "王座后的影子抬起白骨般的手，刺耳的哭声震落了顶上的灰。",
-        "foes": [
-          {
-            "id": "dg_boss_banshee",
-            "portrait": "monster_banshee",
-            "name": "墓窟女妖王",
-            "weapon": "staff",
-            "primary": "intellect",
-            "secondary": "speed",
-            "corePool": 22,
-            "expPool": 520,
-            "armour": 2,
-            "threatTier": 3,
-            "column": 1,
-            "size": 2,
-            "actionPoints": 2,
-            "money": 175,
-            "skills": [
-              "frost_bind",
-              "magic_missile"
-            ],
-            "loot": [
-              {
-                "itemId": "炼金尘",
-                "min": 3,
-                "max": 4,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "钢",
-                "min": 1,
-                "max": 1,
-                "ratePercent": 35
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_banshee_hound",
-            "portrait": "monster_bone_hound",
-            "name": "守墓骨犬",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 10,
-            "expPool": 240,
-            "threatTier": 1,
-            "column": 4,
-            "money": 14,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 80
-              }
-            ]
-          }
-        ]
+        "families": ["banshee", "hound"]
       },
       {
-        "minTier": 3,
         "weight": 1,
         "title": "熔炉巨兽",
         "text": "熔岩般的裂纹在巨兽胸口亮起，它每走一步，石室都随之震颤。",
-        "foes": [
-          {
-            "id": "dg_boss_magma",
-            "portrait": "monster_boss_magma_behemoth",
-            "name": "熔炉巨兽",
-            "primary": "strength",
-            "secondary": "constitution",
-            "corePool": 34,
-            "expPool": 770,
-            "armour": 4,
-            "threatTier": 4,
-            "column": 1,
-            "size": 3,
-            "actionPoints": 2,
-            "money": 245,
-            "skills": [
-              "heavy_cleave",
-              "sweep"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 2,
-                "max": 4,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "炼金尘",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 80
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_magma_add",
-            "portrait": "monster_blood_beast",
-            "name": "熔渣兽",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 13,
-            "expPool": 310,
-            "armour": 1,
-            "threatTier": 1,
-            "column": 4,
-            "money": 20,
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 70
-              }
-            ]
-          }
-        ]
+        "families": ["magma"]
       },
       {
-        "minTier": 4,
         "weight": 3,
         "title": "骸骨巨像",
         "text": "巨大的骸骨从石座上站起，王冠里燃着四团幽蓝的火。",
-        "foes": [
-          {
-            "id": "dg_boss_colossus",
-            "portrait": "monster_boss_bone_colossus",
-            "name": "墓王巨像",
-            "weapon": "sword",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 40,
-            "expPool": 910,
-            "armour": 5,
-            "threatTier": 4,
-            "column": 1,
-            "size": 3,
-            "actionPoints": 3,
-            "money": 340,
-            "skills": [
-              "iron_wall",
-              "sweep"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 3,
-                "max": 5,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "炼金尘",
-                "min": 3,
-                "max": 5,
-                "ratePercent": 100
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_colossus_hound",
-            "portrait": "monster_bone_hound",
-            "name": "王墓骨犬",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 16,
-            "expPool": 400,
-            "armour": 2,
-            "threatTier": 1,
-            "column": 4,
-            "money": 25,
-            "loot": [
-              {
-                "itemId": "兽皮",
-                "min": 2,
-                "max": 3,
-                "ratePercent": 90
-              }
-            ]
-          }
-        ]
+        "families": ["colossus", "hound"]
       },
       {
-        "minTier": 4,
         "weight": 2,
         "title": "深渊蠕虫",
         "text": "地底传来一声漫长的轰鸣，石壁裂开，露出吞噬过整支军队的巨口。",
-        "foes": [
-          {
-            "id": "dg_boss_abyss_worm",
-            "portrait": "monster_boss_abyss_worm",
-            "name": "深渊吞噬者",
-            "primary": "constitution",
-            "secondary": "strength",
-            "corePool": 42,
-            "expPool": 1010,
-            "armour": 4,
-            "threatTier": 4,
-            "column": 1,
-            "size": 4,
-            "actionPoints": 3,
-            "money": 380,
-            "skills": [
-              "shatter"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 4,
-                "max": 6,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "炼金尘",
-                "min": 4,
-                "max": 6,
-                "ratePercent": 100
-              }
-            ]
-          }
-        ]
+        "families": ["abyss"]
       },
       {
-        "minTier": 4,
         "weight": 1,
         "title": "腐肉泰坦",
         "text": "厚重的缝线在巨人身上绷断，腐肉泰坦拖着残破肢体扑向众人。",
-        "foes": [
-          {
-            "id": "dg_boss_flesh_titan",
-            "portrait": "monster_boss_flesh_titan",
-            "name": "腐肉泰坦",
-            "primary": "strength",
-            "secondary": "constitution",
-            "corePool": 38,
-            "expPool": 940,
-            "armour": 4,
-            "threatTier": 4,
-            "column": 1,
-            "size": 3,
-            "actionPoints": 3,
-            "money": 360,
-            "skills": [
-              "heavy_cleave",
-              "sweep"
-            ],
-            "loot": [
-              {
-                "itemId": "钢",
-                "min": 3,
-                "max": 5,
-                "ratePercent": 100
-              },
-              {
-                "itemId": "药剂",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 60
-              }
-            ]
-          },
-          {
-            "id": "dg_boss_titan_add",
-            "portrait": "monster_blood_beast",
-            "name": "剥皮侍从",
-            "primary": "strength",
-            "secondary": "speed",
-            "corePool": 15,
-            "expPool": 360,
-            "threatTier": 1,
-            "column": 4,
-            "money": 20,
-            "loot": [
-              {
-                "itemId": "肉",
-                "min": 1,
-                "max": 2,
-                "ratePercent": 70
-              }
-            ]
-          }
-        ]
+        "families": ["flesh"]
       }
     ],
     "clearedText": "{0}已肃清。",
@@ -1236,8 +210,7 @@
         "rampDays": 20,
         "moneyBase": 100,
         "moneyPerStar": 70,
-        "corePerStar": 2,
-        "expPerStar": 150,
+        "crPerStar": 1.5,
         "partyBase": 2,
         "sites": [
           {

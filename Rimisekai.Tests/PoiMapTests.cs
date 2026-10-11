@@ -187,7 +187,7 @@ public sealed class PoiMapTests
         Assert.NotEmpty(eventFixtures);
         Assert.True(eventFixtures.Length < ruin.AllRooms.Count / 2, "设施事件应分布在部分房间，而不是每间房都触发");
         Assert.Contains(eventFixtures, f => f.Name == "封存宝箱" && f.DungeonEvent!.Loot.Count > 0);
-        Assert.All(eventFixtures, f => Assert.Empty(f.DungeonEvent!.Foes));
+        Assert.All(eventFixtures, f => Assert.False(f.DungeonEvent!.IsBattle));
     }
 
     [Theory]

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rimisekai.Combat;
 using Rimisekai.Defs;
+using Rimisekai.Hub;
 using Rimisekai.Save;
 using Rimisekai.WorldMap;
 
@@ -55,7 +57,11 @@ public static class QuestBoard
         var halves = (int)Math.Round(board.StarsMin * 2) + rng.Next((int)Math.Round((cap - board.StarsMin) * 2) + 1);
         var stars = halves / 2.0;
         var tier = TierOf(stars);
-        var boss = MapCatalog.Default.Dungeon.BossAtTier(tier, (uint)rng.Next());
+        // 正主：在该地城类型、该危险等级组得出阵容的首领条目里抽一条，正主按星数加码 CR。
+        var habitat = Habitat.InDungeon(site.DungeonId, EncounterTable.BossRoom);
+        var boss = EncounterTable.Pick(EncounterTable.Eligible(MapCatalog.Default.Dungeon.Bosses, EncounterKind.Boss, tier, habitat),
+            (uint)rng.Next());
+        var bonus = (int)Math.Round(board.CrPerStar * stars, MidpointRounding.AwayFromZero);
         var money = (int)Math.Round((board.MoneyBase + board.MoneyPerStar * stars) / 10.0) * 10;
         var def = new QuestDef
         {
@@ -70,8 +76,7 @@ public static class QuestBoard
             Difficulty = stars,
             MaxPartySize = board.PartyBase + tier,
             RewardMoney = money,
-            Foes = boss.Foes.Select(f => f.Stronger(
-                (int)Math.Round(board.CorePerStar * stars), (int)Math.Round(board.ExpPerStar * stars))).ToList(),
+            Foes = EncounterTable.Lineup(boss, EncounterKind.Boss, tier, habitat, rng.Next(), bonus),
         };
         Cache[key] = def;
         return def;

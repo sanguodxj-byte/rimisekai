@@ -191,7 +191,7 @@ public sealed class CombatTests
         {
             Id = "slime", Name = "软泥", Weapon = WeaponType.Unarmed,
             Primary = CoreStat.Constitution, Secondary = CoreStat.Strength,
-            Armour = 5, Money = 12, ThreatTier = 2, Column = 3,
+            Armour = 5, Money = 12, ThreatTier = 2, Column = 3, Cr = ChallengeRating.Parse("6"),
             Skills = { "acid" },
         };
         var unit = Deploy.FromEnemy(def, 11, CombatSide.Defender);
@@ -394,7 +394,7 @@ public sealed class CombatTests
     {
         var def = new EnemyDef
         {
-            Id = "slime", Name = "软泥", Money = 30, CorePool = 0, ExpPool = 0,
+            Id = "slime", Name = "软泥", Money = 30,
             Loot = { new EnemyLoot { ItemId = "炼金尘", Min = 2, Max = 4, RatePercent = 60 } },
         };
         var battle = new Battle(d100: () => 0);

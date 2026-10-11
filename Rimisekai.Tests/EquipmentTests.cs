@@ -193,22 +193,9 @@ public sealed class EquipmentTests
     public void Every_monster_in_the_content_has_a_drop_table_of_real_items()
     {
         ContentDefs.EnsureInitialized();
-        var foes = new List<JsonObject>();
-        void Walk(JsonNode? node)
-        {
-            if (node is JsonObject o)
-            {
-                if (o.ContainsKey("corePool"))
-                    foes.Add(o);
-                foreach (var pair in o)
-                    Walk(pair.Value);
-            }
-            else if (node is JsonArray a)
-                foreach (var item in a)
-                    Walk(item);
-        }
-        foreach (var file in new[] { "content/map_defs.json", "content/defs/quests.json" })
-            Walk(JsonNode.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(Root, file))));
+        // 怪物只在模板表里：每个模板都有掉落表。
+        var foes = JsonNode.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(Root, "content/defs/monsters.json")))!["defs"]!
+            .AsArray().Select(node => node!.AsObject()).ToList();
         Assert.NotEmpty(foes);
         foreach (var foe in foes)
         {

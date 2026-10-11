@@ -7,7 +7,10 @@ using Rimisekai.Defs;
 namespace Rimisekai.Combat;
 
 /// <summary>阵中一只怪：模板、落位（列、站位层）、是不是正主、按哪档 CR 生成。</summary>
-public sealed record MonsterSlot(MonsterDef Monster, int Column, int ThreatTier, bool Boss, ChallengeRating Cr);
+public sealed record MonsterSlot(MonsterDef Monster, int Column, int ThreatTier, bool Boss, ChallengeRating Cr)
+{
+    public EnemyDef ToEnemy() => EnemyDef.Place(Monster, Column, ThreatTier, Boss, Cr);
+}
 
 /// <summary>
 /// 4 列 × 4 层战场的占格：单位从 column 向右、从站位层向纵深延展 size 格，

@@ -131,7 +131,7 @@ public partial class MobileHitAudit : Node
                 });
         list.Add(new Rimisekai.Catalog.EnemyDef
         {
-            Id = "boss", Name = "首领", CorePool = 40, ExpPool = 6000,
+            Id = "boss", Name = "首领", Cr = Rimisekai.Catalog.ChallengeRating.Whole(20), Boss = true,
             ThreatTier = 4, Column = 2, Size = 2,
         });
         return list;
