@@ -1,0 +1,58 @@
+{
+  "defType": "ChallengeDef",
+  "defs": [
+    {
+      "defName": "Challenge_Standard",
+      "label": "挑战等级",
+      "description": "怪物强度＝挑战等级（CR，取值照 D&D）。CR → 我方等级 → 属性池/经验池；危险等级 → CR 窗口与遭遇经验值预算；遭遇构成规则。字段写法见 docs/怪物表规范.md。",
+      "ratings": [
+        { "cr": "0", "level": 1, "xp": 10 },
+        { "cr": "1/8", "level": 1, "xp": 25 },
+        { "cr": "1/4", "level": 1, "xp": 50 },
+        { "cr": "1/2", "level": 3, "xp": 100 },
+        { "cr": "1", "level": 5, "xp": 200 },
+        { "cr": "2", "level": 10, "xp": 450 },
+        { "cr": "3", "level": 15, "xp": 700 },
+        { "cr": "4", "level": 20, "xp": 1100 },
+        { "cr": "5", "level": 25, "xp": 1800 },
+        { "cr": "6", "level": 30, "xp": 2300 },
+        { "cr": "7", "level": 35, "xp": 2900 },
+        { "cr": "8", "level": 40, "xp": 3900 },
+        { "cr": "9", "level": 45, "xp": 5000 },
+        { "cr": "10", "level": 50, "xp": 5900 },
+        { "cr": "11", "level": 55, "xp": 7200 },
+        { "cr": "12", "level": 60, "xp": 8400 },
+        { "cr": "13", "level": 65, "xp": 10000 },
+        { "cr": "14", "level": 70, "xp": 11500 },
+        { "cr": "15", "level": 75, "xp": 13000 },
+        { "cr": "16", "level": 80, "xp": 15000 },
+        { "cr": "17", "level": 85, "xp": 18000 },
+        { "cr": "18", "level": 90, "xp": 20000 },
+        { "cr": "19", "level": 95, "xp": 22000 },
+        { "cr": "20", "level": 100, "xp": 25000 },
+        { "cr": "21", "level": 100, "xp": 33000 },
+        { "cr": "22", "level": 100, "xp": 41000 },
+        { "cr": "23", "level": 100, "xp": 50000 },
+        { "cr": "24", "level": 100, "xp": 62000 },
+        { "cr": "25", "level": 100, "xp": 75000 },
+        { "cr": "26", "level": 100, "xp": 90000 },
+        { "cr": "27", "level": 100, "xp": 105000 },
+        { "cr": "28", "level": 100, "xp": 120000 },
+        { "cr": "29", "level": 100, "xp": 135000 },
+        { "cr": "30", "level": 100, "xp": 155000 }
+      ],
+      "stats": { "coreBase": 3, "corePerLevel": 0.6, "expBase": 60, "expPerLevel": 15 },
+      "dangerTiers": [
+        { "tier": 1, "crMin": "0", "crMax": "2", "budgetXp": 650, "bossCrMin": "4", "bossCrMax": "6" },
+        { "tier": 2, "crMin": "1/4", "crMax": "4", "budgetXp": 2200, "bossCrMin": "4", "bossCrMax": "7" },
+        { "tier": 3, "crMin": "1", "crMax": "7", "budgetXp": 3600, "bossCrMin": "7", "bossCrMax": "10" },
+        { "tier": 4, "crMin": "3", "crMax": "9", "budgetXp": 5800, "bossCrMin": "10", "bossCrMax": "13" }
+      ],
+      "compositions": [
+        { "kind": "wild", "minCount": 1, "maxCount": 3, "leader": false },
+        { "kind": "guard", "minCount": 1, "maxCount": 3, "leader": false },
+        { "kind": "boss", "minCount": 1, "maxCount": 2, "leader": true, "minionBudgetPercent": 35 }
+      ]
+    }
+  ]
+}
