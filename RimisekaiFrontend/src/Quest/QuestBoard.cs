@@ -55,14 +55,14 @@ public static class QuestBoard
         var halves = (int)Math.Round(board.StarsMin * 2) + rng.Next((int)Math.Round((cap - board.StarsMin) * 2) + 1);
         var stars = halves / 2.0;
         var tier = TierOf(stars);
-        var bosses = MapCatalog.Default.Dungeon.Bosses.FindAll(b => b.MinTier <= tier);
-        var boss = bosses[rng.Next(bosses.Count)];
+        var boss = MapCatalog.Default.Dungeon.BossAtTier(tier, (uint)rng.Next());
         var money = (int)Math.Round((board.MoneyBase + board.MoneyPerStar * stars) / 10.0) * 10;
         var def = new QuestDef
         {
             Id = id,
             DefName = $"QuestBoard_{id}",
             Name = site.Name,
+            DungeonId = site.DungeonId,
             Kind = QuestKind.Dungeon,
             Generated = true,
             Description = string.Format(site.Description, town.NameZh),

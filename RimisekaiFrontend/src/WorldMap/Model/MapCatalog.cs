@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Rimisekai.Catalog;
 using Rimisekai.WorldMap.Math;
 
 namespace Rimisekai.WorldMap;
@@ -22,6 +24,10 @@ public sealed class FacilityTemplateDef
     public string Terrain { get; set; } = "Plains";
     public bool DefaultPool { get; set; } = true;
     public List<int> RoomIds { get; set; } = new();
+
+    /// <summary>地城设施到访事件；事件由设施触发，不属于房间模板。</summary>
+    [JsonPropertyName("event")]
+    public EncounterDef? DungeonEvent { get; set; }
 
     /// <summary>城镇商店：进了这一间才能买卖（见 <see cref="Hub.HubSession.AtCityShop"/>）。</summary>
     public bool Shop { get; set; }
@@ -65,6 +71,9 @@ public sealed class EncounterDef
     public int Minutes { get; set; }
     public int Mood { get; set; }
 
+    /// <summary>设施事件或战斗遭遇的物品掉落行。</summary>
+    public List<EnemyLoot> Loot { get; set; } = new();
+
     /// <summary>事件的那枚钮写什么。</summary>
     public string AcceptLabel { get; set; } = "";
 }
@@ -84,12 +93,10 @@ public sealed class DungeonDef
     /// <summary>地城的块拼法：每式是一组 5×5 块坐标（单块、横两块、竖两块、L 形、一字三块……），按兴趣点种子挑一式。</summary>
     public List<List<List<int>>> Layouts { get; set; } = new();
 
-    /// <summary>地城里普通石室有守卫的百分率。</summary>
+    /// <summary>地城里普通房间直接遇敌的百分率。</summary>
     public int GuardPercent { get; set; }
     public List<EncounterDef> Guards { get; set; } = new();
     public List<EncounterDef> Bosses { get; set; } = new();
-    public EncounterDef Treasure { get; set; } = new();
-    public EncounterDef Shrine { get; set; } = new();
 
     /// <summary>首领倒下后的日志，{0} 为地城名。</summary>
     public string ClearedText { get; set; } = "";
@@ -99,6 +106,34 @@ public sealed class DungeonDef
 
     /// <summary>委托地城（包接送）。</summary>
     public QuestDungeonDef Quest { get; set; } = new();
+
+    /// <summary>在当前危险级可达的最高档中，按内容权重抽一组守卫；同一 roll 永远得到同一组。</summary>
+    public EncounterDef GuardAtTier(int tier, uint roll) => PickAtTier(Guards, tier, roll);
+
+    /// <summary>在当前危险级可达的最高档中，按内容权重抽一位首领。</summary>
+    public EncounterDef BossAtTier(int tier, uint roll) => PickAtTier(Bosses, tier, roll);
+
+    private static EncounterDef PickAtTier(List<EncounterDef> entries, int tier, uint roll)
+    {
+        var highestTier = 0;
+        foreach (var entry in entries)
+            if (entry.MinTier <= tier && entry.MinTier > highestTier)
+                highestTier = entry.MinTier;
+
+        var candidates = entries.FindAll(entry => entry.MinTier == highestTier);
+        var totalWeight = 0;
+        foreach (var entry in candidates)
+            totalWeight += entry.Weight;
+
+        var pick = (int)(roll % (uint)totalWeight);
+        foreach (var entry in candidates)
+        {
+            pick -= entry.Weight;
+            if (pick < 0)
+                return entry;
+        }
+        return candidates[^1];
+    }
 }
 
 /// <summary>
@@ -125,10 +160,19 @@ public sealed class QuestDungeonDef
     public QuestBoardDef Board { get; set; } = new();
 }
 
+/// <summary>Roguelike 副本原型：房间与设施模板只通过此表列出的 ID 参与该副本生成。</summary>
+public sealed class DungeonArchetypeDef
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public List<int> RoomIds { get; set; } = new();
+    public List<int> FacilityIds { get; set; } = new();
+}
+
 /// <summary>
 /// 委托板现生成地城探索委托：每天张贴 <see cref="PerDay"/> 张，每张挂 <see cref="LifeDays"/> 天，了结即撕下；
 /// 地点按张贴顺序轮转 <see cref="Sites"/>，发单的聚落取世界上的一处聚落，难度在星数区间里按半星掷，
-/// 正主从 <c>dungeon.bosses</c> 里按危险等级挑，酬金＝<see cref="MoneyBase"/>＋<see cref="MoneyPerStar"/>×星数（取整到十）。
+/// 正主从 <c>dungeon_defs.json rules.bosses</c> 里按危险等级挑，酬金＝<see cref="MoneyBase"/>＋<see cref="MoneyPerStar"/>×星数（取整到十）。
 /// </summary>
 public sealed class QuestBoardDef
 {
@@ -159,6 +203,7 @@ public sealed class QuestBoardDef
 /// <summary>委托地点：名称即委托名；描述里 {0} 为发单的聚落名；传言任挑一条。</summary>
 public sealed class QuestSiteDef
 {
+    public string DungeonId { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public List<string> Rumors { get; set; } = new();
@@ -169,6 +214,7 @@ public sealed class PoiScaleDef
     public string Type { get; set; } = "";
     public int BlocksW { get; set; } = 1;
     public int BlocksH { get; set; } = 1;
+    public string? DungeonId { get; set; }
     public List<string> Districts { get; set; } = new();
 }
 
@@ -194,7 +240,12 @@ public sealed class MapDefsTable
 {
     public List<TerrainDefEntry> Terrains { get; set; } = new();
     public WildsDef Wilds { get; set; } = new();
-    public DungeonDef Dungeon { get; set; } = new();
+}
+
+public sealed class DungeonDefsTable
+{
+    public DungeonDef Rules { get; set; } = new();
+    public List<DungeonArchetypeDef> Dungeons { get; set; } = new();
 }
 
 public sealed class RoomDefsTable
@@ -215,8 +266,8 @@ public sealed class PoiDefsTable
 }
 
 /// <summary>
-/// 组合地图、房间、设施与 POI 数据表。地图表只描述大地图地貌和遭遇；
-/// 地点生成所需的房间、设施和 POI 规则分别由独立表提供。
+/// 组合地图、房间、设施、POI 与 Roguelike 副本原型数据表；
+/// 房间与设施按分区或 dungeonId 索引，不假设副本一定是地下建筑。
 /// </summary>
 public sealed class MapCatalog
 {
@@ -229,6 +280,7 @@ public sealed class MapCatalog
     private readonly Dictionary<int, RoomTemplateDef> _roomsById = new();
     private readonly Dictionary<int, FacilityTemplateDef> _facilitiesById = new();
     private readonly Dictionary<string, PoiDistrictDef> _districts = new();
+    private readonly Dictionary<string, DungeonArchetypeDef> _dungeons = new(StringComparer.Ordinal);
 
     /// <summary>野外遭遇表。</summary>
     public WildsDef Wilds { get; private set; } = new();
@@ -252,8 +304,6 @@ public sealed class MapCatalog
     private readonly List<RoomTemplateDef> _openSpaces = new();
     private readonly List<RoomTemplateDef> _defaultRoomPool = new();
     private readonly List<FacilityTemplateDef> _defaultFacilityPool = new();
-    private readonly List<RoomTemplateDef> _treasures = new();
-    private readonly List<RoomTemplateDef> _shrines = new();
 
     public string GetTerrainName(WorldTerrainType terrain) =>
         _terrainNames.TryGetValue(terrain, out var name) ? name : terrain.ToString();
@@ -273,9 +323,35 @@ public sealed class MapCatalog
 
     public RoomTemplateDef GetRoadTemplate() => _roads[0];
 
-    public RoomTemplateDef GetTreasureTemplate() => _treasures[0];
+    public DungeonArchetypeDef GetDungeonTemplate(string dungeonId) => _dungeons[dungeonId];
 
-    public RoomTemplateDef GetShrineTemplate() => _shrines[0];
+    public string? GetPoiDungeonId(WorldPoiType type) => _poiScales[type].DungeonId;
+
+    public RoomTemplateDef GetDungeonRoomTemplate(string dungeonId, int index)
+    {
+        var dungeon = _dungeons[dungeonId];
+        return _roomsById[dungeon.RoomIds[(int)((uint)index % (uint)dungeon.RoomIds.Count)]];
+    }
+
+    public IReadOnlyList<RoomTemplateDef> GetDungeonRoomTemplates(string dungeonId)
+    {
+        var templates = new List<RoomTemplateDef>();
+        foreach (var roomId in _dungeons[dungeonId].RoomIds)
+            templates.Add(_roomsById[roomId]);
+        return templates;
+    }
+
+    public FacilityTemplateDef? GetDungeonFacilityTemplate(string dungeonId, int roomTemplateId, int index)
+    {
+        var pool = new List<FacilityTemplateDef>();
+        foreach (var id in _dungeons[dungeonId].FacilityIds)
+        {
+            var facility = _facilitiesById[id];
+            if (facility.RoomIds.Contains(roomTemplateId))
+                pool.Add(facility);
+        }
+        return pool.Count == 0 ? null : pool[(int)((uint)index % (uint)pool.Count)];
+    }
 
     /// <summary>
     /// 根据 POI 类型获取拼接规模与各 5x5 块的分区 ID。
@@ -419,7 +495,7 @@ public sealed class MapCatalog
     public string GetPoiSettlementName(WorldPoiType type, int index) =>
         GenerateSettlementName(type, 42, index);
 
-    public static MapCatalog LoadFromJson(string mapJson, string roomJson, string facilityJson, string poiJson)
+    public static MapCatalog LoadFromJson(string mapJson, string roomJson, string facilityJson, string poiJson, string dungeonJson)
     {
         var options = new JsonSerializerOptions
         {
@@ -430,7 +506,8 @@ public sealed class MapCatalog
         var roomTable = JsonSerializer.Deserialize<RoomDefsTable>(roomJson, options)!;
         var facilityTable = JsonSerializer.Deserialize<FacilityDefsTable>(facilityJson, options)!;
         var poiTable = JsonSerializer.Deserialize<PoiDefsTable>(poiJson, options)!;
-        return BuildFromTables(mapTable, roomTable, facilityTable, poiTable);
+        var dungeonTable = JsonSerializer.Deserialize<DungeonDefsTable>(dungeonJson, options)!;
+        return BuildFromTables(mapTable, roomTable, facilityTable, poiTable, dungeonTable);
     }
 
     public static MapCatalog CreateDefault()
@@ -439,7 +516,8 @@ public sealed class MapCatalog
             ReadJson("map_defs.json"),
             ReadJson("room_defs.json"),
             ReadJson("facility_defs.json"),
-            ReadJson("poi_defs.json"));
+            ReadJson("poi_defs.json"),
+            ReadJson("dungeon_defs.json"));
     }
 
     private static string ReadJson(string fileName)
@@ -467,9 +545,9 @@ public sealed class MapCatalog
         throw new FileNotFoundException($"未找到数据表 content/{fileName}");
     }
 
-    private static MapCatalog BuildFromTables(MapDefsTable map, RoomDefsTable rooms, FacilityDefsTable facilities, PoiDefsTable poi)
+    private static MapCatalog BuildFromTables(MapDefsTable map, RoomDefsTable rooms, FacilityDefsTable facilities, PoiDefsTable poi, DungeonDefsTable dungeons)
     {
-        var catalog = new MapCatalog { Wilds = map.Wilds, Dungeon = map.Dungeon };
+        var catalog = new MapCatalog { Wilds = map.Wilds, Dungeon = dungeons.Rules };
 
         foreach (var terrain in map.Terrains)
         {
@@ -503,12 +581,6 @@ public sealed class MapCatalog
                     if (room.DefaultPool)
                         catalog._defaultRoomPool.Add(room);
                     break;
-                case "treasure":
-                    catalog._treasures.Add(room);
-                    break;
-                case "shrine":
-                    catalog._shrines.Add(room);
-                    break;
                 default:
                     if (room.DefaultPool)
                         catalog._defaultRoomPool.Add(room);
@@ -532,6 +604,13 @@ public sealed class MapCatalog
         foreach (var district in poi.Districts)
             catalog._districts.Add(district.Id, district);
 
+        foreach (var dungeon in dungeons.Dungeons)
+        {
+            if (string.IsNullOrWhiteSpace(dungeon.Id) || string.IsNullOrWhiteSpace(dungeon.Name))
+                throw new InvalidDataException("dungeon_defs.json 中副本必须配置 id 与 name");
+            catalog._dungeons.Add(dungeon.Id, dungeon);
+        }
+
         catalog.Grammar.SyllablePrefixes.AddRange(poi.SettlementGrammar.SyllablePrefixes);
         catalog.Grammar.SyllableSuffixes.AddRange(poi.SettlementGrammar.SyllableSuffixes);
         foreach (var pair in poi.SettlementGrammar.FeaturePrefixes)
@@ -546,6 +625,13 @@ public sealed class MapCatalog
             foreach (var roomId in facility.RoomIds)
                 if (!catalog._roomsById.ContainsKey(roomId))
                     throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 引用了不存在的 roomId {roomId}");
+            if (facility.DungeonEvent is { } dungeonEvent)
+            {
+                if (dungeonEvent.Foes.Count > 0)
+                    throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 的事件不能直接配置敌人");
+                if (dungeonEvent.Loot.Exists(drop => drop.Min < 0 || drop.Max < drop.Min || drop.RatePercent is < 0 or > 100))
+                    throw new InvalidDataException($"facility_defs.json 中设施 {facility.Id} 的战利品行无效");
+            }
         }
         foreach (var district in poi.Districts)
         {
@@ -564,6 +650,30 @@ public sealed class MapCatalog
                 && (!catalog._facilitiesById.TryGetValue(district.ShopFacilityId, out var shop) || !shop.Shop))
                 throw new InvalidDataException($"poi_defs.json 分区 {district.Id} 的商店 {district.ShopFacilityId} 不是 facility_defs.json 里的商店");
         }
+
+        foreach (var poiScale in poi.Pois)
+            if (poiScale.DungeonId is { Length: > 0 } dungeonId && !catalog._dungeons.ContainsKey(dungeonId))
+                throw new InvalidDataException($"poi_defs.json 类型 {poiScale.Type} 引用了不存在的 dungeonId {dungeonId}");
+
+        foreach (var dungeon in dungeons.Dungeons)
+        {
+            if (dungeon.RoomIds.Count == 0)
+                throw new InvalidDataException($"dungeon_defs.json 副本 {dungeon.Id} 未配置 roomIds");
+            foreach (var roomId in dungeon.RoomIds)
+                if (!catalog._roomsById.ContainsKey(roomId))
+                    throw new InvalidDataException($"dungeon_defs.json 副本 {dungeon.Id} 引用了不存在的 roomId {roomId}");
+            foreach (var facilityId in dungeon.FacilityIds)
+            {
+                if (!catalog._facilitiesById.TryGetValue(facilityId, out var facility))
+                    throw new InvalidDataException($"dungeon_defs.json 副本 {dungeon.Id} 引用了不存在的 facilityId {facilityId}");
+                if (!facility.RoomIds.Exists(dungeon.RoomIds.Contains))
+                    throw new InvalidDataException($"dungeon_defs.json 副本 {dungeon.Id} 的设施 {facilityId} 未绑定到副本内任何房间");
+            }
+        }
+
+        foreach (var site in dungeons.Rules.Quest.Board.Sites)
+            if (!catalog._dungeons.ContainsKey(site.DungeonId))
+                throw new InvalidDataException($"dungeon_defs.json 委托地点 {site.Name} 引用了不存在的 dungeonId {site.DungeonId}");
 
         return catalog;
     }

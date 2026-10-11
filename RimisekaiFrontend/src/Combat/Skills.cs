@@ -155,6 +155,26 @@ public sealed class LootResult
     }
 }
 
+/// <summary>按统一掉率与数量规则生成物品战利品；战斗掉落与地城设施共用。</summary>
+public static class LootGenerator
+{
+    public static List<(string ItemId, int Count)> Roll(IEnumerable<EnemyLoot> rows, Func<int>? d100 = null)
+    {
+        var roll = d100 ?? (() => System.Random.Shared.Next(100));
+        var result = new List<(string ItemId, int Count)>();
+        foreach (var row in rows)
+        {
+            if (roll() >= row.RatePercent)
+                continue;
+            var span = row.Max - row.Min + 1;
+            var count = row.Min + (span > 1 ? roll() % span : 0);
+            if (count > 0)
+                result.Add((row.ItemId, count));
+        }
+        return result;
+    }
+}
+
 public static class BattleLoot
 {
     /// <summary>
@@ -170,15 +190,8 @@ public static class BattleLoot
             if (m.Side != side || m.Alive)
                 continue;
             result.Money += m.MoneyReward;
-            foreach (var row in m.Loot)
-            {
-                if (roll() >= row.RatePercent)
-                    continue;
-                var span = row.Max - row.Min + 1;
-                var count = row.Min + (span > 1 ? roll() % span : 0);
-                if (count > 0)
-                    result.Add(row.ItemId, count);
-            }
+            foreach (var (itemId, count) in LootGenerator.Roll(m.Loot, roll))
+                result.Add(itemId, count);
         }
         return result;
     }

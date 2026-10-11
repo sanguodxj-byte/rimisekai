@@ -56,6 +56,9 @@ public sealed class QuestDef : Def, IIdentifiedDef
     }
     public QuestKind Kind { get; init; }
 
+    /// <summary>地城探索委托对应的 Roguelike 副本原型 ID。</summary>
+    public string DungeonId { get; init; } = "";
+
     /// <summary>战斗委托的打法；地城委托不看。</summary>
     public QuestBattle Battle { get; init; }
 

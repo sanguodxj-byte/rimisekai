@@ -8,8 +8,6 @@ public enum PoiRoomType
     Normal = 0,
     Start = 1,
     End = 2,
-    Treasure = 3,
-    Shrine = 4,
     Hall = 5,
     Corridor = 6,
 }

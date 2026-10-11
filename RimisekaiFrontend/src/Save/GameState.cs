@@ -124,36 +124,27 @@ public sealed class GameState
     {
         var poiSeed = WorldSeed ^ (poiId * 31337);
         var poi = World.Pois.Find(p => p.Id == poiId);
-        var poiMap = poi is { Type: WorldPoiType.Ruin } && blocksW == 0 && blocksH == 0
-            ? GenerateDungeon(poiSeed)
-            : (poi != null && blocksW == 0 && blocksH == 0)
-                ? PoiAssemblyGenerator.GenerateForPoi(poi.Type, poiSeed)
-                : PoiAssemblyGenerator.GenerateGrid(poiSeed, blocksW > 0 ? blocksW : 1, blocksH > 0 ? blocksH : 1);
+        PoiMapData poiMap;
+        if (poi != null && blocksW == 0 && blocksH == 0)
+        {
+            var dungeonId = MapCatalog.Default.GetPoiDungeonId(poi.Type);
+            poiMap = dungeonId != null
+                ? PoiAssemblyGenerator.GenerateDungeon(dungeonId, poiSeed)
+                : PoiAssemblyGenerator.GenerateForPoi(poi.Type, poiSeed);
+        }
+        else
+        {
+            poiMap = PoiAssemblyGenerator.GenerateGrid(poiSeed, blocksW > 0 ? blocksW : 1, blocksH > 0 ? blocksH : 1);
+        }
         CurrentPoi = poiMap;
         return poiMap;
     }
 
     /// <summary>委托地城：按种子现生成一座地城，作为当前场景。</summary>
-    public PoiMapData EnterQuestDungeon(int seed)
+    public PoiMapData EnterQuestDungeon(int seed, string dungeonId)
     {
-        CurrentPoi = GenerateDungeon(seed);
+        CurrentPoi = PoiAssemblyGenerator.GenerateDungeon(dungeonId, seed);
         return CurrentPoi;
-    }
-
-    /// <summary>地城：按种子从数据表的块拼法里挑一式，每块都是遗迹地牢。</summary>
-    private static PoiMapData GenerateDungeon(int poiSeed)
-    {
-        var (_, _, districts) = MapCatalog.Default.GetPoiScale(WorldPoiType.Ruin);
-        var layouts = MapCatalog.Default.Dungeon.Layouts;
-        var layout = layouts[(int)((uint)poiSeed % (uint)layouts.Count)];
-        var blocks = new List<(int bx, int by)>();
-        var names = new List<string>();
-        foreach (var cell in layout)
-        {
-            blocks.Add((cell[0], cell[1]));
-            names.Add(districts[0]);
-        }
-        return PoiAssemblyGenerator.GenerateCustom(poiSeed, blocks, districts: names);
     }
 
     /// <summary>

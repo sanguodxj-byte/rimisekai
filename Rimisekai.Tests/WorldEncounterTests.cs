@@ -14,7 +14,7 @@ namespace Rimisekai.Tests;
 
 /// <summary>
 /// 世界探索遭遇：野外行进中按地貌掷遭遇、撞上即停；事件照单落账；战斗可绕开、可迎战，
-/// 败则退回领地；地城石室按房型摆守卫 / 首领 / 宝库 / 神龛，了结记录随存档走。
+/// 败则退回领地；地城房间直接遇敌，非战斗事件由设施承载，了结记录随存档走。
 /// </summary>
 public sealed class WorldEncounterTests
 {
@@ -133,7 +133,7 @@ public sealed class WorldEncounterTests
     }
 
     /// <summary>从当前石室沿通路走到目标石室，遇守卫一律迎战并判胜。</summary>
-    private static void WalkTo(HubSession hub, int targetRoomId)
+    private static void WalkTo(HubSession hub, int targetRoomId, bool resolveFinalEncounter = true)
     {
         // 委托地城的正主倒下即被接回领地：走到那一步就算到了。
         for (var guard = 0; guard < 200 && hub.PlayerRoomId != targetRoomId && hub.Layer != MapLayer.Territory; guard++)
@@ -161,7 +161,8 @@ public sealed class WorldEncounterTests
                 Assert.True(hub.CrossTo(stepRoom.RegionId));
             else
                 Assert.True(hub.Move(step));
-            Resolve(hub);
+            if (resolveFinalEncounter || hub.PlayerRoomId != targetRoomId)
+                Resolve(hub);
         }
         if (hub.Layer != MapLayer.Territory)
             Assert.Equal(targetRoomId, hub.PlayerRoomId);
@@ -229,19 +230,28 @@ public sealed class WorldEncounterTests
     }
 
     [Fact]
-    public void Treasure_is_taken_once()
+    public void Facility_event_loot_is_taken_once_and_added_to_the_bag()
     {
         var (hub, state) = Setup(rate: 0);
         var ruin = EnterRuin(hub, state);
-        var treasure = state.CurrentPoi!.AllRooms.FirstOrDefault(r => r.RoomType == PoiRoomType.Treasure);
-        if (treasure == null)
-            return;
-        var id = HubSession.PoiRoomIdBase + treasure.Id;
-        var before = state.Money;
-        WalkTo(hub, id);
-        Assert.True(state.Dungeons.IsSpent(ruin.Id, treasure.Id));
-        Assert.True(state.Money > before);
-        // 走开再回来，宝库不再起事。
+        var fixtureRoom = state.CurrentPoi!.AllRooms.First(room => room.FacilityIds
+            .Select(MapCatalog.Default.GetFacilityById)
+            .Any(facility => facility.DungeonEvent is { Loot.Count: > 0 }));
+        var fixture = fixtureRoom.FacilityIds.Select(MapCatalog.Default.GetFacilityById)
+            .First(facility => facility.DungeonEvent is { Loot.Count: > 0 });
+        var guaranteedDrop = fixture.DungeonEvent!.Loot.First(drop => drop.RatePercent == 100);
+        var id = HubSession.PoiRoomIdBase + fixtureRoom.Id;
+        var before = state.Roster.Master!.Bag.Get(guaranteedDrop.ItemId);
+        WalkTo(hub, id, resolveFinalEncounter: false);
+        var encounter = hub.PendingEncounter!;
+        Assert.Equal(EncounterSource.DungeonFacility, encounter.Source);
+        Assert.Equal(fixture.Name, encounter.FacilityName);
+        Assert.Contains(encounter.Loot, item => item.ItemId == guaranteedDrop.ItemId);
+        var gained = encounter.Loot.Where(item => item.ItemId == guaranteedDrop.ItemId).Sum(item => item.Count);
+        hub.AcceptEncounter();
+        Assert.Equal(before + gained, state.Roster.Master!.Bag.Get(guaranteedDrop.ItemId));
+        Assert.True(state.Dungeons.IsSpent(ruin.Id, fixtureRoom.Id));
+        // 走开再回来，设施事件不再触发。
         var back = state.Territory.Rooms.First(r => r.Id == id).Links[0];
         Assert.True(hub.Move(back));
         Resolve(hub);
@@ -340,6 +350,7 @@ public sealed class WorldEncounterTests
             Assert.Equal(QuestKind.Dungeon, q.Kind);
             Assert.InRange(q.Difficulty, board.StarsMin, board.StarsEarly);
             Assert.Contains(board.Sites, s => s.Name == q.Name);
+            Assert.Equal(board.Sites.Single(s => s.Name == q.Name).DungeonId, q.DungeonId);
             Assert.DoesNotContain("{", q.Description);
             // 守关的是某个够格的首领，按星数加厚：每星 CorePerStar 点核心、ExpPerStar 点经验。
             var core = (int)Math.Round(board.CorePerStar * q.Difficulty);
@@ -360,7 +371,10 @@ public sealed class WorldEncounterTests
         var run = state.Quests.Start(def, new[] { state.Roster.Master!.Id })!;
         Assert.True(hub.StartQuestDungeon(run));
         Assert.Equal(def.Name, hub.MapTitle());
-        var endId = HubSession.PoiRoomIdBase + state.CurrentPoi!.AllRooms.First(r => r.IsEnd).Id;
+        var archetype = MapCatalog.Default.GetDungeonTemplate(def.DungeonId);
+        Assert.All(state.CurrentPoi!.AllRooms.Where(room => room.RoomTemplateId.HasValue),
+            room => Assert.Contains(room.RoomTemplateId!.Value, archetype.RoomIds));
+        var endId = HubSession.PoiRoomIdBase + state.CurrentPoi.AllRooms.First(r => r.IsEnd).Id;
         var before = state.Money;
         WalkTo(hub, endId);
         Assert.Equal(MapLayer.Territory, hub.Layer);

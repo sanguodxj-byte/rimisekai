@@ -6,8 +6,8 @@ using Rimisekai.WorldMap.Math;
 namespace Rimisekai.PoiMap.Generator;
 
 /// <summary>
-/// 封闭式地牢/迷宫（遗迹、洞窟、地下城）生成器：
-/// 专用于探索型地下城，保留幽深走廊、封闭石室、分支死胡同藏宝库与边缘关口出口。
+/// Roguelike 副本区块生成器（遗迹、森林、古战场等）：
+/// 保留纵深探索、分支回路与边缘出口；具体房间池由副本原型 ID 决定。
 /// </summary>
 public static class DungeonBlockGenerator
 {
@@ -19,14 +19,14 @@ public static class DungeonBlockGenerator
         int regionId,
         ref int nextRoomId,
         int seed,
-        (int x, int y)? preferredStart = null,
-        string district = "RuinDistrict")
+        string dungeonId,
+        (int x, int y)? preferredStart = null)
     {
         var block = new PoiBlock(blockX, blockY, regionId);
         var rng = new SeededRng(seed ^ (blockX * 73856 + blockY * 19349));
         var catalog = MapCatalog.Default;
 
-        // 1. 初始化 5x5 地牢石室格点
+        // 1. 初始化 5x5 副本房间格点
         for (var y = 0; y < Size; y++)
         {
             for (var x = 0; x < Size; x++)
@@ -90,7 +90,7 @@ public static class DungeonBlockGenerator
             LinkRooms(remainingEdges[i].a, remainingEdges[i].b);
         }
 
-        // 3. 确定地牢入口大门（必须在边缘格）
+        // 3. 确定副本入口（必须在边缘格）
         int startX = 0, startY = 2;
         if (preferredStart.HasValue && IsEdgeCoord(preferredStart.Value.x, preferredStart.Value.y))
         {
@@ -105,7 +105,7 @@ public static class DungeonBlockGenerator
         startRoom.Name = "大门";
         block.StartRoom = startRoom;
 
-        // 4. 确定地牢深处出口（在边缘格，且离入口图距离最远）
+        // 4. 确定副本出口（在边缘格，且离入口图距离最远）
         var edgeRooms = new List<PoiRoom>();
         for (var y = 0; y < Size; y++)
         {
@@ -130,54 +130,69 @@ public static class DungeonBlockGenerator
         chosenEnd.Name = "出口";
         block.EndRoom = chosenEnd;
 
-        // 5. 装饰地牢房间（分支死胡同设为宝库/神龛，主通道设为石廊）
-        DecorateDungeon(block, catalog, district, rng);
+        // 5. 装饰副本房间：房间只表达空间类型，所有非战斗探索内容由附属设施承载。
+        DecorateDungeon(block, catalog, dungeonId, rng);
 
         return block;
     }
 
-    private static void DecorateDungeon(PoiBlock block, MapCatalog catalog, string district, SeededRng rng)
+    private static void DecorateDungeon(PoiBlock block, MapCatalog catalog, string dungeonId, SeededRng rng)
     {
         var facilityIdx = 0;
+        var templates = catalog.GetDungeonRoomTemplates(dungeonId);
+        var templateUseCounts = new Dictionary<int, int>();
 
         foreach (var r in block.Rooms)
         {
             if (r.IsStart || r.IsEnd)
                 continue;
 
-            // 死胡同末端设为藏宝库或神龛
-            if (r.Links.Count == 1)
+            var adjacentTemplateIds = new HashSet<int>();
+            foreach (var (x, y) in new[]
             {
-                var isTreasure = rng.NextBool(0.6f);
-                var tpl = isTreasure ? catalog.GetTreasureTemplate() : catalog.GetShrineTemplate();
-                r.RoomType = isTreasure ? PoiRoomType.Treasure : PoiRoomType.Shrine;
-                r.Terrain = WorldTerrainType.Plains;
-                r.Name = tpl.Name;
+                (r.LocalX - 1, r.LocalY),
+                (r.LocalX + 1, r.LocalY),
+                (r.LocalX, r.LocalY - 1),
+                (r.LocalX, r.LocalY + 1),
+            })
+            {
+                var adjacentRoom = block.RoomAt(x, y);
+                if (adjacentRoom?.RoomTemplateId is int adjacentTemplateId)
+                    adjacentTemplateIds.Add(adjacentTemplateId);
             }
-            else if (r.Links.Count >= 3)
+
+            var leastUsedCount = int.MaxValue;
+            var candidates = new List<RoomTemplateDef>();
+            foreach (var candidate in templates)
             {
-                // 枢纽大厅
-                r.Name = "石柱大厅";
-                r.Terrain = WorldTerrainType.Plains;
-            }
-            else
-            {
-                // 普通通道或古遗迹设施
-                var templateIndex = facilityIdx++;
-                var tpl = catalog.GetDistrictRoomTemplate(district, templateIndex);
-                r.RoomTemplateId = tpl.Id;
-                var facility = catalog.GetDistrictFacilityTemplate(district, tpl.Id, templateIndex);
-                if (facility != null)
+                if (adjacentTemplateIds.Contains(candidate.Id))
+                    continue;
+
+                var usedCount = templateUseCounts.GetValueOrDefault(candidate.Id);
+                if (usedCount < leastUsedCount)
                 {
-                    r.FacilityIds.Add(facility.Id);
-                    r.Name = facility.Name;
+                    candidates.Clear();
+                    leastUsedCount = usedCount;
                 }
-                else
-                {
-                    r.Name = tpl.Name;
-                }
-                r.Terrain = Enum.TryParse<WorldTerrainType>(tpl.Terrain, ignoreCase: true, out var t) ? t : WorldTerrainType.Plains;
+                if (usedCount == leastUsedCount)
+                    candidates.Add(candidate);
             }
+
+            var templateIndex = facilityIdx++;
+            var tpl = candidates[rng.NextRange(0, candidates.Count)];
+            templateUseCounts[tpl.Id] = templateUseCounts.GetValueOrDefault(tpl.Id) + 1;
+            r.RoomTemplateId = tpl.Id;
+            // 分支末梢优先提供可探索设施；普通房间只偶尔出现设施，避免每间屋子都弹事件。
+            // 储藏间始终附带箱柜，让地城稳定具备一处可由战利品生成器结算的宝箱。
+            var hasFacility = tpl.Id == 1052 || r.Links.Count == 1 || rng.NextBool(0.25f);
+            var facility = hasFacility ? catalog.GetDungeonFacilityTemplate(dungeonId, tpl.Id, templateIndex) : null;
+            if (facility != null)
+                r.FacilityIds.Add(facility.Id);
+            r.Name = tpl.Name;
+            r.RoomType = r.Links.Count >= 3 ? PoiRoomType.Hall
+                : r.Links.Count == 2 ? PoiRoomType.Corridor
+                : PoiRoomType.Normal;
+            r.Terrain = Enum.TryParse<WorldTerrainType>(tpl.Terrain, ignoreCase: true, out var t) ? t : WorldTerrainType.Plains;
         }
     }
 

@@ -228,7 +228,8 @@
             }
           ]
         }
-      ]
+      ],
+      "dungeonId": "mine"
     },
     {
       "defName": "Quest_NorthSlopeAlpha",

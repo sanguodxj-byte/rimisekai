@@ -1338,6 +1338,8 @@ public partial class PortraitCapture : Node
                     ThreatTier = i, Column = i,
                     Portrait = new[] { "monster_acid_slime", "monster_banshee", "monster_basilisk", "monster_bog_leech" }[i - 1],
                 });
+        else if (size == 4)
+            foes.AddRange(Rimisekai.WorldMap.MapCatalog.Default.Dungeon.BossAtTier(4, 3).Foes);
         else
         {
             foes.Add(new Rimisekai.Catalog.EnemyDef

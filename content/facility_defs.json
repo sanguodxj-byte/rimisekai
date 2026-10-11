@@ -354,7 +354,14 @@
       "defaultPool": false,
       "roomIds": [
         1047
-      ]
+      ],
+      "event": {
+        "id": "ruin_broken_altar",
+        "title": "破败祭坛",
+        "text": "裂纹遍布的石像仍留着微弱暖意，众人停步默祷，紧绷的心绪缓和下来。",
+        "acceptLabel": "默祷",
+        "mood": 4
+      }
     },
     {
       "id": 1041,
@@ -363,7 +370,14 @@
       "defaultPool": false,
       "roomIds": [
         1045
-      ]
+      ],
+      "event": {
+        "id": "ruin_collapsed_passage",
+        "title": "崩塌回廊",
+        "text": "碎石堵住了近路，众人费了一番力气才从侧面的窄缝挤过去。",
+        "acceptLabel": "绕过",
+        "minutes": 30
+      }
     },
     {
       "id": 1042,
@@ -392,6 +406,406 @@
         1049,
         1050
       ]
+    },
+    {
+      "id": 1045,
+      "name": "封存宝箱",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1052
+      ],
+      "event": {
+        "id": "dungeon_sealed_chest",
+        "title": "封存宝箱",
+        "text": "箱扣锈死了，撬开后露出一袋旧币和保存完好的矿料。",
+        "acceptLabel": "打开",
+        "moneyMin": 15,
+        "moneyMax": 55,
+        "loot": [
+          {
+            "itemId": "铁矿",
+            "min": 1,
+            "max": 3,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "药剂",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": 1046,
+      "name": "军需木箱",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1052,
+        1067,
+        1079
+      ],
+      "event": {
+        "id": "dungeon_supply_crate",
+        "title": "军需木箱",
+        "text": "木箱里还剩下几份被油布包好的军粮与布料。",
+        "acceptLabel": "搜查",
+        "loot": [
+          {
+            "itemId": "干粮",
+            "min": 1,
+            "max": 3,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "布",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 60
+          }
+        ]
+      }
+    },
+    {
+      "id": 1047,
+      "name": "沉睡石棺",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1053
+      ],
+      "event": {
+        "id": "dungeon_sarcophagus",
+        "title": "沉睡石棺",
+        "text": "石棺中只剩一副空甲，夹层里藏着炼金尘与零散钱币。",
+        "acceptLabel": "取走",
+        "moneyMin": 25,
+        "moneyMax": 90,
+        "loot": [
+          {
+            "itemId": "炼金尘",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 80
+          },
+          {
+            "itemId": "钢",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": 1048,
+      "name": "祖灵灵柩",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1053
+      ],
+      "event": {
+        "id": "dungeon_ancestral_coffer",
+        "title": "祖灵灵柩",
+        "text": "棺内陪葬的铁矿被妥善封装；合上棺盖前，众人向逝者致意。",
+        "acceptLabel": "收取",
+        "loot": [
+          {
+            "itemId": "铁矿",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "炼金尘",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": 1049,
+      "name": "祷告祭台",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1054
+      ],
+      "event": {
+        "id": "dungeon_prayer_altar",
+        "title": "祷告祭台",
+        "text": "祭台上的灯芯尚未熄灭，众人静默片刻，重新振作起来。",
+        "acceptLabel": "祈祷",
+        "mood": 6
+      }
+    },
+    {
+      "id": 1050,
+      "name": "圣像供台",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1054
+      ],
+      "event": {
+        "id": "dungeon_votive_stand",
+        "title": "圣像供台",
+        "text": "石龛里留着几株干燥药草与前人写下的祝祷。",
+        "acceptLabel": "取下",
+        "mood": 3,
+        "loot": [
+          {
+            "itemId": "草药",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": 1051,
+      "name": "古卷柜",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1055
+      ],
+      "event": {
+        "id": "dungeon_scroll_cabinet",
+        "title": "古卷柜",
+        "text": "大多数卷册已朽坏，夹层中仍有可用的炼金记录。",
+        "acceptLabel": "翻检",
+        "loot": [
+          {
+            "itemId": "炼金尘",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "草药",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": 1052,
+      "name": "密封账匣",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1055
+      ],
+      "event": {
+        "id": "dungeon_ledger_box",
+        "title": "密封账匣",
+        "text": "账匣里锁着一小袋旧币和未登记的矿料。",
+        "acceptLabel": "撬开",
+        "moneyMin": 10,
+        "moneyMax": 40,
+        "loot": [
+          {
+            "itemId": "铁矿",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 75
+          }
+        ]
+      }
+    },
+    {
+      "id": 1053,
+      "name": "浸水宝匣",
+      "terrain": "Lake",
+      "defaultPool": false,
+      "roomIds": [
+        1056,
+        1066,
+        1078
+      ],
+      "event": {
+        "id": "dungeon_drowned_cache",
+        "title": "浸水宝匣",
+        "text": "水底的匣子竟然没有完全进水，里面还压着几块矿石。",
+        "acceptLabel": "捞起",
+        "moneyMin": 5,
+        "moneyMax": 30,
+        "loot": [
+          {
+            "itemId": "铁矿",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "兽皮",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": 1054,
+      "name": "锈蚀兵器架",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1057,
+        1071
+      ],
+      "event": {
+        "id": "dungeon_weapon_rack",
+        "title": "锈蚀兵器架",
+        "text": "多数兵器已经锈蚀，架底仍有可回收的钢料。",
+        "acceptLabel": "拆取",
+        "loot": [
+          {
+            "itemId": "钢",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "铁矿",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 60
+          }
+        ]
+      }
+    },
+    {
+      "id": 1055,
+      "name": "守卫遗骸",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1058,
+        1072
+      ],
+      "event": {
+        "id": "dungeon_guard_remains",
+        "title": "守卫遗骸",
+        "text": "囚室角落的遗骸旁散落着一包干粮和一块旧皮革。",
+        "acceptLabel": "收取",
+        "loot": [
+          {
+            "itemId": "干粮",
+            "min": 1,
+            "max": 2,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "兽皮",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 60
+          }
+        ]
+      }
+    },
+    {
+      "id": 1056,
+      "name": "绊索机关",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1060,
+        1065,
+        1070,
+        1077
+      ],
+      "event": {
+        "id": "dungeon_tripwire",
+        "title": "绊索机关",
+        "text": "暗处的机关被触发，众人及时躲开落石，却不得不绕路脱身。",
+        "acceptLabel": "拆除",
+        "money": -15,
+        "minutes": 45
+      }
+    },
+    {
+      "id": 1057,
+      "name": "炼金残槽",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1061
+      ],
+      "event": {
+        "id": "dungeon_alchemy_vat",
+        "title": "炼金残槽",
+        "text": "槽底凝结着少量未挥发的炼金尘，旁边还有一瓶封口完整的药剂。",
+        "acceptLabel": "收取",
+        "loot": [
+          {
+            "itemId": "炼金尘",
+            "min": 2,
+            "max": 4,
+            "ratePercent": 100
+          },
+          {
+            "itemId": "药剂",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": 1058,
+      "name": "骨灰瓮",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1062
+      ],
+      "event": {
+        "id": "dungeon_ash_urn",
+        "title": "骨灰瓮",
+        "text": "瓮中有几枚旧币。众人重新封好瓮口，向逝者行礼。",
+        "acceptLabel": "合上",
+        "moneyMin": 5,
+        "moneyMax": 25,
+        "mood": 2
+      }
+    },
+    {
+      "id": 1059,
+      "name": "星盘残件",
+      "terrain": "Plains",
+      "defaultPool": false,
+      "roomIds": [
+        1063
+      ],
+      "event": {
+        "id": "dungeon_astrolabe",
+        "title": "星盘残件",
+        "text": "残缺星盘仍指向地表的方向，辨明路线后，队伍的心情轻快了些。",
+        "acceptLabel": "辨读",
+        "mood": 4,
+        "loot": [
+          {
+            "itemId": "炼金尘",
+            "min": 1,
+            "max": 1,
+            "ratePercent": 45
+          }
+        ]
+      }
     }
   ]
 }

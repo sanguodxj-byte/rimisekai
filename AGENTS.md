@@ -6,7 +6,7 @@
 
 装备轴表、共享材料与物品定义分别遵守 [`docs/装备表规范.md`](docs/装备表规范.md) 和 [`docs/物品表规范.md`](docs/物品表规范.md)；改动 `equipment.xml`、`materials.xml`、`things.json` 或相关引用时必须遵守。
 
-大地图与 POI 生成配置按地图、房间、设施、POI 分表；表职责、字段与 ID 关联见 [`docs/地图数据表结构.md`](docs/地图数据表结构.md)。
+大地图与 Roguelike 副本生成配置按地图、房间、设施、POI、副本原型分表；表职责、字段与 ID 关联见 [`docs/地图数据表结构.md`](docs/地图数据表结构.md)。
 
 ## 铁律（项目级）
 
@@ -325,19 +325,19 @@
 - `EnterWorldPoi` 只在队伍站在该聚落格上时成立；调试/出图/测试走 `TravelToPoiDirect`（沿路走过去、照走时间，不是传送）。
 - 待议：大地图遭遇战、行进中跟随者的位置（现仍留在领地）、兴趣点内底部钮写「离开」与禁用「建造」、地貌耗时整体是否下调、世界尺寸（现 128×128）。
 
-### 世界探索：遭遇与地城（2026-10-08 拟案，待主人核定）
+### 世界探索：遭遇与 Roguelike 副本（2026-10-08 拟案，待主人核定）
 
 - **野外遭遇**：大地图逐格行进，每进一格按地貌掷一次（`map_defs.json` 各地貌 `encounter` 千分率；走在路上按 `wilds.roadPercent` 打折；领地 `wilds.safeRadius` 格内与聚落格不起）。掷骰按（世界种子, 格点, 此刻）哈希，可复现。撞上即停在那一格，`HubSession.PendingEncounter` 摆出遭遇，前端弹窗；没了结前行进、走房、过界一律不动。
 - **危险等级**：离领地每 20 格高一级（1–4），遭遇表每条 `minTier` 据此筛——拦路匪、私设关卡只在二级以外出现。
 - **遭遇表** `wilds.events`：有 `foes`＝战斗（迎战 / 绕开，绕开多花 `detourMinutes`）；无 `foes`＝事件（一枚钮，照单落账：`money` 可负、钱不跌破 0；`minutes` 耽搁；`mood` 同行者心情）。
 - **迎战**：玩家本人＋跟着的人上阵（`Encounters.Start`）。胜：照常结算；撤离或僵持：野外原地、地城退回上一间；败：众人退回领地（一路不起遭遇）。
-- **地城**：遗迹（Ruin）即地城，按兴趣点种子从 `dungeon.layouts` 挑块拼法（单块、横/竖两块、L 形、一字三块），每块都是迷宫地牢。踏进石室：全图出口＝首领房；死胡同的藏宝库给 `moneyMin–moneyMax` 金币、神龛给心情，各一次；普通石室按 `guardPercent` 有守卫（迎战 / 退回）。地城里走远路逐间走，第一间有东西的就截住。首领倒下＝地城肃清（地点抽屉写「已肃清」），之后不再出守卫。
-- **存档**：`DungeonRooms`（了结的石室）与 `DungeonsCleared`（肃清的地城）；地城本身按种子现生成，不存。
+- **Roguelike 副本**：遗迹、森林、古战场等都属于副本原型，按 `poi_defs.json` / 委托的 `dungeonId` 从 `dungeon_defs.json` 取房间索引，并按 `dungeon_defs.json` 的 `rules.layouts` 挑块拼法（单块、横/竖两块、L 形、一字三块）。进入副本房间：全图出口＝首领房；死胡同的藏宝库给 `moneyMin–moneyMax` 金币、神龛给心情，各一次；普通房间按 `guardPercent` 有守卫（迎战 / 退回）。副本里走远路逐间走，第一间有东西的就截住。首领倒下＝副本肃清（地点抽屉写「已肃清」），之后不再出守卫。
+- **存档**：`DungeonRooms`（了结的石室）与 `DungeonsCleared`（肃清的地城）；副本本身按种子现生成，不存。
 - 出图与测试把 `HubSession.EncounterRate` 置 0，遭遇另行用 `ForceWildEncounter` 摆出来核对。
-- **地城迷雾**（2026-10-08 主人要求，细则拟案）：地城里走过的石室全亮；与走过的有门相通的只望见轮廓，格上写 `dungeon.fogName`（「？」），只画通向走过那边的门；其余漆黑，按空格画，点不了、走不到，远路也不从黑处抄近道（`HubSession.RoomShown / DoorShown / CanReach`）。遗迹走过的石室记在 `DungeonLedger.VisitedRooms`，进存档（`DungeonVisited`）；大地图仍无迷雾。
-- **委托＝地城入口之一**（拟案）：`quests.json` 里 map / graphicalMap 类委托是**包接送的地城**——在领地里接单、点名、出发，马车把编成的人送进一座现生成的遗迹地牢（种子随通关次数变，每趟不同；危险等级＝1＋难度星÷`dungeon.quest.starsPerTier`），同样有迷雾、守卫、宝库、神龛，最深处的正主＝委托的 `foes`。正主倒下＝委托通关（照常记通关与冷却），马车接回领地，落回出发那间房。战败或撤离也接回，委托不算数。在委托地城里，出行钮换成「撤离」（先确认），建造钮置灰（只有领地里能建造）。dialogue 类委托仍是接单即单独一战。为委托临时拉进队伍的人，好感掉档也不中途离队，回程各回各的日子。委托地城不进存档，存档时人记回领地。
+- **副本迷雾**（2026-10-08 主人要求，细则拟案）：副本里走过的房间全亮；与走过的有门相通的只望见轮廓，格上写 `dungeon_defs.json` 的 `rules.fogName`（「？」），只画通向走过那边的门；其余漆黑，按空格画，点不了、走不到，远路也不从黑处抄近道（`HubSession.RoomShown / DoorShown / CanReach`）。遗迹副本中走过的房间记在 `DungeonLedger.VisitedRooms`，进存档（`DungeonVisited`）；大地图仍无迷雾。
+- **委托＝副本入口之一**（拟案）：`quests.json` 里 map / graphicalMap 类委托是**包接送的地城**——在领地里接单、点名、出发，马车把编成的人送进一座现生成的 Roguelike 副本（遗迹、森林、古战场、矿道等）——种子随通关次数变，每趟不同；危险等级＝1＋难度星÷`dungeon_defs.rules.quest.starsPerTier`），同样有迷雾、守卫、宝库、神龛，最深处的正主＝委托的 `foes`。正主倒下＝委托通关（照常记通关与冷却），马车接回领地，落回出发那间房。战败或撤离也接回，委托不算数。在委托副本里，出行钮换成「撤离」（先确认），建造钮置灰（只有领地里能建造）。dialogue 类委托仍是接单即单独一战。为委托临时拉进队伍的人，好感掉档也不中途离队，回程各回各的日子。委托副本不进存档，存档时人记回领地。
 
-- **委托板现生成探索委托**（2026-10-09 拟案，待主人核定）：`map_defs.json` 的 `dungeon.quest.board`。每天贴 `perDay` 张、各挂 `lifeDays` 天，了结即撕下（一次性、不起冷却）；只由（世界种子, 张贴日, 第几张）决定，不进存档，了结记在通关次数里。地点按张贴顺序轮转 `sites`（同时挂着的不撞名），描述 {0}＝随机一处聚落；星数在 `starsMin`–上限间按半星掷，上限从 `starsEarly` 经 `rampDays` 天涨到 `starsMax`；正主取 `dungeon.bosses` 里危险等级够得着的一组；酬金＝`moneyBase`＋`moneyPerStar`×星（取整到十），人数上限＝`partyBase`＋危险等级。Core `QuestBoard.Open / Posting / TierOf`，前端委托页只读 `QuestBoard.Open`。委托 `rewardMoney` 在正主倒下结算时实发（物品奖励暂只展示）。兴趣点与地城的石室不可拆除。
+- **委托板现生成探索委托**（2026-10-09 拟案，待主人核定）：`dungeon_defs.json` 的 `rules.quest.board`。每天贴 `perDay` 张、各挂 `lifeDays` 天，了结即撕下（一次性、不起冷却）；只由（世界种子, 张贴日, 第几张）决定，不进存档，了结记在通关次数里。地点按张贴顺序轮转 `sites`（同时挂着的不撞名），描述 {0}＝随机一处聚落；星数在 `starsMin`–上限间按半星掷，上限从 `starsEarly` 经 `rampDays` 天涨到 `starsMax`；正主取 `dungeon_defs.json` 的 `rules.bosses` 里危险等级够得着的一组；酬金＝`moneyBase`＋`moneyPerStar`×星（取整到十），人数上限＝`partyBase`＋危险等级。Core `QuestBoard.Open / Posting / TierOf`，前端委托页只读 `QuestBoard.Open`。委托 `rewardMoney` 在正主倒下结算时实发（物品奖励暂只展示）。兴趣点与副本房间不可拆除。
 
 ### 界面命名总表（2026-09-30 拟案，待主人核定）
 

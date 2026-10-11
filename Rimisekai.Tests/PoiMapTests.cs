@@ -163,9 +163,9 @@ public sealed class PoiMapTests
     }
 
     [Fact]
-    public void Dungeon_generates_labyrinth_structure_with_treasures()
+    public void Dungeon_generates_varied_rooms_with_facility_bound_events()
     {
-        // 遗迹/洞窟地下城：应采用封闭式地牢迷宫生成策略，包含藏宝库或神龛
+        // 遗迹/洞窟地下城：应采用封闭式地牢迷宫生成策略，非战斗探索内容由设施承载。
         var ruin = PoiAssemblyGenerator.GenerateForPoi(Rimisekai.WorldMap.WorldPoiType.Ruin, seed: 999);
         Assert.Single(ruin.Blocks);
         Assert.Equal(25, ruin.AllRooms.Count);
@@ -179,17 +179,65 @@ public sealed class PoiMapTests
         // 验证全连通
         Assert.Equal(25, GetReachableRoomIds(ruin, ruin.Blocks[0].StartRoom!.Id).Count);
 
-        // 验证地牢具备分支末梢宝藏或神龛特性
-        var hasTreasureOrShrine = false;
-        foreach (var r in ruin.AllRooms)
+        Assert.True(ruin.AllRooms.Select(r => r.Name).Distinct().Count() >= 12, "地牢应有多种房间模板");
+        var eventFixtures = ruin.AllRooms.SelectMany(r => r.FacilityIds)
+            .Select(Rimisekai.WorldMap.MapCatalog.Default.GetFacilityById)
+            .Where(f => f.DungeonEvent != null)
+            .ToArray();
+        Assert.NotEmpty(eventFixtures);
+        Assert.True(eventFixtures.Length < ruin.AllRooms.Count / 2, "设施事件应分布在部分房间，而不是每间房都触发");
+        Assert.Contains(eventFixtures, f => f.Name == "封存宝箱" && f.DungeonEvent!.Loot.Count > 0);
+        Assert.All(eventFixtures, f => Assert.Empty(f.DungeonEvent!.Foes));
+    }
+
+    [Theory]
+    [InlineData("ruins")]
+    [InlineData("forest")]
+    [InlineData("ancient_battlefield")]
+    [InlineData("mine")]
+    public void Dungeon_room_templates_are_seeded_balanced_and_not_repeated_in_adjacent_cells(string dungeonId)
+    {
+        var blockCoords = new[] { (0, 0), (1, 0) };
+        var dungeonIds = new[] { dungeonId, dungeonId };
+        var map = PoiAssemblyGenerator.GenerateCustom(20261011, blockCoords, dungeonIds: dungeonIds);
+        var repeated = PoiAssemblyGenerator.GenerateCustom(20261011, blockCoords, dungeonIds: dungeonIds);
+
+        Assert.Equal(
+            map.AllRooms.Select(room => room.RoomTemplateId),
+            repeated.AllRooms.Select(room => room.RoomTemplateId));
+
+        foreach (var block in map.Blocks)
         {
-            if (r.RoomType is PoiRoomType.Treasure or PoiRoomType.Shrine || r.Name is "藏宝库" or "神龛" or "破败祭坛")
+            var themedRooms = block.Rooms.Where(room => room.RoomTemplateId.HasValue).ToArray();
+            var templateCount = Rimisekai.WorldMap.MapCatalog.Default.GetDungeonTemplate(dungeonId).RoomIds.Count;
+            Assert.Equal(System.Math.Min(23, templateCount), themedRooms.Select(room => room.RoomTemplateId).Distinct().Count());
+            var usageCounts = themedRooms.GroupBy(room => room.RoomTemplateId).Select(group => group.Count()).ToArray();
+            Assert.InRange(usageCounts.Max() - usageCounts.Min(), 0, 1);
+
+            foreach (var room in block.Rooms)
             {
-                hasTreasureOrShrine = true;
-                break;
+                foreach (var adjacentRoom in new[]
+                {
+                    block.RoomAt(room.LocalX + 1, room.LocalY),
+                    block.RoomAt(room.LocalX, room.LocalY + 1),
+                })
+                    if (adjacentRoom?.RoomTemplateId is int adjacentTemplateId && room.RoomTemplateId is int templateId)
+                        Assert.NotEqual(templateId, adjacentTemplateId);
+
+                foreach (var linkedRoomId in room.Links)
+                {
+                    var linkedRoom = map.GetRoom(linkedRoomId)!;
+                    if (linkedRoom.RoomTemplateId.HasValue && room.RoomTemplateId.HasValue)
+                        Assert.NotEqual(room.RoomTemplateId, linkedRoom.RoomTemplateId);
+                }
             }
         }
-        Assert.True(hasTreasureOrShrine, "地牢应包含藏宝库、神龛或破败祭坛等探索要素");
+
+        var firstBlockTemplates = map.Blocks[0].Rooms.Where(room => room.RoomTemplateId.HasValue)
+            .Select(room => room.RoomTemplateId).ToArray();
+        var secondBlockTemplates = map.Blocks[1].Rooms.Where(room => room.RoomTemplateId.HasValue)
+            .Select(room => room.RoomTemplateId).ToArray();
+        Assert.False(firstBlockTemplates.SequenceEqual(secondBlockTemplates));
     }
 
     [Fact]
@@ -212,6 +260,22 @@ public sealed class PoiMapTests
         var ruinBmp = Path.Combine(Directory.GetCurrentDirectory(), "poi_ruin_dungeon.bmp");
         PoiMapImageExporter.ExportToBmp(ruin, ruinBmp, cellSize: 48);
         Assert.True(File.Exists(ruinBmp));
+
+        // 4. Roguelike 副本主题共用生成器，但房间 ID 各自从副本表索引。
+        var forest = PoiAssemblyGenerator.GenerateDungeon("forest", seed: 0);
+        var forestBmp = Path.Combine(Directory.GetCurrentDirectory(), "poi_forest_roguelike.bmp");
+        PoiMapImageExporter.ExportToBmp(forest, forestBmp, cellSize: 48);
+        Assert.True(File.Exists(forestBmp));
+
+        var battlefield = PoiAssemblyGenerator.GenerateDungeon("ancient_battlefield", seed: 0);
+        var battlefieldBmp = Path.Combine(Directory.GetCurrentDirectory(), "poi_battlefield_roguelike.bmp");
+        PoiMapImageExporter.ExportToBmp(battlefield, battlefieldBmp, cellSize: 48);
+        Assert.True(File.Exists(battlefieldBmp));
+
+        var mine = PoiAssemblyGenerator.GenerateDungeon("mine", seed: 0);
+        var mineBmp = Path.Combine(Directory.GetCurrentDirectory(), "poi_mine_roguelike.bmp");
+        PoiMapImageExporter.ExportToBmp(mine, mineBmp, cellSize: 48);
+        Assert.True(File.Exists(mineBmp));
     }
 
     private static HashSet<int> GetReachableRoomIds(PoiMapData map, int startRoomId)
