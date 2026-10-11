@@ -230,8 +230,8 @@ public sealed class EnemyLoot
 
 /// <summary>
 /// 敌人的装备掉落覆盖行：写了就把这只怪的第一件掉落定死成指定的种类（专属装备），
-/// 掉率用 <see cref="RatePercent"/> 代替威胁等级掉率；材质、品质只给下限，掷出来更好的照留。
-/// 威胁 4 的第二件与其余随机项（附魔、祝福、强化）仍按规则表掷。
+/// 掉率用 <see cref="RatePercent"/> 代替 CR 段 / 正主掉率；材质、品质只给下限，掷出来更好的照留。
+/// 正主的第二件与其余随机项（附魔、祝福、强化）仍按规则表掷。
 /// </summary>
 public sealed class EnemyGear
 {

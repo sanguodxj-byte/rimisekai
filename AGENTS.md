@@ -2,7 +2,7 @@
 
 > 本文件是 rimisekai 工作区的项目级规范。通用规范见用户级 `~/.zcode/AGENTS.md`。
 
-怪物数据字段、数值边界与布阵约定见 [`docs/怪物表规范.md`](docs/怪物表规范.md)，修改任务或地图遭遇中的 `foes` 时必须遵守。
+怪物强度＝挑战等级（CR，照 D&D），怪物模板（`content/defs/monsters.json`）、CR→等级→属性表与遭遇构成规则（`content/defs/challenge.json`）、栖息标签、委托固定阵容与装备掉落 CR 规则见 [`docs/怪物表规范.md`](docs/怪物表规范.md)，改动怪物、遭遇条目、委托阵容或 `gear_drops.json` 时必须遵守。`threatTier` 只是战场站位层，不代表强弱，不得拿来定掉率、首领或品质。
 
 装备轴表、共享材料与物品定义分别遵守 [`docs/装备表规范.md`](docs/装备表规范.md) 和 [`docs/物品表规范.md`](docs/物品表规范.md)；改动 `equipment.xml`、`materials.xml`、`things.json` 或相关引用时必须遵守。
 
@@ -328,16 +328,16 @@
 ### 世界探索：遭遇与 Roguelike 副本（2026-10-08 拟案，待主人核定）
 
 - **野外遭遇**：大地图逐格行进，每进一格按地貌掷一次（`map_defs.json` 各地貌 `encounter` 千分率；走在路上按 `wilds.roadPercent` 打折；领地 `wilds.safeRadius` 格内与聚落格不起）。掷骰按（世界种子, 格点, 此刻）哈希，可复现。撞上即停在那一格，`HubSession.PendingEncounter` 摆出遭遇，前端弹窗；没了结前行进、走房、过界一律不动。
-- **危险等级**：离领地每 20 格高一级（1–4），遭遇表每条 `minTier` 据此筛——拦路匪、私设关卡只在二级以外出现。
-- **遭遇表** `wilds.events`：有 `foes`＝战斗（迎战 / 绕开，绕开多花 `detourMinutes`）；无 `foes`＝事件（一枚钮，照单落账：`money` 可负、钱不跌破 0；`minutes` 耽搁；`mood` 同行者心情）。
+- **危险等级**：离领地每 20 格高一级（1–4），遭遇表每条 `minTier` 据此筛——拦路匪、私设关卡只在二级以外出现；危险等级再经 `content/defs/challenge.json` 换成 CR 窗口与经验值预算。
+- **遭遇表** `wilds.events`：写了 `families`（怪物族群）＝战斗（迎战 / 绕开，绕开多花 `detourMinutes`），阵容由遭遇生成器按 CR 窗口 ∩ 脚下地形 ∩ 族群现组（同种子同阵容）；不写＝事件（一枚钮，照单落账：`money` 可负、钱不跌破 0；`minutes` 耽搁；`mood` 同行者心情）。组不出阵容的战斗条目不参与抽选。
 - **迎战**：玩家本人＋跟着的人上阵（`Encounters.Start`）。胜：照常结算；撤离或僵持：野外原地、地城退回上一间；败：众人退回领地（一路不起遭遇）。
-- **Roguelike 副本**：遗迹、森林、古战场等都属于副本原型，按 `poi_defs.json` / 委托的 `dungeonId` 从 `dungeon_defs.json` 取房间索引，并按 `dungeon_defs.json` 的 `rules.layouts` 挑块拼法（单块、横/竖两块、L 形、一字三块）。进入副本房间：全图出口＝首领房；死胡同的藏宝库给 `moneyMin–moneyMax` 金币、神龛给心情，各一次；普通房间按 `guardPercent` 有守卫（迎战 / 退回）。副本里走远路逐间走，第一间有东西的就截住。首领倒下＝副本肃清（地点抽屉写「已肃清」），之后不再出守卫。
+- **Roguelike 副本**：遗迹、森林、古战场等都属于副本原型，按 `poi_defs.json` / 委托的 `dungeonId` 从 `dungeon_defs.json` 取房间索引，并按 `dungeon_defs.json` 的 `rules.layouts` 挑块拼法（单块、横/竖两块、L 形、一字三块）。进入副本房间：全图出口＝首领房（必有正主）；死胡同的藏宝库给 `moneyMin–moneyMax` 金币、神龛给心情，各一次；普通房间按 `guardPercent` 有守卫（迎战 / 退回）。守卫与首领条目（`rules.guards` / `rules.bosses`）只写叙事与族群，阵容按地城类型＋房间地形从怪物模板里现组。副本里走远路逐间走，第一间有东西的就截住。首领倒下＝副本肃清（地点抽屉写「已肃清」），之后不再出守卫。
 - **存档**：`DungeonRooms`（了结的石室）与 `DungeonsCleared`（肃清的地城）；副本本身按种子现生成，不存。
 - 出图与测试把 `HubSession.EncounterRate` 置 0，遭遇另行用 `ForceWildEncounter` 摆出来核对。
 - **副本迷雾**（2026-10-08 主人要求，细则拟案）：副本里走过的房间全亮；与走过的有门相通的只望见轮廓，格上写 `dungeon_defs.json` 的 `rules.fogName`（「？」），只画通向走过那边的门；其余漆黑，按空格画，点不了、走不到，远路也不从黑处抄近道（`HubSession.RoomShown / DoorShown / CanReach`）。遗迹副本中走过的房间记在 `DungeonLedger.VisitedRooms`，进存档（`DungeonVisited`）；大地图仍无迷雾。
-- **委托＝副本入口之一**（拟案）：`quests.json` 里 map / graphicalMap 类委托是**包接送的地城**——在领地里接单、点名、出发，马车把编成的人送进一座现生成的 Roguelike 副本（遗迹、森林、古战场、矿道等）——种子随通关次数变，每趟不同；危险等级＝1＋难度星÷`dungeon_defs.rules.quest.starsPerTier`），同样有迷雾、守卫、宝库、神龛，最深处的正主＝委托的 `foes`。正主倒下＝委托通关（照常记通关与冷却），马车接回领地，落回出发那间房。战败或撤离也接回，委托不算数。在委托副本里，出行钮换成「撤离」（先确认），建造钮置灰（只有领地里能建造）。dialogue 类委托仍是接单即单独一战。为委托临时拉进队伍的人，好感掉档也不中途离队，回程各回各的日子。委托副本不进存档，存档时人记回领地。
+- **委托＝副本入口之一**（拟案）：`quests.json` 里 map / graphicalMap 类委托是**包接送的地城**——在领地里接单、点名、出发，马车把编成的人送进一座现生成的 Roguelike 副本（遗迹、森林、古战场、矿道等）——种子随通关次数变，每趟不同；危险等级＝1＋难度星÷`dungeon_defs.rules.quest.starsPerTier`），同样有迷雾、守卫、宝库、神龛，最深处的正主＝委托的 `foes`（引用怪物模板 id 的固定阵容，正主标 `boss`）。正主倒下＝委托通关（照常记通关与冷却），马车接回领地，落回出发那间房。战败或撤离也接回，委托不算数。在委托副本里，出行钮换成「撤离」（先确认），建造钮置灰（只有领地里能建造）。dialogue 类委托仍是接单即单独一战。为委托临时拉进队伍的人，好感掉档也不中途离队，回程各回各的日子。委托副本不进存档，存档时人记回领地。
 
-- **委托板现生成探索委托**（2026-10-09 拟案，待主人核定）：`dungeon_defs.json` 的 `rules.quest.board`。每天贴 `perDay` 张、各挂 `lifeDays` 天，了结即撕下（一次性、不起冷却）；只由（世界种子, 张贴日, 第几张）决定，不进存档，了结记在通关次数里。地点按张贴顺序轮转 `sites`（同时挂着的不撞名），描述 {0}＝随机一处聚落；星数在 `starsMin`–上限间按半星掷，上限从 `starsEarly` 经 `rampDays` 天涨到 `starsMax`；正主取 `dungeon_defs.json` 的 `rules.bosses` 里危险等级够得着的一组；酬金＝`moneyBase`＋`moneyPerStar`×星（取整到十），人数上限＝`partyBase`＋危险等级。Core `QuestBoard.Open / Posting / TierOf`，前端委托页只读 `QuestBoard.Open`。委托 `rewardMoney` 在正主倒下结算时实发（物品奖励暂只展示）。兴趣点与副本房间不可拆除。
+- **委托板现生成探索委托**（2026-10-09 拟案，待主人核定）：`dungeon_defs.json` 的 `rules.quest.board`。每天贴 `perDay` 张、各挂 `lifeDays` 天，了结即撕下（一次性、不起冷却）；只由（世界种子, 张贴日, 第几张）决定，不进存档，了结记在通关次数里。地点按张贴顺序轮转 `sites`（同时挂着的不撞名），描述 {0}＝随机一处聚落；星数在 `starsMin`–上限间按半星掷，上限从 `starsEarly` 经 `rampDays` 天涨到 `starsMax`；正主＝在该委托地点的地城类型与危险等级下组得出阵容的 `rules.bosses` 条目现组一队，正主 CR 再加 round(星×`crPerStar`) 档；酬金＝`moneyBase`＋`moneyPerStar`×星（取整到十），人数上限＝`partyBase`＋危险等级。Core `QuestBoard.Open / Posting / TierOf`，前端委托页只读 `QuestBoard.Open`。委托 `rewardMoney` 在正主倒下结算时实发（物品奖励暂只展示）。兴趣点与副本房间不可拆除。
 
 ### 界面命名总表（2026-09-30 拟案，待主人核定）
 
@@ -577,7 +577,7 @@
 - 主人定：核心属性和生活等级是工作的两个不同影响值，不相加。`Life(skill) = 经验/100`。
 - 拟案，待主人核定：对口核心属性定干活速度（基准 10 为 100%，每点 ±5%，夹 50~200%）；生活等级定采集产量（每 5 级一件，夹 1~4）与手工品质（<2 粗糙、<8 普通、<20 精良、再往上史诗）；交易本领 = 100 + 2 ×（魅力 + 社交等级）。
 - 主人定：开局生活等级不超过 10、战斗熟练不超过 5，并且是在分配规则不变的前提下整体缩小，不是只截最高项。经验池 720，特质份额是池的 1/20、散发份额是池的 1/30，都按池等比；武器或流派最坏情况拿到池的 3/4（540），生活最坏情况拿满整池。
-- 拟案：怪物与角色同用一套规则，内容表里的 expPool 与 expPerStar 都按 720/3000 等比缩小。
+- 怪物不再手填属性池/经验池：CR → 等级（max(1, round(CR×5))，封顶 100）→ 属性池 3＋0.6×(等级−1)、经验池 60＋15×(等级−1)，交给同一个角色生成器（系数拟合原表，见 `docs/怪物表规范.md`）。
 - 装备进战斗（主人定「全部都加上」，系数拟案）：主手面板全额，副手武器面板按 `BattleRules.OffHandPanelPercent`（50%）折进出手；饰品加成通过 `CharacterState.Stat(stat, equips)` / `CombatWith(equips)` 进攻击、血量、防御、闪避、法强、暴击、速度以及出手的流派属性；防具防御 ×50% 算作护甲（不变）。
 
 ## 过场：继续游戏入场雾、战斗转场、首领转场（2026-10-11）

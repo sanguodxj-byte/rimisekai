@@ -1,10 +1,13 @@
 flowchart LR
-    M[map_defs.json<br/>大地图地貌 · 野外遭遇]
+    M[map_defs.json<br/>大地图地貌 · 野外遭遇条目]
     P[poi_defs.json<br/>POI 类型与规模]
     D[poi_defs.json<br/>聚落分区与命名语法]
     R[room_defs.json<br/>房间模板]
     F[facility_defs.json<br/>设施模板]
-    X[dungeon_defs.json<br/>Roguelike 规则 · 副本原型索引]
+    X[dungeon_defs.json<br/>Roguelike 规则 · 守卫/首领条目 · 副本原型索引]
+    MO[defs/monsters.json<br/>怪物模板]
+    C[defs/challenge.json<br/>CR→等级→属性 · 危险等级→CR · 构成规则]
+    Q[defs/quests.json<br/>委托固定阵容]
     P -->|districts：分区 ID| D
     P -->|dungeonId：副本原型 ID| X
     D -->|roomIds：分区可用房间| R
@@ -12,3 +15,10 @@ flowchart LR
     X -->|roomIds：副本主题房间| R
     X -->|facilityIds：副本可用设施| F
     F -->|roomIds：绑定房间| R
+    M -->|families：族群| MO
+    X -->|families：族群| MO
+    Q -->|monster：模板 ID| MO
+    MO -->|dungeons：副本原型 ID| X
+    MO -->|rooms：房间地形| R
+    MO -->|terrains：野外地形| M
+    MO -->|cr| C
