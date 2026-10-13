@@ -6,8 +6,8 @@ using Rimisekai.Combat;
 
 namespace Rimisekai.Portrait;
 
-/// <summary>技能网上的一式：格位（见 <see cref="SkillTree"/>）；对这个角色作不作数（没有池全作数，有池只算抽到的）、已不已激活。</summary>
-public readonly record struct ChartSkill(SkillDef Def, int Row, float Column, bool Eligible, bool Active);
+/// <summary>技能网上的一式：格位（见 <see cref="SkillTree"/>）、已不已激活。</summary>
+public readonly record struct ChartSkill(SkillDef Def, int Row, float Column, bool Active);
 
 /// <summary>
 /// 竖屏技能网的数据：一式一格，按等阶自上而下由弱到强，核心技能一行居中；
@@ -21,7 +21,7 @@ public static class PortraitSkillChart
     {
         var active = SkillTree.Active(who).Select(s => s.Id).ToHashSet();
         return SkillTree.Layout(who)
-            .Select(slot => new ChartSkill(slot.Def, slot.Row, slot.Column, SkillTree.Eligible(who, slot.Def), active.Contains(slot.Def.Id)))
+            .Select(slot => new ChartSkill(slot.Def, slot.Row, slot.Column, active.Contains(slot.Def.Id)))
             .ToList();
     }
 

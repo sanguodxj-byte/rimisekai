@@ -9,18 +9,18 @@ using Xunit;
 namespace Rimisekai.Tests;
 
 /// <summary>
-/// 身份技能池：内容表的形状（每身份 20 基础＋3 核心、法术至少咏唱一回合）、抽池必中核心、
+/// 身份技能池：内容表的形状（每身份 37 基础＋3 核心、法术至少咏唱一回合）、抽池必中核心、
 /// 核心四类机制（姿态 / 机制点 / 反应 / 光环）在战斗里的结算、咏唱中挨弱化即打断、玩家只在领地里重抽。
 /// </summary>
 public class IdentitySkillPoolTests
 {
     [Fact]
-    public void Every_pool_has_twenty_basics_and_three_cores()
+    public void Every_pool_has_thirty_seven_basics_and_three_cores()
     {
         Assert.NotEmpty(SkillPool.Pools);
         foreach (var pool in SkillPool.Pools)
         {
-            Assert.Equal(20, pool.Skills.Count(s => s.Core == CoreKind.None));
+            Assert.Equal(37, pool.Skills.Count(s => s.Core == CoreKind.None));
             Assert.Equal(3, pool.Skills.Count(s => s.Core != CoreKind.None));
             Assert.True(Defs.DefDatabase<Defs.IdentityDef>.Get(pool.DefName) != null, $"{pool.DefName} 不是身份");
         }
@@ -126,7 +126,9 @@ public class IdentitySkillPoolTests
             // 连线：网上每式（普通攻击除外）至少一条进线。
             var links = SkillTree.Links(slots);
             Assert.All(slots.Where(s => s.Row > 0), s => Assert.Contains(links, l => l.Target.Id == s.Def.Id));
-            Assert.All(pool.SharedSkills, id => Assert.Contains(slots, s => s.Def.Id == id));
+            // 网上只有普通攻击与抽到的：3 式核心＋BasicDraw 式基础，不画整池。
+            Assert.Equal(master.SkillPool.OrderBy(id => id, StringComparer.Ordinal),
+                slots.Where(s => s.Row > 0).Select(s => s.Def.Id).OrderBy(id => id, StringComparer.Ordinal));
         }
     }
 

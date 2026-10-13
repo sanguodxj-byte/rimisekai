@@ -1192,10 +1192,16 @@ public partial class PortraitCapture : Node
             _root.HubScreen.DebugPress(PortraitAction.SkillNode, star.Index);
             Require(_root.HubScreen.DebugSelectedSkill == star.Label, "tapping a star selects its skill");
         }
-        // 选一式未激活的高阶技能，详情里看激活条件逐条。
-        var knight = Rimisekai.Combat.SkillPool.PoolOf("骑士")!;
-        var pick = stars.First(w => w.Label == knight.Skills.Where(s => s.Core == Rimisekai.Catalog.CoreKind.None)
-            .OrderByDescending(Rimisekai.Combat.SkillTier.Score).First().Id);
+        // 网上只有抽到的：从中选一式未激活的最高阶基础技能，详情里看激活条件逐条。
+        var master = _root.HubScreen.DebugHub.State.Roster.Master!;
+        var active = Rimisekai.Combat.SkillTree.Active(master).Select(s => s.Id).ToHashSet();
+        var idle = Rimisekai.Combat.SkillPool.Skills(master)
+            .Where(s => s.Core == Rimisekai.Catalog.CoreKind.None && !active.Contains(s.Id)).ToList();
+        Require(stars.All(w => w.Label == Rimisekai.Combat.BattleSkills.AttackId || master.SkillPool.Contains(w.Label)),
+            "the chart shows only the basic attack and the drawn skills");
+        var shown = stars.Where(w => idle.Any(s => s.Id == w.Label)).ToList();
+        Require(shown.Count > 0, "the drawn knight pool shows an inactive basic skill to inspect");
+        var pick = shown.OrderByDescending(w => Rimisekai.Combat.SkillTier.Score(idle.First(s => s.Id == w.Label))).First();
         _root.HubScreen.DebugPress(PortraitAction.SkillNode, pick.Index);
     }
 

@@ -10,12 +10,11 @@ public readonly record struct TreeSlot(SkillDef Def, int Row, float Column);
 
 /// <summary>
 /// 角色的技能网（拟案，待主人核定）。
-/// 网上有什么：有身份技能池的角色＝普通攻击＋本身份池的全部技能；没有技能池的身份＝全部通用技能。
+/// 网上有什么：有身份技能池的角色＝普通攻击＋池里抽到的技能（3 式核心＋<see cref="SkillPool.BasicDraw"/> 式基础）；没有技能池的身份＝全部通用技能。
 /// 防御架势是战斗指令，不算技能、不上网；道具招式（<see cref="ItemActions"/>）也不上网。
 /// 排法：基础技能按 <see cref="SkillTier"/> 一到五阶自上而下（越往下越强），一行至多五式，满了另起一行；
 /// 核心技能单占一行，永远插在正中间（主人 2026-10-11 定）。
-/// 激活：不学习，门槛（流派、流派熟练、武器熟练、属性……）达到即自动激活（主人 2026-10-11 定）；
-/// 有池的角色只有抽到的才会激活，没抽到的只在网上看得见。
+/// 激活：不学习，门槛（流派、流派熟练、武器熟练、属性……）达到即自动激活（主人 2026-10-11 定）。
 /// 连线（<see cref="Links"/>）按门槛高低启发式现算：门槛更低、同一流派的技能连向门槛更高的，网上每式至少有一条进线。
 /// </summary>
 public static class SkillTree
@@ -29,18 +28,14 @@ public static class SkillTree
     public static IEnumerable<SkillDef> Skills(CharacterState c)
     {
         var general = SkillTable.All.Where(s => s.Id != BattleSkills.GuardId);
-        if (SkillPool.PoolOf(c.PoolIdentity) is not { } pool)
+        if (SkillPool.PoolOf(c.PoolIdentity) == null)
             return general;
-        return general.Where(SkillTable.Innate).Concat(SkillPool.Basics(pool)).Concat(SkillPool.Cores(pool)).DistinctBy(s => s.Id);
+        return general.Where(SkillTable.Innate).Concat(SkillPool.Skills(c));
     }
 
-    /// <summary>网上的这一式对这个角色作不作数：没有池的角色全作数；有池的角色只有通用两式与抽到的。</summary>
-    public static bool Eligible(CharacterState c, SkillDef s) =>
-        SkillPool.PoolOf(c.PoolIdentity) == null || SkillTable.Innate(s) || c.SkillPool.Contains(s.Id);
-
-    /// <summary>已激活的技能：作数且门槛全满足（前置成链，迭代到不动点）。</summary>
+    /// <summary>已激活的技能：网上门槛全满足的（前置成链，迭代到不动点）。</summary>
     public static IEnumerable<SkillDef> Active(CharacterState c) =>
-        SkillTable.MeetsGates(c, Skills(c).Where(s => Eligible(c, s)).ToList());
+        SkillTable.MeetsGates(c, Skills(c).ToList());
 
     /// <summary>门槛的分量：流派熟练＋武器熟练（连线比高低用）。</summary>
     private static int Weight(SkillDef s) => s.Gate.StyleLevel + s.Gate.WeaponLevel;

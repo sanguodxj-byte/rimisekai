@@ -8,7 +8,7 @@ using Rimisekai.Defs;
 namespace Rimisekai.Combat;
 
 /// <summary>
-/// 身份技能池（拟案，待主人核定）。技能池按身份取索引（<see cref="IdentitySkillPoolDef"/>）：本身份 20 式基础＋3 式核心，
+/// 身份技能池（拟案，待主人核定）。技能池按身份取索引（<see cref="IdentitySkillPoolDef"/>）：本身份 37 式基础＋3 式核心，
 /// 再并入风格对得上的通用技能（<see cref="IdentitySkillPoolDef.SharedSkills"/>）当基础技能。
 /// 角色的池＝3 式核心全收（主人 2026-10-11 定），再从基础技能里不放回地抽 <see cref="BasicDraw"/> 式。
 /// 池里的技能直接会用（不走流派门槛与派生学习），机制点核心是被动、不进菜单。
@@ -16,8 +16,8 @@ namespace Rimisekai.Combat;
 /// </summary>
 public static class SkillPool
 {
-    /// <summary>每池从基础技能里抽几式（提案值，调参先过主人）。</summary>
-    public const int BasicDraw = 5;
+    /// <summary>每池从基础技能里抽几式（主人 2026-10-13 定：核心 3＋基础 15＝18 式）。</summary>
+    public const int BasicDraw = 15;
 
     /// <summary>有技能池的身份（defName）。</summary>
     public static IReadOnlyList<IdentitySkillPoolDef> Pools

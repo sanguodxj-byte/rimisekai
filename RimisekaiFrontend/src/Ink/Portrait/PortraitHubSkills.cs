@@ -44,13 +44,13 @@ public partial class PortraitHubScreen
             DrawLine(new Vector2(web.Position.X + 30f, ly), new Vector2(web.End.X - 30f, ly), new Color(InkStyle.Dim, 0.12f), 1f, true);
         }
 
-        // 连线：先画暗线，再画亮线（两端已激活 / 来源已激活、下一式作数而未激活的呼吸线 / 与所选相连的），亮的压在上面。
+        // 连线：先画暗线，再画亮线（两端已激活 / 来源已激活、下一式未激活的呼吸线 / 与所选相连的），亮的压在上面。
         var edges = SkillTree.Links(all.Select(s => new TreeSlot(s.Def, s.Row, s.Column)).ToList()).Select(l => (Source: byId[l.Source.Id], Target: byId[l.Target.Id])).ToList();
         foreach (var pass in new[] { false, true })
             foreach (var (source, target) in edges)
             {
                 var linked = source.Def.Id == _skillSelectedId || target.Def.Id == _skillSelectedId;
-                var lit = linked || source.Active && target.Eligible;
+                var lit = linked || source.Active;
                 if (lit != pass)
                     continue;
                 var color = linked ? InkStyle.Line
@@ -159,8 +159,8 @@ public partial class PortraitHubScreen
         if (s.Def.Core != CoreKind.None)
             DrawArc(at, r + 9f, 0f, Mathf.Tau, 48, s.Active ? InkStyle.Line : new Color(InkStyle.Dim, 0.7f), 2f, true);
         DrawCircle(at, r, InkStyle.Panel);
-        // 已激活实心；抽到（作数）而未达条件描边呼吸；没抽到的暗。
-        var rim = s.Active ? InkStyle.Line : s.Eligible ? new Color(InkStyle.Line, pulse) : new Color(InkStyle.Dim, 0.45f);
+        // 已激活实心；未达条件描边呼吸。
+        var rim = s.Active ? InkStyle.Line : new Color(InkStyle.Line, pulse);
         DrawArc(at, r, 0f, Mathf.Tau, 40, rim, selected ? 4f : 2f, true);
         var star = StarPoints(at, r * 0.62f);
         if (s.Active)
@@ -199,12 +199,11 @@ public partial class PortraitHubScreen
         var right = frame.End.X - 56f;
         y = frame.Position.Y + 70f;
 
-        var status = s.Active ? "已激活" : s.Eligible ? "未达条件" : "未抽到";
+        var status = s.Active ? "已激活" : "未达条件";
         var statusWidth = InkDraw.Measure(status, PortraitLayout.FontMeta).X + 56f;
         var chip = new Rect2(right - statusWidth, y - 32f, statusWidth, 64f);
-        var lit = s.Eligible;
-        PortraitFrame.Brackets(this, chip, lit ? InkStyle.Line : InkStyle.Dim);
-        InkDraw.Text(this, chip.GetCenter(), status, PortraitLayout.FontMeta, lit ? InkStyle.Line : InkStyle.Dim, "cm");
+        PortraitFrame.Brackets(this, chip, InkStyle.Line);
+        InkDraw.Text(this, chip.GetCenter(), status, PortraitLayout.FontMeta, InkStyle.Line, "cm");
         InkDraw.TextBounded(this, new Rect2(left, y - 40f, chip.Position.X - left - 20f, 80f), def.Name,
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
         y += 72f;
@@ -274,7 +273,7 @@ public partial class PortraitHubScreen
         }
         if (footer)
             InkDraw.TextBounded(this, new Rect2(left, y + 10f, right - left, 56f),
-                s.Eligible ? "条件达成即自动激活" : "没抽到，换身份或重抽才可能有",
+                "条件达成即自动激活",
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
         return frame.End.Y + 30f;
     }
