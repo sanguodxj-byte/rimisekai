@@ -156,6 +156,9 @@ public sealed class Combatant
     /// <summary>敌人成军时的目录行（装备掉落按它的威胁等级、武器与 gear 覆盖行掷）；角色与手搭的参战者为 null，不掉装备。</summary>
     public EnemyDef? Enemy { get; init; }
 
+    /// <summary>怪物出招轮转的下一位：按 <see cref="Skills"/> 的顺序依次出、到尾回头，每出手一次进一位。</summary>
+    public int NextSkill { get; set; }
+
     /// <summary>委托首领：倒下至少掉 <see cref="Defs.GearDropDef.QuestBossMinDrops"/> 件装备。由开战方标记。</summary>
     public bool QuestBoss { get; set; }
 
@@ -1414,6 +1417,12 @@ public sealed class Battle
         if (foes.Count == 0)
             return;
 
+        if (actor.Enemy != null)
+        {
+            MonsterTurn(actor);
+            return;
+        }
+
         SkillDef? best = null;
         var bestScore = -1;
         foreach (var id in actor.Skills)
@@ -1454,6 +1463,19 @@ public sealed class Battle
                 targetId = targets[0].Id;
         }
 
+        Perform(actor, action, targetId);
+    }
+
+    /// <summary>
+    /// 怪物出手不挑招：按技能表顺序（普通攻击在先，其后流派能力、模板技能）轮着出，到尾回头。
+    /// 目标照旧：打击从最前排里随机一个，治疗给本方伤得最重的半血以下者、没有就给自己，增益给自己。
+    /// </summary>
+    private void MonsterTurn(Combatant actor)
+    {
+        var id = actor.Skills[actor.NextSkill % actor.Skills.Count];
+        actor.NextSkill = (actor.NextSkill + 1) % actor.Skills.Count;
+        var action = SkillOf(actor, id) ?? Lookup(BattleSkills.AttackId)!;
+        var targetId = action.Kind == SkillKind.Heal ? (WeakestHurt(actor.Side)?.Id ?? actor.Id) : 0;
         Perform(actor, action, targetId);
     }
 
