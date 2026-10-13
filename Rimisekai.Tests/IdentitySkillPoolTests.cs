@@ -83,27 +83,25 @@ public class IdentitySkillPoolTests
     }
 
     [Fact]
-    public void Identity_skill_gates_follow_the_tier_and_shared_skills_share_the_style()
+    public void Identity_skill_gates_follow_the_tier_with_attribute_and_weapon_only()
     {
-        // 一到五阶：（流派熟练, 武器熟练）＝(0,0) (3,0) (6,2) (9,5) (12,8)；核心 (5,1)。拟案。
-        var levels = new[] { (0, 0), (3, 0), (6, 2), (9, 5), (12, 8) };
+        // 门槛只有属性＋武器熟练（主人 2026-10-13 定，撤掉流派）。一到五阶：属性下限 6/9/12/15/18、武器熟练 1/1/2/5/8；核心 11/1。
+        var levels = new[] { (6, 1), (9, 1), (12, 2), (15, 5), (18, 8) };
         foreach (var pool in SkillPool.Pools)
-        {
-            var style = pool.Skills[0].Gate.Style;
-            Assert.NotNull(style);
             foreach (var s in pool.Skills)
             {
-                Assert.Equal(style, s.Gate.Style);
-                var (sl, wl) = s.Core != CoreKind.None ? (5, 1) : levels[SkillTier.Of(s) - 1];
-                Assert.Equal(sl, s.Gate.StyleLevel);
-                Assert.Equal(wl, s.Gate.WeaponLevel);
+                var (am, wl) = s.Core != CoreKind.None ? (11, 1) : levels[SkillTier.Of(s) - 1];
+                var core = Assert.Single(s.Gate.Core!);
+                Assert.Equal(s.Gate.Attribute, core.Stat);
+                Assert.Equal(am, core.Min);
+                Assert.Equal(s.Gate.Weapon.HasValue ? wl : 0, s.Gate.WeaponLevel);
+                Assert.Null(s.Gate.Life);
+                Assert.Null(s.Gate.Traits);
             }
-            Assert.All(pool.SharedSkills, id => Assert.Equal(style, SkillTable.Get(id)!.Gate.Style));
-        }
     }
 
     [Fact]
-    public void Tree_sorts_by_tier_downwards_and_keeps_the_cores_in_the_middle_row()
+    public void Tree_sorts_by_tier_downwards_and_keeps_the_cores_in_the_third_row()
     {
         var hub = TerritoryLoopTests.NewGame(out var state, 7);
         var master = state.Roster.Master!;
@@ -121,8 +119,7 @@ public class IdentitySkillPoolTests
             var cores = slots.Where(s => s.Def.Core != CoreKind.None).ToList();
             Assert.Equal(3, cores.Count);
             Assert.Single(cores.Select(s => s.Row).Distinct());
-            var rows = slots.Max(s => s.Row);   // 除去顶行（普通攻击）的行数
-            Assert.Equal(1 + (rows - 1) / 2, cores[0].Row);
+            Assert.Equal(2, cores[0].Row);   // 第三排：普通攻击、一排基础之下
             // 连线：网上每式（普通攻击除外）至少一条进线。
             var links = SkillTree.Links(slots);
             Assert.All(slots.Where(s => s.Row > 0), s => Assert.Contains(links, l => l.Target.Id == s.Def.Id));

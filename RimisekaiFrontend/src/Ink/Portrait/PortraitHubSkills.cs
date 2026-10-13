@@ -167,6 +167,13 @@ public partial class PortraitHubScreen
             DrawColoredPolygon(star, InkStyle.Line);
         else
             InkDraw.Ink(this, star.Append(star[0]).ToArray(), rim, 1.5f);
+        // 等阶：章环上沿嵌几颗小菱，一阶一颗到五阶五颗（零阶的普通攻击不嵌）；核心技能在外环四角各嵌一颗。
+        var pipColor = s.Active || selected ? InkStyle.Line : rim;
+        if (s.Def.Core == CoreKind.None)
+            DrawTierPips(at, r, Rimisekai.Combat.SkillTier.Of(s.Def), pipColor);
+        else
+            for (var i = 0; i < 4; i++)
+                DrawPip(at + Vector2.FromAngle(Mathf.Pi / 4f + i * Mathf.Pi / 2f) * (r + 9f), pipColor);
         // 名字衬一块底色，压住从后面穿过的连线；最外两列的长名往里收，不压面板内框线。
         var nameWidth = Mathf.Min(InkDraw.Measure(s.Def.Name, PortraitLayout.FontMeta).X, 184f) + 12f;
         var inner = web.Grow(-16f);
@@ -174,6 +181,26 @@ public partial class PortraitHubScreen
         DrawRect(new Rect2(nameX - nameWidth / 2f, at.Y + r + 6f, nameWidth, 48f), InkStyle.Panel);
         InkDraw.TextBounded(this, new Rect2(nameX - 92f, at.Y + r + 4f, 184f, 52f), s.Def.Name,
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, s.Active || selected ? InkStyle.Line : InkStyle.Dim, "cm");
+    }
+
+    private void DrawTierPips(Vector2 at, float r, int tier, Color color)
+    {
+        const float step = 0.46f;
+        for (var i = 0; i < tier; i++)
+            DrawPip(at + Vector2.FromAngle(-Mathf.Pi / 2f + (i - (tier - 1) / 2f) * step) * r, color);
+    }
+
+    /// <summary>一颗小菱：先垫一圈底色把环线断开，再画实心菱。</summary>
+    private void DrawPip(Vector2 c, Color color)
+    {
+        const float half = 9.5f;
+        var diamond = new[]
+        {
+            c + new Vector2(0f, -half), c + new Vector2(half * 0.7f, 0f),
+            c + new Vector2(0f, half), c + new Vector2(-half * 0.7f, 0f),
+        };
+        DrawColoredPolygon(diamond.Select(v => c + (v - c) * 1.45f).ToArray(), InkStyle.Panel);
+        DrawColoredPolygon(diamond, color);
     }
 
     private static Vector2[] StarPoints(Vector2 c, float r)
@@ -190,10 +217,14 @@ public partial class PortraitHubScreen
         var def = s.Def;
         var reqs = PortraitSkillChart.Requirements(who, def);
         var lineHeight = PortraitLayout.FontMeta * 1.4f;
-        var descLines = def.Description.Length > 0
+        // 效果句由数值拼成；说明文字只给核心技能交代机制（基础技能的效果全在效果句里）。
+        var effect = InkText.SkillEffect(def);
+        var effectLines = effect.Length > 0
+            ? InkDraw.WrapLines(effect, PortraitLayout.FullWidth - 112f, PortraitLayout.FontMeta) : new List<string>();
+        var descLines = def.Core != CoreKind.None && def.Description.Length > 0
             ? InkDraw.WrapLines(def.Description, PortraitLayout.FullWidth - 112f, PortraitLayout.FontMeta) : new List<string>();
         var footer = !s.Active;
-        var height = 70f + 72f + 64f + 64f + (def.Status.HasValue ? 64f : 0f) + descLines.Count * lineHeight + 20f + 56f
+        var height = 70f + 72f + 64f + (effectLines.Count + descLines.Count) * lineHeight + 40f + 56f
             + System.Math.Max(1, reqs.Count) * 64f + (footer ? 96f : 30f);
         var frame = new Rect2(PortraitLayout.Pad, y, PortraitLayout.FullWidth, height);
         PortraitFrame.GothicFrame(this, frame);
@@ -210,46 +241,32 @@ public partial class PortraitHubScreen
             PortraitLayout.FontTitle, PortraitLayout.FontBody, InkStyle.Line, "lm");
         y += 72f;
 
+        // 题签：等阶（核心为种类）· 属性 · 射程 · 咏唱；伤害类型、目标、数值都在效果句里。
         var tags = new List<string>
         {
             def.Core != CoreKind.None ? InkText.CoreKind(def.Core) : InkText.SkillTier(SkillTier.Of(def)),
-            InkText.SkillKind(def.Kind), InkText.SkillTarget(def.Target), InkText.SkillRange(def.Range),
         };
-        if (def.Gate.Style.HasValue)
-            tags.Insert(1, InkText.Style(def.Gate.Style.Value));
         if (def.Gate.Attribute.HasValue)
-            tags.Insert(def.Gate.Style.HasValue ? 2 : 1, InkText.CoreStat(def.Gate.Attribute.Value));
+            tags.Add(InkText.CoreStat(def.Gate.Attribute.Value));
+        tags.Add(InkText.SkillRange(def.Range));
         if (def.ChantRounds > 0)
             tags.Add($"咏唱{def.ChantRounds}回合");
-        if (def.Control)
-            tags.Add("打断咏唱");
         PortraitFrame.TagLine(this, left, y, tags, right, InkStyle.Dim);
         y += 64f;
 
-        var numbers = new List<(string, string)> { ("威力", $"{def.Power}%") };
-        if (def.HitMod != 0)
-            numbers.Add(("命中", def.HitMod.ToString("+0;-0")));
-        PortraitFrame.CountTags(this, left, y, numbers, right);
-        y += 64f;
-        if (def.Status.HasValue)
+        foreach (var line in effectLines)
         {
-            var effect = def.Status.Value switch
-            {
-                StatusKind.StatMod => $"{InkText.StatusStat(def.StatusStat)} {def.StatusPercent:+0;-0}%，持续 {def.StatusRounds} 回合",
-                StatusKind.Dot => $"每回合 {def.StatusPower} 点伤害，持续 {def.StatusRounds} 回合",
-                StatusKind.Points => $"点数护盾 {def.StatusPower} 点，持续 {def.StatusRounds} 回合",
-            };
-            PortraitFrame.CountTag(this, left, y, "附加", effect, true);
-            y += 64f;
+            InkDraw.Text(this, new Vector2(left, y + lineHeight / 2f), line, PortraitLayout.FontMeta, InkStyle.Line, "lm");
+            y += lineHeight;
         }
-        // 说明（核心技能的机制、部分基础技能的附注）：整句折行，不截断。
+        // 说明（核心技能的机制）：整句折行，不截断。
         foreach (var line in descLines)
         {
             InkDraw.Text(this, new Vector2(left, y + lineHeight / 2f), line, PortraitLayout.FontMeta, InkStyle.Dim, "lm");
             y += lineHeight;
         }
 
-        y += 20f;
+        y += 40f;
         PortraitFrame.SectionRule(this, left - 20f, right + 20f, y, "激活条件");
         y += 56f;
         if (reqs.Count == 0)

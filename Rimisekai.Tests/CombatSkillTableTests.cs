@@ -9,15 +9,17 @@ using Xunit;
 namespace Rimisekai.Tests;
 
 /// <summary>
-/// 能力表：技能按「流派 × 熟练等级」解锁；部署时只带上已解锁的能力。
+/// 能力表：技能按「属性下限 × 武器熟练」解锁（无流派限制）；部署时只带上已解锁的能力。
 /// </summary>
 public sealed class CombatSkillTableTests
 {
-    private static CharacterState swordsman(int styleLevel)
+    /// <summary>剑士：敏捷 6＋rank、剑熟练 rank≥6 时 2 级否则 1 级——恰好对上单手一线疾斩/破甲/二连斩的门槛。</summary>
+    internal static CharacterState swordsman(int rank)
     {
         var c = new CharacterState(1) { Name = "剑士" };
         c.Equip(WeaponType.Sword);
-        c.Styles[(int)StyleType.OneHand].AddExp(styleLevel * Proficiency.ExpPerLevel);
+        c[CoreStat.Dexterity] = 6 + rank;
+        c.Weapons[(int)WeaponType.Sword].AddExp((rank >= 6 ? 2 : 1) * Proficiency.ExpPerLevel);
         return c;
     }
 
@@ -30,10 +32,11 @@ public sealed class CombatSkillTableTests
         Assert.Equal("药剂", SkillTable.Get("药剂")!.Item);
         foreach (var skill in SkillTable.All)
             Assert.False(string.IsNullOrWhiteSpace(skill.Name));
-        // 通用能力（attack/guard）无流派门槛，其余全部归属一个流派。
-        Assert.Null(SkillTable.Get(BattleSkills.AttackId)!.Gate.Style);
-        Assert.Null(SkillTable.Get(BattleSkills.GuardId)!.Gate.Style);
-        Assert.NotNull(SkillTable.Get("slash")!.Gate.Style);
+        // 通用能力（attack/guard）无门槛，其余都有属性下限，且属性归属与下限同一项。
+        Assert.True(SkillTable.Innate(SkillTable.Get(BattleSkills.AttackId)!));
+        Assert.True(SkillTable.Innate(SkillTable.Get(BattleSkills.GuardId)!));
+        foreach (var skill in SkillTable.All.Where(s => !SkillTable.Innate(s)))
+            Assert.Equal(skill.Gate.Attribute, Assert.Single(skill.Gate.Core!).Stat);
     }
 
     /// <summary>门槛是一组可空条件：只写自己在意的项，其余为空即不设条件。</summary>
@@ -42,7 +45,7 @@ public sealed class CombatSkillTableTests
     {
         var c = new CharacterState(1) { Name = "试炼者" };
         c.Equip(WeaponType.Sword);
-        c.Styles[(int)StyleType.OneHand].AddExp(6 * Proficiency.ExpPerLevel);
+        c.Weapons[(int)WeaponType.Sword].AddExp(6 * Proficiency.ExpPerLevel);
         c[CoreStat.Strength] = 12;
         c.LifeExp[(int)LifeSkill.Smithing] = 3 * 100;
 
@@ -53,8 +56,8 @@ public sealed class CombatSkillTableTests
         // 四条条件都满足即解锁。
         var full = new SkillGate
         {
-            Style = StyleType.OneHand,
-            StyleLevel = 6,
+            Weapon = WeaponType.Sword,
+            WeaponLevel = 6,
             Core = new[] { new CoreRequirement(CoreStat.Strength, 12) },
             Life = new[] { new LifeRequirement(LifeSkill.Smithing, 3) },
             Prerequisites = new[] { "slash" },
@@ -64,8 +67,8 @@ public sealed class CombatSkillTableTests
         // 任一条不满足即锁住，并逐条列在 Unmet 里。
         var tooStrong = new SkillGate
         {
-            Style = StyleType.OneHand,
-            StyleLevel = 6,
+            Weapon = WeaponType.Sword,
+            WeaponLevel = 6,
             Core = new[] { new CoreRequirement(CoreStat.Strength, 13) },
         };
         Assert.False(tooStrong.Meets(c, unlocked));
@@ -138,9 +141,9 @@ public sealed class CombatSkillTableTests
     }
 
     [Fact]
-    public void Gates_by_style_proficiency_level()
+    public void Gates_by_attribute_and_weapon_level()
     {
-        // 熟练 1 级：门槛只够初级（疾斩）与通用两式。
+        // 敏捷 7、剑 1：门槛只够初级（疾斩）与通用两式。
         var novice = SkillTable.Known(swordsman(1))
             .Select(s => s.Id).ToList();
         Assert.Contains("slash", novice);
@@ -148,48 +151,51 @@ public sealed class CombatSkillTableTests
         Assert.DoesNotContain("armor_break", novice);
         Assert.DoesNotContain("cross_slash", novice);
 
-        // 熟练 3 级：进阶解锁。
+        // 敏捷 9：进阶解锁。
         var journeyman = SkillTable.Known(swordsman(3))
             .Select(s => s.Id).ToList();
         Assert.Contains("armor_break", journeyman);
         Assert.DoesNotContain("cross_slash", journeyman);
 
-        // 熟练 6 级：高级解锁。
+        // 敏捷 12、剑 2：高级解锁。
         var master = SkillTable.Known(swordsman(6))
             .Select(s => s.Id).ToList();
         Assert.Contains("cross_slash", master);
 
-        // 换流派就不带单手的能力：法术流派的角色没有疾斩。
+        // 没练过剑就没有剑招：只练杖的法师没有疾斩。
         var mage = new CharacterState(2) { Name = "法师" };
         mage.Equip(WeaponType.Staff);
-        mage.Styles[(int)StyleType.Spell].AddExp(9 * Proficiency.ExpPerLevel);
+        mage[CoreStat.Intellect] = 15;
+        mage[CoreStat.Dexterity] = 6;
+        mage.Weapons[(int)WeaponType.Staff].AddExp(9 * Proficiency.ExpPerLevel);
         Assert.DoesNotContain("slash", SkillTable.Known(mage)
             .Select(s => s.Id).ToList());
     }
 
     [Fact]
-    public void Deploy_carries_known_skills_of_the_equipped_style()
+    public void Deploy_carries_known_skills()
     {
-        var c = swordsman(3);   // 单手熟练 3：疾斩与破甲自动激活
+        var c = swordsman(3);   // 敏捷 9、剑 1：疾斩与破甲自动激活
         var unit = Deploy.FromCharacter(c, CombatSide.Attacker);
 
         Assert.Contains(BattleSkills.AttackId, unit.Skills);
         Assert.Contains(BattleSkills.GuardId, unit.Skills);
         Assert.Contains("slash", unit.Skills);
         Assert.Contains("armor_break", unit.Skills);
-        // 没到 6 级，高级不该出现。
+        // 敏捷不到 12，高级不该出现。
         Assert.DoesNotContain("cross_slash", unit.Skills);
-        // 别流派的能力不该出现。
+        // 没练杖、智力不够，法术不该出现。
         Assert.DoesNotContain("magic_missile", unit.Skills);
     }
 
     [Fact]
-    public void Universal_skills_come_with_any_style()
+    public void Universal_skills_come_with_anyone()
     {
-        // 法术流派的角色也自带普通攻击与防御架势。
+        // 法师也自带普通攻击与防御架势。
         var mage = new CharacterState(2) { Name = "法师" };
         mage.Equip(WeaponType.Staff);
-        mage.Styles[(int)StyleType.Spell].AddExp(Proficiency.ExpPerLevel);
+        mage[CoreStat.Intellect] = 7;
+        mage.Weapons[(int)WeaponType.Staff].AddExp(Proficiency.ExpPerLevel);
         var unit = Deploy.FromCharacter(mage, CombatSide.Attacker);
 
         Assert.Contains(BattleSkills.AttackId, unit.Skills);
@@ -201,28 +207,25 @@ public sealed class CombatSkillTableTests
 /// <summary>自动激活与启发式连线：门槛达到即会，不必学习；连线按门槛高低现算，网上没有孤立技能。</summary>
 public sealed class SkillActivationTests
 {
-    private static CharacterState Swordsman(int styleLevel)
-    {
-        var c = new CharacterState(1) { Name = "剑士" };
-        c.Equip(WeaponType.Sword);
-        c.Styles[(int)StyleType.OneHand].AddExp(styleLevel * Proficiency.ExpPerLevel);
-        return c;
-    }
-
     [Fact]
-    public void Meeting_the_gate_activates_the_skill_and_use_needs_the_style()
+    public void Meeting_the_gate_activates_the_skill_whatever_is_held()
     {
-        var c = Swordsman(3);
+        var c = CombatSkillTableTests.swordsman(3);
         Assert.Contains("armor_break", SkillTable.Known(c).Select(s => s.Id));
+        // 不看手里拿什么（流派限制已撤）：换杖照样会。
         c.Equip(WeaponType.Staff);
+        Assert.Contains("armor_break", SkillTable.Known(c).Select(s => s.Id));
+        // 属性掉到门槛下就不会了。
+        c[CoreStat.Dexterity] = 8;
         Assert.DoesNotContain("armor_break", SkillTable.Known(c).Select(s => s.Id));
     }
 
     [Fact]
-    public void Weapon_level_gates_count_without_holding_that_weapon_style()
+    public void Weapon_level_gates_count_without_holding_that_weapon()
     {
-        var gate = new SkillGate { Style = StyleType.OneHand, StyleLevel = 5, Weapon = WeaponType.Sword, WeaponLevel = 1 };
-        var c = Swordsman(5);
+        var gate = new SkillGate { Weapon = WeaponType.Sword, WeaponLevel = 2 };
+        var c = CombatSkillTableTests.swordsman(3);
+        c.Equip(WeaponType.Staff);
         Assert.False(gate.Meets(c, new HashSet<string>()));
         c.Weapons[(int)WeaponType.Sword].AddExp(Proficiency.ExpPerLevel);
         Assert.True(gate.Meets(c, new HashSet<string>()));
@@ -234,11 +237,11 @@ public sealed class SkillActivationTests
         var slots = SkillTree.Layout(new CharacterState(1));
         var skills = slots.Select(s => s.Def).ToList();
         var links = SkillTree.Links(slots);
-        // 单手一线：疾斩（单手 1）→ 破甲（单手 3）→ 二连斩（单手 6）。
+        // 敏捷一线：疾斩（敏捷 7）→ 破甲（敏捷 9）→ 二连斩（敏捷 12）。
         Assert.Contains(links, l => l.Source.Id == "slash" && l.Target.Id == "armor_break");
         Assert.Contains(links, l => l.Source.Id == "armor_break" && l.Target.Id == "cross_slash");
         Assert.All(skills.Where(s => !SkillTable.Innate(s)), s => Assert.Contains(links, l => l.Target.Id == s.Id));
-        Assert.All(links, l => Assert.True(SkillTable.Innate(l.Source) || l.Source.Gate.Style == l.Target.Gate.Style, $"{l.Source.Id} → {l.Target.Id}"));
+        Assert.All(links, l => Assert.True(SkillTable.Innate(l.Source) || l.Source.Gate.Attribute == l.Target.Gate.Attribute, $"{l.Source.Id} → {l.Target.Id}"));
         Assert.DoesNotContain(skills, s => s.Id == BattleSkills.GuardId);
     }
 }
@@ -252,7 +255,7 @@ public sealed class ChantTests
     private static SkillDef Spell(int chantRounds, bool control = false) => new()
     {
         Id = "test_spell", Name = "试验法术",
-        Gate = new SkillGate { Style = StyleType.Spell, StyleLevel = 1 },
+        Gate = new SkillGate { Attribute = CoreStat.Intellect, Core = new[] { new CoreRequirement(CoreStat.Intellect, 1) } },
         Kind = SkillKind.Spell, Target = SkillTarget.Enemy, Power = 100,
         ChantRounds = chantRounds, Control = control,
     };

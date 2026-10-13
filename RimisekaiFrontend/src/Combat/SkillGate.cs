@@ -6,12 +6,6 @@ namespace Rimisekai.Combat;
 /// <summary>技能门槛的类别。加一类新条件＝这里加一枚，Meets 与 Unmet 各补一支。</summary>
 public enum SkillGateKind
 {
-    /// <summary>须装备某个流派。</summary>
-    Style,
-
-    /// <summary>该流派的熟练等级下限。</summary>
-    StyleLevel,
-
     /// <summary>某种武器的熟练等级下限。</summary>
     WeaponLevel,
 
@@ -30,9 +24,9 @@ public enum SkillGateKind
 
 /// <summary>一条未满足的门槛。Core 不持有显示文案，界面按 Kind 翻成中文。</summary>
 /// <param name="Kind">门槛类别。</param>
-/// <param name="Subject">主体枚举值（流派／属性／生活技能／素质）；前置技能时为 -1。</param>
+/// <param name="Subject">主体枚举值（武器／属性／生活技能／素质）；前置技能时为 -1。</param>
 /// <param name="SubjectId">前置技能的门槛为技能 Id；其余为空串。</param>
-/// <param name="Required">门槛要求值；流派与前置技能这类有无判定不看它。</param>
+/// <param name="Required">门槛要求值；素质与前置技能这类有无判定不看它。</param>
 /// <param name="Actual">角色当前值。</param>
 public readonly record struct SkillGateMiss(
     SkillGateKind Kind,
@@ -51,7 +45,7 @@ public readonly record struct LifeRequirement(LifeSkill Skill, int Min);
 /// 技能解锁门槛：一组**全部可空**的条件，逐条 AND——全部满足才解锁。
 /// 每个字段为 null 或空即不设该条件，新技能只写自己在意的那几项。
 ///
-/// 覆盖：流派（须装备）＋该流派熟练等级、核心属性下限、生活技能下限、
+/// 覆盖：武器熟练等级、核心属性下限、生活技能下限、
 /// 素质（须全部具备）、前置技能（须全部已解锁）。
 ///
 /// 扩展方式：<see cref="SkillGateKind"/> 加一枚类别，这里加一个可空字段，
@@ -69,20 +63,11 @@ public sealed class SkillGate
     /// </summary>
     public CoreStat? Attribute { get; init; }
 
-    /// <summary>须装备的流派。null = 不限流派。</summary>
-    public StyleType? Style { get; init; }
-
-    /// <summary>该流派的熟练等级下限。仅在 <see cref="Style"/> 非空时参与判定。</summary>
-    public int StyleLevel { get; init; }
-
     /// <summary>武器熟练门槛：哪种武器（不必此刻拿着，只看熟练），null = 不限。</summary>
     public WeaponType? Weapon { get; init; }
 
     /// <summary>该武器的熟练等级下限。仅在 <see cref="Weapon"/> 非空时参与判定。</summary>
     public int WeaponLevel { get; init; }
-
-    /// <summary>角色此刻的流派：空手算格斗（与战斗里的取法一致）。</summary>
-    public static StyleType StyleOf(CharacterState c) => c.EquippedStyle ?? StyleType.Unarmed;
 
     /// <summary>核心属性下限，须全部满足。null/空 = 不限。</summary>
     public IReadOnlyList<CoreRequirement>? Core { get; init; }
@@ -102,14 +87,6 @@ public sealed class SkillGate
     /// </summary>
     public bool Meets(CharacterState c, IReadOnlySet<string> unlocked)
     {
-        if (Style.HasValue)
-        {
-            if (StyleOf(c) != Style)
-                return false;
-            if (c.Styles[(int)Style.Value].Level < StyleLevel)
-                return false;
-        }
-
         if (Weapon.HasValue && c.Weapons[(int)Weapon.Value].Level < WeaponLevel)
             return false;
 
@@ -140,15 +117,6 @@ public sealed class SkillGate
     public IReadOnlyList<SkillGateMiss> Unmet(CharacterState c, IReadOnlySet<string> unlocked)
     {
         var misses = new List<SkillGateMiss>();
-
-        if (Style.HasValue)
-        {
-            if (StyleOf(c) != Style)
-                misses.Add(new SkillGateMiss(SkillGateKind.Style, (int)Style.Value, "", 0, (int)StyleOf(c)));
-            else if (c.Styles[(int)Style.Value].Level < StyleLevel)
-                misses.Add(new SkillGateMiss(SkillGateKind.StyleLevel, (int)Style.Value, "",
-                    StyleLevel, c.Styles[(int)Style.Value].Level));
-        }
 
         if (Weapon.HasValue && c.Weapons[(int)Weapon.Value].Level < WeaponLevel)
             misses.Add(new SkillGateMiss(SkillGateKind.WeaponLevel, (int)Weapon.Value, "",

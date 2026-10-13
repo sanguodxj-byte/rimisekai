@@ -6,7 +6,7 @@ namespace Rimisekai.Combat;
 /// 技能等阶（拟案，待主人核定）：按数值把每式技能分成一到五阶，技能网自上而下按阶排（越往下越强）。
 /// 估值＝单次出手的分量：威力 × 目标数系数 × 命中修正，加附加状态（增减益按幅度×回合，持续伤害按总量，护盾按点数），
 /// 打断咏唱另加一截；咏唱每多一回合按四分之一折扣。增益 / 治疗本身没有威力，只算状态与治疗量。
-/// 核心技能不分阶（网里固定居中）。
+/// 核心技能不分阶（网里固定居中）；通用技能（普通攻击）为零阶，网里固定第一个。
 /// </summary>
 public static class SkillTier
 {
@@ -41,9 +41,11 @@ public static class SkillTier
         return value / (1 + 0.25 * s.ChantRounds);
     }
 
-    /// <summary>一到五阶。</summary>
+    /// <summary>通用技能零阶，其余一到五阶。</summary>
     public static int Of(SkillDef s)
     {
+        if (SkillTable.Innate(s))
+            return 0;
         var score = Score(s);
         var tier = 1;
         foreach (var t in Thresholds)

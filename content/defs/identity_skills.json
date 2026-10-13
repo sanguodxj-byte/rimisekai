@@ -27,8 +27,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -51,10 +56,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -75,9 +83,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
+      "weapon": "Spear",
       "weaponLevel": 5
      }
     },
@@ -99,8 +112,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -123,8 +141,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -147,8 +170,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -171,10 +199,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -195,8 +226,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -217,8 +253,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -241,8 +282,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -265,8 +311,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -289,8 +340,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -311,9 +367,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
+      "weapon": "Spear",
       "weaponLevel": 5
      }
     },
@@ -335,8 +396,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -357,8 +423,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -381,8 +452,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -403,8 +479,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -427,8 +508,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -451,8 +537,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -473,8 +564,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -497,8 +593,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -519,8 +620,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -541,9 +647,14 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
+      "weapon": "Unarmed",
       "weaponLevel": 2
      }
     },
@@ -565,8 +676,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -587,8 +705,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -609,8 +732,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -633,10 +761,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -657,8 +788,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -679,8 +815,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -703,8 +844,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -727,10 +873,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -751,8 +900,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -775,10 +929,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
-      "weapon": "Sword",
-      "weaponLevel": 8
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -799,8 +956,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -823,8 +985,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -845,9 +1012,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
+      "weapon": "Spear",
       "weaponLevel": 2
      }
     },
@@ -869,15 +1041,22 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
      "defType": "SkillDef",
      "defName": "knight_c1",
      "label": "不动姿态",
-     "description": "防御 +50%，速度 -3，持续到战斗结束",
+     "description": "自身防御 +50%、速度 -3，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -904,17 +1083,20 @@
       }
      ],
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "knight_c2",
      "label": "荣誉",
-     "description": "每受击一次积累 1 层，持续 4 回合，每层攻击 +10%，至多 5 层",
+     "description": "每受到一次攻击积累 1 层，每层攻击 +10%，至多 5 层，持续 4 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -938,17 +1120,20 @@
      ],
      "maxStacks": 5,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "knight_c3",
      "label": "守护反击",
-     "description": "受击时以 200% 威力反击来者，挂 3 回合，可发动 2 次",
+     "description": "受到攻击时，对攻击者发动 200% 威力的反击。效果持续 3 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -968,10 +1153,13 @@
      "reactPower": 200,
      "reactUses": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 11
+       }
+      ]
      }
     }
    ]
@@ -1004,8 +1192,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1028,8 +1221,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1052,8 +1250,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1074,8 +1279,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1098,8 +1308,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1122,8 +1337,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -1146,10 +1366,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -1170,8 +1393,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1194,8 +1422,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1218,10 +1451,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -1242,8 +1478,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1266,8 +1507,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -1288,8 +1534,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1312,10 +1563,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -1336,8 +1590,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1358,8 +1619,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -1380,8 +1646,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1404,8 +1675,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1428,8 +1704,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -1450,8 +1731,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -1474,8 +1760,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1496,8 +1789,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -1518,8 +1816,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -1540,8 +1843,15 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1562,8 +1872,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1584,8 +1901,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -1606,8 +1930,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1630,8 +1959,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1654,8 +1988,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -1678,10 +2017,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -1702,8 +2044,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1726,10 +2073,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -1750,8 +2100,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -1774,10 +2129,13 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 12,
-      "weapon": "Sword",
-      "weaponLevel": 8
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -1798,8 +2156,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -1822,8 +2185,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -1846,15 +2214,20 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "spellblade_c1",
      "label": "剑光",
-     "description": "攻击命中积累 1 层，持续五回合，每层技能伤害 +30%，至多 3 层",
+     "description": "攻击命中时积累 1 层，每层技能伤害 +30%，至多 3 层，持续 5 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -1878,8 +2251,13 @@
      ],
      "maxStacks": 3,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 5,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 11
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 1
      }
@@ -1888,7 +2266,7 @@
      "defType": "SkillDef",
      "defName": "spellblade_c2",
      "label": "迅捷姿态",
-     "description": "闪避 +30%，速度 +5，持续到战斗结束",
+     "description": "自身闪避 +30%、速度 +5，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -1915,17 +2293,20 @@
       }
      ],
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "spellblade_c3",
      "label": "天星剑返",
-     "description": "闪避对方攻击时发动，对所有敌人造成 300% 伤害",
+     "description": "闪避敌方攻击时，对全体敌人造成 300% 威力的伤害。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -1945,8 +2326,13 @@
      "reactPower": 300,
      "reactUses": 1,
      "gate": {
-      "style": "OneHand",
-      "styleLevel": 5,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 1
      }
@@ -1982,8 +2368,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2006,8 +2397,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2030,8 +2426,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2054,8 +2455,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 5
      }
@@ -2078,8 +2484,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2100,8 +2513,15 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2122,10 +2542,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
-      "weapon": "Staff",
-      "weaponLevel": 5
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -2146,10 +2569,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
-      "weapon": "Staff",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -2170,8 +2596,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -2192,8 +2623,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2216,8 +2652,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2240,10 +2681,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
-      "weapon": "Staff",
-      "weaponLevel": 8
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -2264,8 +2708,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2288,8 +2737,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2310,10 +2766,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
-      "weapon": "Staff",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -2334,8 +2793,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 5
      }
@@ -2358,8 +2822,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2382,8 +2851,13 @@
      "statusPower": 0,
      "statusRounds": 4,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -2404,8 +2878,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2428,8 +2907,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2452,8 +2936,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2474,8 +2965,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -2496,8 +2992,15 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2518,8 +3021,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2540,8 +3050,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2564,8 +3079,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
@@ -2586,8 +3108,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2610,8 +3137,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 2
      }
@@ -2634,10 +3166,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 6,
-      "weapon": "Staff",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -2658,8 +3193,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 5
      }
@@ -2682,8 +3222,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2706,8 +3251,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2730,8 +3280,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 5
      }
@@ -2754,10 +3309,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
-      "weapon": "Staff",
-      "weaponLevel": 8
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -2778,8 +3336,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 9,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 15
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 5
      }
@@ -2802,8 +3365,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 12,
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 18
+       }
+      ],
       "weapon": "Staff",
       "weaponLevel": 8
      }
@@ -2826,15 +3394,22 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 0
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 6
+       }
+      ],
+      "weapon": "Staff",
+      "weaponLevel": 1
      }
     },
     {
      "defType": "SkillDef",
      "defName": "mage_c1",
      "label": "魔力共鸣",
-     "description": "法术命中积累 1 层，持续 4 回合，每层法强 +15%，至多 4 层",
+     "description": "法术命中时积累 1 层，每层法强 +15%，至多 4 层，持续 4 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -2858,17 +3433,20 @@
      ],
      "maxStacks": 4,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 5,
-      "weapon": "Staff",
-      "weaponLevel": 1
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "mage_c2",
      "label": "奥术领域",
-     "description": "法强 +40%，防御 -20%，持续到战斗结束",
+     "description": "自身法强 +40%、防御 -20%，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -2895,17 +3473,20 @@
       }
      ],
      "gate": {
-      "style": "Spell",
-      "styleLevel": 5,
-      "weapon": "Staff",
-      "weaponLevel": 1
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "mage_c3",
      "label": "法术反制",
-     "description": "敌人开始咏唱时以 150% 法术轰击之，挂 4 回合，可发动 2 次",
+     "description": "敌方开始咏唱时，对其造成 150% 威力的法术伤害。效果持续 4 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -2925,10 +3506,13 @@
      "reactPower": 150,
      "reactUses": 2,
      "gate": {
-      "style": "Spell",
-      "styleLevel": 5,
-      "weapon": "Staff",
-      "weaponLevel": 1
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 11
+       }
+      ]
      }
     }
    ]
@@ -2962,8 +3546,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -2986,8 +3575,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3010,8 +3604,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3032,8 +3633,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3054,8 +3662,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3078,8 +3691,13 @@
      "statusPower": 4,
      "statusRounds": 4,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3102,10 +3720,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
-      "weapon": "Dagger",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -3126,9 +3747,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
-      "weapon": "Dagger",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
+      "weapon": "Unarmed",
       "weaponLevel": 2
      }
     },
@@ -3150,8 +3776,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -3174,10 +3805,13 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
-      "weapon": "Dagger",
-      "weaponLevel": 2
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -3198,8 +3832,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3222,8 +3861,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -3244,8 +3888,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3268,9 +3917,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
-      "weapon": "Dagger",
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
+      "weapon": "Unarmed",
       "weaponLevel": 5
      }
     },
@@ -3292,9 +3946,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
-      "weapon": "Dagger",
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
+      "weapon": "Crossbow",
       "weaponLevel": 2
      }
     },
@@ -3316,8 +3975,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Intellect",
+      "core": [
+       {
+        "stat": "Intellect",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -3338,8 +4002,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -3362,8 +4031,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3386,8 +4060,13 @@
      "statusPower": 8,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3410,8 +4089,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3434,8 +4118,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 0
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 6
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3456,8 +4147,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -3478,8 +4174,13 @@
      "statusPower": 3,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 0
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -3500,8 +4201,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3522,8 +4230,15 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3544,8 +4259,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -3566,8 +4288,13 @@
      "statusPower": 4,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3590,8 +4317,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3614,8 +4346,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 2
      }
@@ -3638,8 +4375,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -3662,8 +4404,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -3686,10 +4433,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
-      "weapon": "Dagger",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -3710,8 +4460,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3734,8 +4489,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3758,8 +4518,13 @@
      "statusPower": 8,
      "statusRounds": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 8
      }
@@ -3782,8 +4547,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 5
      }
@@ -3806,15 +4576,22 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
      "defType": "SkillDef",
      "defName": "assassin_c1",
      "label": "杀意",
-     "description": "击倒敌人积累 1 层，持续 6 回合，每层技能伤害 +40%、速度 +2，至多 3 层",
+     "description": "击倒敌人时积累 1 层，每层技能伤害 +40%、速度 +2，至多 3 层，持续 6 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -3843,8 +4620,13 @@
      ],
      "maxStacks": 3,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 5,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 1
      }
@@ -3853,7 +4635,7 @@
      "defType": "SkillDef",
      "defName": "assassin_c2",
      "label": "暗影姿态",
-     "description": "闪避 +25%，暴击率 +10，持续到战斗结束",
+     "description": "自身闪避 +25%、暴击率 +10，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -3880,17 +4662,20 @@
       }
      ],
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 5,
-      "weapon": "Dagger",
-      "weaponLevel": 1
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "assassin_c3",
      "label": "影返",
-     "description": "闪避对方攻击时以 250% 刺回来者，挂 3 回合，可发动 2 次",
+     "description": "闪避敌方攻击时，对攻击者发动 250% 威力的反击。效果持续 3 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -3910,8 +4695,13 @@
      "reactPower": 250,
      "reactUses": 2,
      "gate": {
-      "style": "DualWield",
-      "styleLevel": 5,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ],
       "weapon": "Dagger",
       "weaponLevel": 1
      }
@@ -3946,8 +4736,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -3968,8 +4765,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -3992,8 +4794,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4016,8 +4823,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4040,8 +4852,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4064,8 +4881,13 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4088,8 +4910,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -4110,8 +4937,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4132,8 +4966,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4154,8 +4995,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4178,8 +5024,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4202,8 +5053,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -4224,8 +5080,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4248,8 +5109,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4272,8 +5138,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -4294,8 +5165,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4318,8 +5194,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4342,8 +5223,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4364,8 +5252,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4388,8 +5281,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4412,8 +5310,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4434,8 +5339,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -4456,8 +5366,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 0
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 6
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4478,8 +5395,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4500,8 +5424,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4522,8 +5453,15 @@
      "statusPower": 4,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
@@ -4544,8 +5482,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4568,8 +5511,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4592,8 +5540,13 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 6,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 2
      }
@@ -4616,8 +5569,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4640,8 +5598,13 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4664,10 +5627,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
-      "weapon": "Bow",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -4688,8 +5654,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4712,8 +5683,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4736,8 +5712,13 @@
      "statusPower": 8,
      "statusRounds": 3,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 12,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 8
      }
@@ -4760,8 +5741,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 9,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 5
      }
@@ -4784,15 +5770,22 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ],
+      "weapon": "Bow",
+      "weaponLevel": 1
      }
     },
     {
      "defType": "SkillDef",
      "defName": "archer_c1",
      "label": "专注",
-     "description": "命中积累 1 层，持续 4 回合，每层暴击率 +6，至多 5 层",
+     "description": "攻击命中时积累 1 层，每层暴击率 +6，至多 5 层，持续 4 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -4816,8 +5809,13 @@
      ],
      "maxStacks": 5,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 5,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 11
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 1
      }
@@ -4826,7 +5824,7 @@
      "defType": "SkillDef",
      "defName": "archer_c2",
      "label": "游射姿态",
-     "description": "速度 +4，闪避 +15%，持续到战斗结束",
+     "description": "自身速度 +4、闪避 +15%，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -4853,8 +5851,13 @@
       }
      ],
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 5,
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 1
      }
@@ -4863,7 +5866,7 @@
      "defType": "SkillDef",
      "defName": "archer_c3",
      "label": "截击",
-     "description": "敌人开始咏唱时一箭射去，180% 威力，挂 4 回合，可发动 2 次",
+     "description": "敌方开始咏唱时，对其造成 180% 威力的射击。效果持续 4 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -4883,8 +5886,13 @@
      "reactPower": 180,
      "reactUses": 2,
      "gate": {
-      "style": "Ranged",
-      "styleLevel": 5,
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 11
+       }
+      ],
       "weapon": "Bow",
       "weaponLevel": 1
      }
@@ -4915,8 +5923,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -4937,8 +5950,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -4959,8 +5977,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -4981,8 +6004,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5003,10 +6031,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5027,8 +6058,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5049,10 +6085,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -5073,8 +6112,13 @@
      "statusPower": 60,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5095,10 +6139,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5119,10 +6166,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5143,8 +6193,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5165,8 +6220,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5187,8 +6247,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5209,8 +6274,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5231,10 +6301,13 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5255,10 +6328,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5279,10 +6355,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5303,8 +6382,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5325,8 +6409,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5347,8 +6436,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5369,8 +6463,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5391,8 +6490,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5413,8 +6517,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5435,8 +6544,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5457,8 +6571,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5479,8 +6598,13 @@
      "statusPower": 4,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -5501,10 +6625,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5525,10 +6652,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5549,10 +6679,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -5573,10 +6706,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -5597,10 +6733,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -5621,10 +6760,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5645,10 +6787,13 @@
      "statusPower": 100,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -5669,10 +6814,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -5693,10 +6841,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5717,10 +6868,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -5741,15 +6895,20 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "priest_c1",
      "label": "圣域",
-     "description": "全体友方防御 +20%、法强 +10%，持续到战斗结束",
+     "description": "全体友方防御 +20%、法强 +10%，持续至战斗结束。",
      "kind": "Buff",
      "target": "AllAllies",
      "power": 100,
@@ -5776,17 +6935,20 @@
       }
      ],
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "priest_c2",
      "label": "信仰",
-     "description": "每受击一次积累 1 层，持续 5 回合，每层法强 +12%，至多 5 层",
+     "description": "每受到一次攻击积累 1 层，每层法强 +12%，至多 5 层，持续 5 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -5810,17 +6972,20 @@
      ],
      "maxStacks": 5,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "priest_c3",
      "label": "神恩",
-     "description": "受击时为自己回复 80% 威力的生命，挂 3 回合，可发动 2 次",
+     "description": "受到攻击时，为自身回复 80% 威力的生命。效果持续 3 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -5840,10 +7005,13 @@
      "reactPower": 80,
      "reactUses": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 11
+       }
+      ]
      }
     }
    ]
@@ -5876,10 +7044,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -5900,10 +7071,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -5924,9 +7098,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
+      "weapon": "Dagger",
       "weaponLevel": 2
      }
     },
@@ -5948,8 +7127,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5970,8 +7154,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -5992,10 +7181,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6016,8 +7208,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6038,10 +7235,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6062,8 +7262,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6084,8 +7289,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -6106,8 +7318,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6128,10 +7345,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6152,10 +7372,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6176,8 +7399,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6198,8 +7426,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6220,10 +7453,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6244,10 +7480,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -6268,10 +7507,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6292,8 +7534,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6314,10 +7561,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6338,8 +7588,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6360,8 +7615,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6382,8 +7642,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6404,8 +7669,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6426,8 +7696,15 @@
      "statusPower": 0,
      "statusRounds": 1,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
@@ -6448,8 +7725,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6470,10 +7752,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6494,9 +7779,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ],
+      "weapon": "Dagger",
       "weaponLevel": 2
      }
     },
@@ -6518,10 +7808,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -6542,10 +7835,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6566,9 +7862,14 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ],
+      "weapon": "Dagger",
       "weaponLevel": 5
      }
     },
@@ -6590,10 +7891,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Perception",
+      "core": [
+       {
+        "stat": "Perception",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6614,10 +7918,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -6638,10 +7945,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -6662,9 +7972,14 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 18
+       }
+      ],
+      "weapon": "Dagger",
       "weaponLevel": 8
      }
     },
@@ -6686,10 +8001,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6710,15 +8028,22 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 9
+       }
+      ],
+      "weapon": "Dagger",
+      "weaponLevel": 1
      }
     },
     {
      "defType": "SkillDef",
      "defName": "maid_c1",
      "label": "完美侍奉",
-     "description": "全体友方速度 +2、防御 +10%，持续到战斗结束",
+     "description": "全体友方速度 +2、防御 +10%，持续至战斗结束。",
      "kind": "Buff",
      "target": "AllAllies",
      "power": 100,
@@ -6745,17 +8070,20 @@
       }
      ],
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "maid_c2",
      "label": "勤勉",
-     "description": "命中积累 1 层，持续 5 回合，每层攻击 +8%、闪避 +5%，至多 5 层",
+     "description": "攻击命中时积累 1 层，每层攻击 +8%、闪避 +5%，至多 5 层，持续 5 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -6784,17 +8112,20 @@
      ],
      "maxStacks": 5,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "maid_c3",
      "label": "护主",
-     "description": "受击时以 180% 威力还击来者，挂 3 回合，可发动 2 次",
+     "description": "受到攻击时，对攻击者发动 180% 威力的反击。效果持续 3 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -6814,10 +8145,13 @@
      "reactPower": 180,
      "reactUses": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ]
      }
     }
    ]
@@ -6846,10 +8180,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6870,10 +8207,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -6894,8 +8234,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -6916,8 +8261,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6938,8 +8288,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6960,8 +8315,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -6982,10 +8342,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7006,10 +8369,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7030,8 +8396,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7052,8 +8423,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7074,10 +8450,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7098,8 +8477,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7120,8 +8504,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7142,8 +8531,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7164,10 +8558,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7188,8 +8585,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7210,10 +8612,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7234,10 +8639,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7258,10 +8666,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -7282,8 +8693,13 @@
      "statusPower": 5,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7304,8 +8720,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7326,8 +8747,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7348,8 +8774,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 0
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7370,8 +8801,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7392,8 +8828,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7414,8 +8855,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7436,10 +8882,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7460,10 +8909,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -7484,10 +8936,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7508,10 +8963,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 6,
-      "weapon": "Unarmed",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7532,10 +8990,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7556,10 +9017,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7580,10 +9044,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -7604,10 +9071,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 12,
-      "weapon": "Unarmed",
-      "weaponLevel": 8
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -7628,10 +9098,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7652,10 +9125,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 9,
-      "weapon": "Unarmed",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7676,15 +9152,20 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "bard_c1",
      "label": "行军曲",
-     "description": "全体友方攻击 +15%、速度 +2，持续到战斗结束",
+     "description": "全体友方攻击 +15%、速度 +2，持续至战斗结束。",
      "kind": "Buff",
      "target": "AllAllies",
      "power": 100,
@@ -7711,17 +9192,20 @@
       }
      ],
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "bard_c2",
      "label": "余韵",
-     "description": "命中积累 1 层，持续 4 回合，每层技能伤害 +15%、法强 +10%，至多 4 层",
+     "description": "攻击命中时积累 1 层，每层技能伤害 +15%、法强 +10%，至多 4 层，持续 4 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -7750,17 +9234,20 @@
      ],
      "maxStacks": 4,
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "bard_c3",
      "label": "即兴姿态",
-     "description": "闪避 +20%，暴击率 +8，持续到战斗结束",
+     "description": "自身闪避 +20%、暴击率 +8，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -7787,10 +9274,13 @@
       }
      ],
      "gate": {
-      "style": "Unarmed",
-      "styleLevel": 5,
-      "weapon": "Unarmed",
-      "weaponLevel": 1
+      "attribute": "Dexterity",
+      "core": [
+       {
+        "stat": "Dexterity",
+        "min": 11
+       }
+      ]
      }
     }
    ]
@@ -7821,8 +9311,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -7845,10 +9340,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -7869,8 +9367,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -7891,8 +9394,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -7913,10 +9421,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7937,8 +9448,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -7961,10 +9477,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -7985,10 +9504,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8009,8 +9531,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -8033,8 +9560,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -8057,10 +9589,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8081,8 +9616,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -8105,10 +9645,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8129,8 +9672,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -8151,8 +9699,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -8175,8 +9728,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -8197,10 +9755,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8221,8 +9782,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -8245,8 +9811,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -8267,8 +9838,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -8291,8 +9867,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -8313,8 +9896,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -8335,8 +9923,13 @@
      "statusPower": 0,
      "statusRounds": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 0
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 6
+       }
+      ]
      }
     },
     {
@@ -8357,8 +9950,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -8379,8 +9977,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
@@ -8401,8 +10004,15 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 9
+       }
+      ],
+      "weapon": "Sword",
+      "weaponLevel": 1
      }
     },
     {
@@ -8423,8 +10033,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 12
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 2
      }
@@ -8447,10 +10062,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8471,10 +10089,13 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 6,
-      "weapon": "Sword",
-      "weaponLevel": 2
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 12
+       }
+      ]
      }
     },
     {
@@ -8495,10 +10116,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -8519,10 +10143,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -8543,8 +10170,13 @@
      "statusPower": 6,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 15
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 5
      }
@@ -8567,8 +10199,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -8591,8 +10228,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
+      "attribute": "Strength",
+      "core": [
+       {
+        "stat": "Strength",
+        "min": 18
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 8
      }
@@ -8615,10 +10257,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 9,
-      "weapon": "Sword",
-      "weaponLevel": 5
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 15
+       }
+      ]
      }
     },
     {
@@ -8639,10 +10284,13 @@
      "statusPower": 0,
      "statusRounds": 0,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 12,
-      "weapon": "Sword",
-      "weaponLevel": 8
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 18
+       }
+      ]
      }
     },
     {
@@ -8663,15 +10311,20 @@
      "statusPower": 0,
      "statusRounds": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 3
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 9
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "paladin_c1",
      "label": "守护者姿态",
-     "description": "防御 +40%，攻击 +10%，持续到战斗结束",
+     "description": "自身防御 +40%、攻击 +10%，持续至战斗结束。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -8698,17 +10351,20 @@
       }
      ],
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 11
+       }
+      ]
      }
     },
     {
      "defType": "SkillDef",
      "defName": "paladin_c2",
      "label": "圣印",
-     "description": "命中积累 1 层，持续 5 回合，每层技能伤害 +20%、法强 +10%，至多 3 层",
+     "description": "攻击命中时积累 1 层，每层技能伤害 +20%、法强 +10%，至多 3 层，持续 5 回合。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -8737,8 +10393,13 @@
      ],
      "maxStacks": 3,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
+      "attribute": "Charm",
+      "core": [
+       {
+        "stat": "Charm",
+        "min": 11
+       }
+      ],
       "weapon": "Sword",
       "weaponLevel": 1
      }
@@ -8747,7 +10408,7 @@
      "defType": "SkillDef",
      "defName": "paladin_c3",
      "label": "以牙还牙",
-     "description": "受击时以 220% 圣光回击来者，挂 3 回合，可发动 2 次",
+     "description": "受到攻击时，对攻击者发动 220% 威力的圣光反击。效果持续 3 回合，至多触发 2 次。",
      "kind": "Buff",
      "target": "Self",
      "power": 100,
@@ -8767,10 +10428,13 @@
      "reactPower": 220,
      "reactUses": 2,
      "gate": {
-      "style": "Shield",
-      "styleLevel": 5,
-      "weapon": "Sword",
-      "weaponLevel": 1
+      "attribute": "Constitution",
+      "core": [
+       {
+        "stat": "Constitution",
+        "min": 11
+       }
+      ]
      }
     }
    ]

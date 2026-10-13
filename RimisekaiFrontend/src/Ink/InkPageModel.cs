@@ -20,7 +20,7 @@ public enum InkPage
     /// </summary>
     Status,
 
-    /// <summary>角色技能：战斗技能目录，按流派分组，解锁门槛即流派熟练等级。</summary>
+    /// <summary>角色技能：战斗技能目录，门槛为属性下限＋武器熟练。</summary>
     Skills,
 
     /// <summary>

@@ -273,9 +273,9 @@ public static class InkCharacterPageBuilder
             byAttribute[sector].Sort((a, b) =>
             {
                 var ra = a.Gate.Core != null && a.Gate.Core.Count > 0
-                    ? a.Gate.Core[0].Min : a.Gate.StyleLevel;
+                    ? a.Gate.Core[0].Min : a.Gate.WeaponLevel;
                 var rb = b.Gate.Core != null && b.Gate.Core.Count > 0
-                    ? b.Gate.Core[0].Min : b.Gate.StyleLevel;
+                    ? b.Gate.Core[0].Min : b.Gate.WeaponLevel;
                 return ra.CompareTo(rb);
             });
             PlaceSector(byCell, order, sector, byAttribute[sector], unlocked, alwaysUnlocked: false);
@@ -565,7 +565,7 @@ public static class InkCharacterPageBuilder
     }
 
     /// <summary>
-    /// 技能的**学习需求**清单：只有等级类条件（流派熟练／核心属性／生活技能／素质／前置技能）。
+    /// 技能的**学习需求**清单：只有等级类条件（核心属性／武器熟练／生活技能／素质／前置技能）。
     /// 「须装备某流派」是**使用条件**（要拿着对应武器才能出手），不属于学习需求，这里不列。
     /// 未达成的标在条上；渲染端在清单前只画一次「需求」标签，各条列在其下。
     /// </summary>
@@ -583,15 +583,14 @@ public static class InkCharacterPageBuilder
         void Add(string text, bool missed) =>
             lines.Add(new InkDetailRequirement { Text = text, Unmet = missed });
 
-        // 流派熟练等级：学习需求里唯一的「等级」项。
-        if (gate.Style.HasValue && gate.StyleLevel > 0)
-            Add($"{InkText.Style(gate.Style.Value)}熟练 {gate.StyleLevel}",
-                Missed(SkillGateKind.StyleLevel, (int)gate.Style.Value));
-
         if (gate.Core != null)
             foreach (var requirement in gate.Core)
                 Add($"{InkText.CoreStat(requirement.Stat)} {requirement.Min}",
                     Missed(SkillGateKind.CoreStat, (int)requirement.Stat));
+
+        if (gate.Weapon.HasValue && gate.WeaponLevel > 0)
+            Add($"{InkText.Weapon(gate.Weapon.Value)}熟练 {gate.WeaponLevel}",
+                Missed(SkillGateKind.WeaponLevel, (int)gate.Weapon.Value));
 
         if (gate.Life != null)
             foreach (var requirement in gate.Life)

@@ -10,7 +10,7 @@ namespace Rimisekai.Portrait;
 public readonly record struct ChartSkill(SkillDef Def, int Row, float Column, bool Active);
 
 /// <summary>
-/// 竖屏技能网的数据：一式一格，按等阶自上而下由弱到强，核心技能一行居中；
+/// 竖屏技能网的数据：一式一格，按等阶自上而下由弱到强，核心技能一行在第三排；
 /// 连线按门槛高低现算（<see cref="SkillTree.Links"/>）。门槛达到即自动激活，不必学习。
 /// </summary>
 public static class PortraitSkillChart
@@ -30,24 +30,14 @@ public static class PortraitSkillChart
     {
         var rows = new List<(string, string, string, bool)>();
         var g = s.Gate;
-        if (g.Style.HasValue)
-        {
-            var holding = SkillGate.StyleOf(who);
-            rows.Add(("持用流派", Ink.InkText.Style(g.Style.Value), Ink.InkText.Style(holding), holding == g.Style));
-            if (g.StyleLevel > 0)
-            {
-                var have = who.Styles[(int)g.Style.Value].Level;
-                rows.Add(($"{Ink.InkText.Style(g.Style.Value)}熟练", $"Lv{g.StyleLevel}", $"Lv{have}", have >= g.StyleLevel));
-            }
-        }
+        if (g.Core != null)
+            foreach (var r in g.Core)
+                rows.Add((Ink.InkText.CoreStat(r.Stat), $"{r.Min}", $"{who[r.Stat]}", who[r.Stat] >= r.Min));
         if (g.Weapon.HasValue && g.WeaponLevel > 0)
         {
             var have = who.Weapons[(int)g.Weapon.Value].Level;
             rows.Add(($"{Ink.InkText.Weapon(g.Weapon.Value)}熟练", $"Lv{g.WeaponLevel}", $"Lv{have}", have >= g.WeaponLevel));
         }
-        if (g.Core != null)
-            foreach (var r in g.Core)
-                rows.Add((Ink.InkText.CoreStat(r.Stat), $"{r.Min}", $"{who[r.Stat]}", who[r.Stat] >= r.Min));
         if (g.Life != null)
             foreach (var r in g.Life)
                 rows.Add((Ink.InkText.LifeSkill(r.Skill), $"{r.Min}", $"{who.Life(r.Skill)}", who.Life(r.Skill) >= r.Min));

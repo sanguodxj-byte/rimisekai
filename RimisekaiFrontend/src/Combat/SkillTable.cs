@@ -22,7 +22,7 @@ public static class SkillTable
     }
 
     /// <summary>
-    /// 角色此刻能用的战斗技能＝技能网上已激活的（见 <see cref="SkillTree.Active"/>）：门槛（流派、熟练、属性……）达到即自动激活，不必学习。
+    /// 角色此刻能用的战斗技能＝技能网上已激活的（见 <see cref="SkillTree.Active"/>）：门槛（属性、武器熟练……）达到即自动激活，不必学习。
     /// </summary>
     public static IEnumerable<SkillDef> Known(CharacterState character) => SkillTree.Active(character);
 
@@ -30,7 +30,7 @@ public static class SkillTable
     public static bool Innate(SkillDef skill)
     {
         var g = skill.Gate;
-        return !g.Style.HasValue && !g.Weapon.HasValue && (g.Core == null || g.Core.Count == 0) && (g.Life == null || g.Life.Count == 0)
+        return !g.Weapon.HasValue && (g.Core == null || g.Core.Count == 0) && (g.Life == null || g.Life.Count == 0)
             && (g.Traits == null || g.Traits.Count == 0) && (g.Prerequisites == null || g.Prerequisites.Count == 0);
     }
 

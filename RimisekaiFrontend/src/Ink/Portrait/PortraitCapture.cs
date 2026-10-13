@@ -311,7 +311,7 @@ public partial class PortraitCapture : Node
         });
         _steps.Enqueue(() =>
         {
-            // 换了身份，技能网换成魔剑士的：核心一行居中，抽到的点亮。
+            // 换了身份，技能网换成魔剑士的：核心一行在第三排，抽到的点亮。
             var stars = _root.HubScreen.DebugWidgets.Where(w => w.Action == PortraitAction.SkillNode).ToArray();
             Require(stars.Any(w => w.Label == "spellblade_c1"), "the chart now shows the spellblade tree");
             Shoot("skills_pool_rerolled", _root.HubScreen);

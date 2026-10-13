@@ -1,8 +1,7 @@
 """身份技能池扩容：每身份在原 20 式基础（knight_01…20 等）之后续编 17 式（_21…_37），凑成 37 基础＋3 核心。
 
 读 content/defs/identity_skills.json，删掉已有的 _21 以后的基础式（可重复跑），按本表追加到核心三式之前，
-门槛按等阶给（与 IdentitySkillPoolTests 同口径）：一到五阶（流派熟练, 武器熟练）＝(0,0) (3,0) (6,2) (9,5) (12,8)。
-流派、武器取本池原有门槛。写法与 tools/idskills.py 相同。
+门槛取 tools/idskill_gates.py 的语义表（属性＋武器熟练，按等阶给数值）。写法与 tools/idskills.py 相同。
 """
 import json, os, re, sys
 
@@ -128,15 +127,9 @@ def tier(s):
     return 1 + sum(score(s) >= t for t in (75, 100, 120, 140))
 
 
-LEVELS = {1: (0, 0), 2: (3, 0), 3: (6, 2), 4: (9, 5), 5: (12, 8)}
-
-
-def gate(style, weapon, t):
-    sl, wl = LEVELS[t]
-    g = dict(style=style, styleLevel=sl)
-    if wl:
-        g.update(weapon=weapon, weaponLevel=wl)
-    return g
+def gate(def_name, t):
+    from idskill_gates import gate as semantic_gate
+    return semantic_gate(def_name, t)
 
 
 def main():
@@ -145,12 +138,10 @@ def main():
         skills = pool['skills']
         core = [s for s in skills if 'core' in s]
         old = [s for s in skills if 'core' not in s and int(re.search(r'_(\d+)$', s['defName']).group(1)) <= 20]
-        style = core[0]['gate']['style']
-        weapon = core[0]['gate']['weapon']
         new = more[pool['defName']]
         assert len(old) == 20 and len(new) == 17 and len(core) == 3, pool['defName']
         for s in new:
-            s['gate'] = gate(style, weapon, tier(s))
+            s['gate'] = gate(s['defName'], tier(s))
         pool['skills'] = old + new + core
     out = json.dumps(data, ensure_ascii=False, indent=1) + '\n'
     open(PATH, 'w', encoding='utf-8').write(out)

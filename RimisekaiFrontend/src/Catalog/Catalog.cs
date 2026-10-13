@@ -131,9 +131,9 @@ public sealed class SkillDef : Defs.Def
     public int MaxLevel { get; init; } = 1;
 
     /// <summary>
-    /// 解锁门槛：一组可空条件（流派／熟练／属性／生活技能／素质／前置技能），逐条 AND。
+    /// 解锁门槛：一组可空条件（属性／武器熟练／生活技能／素质／前置技能），逐条 AND。
     /// 无门槛的技能（普通攻击、防御架势）用 <see cref="SkillGate.Open"/>。
-    /// 技能的流派归属即 <see cref="SkillGate.Style"/>，星盘据此分扇区。
+    /// 技能的属性归属即 <see cref="SkillGate.Attribute"/>，星盘据此分扇区。
     /// </summary>
     public SkillGate Gate { get; init; } = SkillGate.Open;
 

@@ -185,8 +185,52 @@ public static class InkText
         _ => "基础",
     };
 
-    /// <summary>技能等阶名：一阶到五阶（见 <see cref="Combat.SkillTier"/>）。</summary>
-    public static string SkillTier(int tier) => $"{"一二三四五"[tier - 1]}阶";
+    /// <summary>
+    /// 技能效果句：由数值拼成一句话，如「对单体敌人造成 250% 威力的法术伤害，命中 +5，并使其防御 -10%，持续 1 回合。」
+    /// 没有直接效果的（核心技能的姿态、机制点等）返回空串，由说明文字交代。
+    /// </summary>
+    public static string SkillEffect(Catalog.SkillDef s)
+    {
+        var target = SkillTarget(s.Target);
+        var them = s.Target == Catalog.SkillTarget.Self ? "自身" : "其";
+        var stat = s.Status switch
+        {
+            Combat.StatusKind.StatMod => $"{(s.StatusStat == Catalog.StatusStat.SpellPower ? "法强" : StatusStat(s.StatusStat))} {s.StatusPercent:+0;-0}%，持续 {s.StatusRounds} 回合",
+            Combat.StatusKind.Dot => $"每回合受到 {s.StatusPower} 点伤害，持续 {s.StatusRounds} 回合",
+            Combat.StatusKind.Points => $"获得 {s.StatusPower} 点护盾，持续 {s.StatusRounds} 回合",
+            _ => "",
+        };
+        var parts = new System.Collections.Generic.List<string>();
+        switch (s.Kind)
+        {
+            case Catalog.SkillKind.Strike:
+            case Catalog.SkillKind.Spell:
+                parts.Add($"对{target}造成 {s.Power}% 威力的{(s.Kind == Catalog.SkillKind.Spell ? "法术" : "物理")}伤害");
+                if (s.HitMod != 0)
+                    parts.Add($"命中 {s.HitMod:+0;-0}");
+                if (stat.Length > 0)
+                    parts.Add($"并使{them}{stat}");
+                break;
+            case Catalog.SkillKind.Heal:
+                parts.Add($"为{target}回复 {s.Power}% 威力的生命");
+                if (stat.Length > 0)
+                    parts.Add($"并使{them}{stat}");
+                break;
+            default:
+                if (stat.Length > 0)
+                    parts.Add($"使{target}{stat}");
+                break;
+        }
+        if (parts.Count == 0)
+            return "";
+        if (s.Control)
+            parts.Add("打断其咏唱");
+        var line = string.Join("，", parts) + "。";
+        return s.ChantRounds > 0 ? $"咏唱 {s.ChantRounds} 回合后，{line}" : line;
+    }
+
+    /// <summary>技能等阶名：零阶到五阶（见 <see cref="Combat.SkillTier"/>）。</summary>
+    public static string SkillTier(int tier) => $"{"零一二三四五"[tier]}阶";
 
     // ---------- 技能门槛（技能盘瓦片与右栏详情用） ----------
 
