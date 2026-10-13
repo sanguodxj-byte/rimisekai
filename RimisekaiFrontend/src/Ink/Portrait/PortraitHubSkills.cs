@@ -65,7 +65,7 @@ public partial class PortraitHubScreen
         {
             var s = all[i];
             var at = At(s);
-            DrawSkillNode(at, s, pulse, s.Def.Id == _skillSelectedId);
+            DrawSkillNode(web, at, s, pulse, s.Def.Id == _skillSelectedId);
             var hit = PortraitLayout.SkillNodeHit(at);
             if (view.Encloses(hit))
                 _widgets.Add(new PortraitWidget(hit, PortraitAction.SkillNode, i, true, s.Def.Id));
@@ -147,7 +147,7 @@ public partial class PortraitHubScreen
     }
 
     /// <summary>一格：圆章里一枚四芒星，名字写在章下。</summary>
-    private void DrawSkillNode(Vector2 at, ChartSkill s, float pulse, bool selected)
+    private void DrawSkillNode(Rect2 web, Vector2 at, ChartSkill s, float pulse, bool selected)
     {
         var r = PortraitLayout.SkillNodeRadius;
         if (selected)
@@ -167,10 +167,12 @@ public partial class PortraitHubScreen
             DrawColoredPolygon(star, InkStyle.Line);
         else
             InkDraw.Ink(this, star.Append(star[0]).ToArray(), rim, 1.5f);
-        // 名字衬一块底色，压住从后面穿过的连线。
+        // 名字衬一块底色，压住从后面穿过的连线；最外两列的长名往里收，不压面板内框线。
         var nameWidth = Mathf.Min(InkDraw.Measure(s.Def.Name, PortraitLayout.FontMeta).X, 184f) + 12f;
-        DrawRect(new Rect2(at.X - nameWidth / 2f, at.Y + r + 6f, nameWidth, 48f), InkStyle.Panel);
-        InkDraw.TextBounded(this, new Rect2(at.X - 92f, at.Y + r + 4f, 184f, 52f), s.Def.Name,
+        var inner = web.Grow(-16f);
+        var nameX = Mathf.Clamp(at.X, inner.Position.X + nameWidth / 2f, inner.End.X - nameWidth / 2f);
+        DrawRect(new Rect2(nameX - nameWidth / 2f, at.Y + r + 6f, nameWidth, 48f), InkStyle.Panel);
+        InkDraw.TextBounded(this, new Rect2(nameX - 92f, at.Y + r + 4f, 184f, 52f), s.Def.Name,
             PortraitLayout.FontMeta, PortraitLayout.FontMeta, s.Active || selected ? InkStyle.Line : InkStyle.Dim, "cm");
     }
 
