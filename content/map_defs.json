@@ -38,6 +38,16 @@
         "detourMinutes": 90
       },
       {
+        "id": "goblin_raiders",
+        "title": "地精劫掠队",
+        "text": "坡上滚下一阵尖笑，几个矮小的身影举着锈刀和投索围了上来。",
+        "terrains": ["Hills", "Forest", "DenseForest", "Rocky", "Mountain"],
+        "weight": 15,
+        "minTier": 1,
+        "families": ["goblin"],
+        "detourMinutes": 60
+      },
+      {
         "id": "bandits",
         "title": "拦路匪",
         "text": "路边石后站起一伙蒙面人，刀已出鞘：「留下钱袋，人可以走。」",

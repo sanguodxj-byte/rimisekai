@@ -104,4 +104,9 @@ public enum Trait
     Adventurous,
     Ascetic,
     Restless,
+
+    // ---------- 身份组追加 ----------
+
+    /// <summary>首领。怪物身份素质，与女仆同组：带它的怪物只当遭遇的正主（首领房、委托首领），不当随从。</summary>
+    Boss,
 }

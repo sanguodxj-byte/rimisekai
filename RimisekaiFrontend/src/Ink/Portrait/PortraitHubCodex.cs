@@ -124,7 +124,7 @@ public partial class PortraitHubScreen
     }
 
     private static string RoleName(MonsterDef monster) =>
-        monster.CanLead && monster.CanFollow ? "随从 / 正主" : monster.CanLead ? "正主" : "随从";
+        monster.CanLead ? "首领" : "随从";
 
     private static string WeaponName(WeaponType? weapon) => weapon switch
     {

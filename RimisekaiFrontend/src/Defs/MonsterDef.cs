@@ -4,13 +4,6 @@ using Rimisekai.Character;
 
 namespace Rimisekai.Defs;
 
-/// <summary>怪物能当什么：随从（野外、守卫房、首领身边）或正主（首领房的首领）。</summary>
-public enum MonsterRole
-{
-    Minion,
-    Boss,
-}
-
 /// <summary>
 /// 怪物模板（content/defs/monsters.json）：全项目唯一的怪物数据源。野外、地城、委托都从这里取，
 /// 战斗开始时按 <see cref="Cr"/> → 等级 → 属性池/经验池交给角色生成器掷身板（见 <see cref="ChallengeDef"/>）。
@@ -54,7 +47,11 @@ public sealed class MonsterDef : Def
     /// <summary>族群：遭遇条目按族群挑怪，叙事与阵容对得上（狼群里只出狼）。</summary>
     public string Family { get; init; } = "";
 
-    public List<MonsterRole> Roles { get; init; } = new();
+    /// <summary>
+    /// 素质（TraitDef 的 DefName），与角色身份授予的素质（如女仆）同一套，生成时授予怪物身板。
+    /// 带首领素质（Boss）的只当正主，不带的只当随从。
+    /// </summary>
+    public List<Trait> Traits { get; init; } = new();
 
     /// <summary>可出现的地城类型（dungeon_defs.json dungeons[].id）。</summary>
     public List<string> Dungeons { get; init; } = new();
@@ -65,6 +62,6 @@ public sealed class MonsterDef : Def
     /// <summary>野外可出现的地形（map_defs.json terrains[].type）。</summary>
     public List<string> Terrains { get; init; } = new();
 
-    public bool CanLead => Roles.Contains(MonsterRole.Boss);
-    public bool CanFollow => Roles.Contains(MonsterRole.Minion);
+    public bool CanLead => Rimisekai.Character.Traits.MarksBoss(Traits);
+    public bool CanFollow => !CanLead;
 }

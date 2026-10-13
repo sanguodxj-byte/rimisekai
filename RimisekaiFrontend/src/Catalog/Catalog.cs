@@ -309,12 +309,16 @@ public sealed class EnemyDef
     /// <summary>装备掉落覆盖行；不写即全按 gear_drops.json 的规则掷。</summary>
     public EnemyGear? Gear { get; init; }
 
+    /// <summary>模板上的素质（如首领），生成身板时授予。</summary>
+    public List<Rimisekai.Character.Trait> Traits { get; init; } = new();
+
     /// <summary>按模板落一只到阵里：列、站位层、是否正主、按哪档 CR 生成（委托板正主会加码）。</summary>
     public static EnemyDef Place(Rimisekai.Defs.MonsterDef m, int column, int threatTier, bool boss, ChallengeRating cr) => new()
     {
         Id = m.Id, Name = m.Name, Weapon = m.Weapon, Primary = m.Primary, Secondary = m.Secondary, Cr = cr, Boss = boss,
         ThreatTier = threatTier, Column = column, Size = m.Size, ActionPoints = m.ActionPoints,
         Portrait = m.Portrait, Armour = m.Armour, Money = m.Money, Skills = m.Skills, Loot = m.Loot, Gear = m.Gear,
+        Traits = m.Traits,
     };
 }
 

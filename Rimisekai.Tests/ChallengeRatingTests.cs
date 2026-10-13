@@ -90,7 +90,6 @@ public sealed class ChallengeRatingTests
             Assert.Matches("^[a-z][a-z0-9_]*$", m.Id);
             Assert.False(string.IsNullOrWhiteSpace(m.Name), m.Id);
             Assert.False(string.IsNullOrWhiteSpace(m.Family), m.Id);
-            Assert.NotEmpty(m.Roles);
             Assert.InRange(m.ThreatTier, 1, 4);
             Assert.InRange(m.Size, 1, m.ThreatTier);
             Assert.True(m.ActionPoints >= 1 && m.Armour >= 0 && m.Money >= 0, m.Id);

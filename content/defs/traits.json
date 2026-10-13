@@ -488,6 +488,15 @@
       "notInPool": true
     },
     {
+      "defName": "Boss",
+      "label": "首领",
+      "group": "身份",
+      "keynote": "此地由我主宰",
+      "exclaim": 0,
+      "intimateBaseline": false,
+      "notInPool": true
+    },
+    {
       "defName": "QuickChant",
       "label": "速咏",
       "group": "独特",

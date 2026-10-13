@@ -25,7 +25,7 @@ public sealed class PersonalityTraitTests
     {
         // 57 条（40 光谱 + 17 机制）逐条都要有中文名与效果说明。
         var byTrait = Traits.Catalog.ToDictionary(d => d.Trait);
-        Assert.Equal(76, byTrait.Count);
+        Assert.Equal(77, byTrait.Count);
         foreach (var value in System.Enum.GetValues<Trait>())
         {
             Assert.True(byTrait.ContainsKey(value), $"{value} 缺目录条目");

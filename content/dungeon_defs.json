@@ -144,6 +144,30 @@
     "bosses": [
       {
         "weight": 3,
+        "title": "地精营地",
+        "text": "篝火旁，一个披着锈甲的高大身影拄剑站起，地精们尖叫着散开。",
+        "families": ["goblin"]
+      },
+      {
+        "weight": 2,
+        "title": "食人魔酋长",
+        "text": "骨堆上坐着一头满身油污的食人魔，它舔了舔巨斧的刃口，咧嘴笑了。",
+        "families": ["ogre"]
+      },
+      {
+        "weight": 2,
+        "title": "迷宫之主",
+        "text": "回廊尽头传来蹄子刨地的声音，一对弯角从黑暗里低了下来。",
+        "families": ["minotaur"]
+      },
+      {
+        "weight": 2,
+        "title": "山岭巨魔",
+        "text": "洞顶的阴影动了。一头青灰皮肤的巨魔垂下长臂，伤疤在它身上一道道合拢。",
+        "families": ["troll"]
+      },
+      {
+        "weight": 3,
         "title": "遗迹之主",
         "text": "最深处的石座上，一头庞然的东西缓缓抬起头来。",
         "families": ["wolf"]

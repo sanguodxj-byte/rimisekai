@@ -60,6 +60,10 @@ public static class Traits
     public static bool IsMage(this CharacterState character) =>
         character.Has(Trait.Mage);
 
+    /// <summary>素质表里有首领：怪物模板据此只当遭遇正主、不当随从。</summary>
+    public static bool MarksBoss(List<Trait> traits) =>
+        traits.Contains(Trait.Boss);
+
     // ---------- 光谱效果 ----------
 
     public static int WorkProgressPercent(this CharacterState c, ActionKind action, int hour) =>

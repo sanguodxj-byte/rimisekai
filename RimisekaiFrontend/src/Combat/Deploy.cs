@@ -96,6 +96,8 @@ public static class Deploy
         var level = rules.LevelOf(def.Cr);
         var body = new CharacterGenerator(rng).RollMonster(id, def.Name, def.Weapon, def.Primary, def.Secondary,
             rules.CorePool(level), rules.ExpPool(level));
+        foreach (var trait in def.Traits)
+            body.Grant(trait);
         var sheet = FromCharacter(body, side);
         var c = new Combatant
         {
