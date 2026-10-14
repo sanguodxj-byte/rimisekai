@@ -315,7 +315,6 @@ public partial class PortraitHubScreen
             _widgets.Add(new PortraitWidget(PortraitFrame.SegmentRect(seg, 2, i), PortraitAction.TradeSegment, i, true, labels[i]));
 
         var bar = PortraitLayout.TradeCheckout;
-        DrawRect(new Rect2(0, view.End.Y, PortraitLayout.CanvasWidth, PortraitLayout.TabTop - view.End.Y), InkStyle.Bg);
         var (count, delta) = TradeTotals();
         var money = _vm.Hub.State.Money;
         PortraitFrame.Bevel(this, bar, 40f, InkStyle.Hover, InkStyle.Line, 3f);
