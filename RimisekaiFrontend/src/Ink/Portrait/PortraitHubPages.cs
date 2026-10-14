@@ -47,7 +47,7 @@ public partial class PortraitHubScreen
     /// <summary>打开系统推入页：读档入口落在「存档」段，设置入口落在「设置」段。</summary>
     public void OpenSystemPage(string page)
     {
-        LeaveTradeIfOpen();
+        LeaveSearchIfOpen();
         CloseTransient();
         _push = PushPage.System;
         _systemSeg = page == InkSystemScreen.PageSettings ? 1 : 0;

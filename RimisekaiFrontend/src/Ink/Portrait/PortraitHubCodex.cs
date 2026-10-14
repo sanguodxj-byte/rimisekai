@@ -17,7 +17,7 @@ public partial class PortraitHubScreen
 
     private void OpenCodexPage()
     {
-        LeaveTradeIfOpen();
+        LeaveSearchIfOpen();
         CloseTransient();
         _pan.Remove("codex");
         _push = PushPage.Codex;

@@ -18,9 +18,6 @@ public enum PortraitAction
     StoragePick,
     StoreIn,
     StoreOut,
-    TradeHeld,
-    TradeMarket,
-    TradeRun,
     QuestPick,
     PartyPick,
     QuestStart,
@@ -95,9 +92,6 @@ public enum PortraitAction
     StockCategory,
     StockSearch,
     StockItem,
-    TradeSegment,
-    TradeMinus,
-    TradePlus,
     CraftStation,
     CraftRecipe,
     CraftToggle,
@@ -189,7 +183,6 @@ public partial class PortraitHubScreen : Control
         _nowPage = 0;
         CloseBuildSheet();
         _buildCategoryMemory.Clear();
-        _tradeQty.Clear();
         _party.Clear();
         _questSel = -1;
         _storeMode = 0;
@@ -202,10 +195,10 @@ public partial class PortraitHubScreen : Control
         SetProcess(true);
     }
 
-    /// <summary>切到某个根页签：收起推入页与抽屉，离开交易段即清掉没成交的数量。</summary>
+    /// <summary>切到某个根页签：收起推入页与抽屉。</summary>
     public void ShowTab(int i)
     {
-        LeaveTradeIfOpen();
+        LeaveSearchIfOpen();
         CloseTransient();
         _push = PushPage.None;
         if (i != _tab)

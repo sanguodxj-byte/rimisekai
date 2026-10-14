@@ -29,12 +29,6 @@ public static partial class PortraitLayout
     public static Rect2 StockRow(int i, float offset) =>
         new(Pad, StockView.Position.Y + i * (StockRowHeight + StockRowGap) - offset, FullWidth, StockRowHeight);
 
-    /// <summary>交易：买卖段 / 行（带 − n + 步进）/ 底部结算条。</summary>
-    public static Rect2 TradeSegment => new(Pad, BodySegment.End.Y + 24f, FullWidth, TouchMin);
-    public static Rect2 TradeCheckout => new(30f, TabTop - 24f - 170f, CanvasWidth - 60f, 170f);
-    public static Rect2 TradeView => new(0, TradeSegment.End.Y + 24f, CanvasWidth, TradeCheckout.Position.Y - 24f - TradeSegment.End.Y - 24f);
-    public const float TradeRowHeight = 160f;
-
     /// <summary>制作：工种签 / 配方行 / 详情框。</summary>
     public static float CraftChipsY => BodySegment.End.Y + 24f;
     public static Rect2 CraftDetail => new(Pad, TabTop - 24f - 640f, FullWidth, 640f);
