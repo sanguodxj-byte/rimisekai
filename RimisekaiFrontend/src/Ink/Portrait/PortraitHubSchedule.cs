@@ -51,15 +51,15 @@ public partial class PortraitHubScreen
             var pressed = PortraitFrame.IsPressed(r);
             var work = a.Mode == SlotMode.Work && a.FacilityId >= 0;
             if (work)
-                PortraitFrame.Bevel(this, r, 20f, pressed ? new Color(InkStyle.Line, 0.78f) : InkStyle.Line);
+                PortraitFrame.Bevel(this, r, 20f, pressed ? PortraitFrame.PressFill : InkStyle.Hover, InkStyle.Line, 3f);
             else
                 PortraitFrame.Bevel(this, r, 20f, pressed ? PortraitFrame.PressFill : InkStyle.Bg, InkStyle.WoodDark, 3f);
             var label = work ? $"工作 · {_vm.Hub.FacilityName(a.FacilityId)}" : "空闲";
-            var ink = work ? InkStyle.Bg : InkStyle.Dim;
+            var ink = work ? InkStyle.Line : InkStyle.Dim;
             var labelSize = InkDraw.TextBounded(this, new Rect2(r.Position.X + 40f, r.Position.Y + 40f, r.Size.X - 80f, 70f), label,
                 PortraitLayout.FontBody, PortraitLayout.FontMeta, ink, "lm");
             InkDraw.Text(this, new Vector2(r.Position.X + 40f, r.End.Y - 50f), SlotRange(slot), PortraitLayout.FontMeta,
-                work ? InkStyle.WoodDark : InkStyle.Dim, "lm");
+                InkStyle.Dim, "lm");
             var labelW = Mathf.Min(InkDraw.Measure(label, labelSize).X, r.Size.X - 80f);
             textBands.Add((r.Position.X + 40f, r.Position.X + 40f + labelW, r.Position.Y + 75f - labelSize * 0.7f, r.Position.Y + 75f + labelSize * 0.7f));
             var rangeW = InkDraw.Measure(SlotRange(slot), PortraitLayout.FontMeta).X;

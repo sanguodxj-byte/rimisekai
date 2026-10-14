@@ -318,15 +318,16 @@ public partial class PortraitHubScreen
         DrawRect(new Rect2(0, view.End.Y, PortraitLayout.CanvasWidth, PortraitLayout.TabTop - view.End.Y), InkStyle.Bg);
         var (count, delta) = TradeTotals();
         var money = _vm.Hub.State.Money;
-        PortraitFrame.Bevel(this, bar, 40f, InkStyle.Line);
+        PortraitFrame.Bevel(this, bar, 40f, InkStyle.Hover, InkStyle.Line, 3f);
         InkDraw.Text(this, new Vector2(bar.Position.X + 50f, bar.Position.Y + 56f), open ? $"共 {count} 件" : "只看行情",
-            PortraitLayout.FontMeta, InkStyle.WoodDark, "lm");
+            PortraitLayout.FontMeta, InkStyle.Dim, "lm");
         InkDraw.TextBounded(this, new Rect2(bar.Position.X + 50f, bar.Position.Y + 84f, bar.Size.X - 420f, 66f),
             open ? $"{(delta >= 0 ? "+" : "−")} {Math.Abs(delta)}  →  余 {InkText.Money(money + delta)}" : "去城镇的商店里买卖",
-            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Bg, "lm");
+            PortraitLayout.FontBody, PortraitLayout.FontMeta, InkStyle.Line, "lm");
         var commit = new Rect2(bar.End.X - 30f - 290f, bar.Position.Y + 26f, 290f, PortraitLayout.TouchMin);
         var canCommit = open && count > 0 && money + delta >= 0;
-        PortraitFrame.Bevel(this, commit, 59f, PortraitFrame.IsPressed(commit) ? InkStyle.Hover : InkStyle.Bg);
+        PortraitFrame.Bevel(this, commit, 59f, PortraitFrame.IsPressed(commit) ? PortraitFrame.PressFill : InkStyle.Bg,
+            canCommit ? InkStyle.Line : InkStyle.WoodDark, 3f);
         InkDraw.Text(this, commit.GetCenter(), "成交", PortraitLayout.FontBody, canCommit ? InkStyle.Line : InkStyle.Dim, "cm");
         _widgets.Add(new PortraitWidget(commit, PortraitAction.TradeRun, 0, canCommit, "成交"));
     }
