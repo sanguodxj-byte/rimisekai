@@ -282,10 +282,6 @@ public static class PortraitFrame
     private static void Gilded(CanvasItem ci, Vector2[] pts, float alpha = 1f) =>
         GradientFill(ci, pts, new Color(InkStyle.WoodLight, alpha), new Color(InkStyle.Wood, alpha));
 
-    /// <summary>骨白填充：亮绯到骨白的竖向渐变（主操作与选中）。</summary>
-    private static void Ruby(CanvasItem ci, Vector2[] pts, float alpha = 1f) =>
-        GradientFill(ci, pts, new Color(InkStyle.WoodLight, alpha), new Color(InkStyle.Wood, alpha));
-
     /// <summary>
     /// 哥特外形块：fill 为空不填，line 为空不描。fill 传骨白（Line 色）的旧调用一律画成银白渐变，
     /// 这样所有「骨白实心＋黑字」的选中块自动换成「银白＋深字」，字依旧读得清。
@@ -306,7 +302,7 @@ public static class PortraitFrame
     }
 
     /// <summary>
-    /// 牌钮（原药丸钮）：primary＝骨白渐变＋银白双线＋两尖各一枚金菱（一屏只给一个主操作）；
+    /// 牌钮（原药丸钮）：primary＝黑底＋骨白双线（内线提亮）＋两尖各一枚金菱（一屏只给一个主操作，不用白实心，免刺眼）；
     /// 否则深石底＋暗金描边。不可用时描边降为暗铜、字降为褐灰。glyph 非空时图标在字左。sub 是第二行小字。
     /// </summary>
     public static void Pill(CanvasItem ci, Rect2 r, string label, bool primary = false, bool enabled = true,
@@ -317,16 +313,15 @@ public static class PortraitFrame
         Color text;
         if (primary && enabled)
         {
+            ci.DrawColoredPolygon(pts, pressed ? InkStyle.Hover : new Color(InkStyle.Panel, 0.94f));
             if (pressed)
-                ci.DrawColoredPolygon(pts, new Color(InkStyle.Line, 0.78f));
-            else
-                Ruby(ci, pts);
+                ci.DrawColoredPolygon(pts, PressFill);
             Outline(ci, pts, InkStyle.Line, PortraitLayout.LineHair - 1f);
-            Outline(ci, RoundRectPoints(r.Grow(-9f), (r.Size.Y - 18f) / 2f), new Color(InkStyle.Bg, 0.45f), 2f);
+            Outline(ci, RoundRectPoints(r.Grow(-9f), (r.Size.Y - 18f) / 2f), new Color(InkStyle.Line, 0.8f), 2f);
             var cy0 = r.GetCenter().Y;
             InkDraw.Jewel(ci, new Vector2(r.Position.X + 4f, cy0), 9f, InkStyle.Line);
             InkDraw.Jewel(ci, new Vector2(r.End.X - 4f, cy0), 9f, InkStyle.Line);
-            text = InkStyle.Bg;
+            text = InkStyle.Line;
         }
         else
         {
@@ -354,7 +349,7 @@ public static class PortraitFrame
         if (sub.Length > 0)
             InkDraw.TextBounded(ci, new Rect2(r.Position.X + r.Size.Y / 2f, cy + 22f, r.Size.X - r.Size.Y, 48f), sub,
                 PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-                primary && enabled ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+                InkStyle.Dim, "cm");
     }
 
     /// <summary>分段控件第 i 段的矩形（整段可点，命中块与画面同源）。</summary>
@@ -364,7 +359,7 @@ public static class PortraitFrame
         return new Rect2(r.Position.X + i * w, r.Position.Y, w, r.Size.Y);
     }
 
-    /// <summary>分段控件：尖拱深槽＋暗金描边，选中段骨白牌＋银白边，段间一道暗金细竖线。</summary>
+    /// <summary>分段控件：尖拱深槽＋暗金描边，选中段黑底＋骨白边＋骨白字（未选褐灰字），段间一道暗金细竖线。</summary>
     public static void Segmented(CanvasItem ci, Rect2 r, IReadOnlyList<string> labels, int selected)
     {
         var trough = RoundRectPoints(r, r.Size.Y / 2f);
@@ -381,13 +376,13 @@ public static class PortraitFrame
             var pts = RoundRectPoints(inner, inner.Size.Y / 2f);
             if (on)
             {
-                Ruby(ci, pts);
+                ci.DrawColoredPolygon(pts, InkStyle.Hover);
                 Outline(ci, pts, InkStyle.Line, 3f);
             }
             else if (Pressed(seg))
                 ci.DrawColoredPolygon(pts, PressFill);
             InkDraw.TextBounded(ci, inner.Grow(-12f), labels[i], PortraitLayout.FontBody, PortraitLayout.FontMeta,
-                on ? InkStyle.Bg : InkStyle.Dim, "cm");
+                on ? InkStyle.Line : InkStyle.Dim, "cm");
         }
     }
 
@@ -397,7 +392,7 @@ public static class PortraitFrame
 
     /// <summary>
     /// 标签签：命中块是整格 r（≥118 高），画出来的尖拱小牌在格内垂直居中、高 visual。
-    /// 选中＝骨白牌＋银白边＋象牙字；未选＝暗铜描边褐灰字。
+    /// 选中＝黑底＋骨白边＋骨白字；未选＝暗铜描边褐灰字。
     /// </summary>
     public static void Chip(CanvasItem ci, Rect2 r, string label, bool selected, float visual = 96f)
     {
@@ -405,7 +400,7 @@ public static class PortraitFrame
         var pts = RoundRectPoints(plate, visual / 2f);
         if (selected)
         {
-            Ruby(ci, pts);
+            ci.DrawColoredPolygon(pts, InkStyle.Hover);
             Outline(ci, pts, InkStyle.Line, 3f);
         }
         else
@@ -414,23 +409,26 @@ public static class PortraitFrame
             Outline(ci, pts, InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
         }
         InkDraw.TextBounded(ci, plate.Grow(-20f), label, PortraitLayout.FontMeta, PortraitLayout.FontMeta,
-            selected ? InkStyle.Bg : InkStyle.Dim, "cm");
+            selected ? InkStyle.Line : InkStyle.Dim, "cm");
     }
 
-    /// <summary>只读小签（特质等）：暗铜描边，不可点；lit＝银白牌深字。</summary>
+    /// <summary>只读小签（特质等）：暗铜描边，不可点；lit＝骨白边骨白字。</summary>
     public static float Tag(CanvasItem ci, Vector2 at, string label, float height = 72f, bool lit = false)
     {
         var w = ChipWidth(label) - 16f;
         var r = new Rect2(at, new Vector2(w, height));
         var pts = RoundRectPoints(r, height / 2f);
         if (lit)
-            Gilded(ci, pts);
+        {
+            ci.DrawColoredPolygon(pts, InkStyle.Hover);
+            Outline(ci, pts, InkStyle.Line, PortraitLayout.LineHair - 2f);
+        }
         else
         {
             ci.DrawColoredPolygon(pts, new Color(InkStyle.Panel, 0.85f));
             Outline(ci, pts, InkStyle.WoodDark, PortraitLayout.LineHair - 2f);
         }
-        InkDraw.Text(ci, r.GetCenter(), label, PortraitLayout.FontMeta, lit ? InkStyle.Bg : InkStyle.Dim, "cm");
+        InkDraw.Text(ci, r.GetCenter(), label, PortraitLayout.FontMeta, lit ? InkStyle.Line : InkStyle.Dim, "cm");
         return w;
     }
 
@@ -944,7 +942,7 @@ public static class PortraitFrame
     private static float PlaqueCut(Rect2 r) => Mathf.Clamp(r.Size.Y * 0.24f, 12f, 26f);
 
     /// <summary>
-    /// 铭牌底：primary＝外一道骨白细线框住一块骨白实心倒角牌（字反黑）；
+    /// 铭牌底：primary＝与普通铭牌同为黑底双线，只把内线提亮为骨白（不用白实心，免刺眼）；
     /// 否则＝双道倒角线（外骨白、内压暗），左右两条竖边正中各钉一枚小菱。
     /// lit＝选中或按住：内线提亮并在内腔压一层极淡衬底与四角刻痕。
     /// </summary>
@@ -952,18 +950,9 @@ public static class PortraitFrame
     {
         var cut = PlaqueCut(r);
         var edge = enabled ? InkStyle.Line : InkStyle.WoodDark;
-        if (primary && enabled)
-        {
-            Poly(ci, ChamferPoints(r, cut), InkStyle.Bg, InkStyle.Line, 3f);
-            Poly(ci, ChamferPoints(r.Grow(-9f), cut - 5f), lit ? new Color(InkStyle.Line, 0.8f) : InkStyle.Line);
-            var cy = r.GetCenter().Y;
-            InkDraw.Jewel(ci, new Vector2(r.Position.X + 22f, cy), 6f, InkStyle.Bg);
-            InkDraw.Jewel(ci, new Vector2(r.End.X - 22f, cy), 6f, InkStyle.Bg);
-            return;
-        }
         Poly(ci, ChamferPoints(r, cut), lit ? PressFill : InkStyle.Bg, edge, enabled ? 3.5f : 2.5f);
         Poly(ci, ChamferPoints(r.Grow(-9f), cut - 5f), null,
-            lit ? InkStyle.Line : enabled ? InkStyle.Dim : new Color(InkStyle.WoodDark, 0.7f), 2f);
+            lit || primary && enabled ? InkStyle.Line : enabled ? InkStyle.Dim : new Color(InkStyle.WoodDark, 0.7f), 2f);
         var my = r.GetCenter().Y;
         InkDraw.Jewel(ci, new Vector2(r.Position.X, my), 7f, edge);
         InkDraw.Jewel(ci, new Vector2(r.End.X, my), 7f, edge);
@@ -982,7 +971,7 @@ public static class PortraitFrame
     }
 
     /// <summary>
-    /// 刻字铭牌钮：primary＝骨白实心牌黑字（一屏只给一个主操作），否则＝双线铭牌骨白字。
+    /// 刻字铭牌钮：双线黑底铭牌骨白字；primary 只提亮内线（一屏只给一个主操作）。
     /// 不可用时线降为暗木色、字降为银灰。glyph 非空时图标在字左。sub 是第二行小字。
     /// </summary>
     public static void Plaque(CanvasItem ci, Rect2 r, string label, bool primary = false, bool enabled = true,
@@ -990,7 +979,7 @@ public static class PortraitFrame
     {
         var pressed = Pressed(r);
         PlaqueBody(ci, r, primary, enabled, pressed);
-        var text = primary && enabled ? InkStyle.Bg : enabled ? InkStyle.Line : InkStyle.Dim;
+        var text = enabled ? InkStyle.Line : InkStyle.Dim;
         var cy = r.GetCenter().Y - (sub.Length > 0 ? 18f : 0f);
         var room = r.Size.X - 80f - (glyph != null ? 76f : 0f);
         var fit = InkDraw.FitSize(label, room, size, PortraitLayout.FontMeta);
@@ -1005,7 +994,7 @@ public static class PortraitFrame
             InkDraw.Text(ci, new Vector2(r.GetCenter().X, cy), label, fit, text, "cm");
         if (sub.Length > 0)
             InkDraw.TextBounded(ci, new Rect2(r.Position.X + 40f, cy + 22f, r.Size.X - 80f, 48f), sub,
-                PortraitLayout.FontMeta, PortraitLayout.FontMeta, primary && enabled ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+                PortraitLayout.FontMeta, PortraitLayout.FontMeta, InkStyle.Dim, "cm");
     }
 
     public static void Brackets(CanvasItem ci, Rect2 r, Color color, float width = 3f)

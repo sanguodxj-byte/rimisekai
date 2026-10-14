@@ -169,15 +169,15 @@ public partial class PortraitHubScreen
             DrawBuildCard(list[pick], site);
     }
 
-    /// <summary>分类页签＝铭牌（选中走主铭牌：银白实心深字），上行类名、下行「能建/总数」。</summary>
+    /// <summary>分类页签＝铭牌（选中走主铭牌：内线提亮、骨白字），上行类名、下行「能建/总数」。</summary>
     private void DrawBuildTab(Rect2 r, int index, BuildTab tab, bool on)
     {
         PortraitFrame.PlaqueBody(this, r, on, true, PortraitFrame.IsPressed(r));
-        var name = on ? InkStyle.Bg : tab.Ready > 0 ? InkStyle.Line : InkStyle.Dim;
+        var name = on ? InkStyle.Line : tab.Ready > 0 ? InkStyle.Line : InkStyle.Dim;
         InkDraw.TextBounded(this, new Rect2(r.Position.X + 8f, r.Position.Y + 14f, r.Size.X - 16f, 56f), tab.Label,
             PortraitLayout.FontBody, PortraitLayout.FontMeta, name, "cm");
         InkDraw.Text(this, new Vector2(r.GetCenter().X, r.Position.Y + 110f), $"{tab.Ready}/{tab.Total}", PortraitLayout.FontMeta,
-            on ? InkStyle.WoodDark : InkStyle.Dim, "cm");
+            on ? InkStyle.Line : InkStyle.Dim, "cm");
         _widgets.Add(new PortraitWidget(r, PortraitAction.BuildCategory, index, true, tab.Label));
     }
 

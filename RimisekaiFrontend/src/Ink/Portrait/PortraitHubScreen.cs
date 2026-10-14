@@ -475,17 +475,17 @@ public partial class PortraitHubScreen : Control
             if (i != _tab && PortraitFrame.IsPressed(r))
                 PortraitFrame.PressMark(this, new Rect2(cx - 70f, cy - 64f, 140f, 110f));
         }
-        // 当前页签的尖拱窗：不横向滑动（安卓式指示条），切换时新龛里的窗自檐下升起、旧龛的窗淡去。
+        // 当前页签的尖拱窗（黑底骨白边，不用白实心）：不横向滑动（安卓式指示条），切换时新龛里的窗自檐下升起、旧龛的窗淡去。
         var rise = _tabMotion.Running ? _tabMotion.Eased : 1f;
         var full = new Rect2(PortraitLayout.Tab(_tab).GetCenter().X - 64f, cy - 62f, 128f, 102f);
         if (_tabMotion.Running && _tabFrom != _tab)
         {
             var old = new Rect2(PortraitLayout.Tab(_tabFrom).GetCenter().X - 64f, cy - 62f, 128f, 102f);
-            PortraitFrame.Arch(this, old, 46f, new Color(InkStyle.Line, 1f - rise));
+            PortraitFrame.Arch(this, old, 46f, new Color(InkStyle.Hover, 1f - rise), new Color(InkStyle.Line, 1f - rise), 3f);
         }
         var h = Mathf.Max(1f, full.Size.Y * rise);
         var win = new Rect2(full.Position.X, full.End.Y - h, full.Size.X, h);
-        PortraitFrame.Arch(this, win, Mathf.Min(46f, h), InkStyle.Line);
+        PortraitFrame.Arch(this, win, Mathf.Min(46f, h), InkStyle.Hover, InkStyle.Line, 3f);
         if (rise >= 1f)
         {
             PortraitFrame.Arch(this, full.Grow(8f), 52f, null, new Color(InkStyle.Line, 0.55f), 2f);
@@ -497,7 +497,7 @@ public partial class PortraitHubScreen : Control
             var on = i == _tab;
             var cx = r.GetCenter().X;
             var covered = on ? rise >= 0.6f : _tabMotion.Running && i == _tabFrom && rise < 0.4f;
-            PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Bg : InkStyle.Dim);
+            PortraitGlyph.TabIcons[i](this, cx, cy + 6f, 26f, covered ? InkStyle.Line : InkStyle.Dim);
             InkDraw.Text(this, new Vector2(cx, cy + 82f), PortraitLayout.TabLabels[i], PortraitLayout.FontMeta,
                 on ? InkStyle.Line : InkStyle.Dim, "cm");
             _widgets.Add(new PortraitWidget(r, PortraitAction.Tab, i, true, PortraitLayout.TabLabels[i]));
